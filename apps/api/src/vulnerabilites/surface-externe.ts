@@ -1640,6 +1640,13 @@ export class SurfaceExterneAlh implements OperationEnLots {
     return out;
   }
 
+  /** Lot PRIO-1 (cartes d'avis de la veille) : CVE demandées exposées sur Internet, oui ou non, sur tous les faits connus et
+      sans droits (décision A du lot ALH5 : un fait de la priorité, le même pour tout le monde). Une lecture pour toutes les
+      CVE ; aucun nom ni nombre rendu. */
+  async cvesExposees(cves: readonly string[]): Promise<Set<string>> {
+    return new Set((await this.porteurs(null, cves)).map((r) => r.cve));
+  }
+
   /** Pour la veille : sur combien d'actifs lisibles chaque CVE est vue, et par combien d'alertes ouvertes lisibles ;
       `horsLecture` (lot ALH5) : elle l'est aussi sur un actif ou par une alerte que la personne ne lit pas (sans nom ni
       nombre). Une CVE que la surface externe ne porte pas du tout est absente de la table rendue. */
@@ -1782,6 +1789,26 @@ export class SurfaceExterneAlh implements OperationEnLots {
       })),
       alertes,
     };
+  }
+
+  /** Pour l'assistant (lot ASSISTANT-V1, outil `machines_prioritaires`) : actifs rangés et lisibles par la personne qui
+      portent les CVE données (mêmes porteurs que `exposition`), avec les CVE de chacun ; identifiants internes seulement
+      (l'appelant les remplace par des repères « E-… »). `sansFiche` : actifs lisibles inconnus de la cartographie (sans
+      fiche, donc sans repère), comptés une fois chacun. Une lecture, quel que soit le nombre de CVE. */
+  async actifsDesCves(
+    user: SessionUser,
+    cves: readonly string[],
+  ): Promise<{ actifs: Map<string, Set<string>>; sansFiche: number }> {
+    const actifs = new Map<string, Set<string>>();
+    const sansFiche = new Set<string>();
+    for (const r of await this.porteurs(user, cves)) {
+      if (r.actif_id) {
+        let x = actifs.get(r.actif_id);
+        if (!x) actifs.set(r.actif_id, (x = new Set()));
+        x.add(r.cve);
+      } else if (r.cle) sansFiche.add(r.cle);
+    }
+    return { actifs, sansFiche: sansFiche.size };
   }
 
   /** Pour le masque de l'assistant (décision C) : toutes les valeurs qui désignent un actif de la surface externe

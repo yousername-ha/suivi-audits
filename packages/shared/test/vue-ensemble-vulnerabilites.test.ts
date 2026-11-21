@@ -36,8 +36,13 @@ describe('niveau d’alerte (1 à 4), règle proposée au lot PC1', () => {
     ['P2 présentes et exploitées à confirmer', f(0, 0, 3, 2), 2, /^3 failles présentes en P2 ; 2 failles exploitées/],
     ['une alerte simple', f(0, 1, 1, 0), 3, /^1 faille en P2, exploitable et exposée directement sur Internet/],
     ['deux alertes simples', f(0, 2, 5, 4), 3, /^2 failles en P2, exploitables et exposées/],
-    ['une faille P1 présente', f(1, 0, 0, 0), 4, /^1 faille exploitée et présente chez nous \(P1\)/],
-    ['P1 l’emporte sur tout le reste', f(3, 9, 9, 9), 4, /^3 failles exploitées et présentes chez nous/],
+    [
+      'une faille P1 présente',
+      f(1, 0, 0, 0),
+      4,
+      /^1 faille présente chez nous en P1 \(exploitation avérée, ou machine en fin de support\)/,
+    ],
+    ['P1 l’emporte sur tout le reste', f(3, 9, 9, 9), 4, /^3 failles présentes chez nous en P1/],
   ];
   for (const [nom, faits, niveau, phrase] of cas)
     it(nom, () => {
@@ -81,6 +86,23 @@ describe('ordre des cibles, le même pour tout le monde', () => {
     gravite: null,
     epss: null,
     ...autres,
+  });
+  it('lot PRIO-1 : à priorité égale, une faille utilisée par des rançongiciels passe devant ; le niveau prime', () => {
+    const rancon = (cle: string, niveau: 'P1' | 'P2', autres: Partial<C> = {}): C =>
+      c(cle, niveau, { priorite: { niveau, faits: [{ fait: 'rancongiciel' }] }, ...autres });
+    const liste = [
+      c('CVE-2026-90013', 'P1', { exploitee: true, gravite: 'critique', epss: 0.9 }),
+      rancon('CVE-2026-90012', 'P1', { exploitee: true, gravite: 'faible' }),
+      rancon('CVE-2026-90011', 'P2', { exploitee: true, aConfirmer: true }),
+      c('CVE-2026-90010', 'P1'),
+    ];
+    expect([...liste].sort(comparerCibles).map((x) => x.cle)).toEqual([
+      'CVE-2026-90012',
+      'CVE-2026-90013',
+      'CVE-2026-90010',
+      'CVE-2026-90011',
+    ]);
+    expect([...liste].reverse().sort(comparerCibles)).toEqual([...liste].sort(comparerCibles));
   });
   it('priorité, exploitation, présence, exploitable, gravité, EPSS puis clé', () => {
     const liste = [

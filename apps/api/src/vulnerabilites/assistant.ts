@@ -23,9 +23,15 @@
    jamais : domaine, adresse, nom de périmètre, FAI, AS. Le masque couvre en plus tous les domaines et adresses de la surface
    externe (et les sous-domaines d'un domaine connu), les fournisseurs d'accès et les numéros d'AS des hôtes, AVANT tout
    envoi : un titre, une recommandation ou une question qui les citerait part avec un repère, « [actif externe] » ou
-   « [réseau externe] ». */
+   « [réseau externe] ».
+   Lot ASSISTANT-V1 (décisions du RSSI du 20/11/2026) : failles_prioritaires rend les cibles du tableau « Cibles par
+   priorité » de la vue d'ensemble (même calcul, même ordre, mêmes droits de lecture), produits à confirmer signalés ;
+   machines_prioritaires rend aussi les actifs exposés (repères « E-… ») ; la rubrique « Quoi faire » d'evaluer_cve porte le
+   contenu de chaque source, source nommée, sans renvoi interne. Rien de plus ne part : repères et compteurs, jamais un nom,
+   une adresse, un domaine, un rôle ni un périmètre. */
 import {
   calculerPriorite,
+  type CibleVueDto,
   type ConstatDto,
   DecisionPropositionVulnBody,
   ETAT_SUIVI_LIBELLES,
@@ -33,21 +39,21 @@ import {
   type EtatSuiviFaille,
   faitsDepuisSources,
   GRAVITE_TENABLE_LIBELLES,
-  type GraviteTenable,
   libelleFaitPriorite,
   libelleFaitRang,
   type MachineDto,
   MOTIF_PROPOSITION_LIBELLES,
   type MotifProposition,
   type NatureSuivi,
+  NIVEAUX_PRIORITE,
+  type NiveauPriorite,
   numeroRepere,
   numeroRepereExterne,
   type Presence,
+  PRESENCE_LIBELLES,
   type Priorite,
   PROPOSITION_VULN_MACHINES_MAX,
   type PropositionVulnerabiliteDto,
-  RechercheConstats,
-  RechercheDeclarees,
   repereExterne,
   repereMachine,
   REPERES_MAX,
@@ -76,14 +82,17 @@ import type { FaillesDetectees } from './failles.js';
 import type { MotsNonMasquesVulnerabilites } from './mots-non-masques.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { lireFaitsCve, publicationsDe, sourcesDe } from './sources.js';
-import { lisible, lisibleAlh, present } from './sql.js';
+import { cveSurMachineFinSupport, lisible, lisibleAlh, present } from './sql.js';
 import type { SuiviFailles } from './suivi.js';
 import type { SurfaceExterneAlh } from './surface-externe.js';
+import type { VueEnsembleVulnerabilites } from './vue-ensemble.js';
 
 /** Remplacement d'un actif exposé qui n'a pas de repère (ronde, actif non lisible, valeur sans fiche). */
 export const ACTIF_EXTERNE_MASQUE = '[actif externe]';
 /** Remplacement d'un fournisseur d'accès ou d'un numéro d'AS d'un hôte exposé. */
 export const RESEAU_EXTERNE_MASQUE = '[réseau externe]';
+/** Mention de la rubrique « Quoi faire » d'evaluer_cve quand aucune source lue ne publie de correctif (lot ASSISTANT-V1). */
+export const QUOI_FAIRE_SANS_CORRECTIF = 'aucun correctif publié par les sources lues';
 
 /** Bornes de ce qui est remis au modèle. */
 export const BORNES_ASSISTANT_VULN = {
@@ -161,6 +170,33 @@ function machinePourModele(m: MachineDto, repere: string | null) {
   };
 }
 
+/** Faille du tableau « Cibles par priorité » telle que remise au modèle (lot ASSISTANT-V1) : CVE, titre et produit publiés
+    par les sources (ou nom du contrôle de Tenable, ou produit surveillé), priorité, présences, faits, état de suivi et nombres
+    que la personne lit ; la fiche qu'elle peut ouvrir (nature et identifiant), s'il y en a une. Ni nom de machine, ni
+    domaine, ni adresse, ni périmètre. */
+function faillePourModele(c: CibleVueDto, i: number) {
+  return {
+    rang: i + 1,
+    cve: c.cve,
+    titre: coupe(c.titre, 200),
+    produit: coupe(c.produit, 100),
+    priorite: priorite(c.priorite),
+    presences: c.presences.map((p) => PRESENCE_LIBELLES[p]),
+    ...(c.presences.includes('a_confirmer') ? { produitAConfirmer: true } : {}),
+    ...(c.aConfirmer ? { seulementAConfirmer: true } : {}),
+    exploitee: c.exploitee,
+    exploitable: c.exploitable,
+    gravite: c.gravite ? GRAVITE_TENABLE_LIBELLES[c.gravite] : null,
+    epss: c.epss,
+    etatSuivi: c.etat ? etatSuivi(c.etat) : null,
+    machinesLisibles: c.machines.lisibles,
+    ...(c.machines.horsLecture ? { machinesAussiHorsDeVosDroits: true } : {}),
+    actifsExposesLisibles: c.actifs.lisibles,
+    ...(c.actifs.horsLecture ? { actifsAussiHorsDeVosDroits: true } : {}),
+    ...(c.fiche ? { nature: c.fiche.nature, id: c.fiche.id } : {}),
+  };
+}
+
 export class AssistantVulnerabilites {
   constructor(
     private readonly db: Db,
@@ -168,6 +204,9 @@ export class AssistantVulnerabilites {
     private readonly suivi: SuiviFailles,
     private readonly reglage: ReglagePrioriteVulnerabilites,
     private readonly nonMasques: MotsNonMasquesVulnerabilites,
+    /** Lot ASSISTANT-V1 : cibles du tableau « Cibles par priorité » de la vue d'ensemble (failles_prioritaires) et CVE
+        exposées sur Internet dans leur ordre (machines_prioritaires). */
+    private readonly vue: Pick<VueEnsembleVulnerabilites, 'cibles'>,
     /** Surface externe (lot ALH2) : exposition d'une CVE et actifs à masquer. */
     private readonly surface: SurfaceExterneAlh | null = null,
   ) {}
@@ -427,18 +466,95 @@ export class AssistantVulnerabilites {
         type: a.type ? TYPE_ALERTE_ALH_LIBELLES[a.type] : null,
         statut: STATUT_ALERTE_ALH_LIBELLES[a.statut],
         titre: coupe(a.titre, 200),
-        recommandationsDeLEditeur: a.defauts.slice(0, B.defauts).map((d) => ({
-          defaut: coupe(d.nom, 200),
-          description: coupe(d.description, 600),
-          resolutions: d.resolutions.slice(0, B.resolutions).map((z) => ({
-            resolution: coupe(z.nom, 200),
-            description: coupe(z.description, 600),
-            facilite: z.facilite,
-            gain: z.gain,
-          })),
-        })),
       })),
+      ...(x.alertes.length > B.alertes ? { alertesNonRendues: x.alertes.length - B.alertes } : {}),
+      // Recommandations de l'éditeur des alertes rendues : remises dans « Quoi faire » (quoiFaire.algoLightHouse), pas ici.
+      recommandations: x.alertes.slice(0, B.alertes).flatMap((a) =>
+        a.defauts.length
+          ? [
+              {
+                alerte: coupe(a.titre, 200),
+                defauts: a.defauts.slice(0, B.defauts).map((d) => ({
+                  defaut: coupe(d.nom, 200),
+                  description: coupe(d.description, 600),
+                  resolutions: d.resolutions.slice(0, B.resolutions).map((z) => ({
+                    resolution: coupe(z.nom, 200),
+                    description: coupe(z.description, 600),
+                    facilite: z.facilite,
+                    gain: z.gain,
+                  })),
+                })),
+              },
+            ]
+          : [],
+      ),
     };
+  }
+
+  /** Rubrique « Quoi faire » d'evaluer_cve (lot ASSISTANT-V1) : le contenu publié par chaque source lue, avec sa source
+      nommée, jamais un renvoi vers une autre partie du résultat. Une rubrique sans contenu est omise ; sans aucun correctif
+      (correctif de Tenable, action exigée par le catalogue KEV, mention « Un correctif existe : oui » du CERT Santé,
+      résolution proposée par l'éditeur de la surface externe), la mention QUOI_FAIRE_SANS_CORRECTIF est rendue. */
+  private static quoiFaire(e: {
+    kev: { action: string | null; echeance: string | null } | null;
+    certSante: SourcesFailleDto['certSante'];
+    constats: readonly ConstatDto[];
+    recommandationsAlh: readonly {
+      alerte: string | null;
+      defauts: { resolutions: unknown[] }[];
+    }[];
+  }) {
+    const B = BORNES_ASSISTANT_VULN;
+    const out: Record<string, unknown> = {};
+    const kevAction = coupe(e.kev?.action, 500);
+    if (kevAction)
+      out.catalogueKev = {
+        source: 'Catalogue KEV de la CISA',
+        actionExigee: kevAction,
+        ...(e.kev?.echeance ? { echeance: e.kev.echeance } : {}),
+      };
+    const cs = e.certSante;
+    if (cs && (cs.correctif || cs.contournement))
+      out.certSante = {
+        source: 'CERT Santé',
+        ...(cs.correctif ? { unCorrectifExiste: cs.correctif } : {}),
+        ...(cs.contournement ? { unContournementExiste: cs.contournement } : {}),
+      };
+    // Correctifs de Tenable : un par texte publié, avec les contrôles qui le portent (constats lisibles, par priorité).
+    const parTexte = new Map<string, { controles: string[]; correctif: string; publieLe: string | null }>();
+    for (const c of e.constats) {
+      const texte = coupe(c.correctif?.trim(), 600);
+      if (!texte) continue;
+      let x = parTexte.get(texte);
+      if (!x) {
+        if (parTexte.size >= B.constats) continue;
+        parTexte.set(texte, (x = { controles: [], correctif: texte, publieLe: jour(c.correctifLe) }));
+      }
+      if (x.controles.length < B.constats && !x.controles.includes(c.plugin)) x.controles.push(c.plugin);
+      const le = jour(c.correctifLe);
+      if (le && (!x.publieLe || le < x.publieLe)) x.publieLe = le;
+    }
+    if (parTexte.size)
+      out.tenable = {
+        source: 'Tenable (correctif publié pour chaque contrôle)',
+        correctifs: [...parTexte.values()].map((x) => ({
+          controles: x.controles,
+          correctif: x.correctif,
+          ...(x.publieLe ? { publieLe: x.publieLe } : {}),
+        })),
+      };
+    if (e.recommandationsAlh.length)
+      out.algoLightHouse = {
+        source: 'AlgoLightHouse (recommandations de l’éditeur de la surface externe)',
+        recommandations: e.recommandationsAlh,
+      };
+    const correctif =
+      !!kevAction ||
+      cs?.correctif === 'oui' ||
+      parTexte.size > 0 ||
+      e.recommandationsAlh.some((a) => a.defauts.some((d) => d.resolutions.length > 0));
+    if (!correctif) out.correctif = QUOI_FAIRE_SANS_CORRECTIF;
+    return out;
   }
 
   /** Évaluer une CVE : ce que la veille en sait, ce que Tenable, les produits surveillés et la surface externe en disent,
@@ -476,7 +592,7 @@ export class AssistantVulnerabilites {
         presentSelonTenable: c.present,
         graviteTenable: GRAVITE_TENABLE_LIBELLES[c.gravite],
         exploitableSelonTenable: c.exploitable,
-        correctifPublieParTenable: coupe(c.correctif, 600),
+        // Texte du correctif : dans « Quoi faire » (quoiFaire.tenable), avec le numéro du contrôle ; seule la date reste ici.
         correctifPublieLe: jour(c.correctifLe),
         machinesTouchees: c.machines,
         reperes: r.reperes,
@@ -553,7 +669,14 @@ export class AssistantVulnerabilites {
           LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
           WHERE cc.cve = ${cve} AND ${present}) AS oui`.execute(k)
       ).rows[0]!.oui;
-    const exposition = await this.surfaceExterne(user, conversationId, cve);
+    const surface = await this.surfaceExterne(user, conversationId, cve);
+    let exposition: Omit<NonNullable<typeof surface>, 'recommandations'> | null = null;
+    let recommandationsAlh: NonNullable<typeof surface>['recommandations'] = [];
+    if (surface) {
+      const { recommandations, ...reste } = surface;
+      exposition = reste;
+      recommandationsAlh = recommandations;
+    }
     if (!faits && !constats.length && !exposition && !detectee)
       return {
         donnees: {
@@ -577,7 +700,13 @@ export class AssistantVulnerabilites {
             ? 'a_confirmer'
             : 'absente';
     const sources = faits || exposition || detectee ? sourcesDe(faits ? [faits] : []) : null;
-    const prioriteCve = sources ? calculerPriorite({ ...faitsDepuisSources(sources), presence }, reglage) : null;
+    // Lot PRIO-1 : un cran de plus si la CVE est présente sur une machine en fin de support (même règle que la fiche).
+    const finDeSupport =
+      (presence === 'detectee' || presence === 'declaree') &&
+      (await sql<{ oui: boolean }>`SELECT ${cveSurMachineFinSupport(cve)} AS oui`.execute(k)).rows[0]!.oui;
+    const prioriteCve = sources
+      ? calculerPriorite({ ...faitsDepuisSources(sources), presence, finDeSupport }, reglage)
+      : null;
     const v = faits?.veille
       ? await k
           .selectFrom('vulnerabilites_veille_cve')
@@ -595,6 +724,15 @@ export class AssistantVulnerabilites {
        WHERE cves @> ARRAY[${cve}]::text[] ORDER BY le DESC, identifiant LIMIT ${BORNES_ASSISTANT_VULN.avis + 1}`.execute(
       k,
     );
+    const quoiFaire = AssistantVulnerabilites.quoiFaire({
+      kev: v ? { action: v.kev_action, echeance: v.kev_echeance } : null,
+      certSante: sources?.certSante ?? null,
+      constats,
+      recommandationsAlh,
+    });
+    const avisRendus = avis.slice(0, BORNES_ASSISTANT_VULN.avis);
+    // Rubriques de « Quoi faire » qui portent un contenu (la mention « aucun correctif… » n'en est pas une).
+    const rubriques = Object.keys(quoiFaire).filter((x) => x !== 'correctif').length;
     return {
       donnees: {
         cve,
@@ -616,18 +754,9 @@ export class AssistantVulnerabilites {
               descriptionNvd: coupe(v?.description, 400),
             }
           : {}),
-        recommandations: {
-          actionExigeeParLeCatalogueKev: coupe(v?.kev_action, 500),
-          echeanceKev: v?.kev_echeance ?? null,
-          ficheCertSante: sources?.certSante
-            ? { correctifExiste: sources.certSante.correctif, contournementExiste: sources.certSante.contournement }
-            : null,
-          correctifsTenable: 'voir chaque constat (correctifPublieParTenable)',
-          ...(exposition
-            ? { recommandationsAlgoLightHouse: 'voir surfaceExterne.alertes (recommandationsDeLEditeur)' }
-            : {}),
-        },
-        avis: avis.slice(0, BORNES_ASSISTANT_VULN.avis).map((a) => ({
+        // Lot ASSISTANT-V1 : contenu publié par chaque source, source nommée ; rubrique vide omise ; sans correctif, la mention.
+        quoiFaire,
+        avis: avisRendus.map((a) => ({
           source: a.source === 'cert-fr' ? 'CERT-FR' : 'CERT Santé',
           identifiant: a.identifiant,
           nature: a.nature,
@@ -640,13 +769,20 @@ export class AssistantVulnerabilites {
         ...(rapprochements.length > produits.length ? { produitsNonRendus: true } : {}),
         ...(exposition ? { surfaceExterne: exposition } : {}),
         ...(prioriteCve ? { priorite: priorite(prioriteCve) } : {}),
-        note: 'Priorité, rang et nombres sont calculés par la plateforme. Les repères M-… désignent des machines, les repères E-… des actifs exposés sur Internet (domaines, adresses) : citez-les tels quels.',
+        note: 'Priorité, rang et nombres sont calculés par la plateforme. Les repères M-… désignent des machines, les repères E-… des actifs exposés sur Internet (domaines, adresses) : citez-les tels quels. « Quoi faire » : reprenez quoiFaire, chaque rubrique avec sa source ; sans correctif publié, dites-le.',
       },
-      elements: 1 + constatsRendus.length + produits.length + (exposition ? 1 : 0),
+      // Ce qui est rendu : la CVE, ses avis, ses constats, ses produits surveillés, les rubriques de « Quoi faire » qui
+      // portent un contenu et la section de la surface externe.
+      elements: 1 + avisRendus.length + constatsRendus.length + produits.length + rubriques + (exposition ? 1 : 0),
     };
   }
 
-  /** Machines à traiter d'abord : toutes celles que la personne lit, ou celles touchées par une CVE ou un constat. */
+  /** Machines à traiter d'abord : toutes celles que la personne lit, ou celles touchées par une CVE ou un constat. Lot
+      ASSISTANT-V1 : aussi les actifs exposés sur Internet (surface externe), sous des repères « E-… » ; sans constat
+      demandé, ceux qui portent une faille suivie exposée, rangés par la faille la plus prioritaire qu'ils portent (ordre
+      du tableau « Cibles par priorité »), puis par nombre de failles exposées ; avec une CVE, ceux qui la portent (mêmes
+      porteurs et mêmes repères que la surface externe d'evaluer_cve, rangés par identifiant). Avec un constat de Tenable :
+      machines seulement. */
   private async machinesPrioritaires(
     user: SessionUser,
     conversationId: string,
@@ -682,86 +818,106 @@ export class AssistantVulnerabilites {
         JOIN vulnerabilites_produits_machines pm ON pm.produit_id = r.produit_id
         WHERE r.cve = ${a.cve} AND r.statut IN ('rattachee', 'confirmee')`.execute(this.db.k);
       ids = new Set(rows.map((r) => r.id));
-      portee = `machines touchées par ${a.cve} (détectées par Tenable ou reliées à un produit surveillé)`;
+      portee = `machines touchées par ${a.cve} (détectées par Tenable ou reliées à un produit surveillé) et actifs exposés sur Internet qui la portent`;
     } else {
       ids = new Set(rangees.map((m) => m.id));
-      portee = 'toutes les machines que la personne peut lire';
+      portee =
+        'toutes les machines que la personne peut lire, et les actifs exposés sur Internet qu’elle peut lire qui portent une faille suivie';
     }
+    const max = Math.min(a.nombre, BORNES_ASSISTANT_VULN.machines);
     // Intersection avec les machines lisibles : machinesRangees ne rend que celles-là.
     const retenues = rangees.filter((m) => ids.has(m.id));
-    const premieres = retenues.slice(0, Math.min(a.nombre, BORNES_ASSISTANT_VULN.machines));
+    const premieres = retenues.slice(0, max);
     const r = await this.reperes(
       conversationId,
       premieres.map((m) => m.id),
     );
+    const actifs = a.constat ? null : await this.actifsPrioritaires(user, conversationId, a.cve ?? null, max);
     return {
       donnees: {
         portee,
         machinesDansLaPortee: retenues.length,
         machines: premieres.map((m) => machinePourModele(m, r.get(m.id) ?? null)),
-        note: 'Ordre du rang calculé par la plateforme (exploitation avérée, puis critères locaux, puis failles critiques et élevées). Citez les repères tels quels, dans cet ordre.',
+        ...(actifs
+          ? {
+              actifsExposesDansLaPortee: actifs.total,
+              ...(actifs.sansFiche ? { actifsExposesSansRepere: actifs.sansFiche } : {}),
+              actifsExposes: actifs.rendus,
+            }
+          : {}),
+        note:
+          'Ordre du rang calculé par la plateforme (exploitation avérée, puis critères locaux, puis failles critiques et élevées). Citez les repères tels quels, dans cet ordre.' +
+          (actifs
+            ? ' Les repères E-… désignent des actifs exposés sur Internet (domaines, adresses), rangés par la plateforme : citez-les tels quels, après les machines, dans leur ordre.'
+            : ''),
       },
-      elements: premieres.length,
+      // Ce qui est rendu : les machines et les actifs exposés, chacun sous son repère.
+      elements: premieres.length + (actifs?.rendus.length ?? 0),
     };
   }
 
-  /** Failles à traiter d'abord : constats et failles déclarées encore à traiter, par priorité. */
+  /** Actifs exposés sur Internet de machines_prioritaires (lot ASSISTANT-V1) : repères « E-… », rang et compteurs, rien
+      d'autre. `cve` : ceux qui la portent ; sinon ceux qui portent une faille suivie exposée (calcul global de la vue
+      d'ensemble, le même pour tout le monde), lus avec les droits de la personne. Null sans surface externe. */
+  private async actifsPrioritaires(user: SessionUser, conversationId: string, cve: string | null, max: number) {
+    if (!this.surface) return null;
+    const exposees: { cve: string; niveau: NiveauPriorite | null }[] = cve
+      ? [{ cve, niveau: null }]
+      : (await this.vue.cibles(user)).exposees;
+    const rang = new Map(exposees.map((x, i) => [x.cve, i]));
+    const niveaux = new Map(exposees.map((x) => [x.cve, x.niveau]));
+    const { actifs, sansFiche } = await this.surface.actifsDesCves(
+      user,
+      exposees.map((x) => x.cve),
+    );
+    const premier = (c: Set<string>) => Math.min(...[...c].map((x) => rang.get(x) ?? Infinity));
+    const ranges = [...actifs]
+      .map(([id, c]) => ({ id, cves: c, premier: premier(c) }))
+      .sort((x, y) => x.premier - y.premier || y.cves.size - x.cves.size || (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
+    const premiers = ranges.slice(0, max);
+    const r = await this.reperesExternes(
+      conversationId,
+      premiers.map((x) => x.id),
+    );
+    return {
+      total: ranges.length + sansFiche,
+      sansFiche,
+      rendus: premiers.map((x, i) => {
+        const parPriorite: Partial<Record<NiveauPriorite, number>> = {};
+        for (const c of x.cves) {
+          const n = niveaux.get(c);
+          if (n) parPriorite[n] = (parPriorite[n] ?? 0) + 1;
+        }
+        return {
+          repere: r.get(x.id) ?? null,
+          rang: i + 1,
+          rangSur: ranges.length,
+          faillesExposees: x.cves.size,
+          ...(cve
+            ? {}
+            : {
+                faillesParPriorite: Object.fromEntries(
+                  NIVEAUX_PRIORITE.flatMap((n) => (parPriorite[n] ? [[n, parPriorite[n]]] : [])),
+                ),
+              }),
+        };
+      }),
+    };
+  }
+
+  /** Failles à traiter d'abord (lot ASSISTANT-V1) : les cibles du tableau « Cibles par priorité » de la vue d'ensemble,
+      telles que l'écran les rend à la personne (même calcul global, même ordre, mêmes nombres lisibles), les premières.
+      Produits à confirmer signalés. Ni nom de machine, ni domaine, ni adresse, ni périmètre : titres, produits, CVE, faits
+      et compteurs seulement. */
   private async faillesPrioritaires(user: SessionUser, nombre: number) {
     this.exigerLecture(user);
-    const constats = await this.failles.constats(user, RechercheConstats.parse({}));
-    const declarees = await this.failles.declarees(user, RechercheDeclarees.parse({}));
-    const ordreGravite = (g: GraviteTenable | null) => (g ? ['critique', 'elevee', 'moyenne', 'faible'].indexOf(g) : 4);
-    const toutes = [
-      ...constats.elements.map((c) => ({
-        tri: { p: c.priorite, g: c.gravite as GraviteTenable | null, n: c.machines },
-        ligne: {
-          nature: 'constat' as const,
-          id: c.id,
-          controle: { numero: c.plugin, nom: coupe(c.nom, 200) },
-          cves: c.cves,
-          ...(c.nombreCves > c.cves.length ? { autresCves: c.nombreCves - c.cves.length } : {}),
-          sansCve: c.nonMaintenu,
-          priorite: priorite(c.priorite),
-          gravite: GRAVITE_TENABLE_LIBELLES[c.gravite],
-          exploitationAveree: c.sources.exploitation.map((x) => SOURCE_EXPLOITATION_LIBELLES[x.source]),
-          exploitable: c.sources.exploitable.map((x) => SOURCE_EXPLOITABLE_LIBELLES[x.source]),
-          epss: valeursRetenues(c.sources.valeurs).epss?.score ?? null,
-          machinesTouchees: c.machines,
-          suivi: { etat: etatSuivi(c.suivi.etat), actionsLiees: c.suivi.nombreActions },
-        },
-      })),
-      ...declarees.elements.map((d) => ({
-        tri: { p: d.priorite, g: d.gravite, n: d.machines },
-        ligne: {
-          nature: 'declaree' as const,
-          id: d.rapprochementId,
-          cve: d.cve,
-          produit: {
-            editeur: coupe(d.produit.editeur, 100),
-            nom: coupe(d.produit.nom, 100),
-            version: coupe(d.produit.versionProduit, 60),
-          },
-          priorite: priorite(d.priorite),
-          gravite: d.gravite ? GRAVITE_TENABLE_LIBELLES[d.gravite] : null,
-          exploitationAveree: d.sources.exploitation.map((x) => SOURCE_EXPLOITATION_LIBELLES[x.source]),
-          exploitable: d.sources.exploitable.map((x) => SOURCE_EXPLOITABLE_LIBELLES[x.source]),
-          epss: d.epss,
-          machinesReliees: d.machines,
-          suivi: { etat: etatSuivi(d.suivi.etat), actionsLiees: d.suivi.nombreActions },
-        },
-      })),
-    ].sort(
-      (a, b) =>
-        ORDRE_NIVEAU(a.tri.p) - ORDRE_NIVEAU(b.tri.p) ||
-        ordreGravite(a.tri.g) - ordreGravite(b.tri.g) ||
-        b.tri.n - a.tri.n,
-    );
-    const rendues = toutes.slice(0, Math.min(nombre, BORNES_ASSISTANT_VULN.failles)).map((x) => x.ligne);
+    const { cibles, total } = await this.vue.cibles(user);
+    const rendues = cibles.slice(0, Math.min(nombre, BORNES_ASSISTANT_VULN.failles)).map(faillePourModele);
     return {
       donnees: {
         failles: rendues,
-        aTraiterAuTotal: constats.total + declarees.total,
-        note: 'Failles encore à traiter (nouvelles, à traiter, en cours), rangées par la priorité calculée par la plateforme.',
+        faillesSuiviesAuTotal: total,
+        note: 'Mêmes failles, dans le même ordre, que le tableau « Cibles par priorité » de la vue d’ensemble du module : priorité calculée par la plateforme, puis exploitation avérée, présence, « exploitable », gravité et EPSS. produitAConfirmer : un produit surveillé est seulement proposé pour cette CVE, la présence reste à confirmer par la personne ; seulementAConfirmer : c’est sa seule présence. Les nombres de machines et d’actifs sont ceux que la personne lit. nature et id : la faille que la personne peut ouvrir (à reprendre dans proposer_action_vulnerabilite) ; absents, elle ne lit aucune machine touchée.',
       },
       elements: rendues.length,
     };

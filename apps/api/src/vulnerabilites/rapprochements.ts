@@ -49,8 +49,7 @@ import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { lireFaitsCve, sourcesDe } from './sources.js';
-import { alerteCertFr, scoreNvd } from './sql.js';
-
+import { alerteCertFr, machinesFinSupport, scoreNvd } from './sql.js';
 const AUTOMATE = { username: 'rapprochement automatique' };
 const empreinte = (x: unknown) => createHash('sha256').update(JSON.stringify(x)).digest('hex');
 
@@ -311,9 +310,12 @@ export class Rapprochements {
       annule_par: string | null;
       annule_le: Date | null;
       annulation_note: string;
+      fin_support: boolean;
     }>`
       SELECT * FROM (
         SELECT r.id, r.cve, r.statut, r.motif, r.version_dans_plage, r.par_identifiant, r.version_decidee, r.decide_par,
+               EXISTS (SELECT 1 FROM vulnerabilites_produits_machines pfs WHERE pfs.produit_id = r.produit_id
+                         AND pfs.machine_id IN (${machinesFinSupport})) AS fin_support,
                r.decide_le, r.note, r.version, r.calcule_le, v.description, v.cvss31_gravite, v.cvss40_gravite,
                ${scoreNvd} AS score, v.epss_score, v.kev_ajout IS NOT NULL AS kev, ${alerteCertFr('v.cve')} AS alerte,
                v.produits_tronques, r.annulation_decision, r.annule_par, r.annule_le, r.annulation_note,
@@ -392,7 +394,11 @@ export class Rapprochements {
         versionDecidee: r.version_decidee,
         calculeLe: r.calcule_le.toISOString(),
         version: r.version,
-        priorite: calculerPriorite({ ...faitsDepuisSources(sources), presence: presenceDe(r.statut) }, reglage),
+        // Lot PRIO-1 : un cran de plus pour une faille déclarée sur une machine en fin de support (rattachée seulement).
+        priorite: calculerPriorite(
+          { ...faitsDepuisSources(sources), presence: presenceDe(r.statut), finDeSupport: r.fin_support },
+          reglage,
+        ),
       };
     });
     const ordre = (s: StatutRapprochement) => ORDRE_FICHE.indexOf(s);

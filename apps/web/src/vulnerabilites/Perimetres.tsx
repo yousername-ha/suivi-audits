@@ -96,7 +96,7 @@ export function CartePerimetre({ c, onOuvrir }: { c: CartePerimetreDto; onOuvrir
         {c.machinesExploitationAveree > 0 && (
           <span className="perim-marque">
             <MarqueZeroDay />
-            {c.machinesExploitationAveree} zero-day
+            {c.machinesExploitationAveree} à exploitation avérée
           </span>
         )}
         {c.machinesExploitables > 0 && (
@@ -308,7 +308,8 @@ export function DetailPerimetre({
             <path d="M12 10v4M12 17.2v.1" />
           </svg>
           <p>
-            <strong>{bandeau}</strong> Leurs tuiles portent la marque « Zero-day » ; la fiche de chacune dit lesquelles.
+            <strong>{bandeau}</strong> Leurs tuiles portent le triangle « exploitation avérée » ; la fiche de chacune
+            dit lesquelles, et lesquelles sont sans correctif connu (zero-day).
           </p>
         </div>
       )}
@@ -381,7 +382,7 @@ export function PerimetresPage() {
         description={
           perimetre
             ? 'Machines du périmètre que vous pouvez lire, par ligne (front, back applicatif, base de données) ou toutes ensemble. Priorité et marques sont calculées par la plateforme, les mêmes pour tout le monde.'
-            : 'Un périmètre par carte, du plus critique au moins critique : machines que vous pouvez lire, priorité la plus haute, failles présentes par gravité, machines marquées zero-day ou exploitables, actifs exposés sur Internet rattachés. Ouvrez une carte pour voir ses machines.'
+            : 'Un périmètre par carte, du plus critique au moins critique : machines que vous pouvez lire, priorité la plus haute, failles présentes par gravité, machines à exploitation avérée ou exploitables, actifs exposés sur Internet rattachés. Ouvrez une carte pour voir ses machines.'
         }
       />
       {!perimetre && (

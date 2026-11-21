@@ -46,6 +46,7 @@ import { RelaisModele, type TransportModele } from './assistant/modele.js';
 import { FluxExternes } from './flux-externes.js';
 import { ProduitsSurveilles } from './vulnerabilites/produits.js';
 import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
+import { PurgeJournaux } from './vulnerabilites/purge-journaux.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
 import { ImportNessus } from './vulnerabilites/import-nessus.js';
@@ -186,12 +187,15 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   /* Assistant (V25, V28) : service de lecture du module, repères des machines et masque de sortie, avec la liste de mots à
      ne pas masquer (V31). */
   const motsNonMasques = new MotsNonMasquesVulnerabilites(db);
+  /* Lot PC1 : vue d'ensemble ; lot ASSISTANT-V1 : ses cibles servent aussi à l'outil failles_prioritaires de l'assistant. */
+  const vueEnsemble = new VueEnsembleVulnerabilites(db, alertesVulnerabilites, surfaceExterne);
   const assistantVulnerabilites = new AssistantVulnerabilites(
     db,
     failles,
     suivi,
     reglagePriorite,
     motsNonMasques,
+    vueEnsemble,
     surfaceExterne,
   );
   assistant.vulnerabilites = assistantVulnerabilites;
@@ -247,7 +251,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       /** Lot V6 : alertes (évaluation par règle, fenêtre d'alerte critique, prise en compte, notifications). */
       alertes: alertesVulnerabilites,
       /** Lot PC1 : vue d'ensemble (poste de commandement), lecture seule, niveau d'alerte et priorités communs à tous. */
-      vueEnsemble: new VueEnsembleVulnerabilites(db, alertesVulnerabilites, surfaceExterne),
+      vueEnsemble,
       /** Lot PC4 : fiche illustrée d'une faille (vecteur traduit, schéma, recommandations par source), lecture seule. */
       fiches: new FichesFailles(db, failles, surfaceExterne, reglagePriorite),
       /** Lot S1 : délais de correction (réglés avec les seuils de priorité), exceptions à échéance, mesure des corrections. */
@@ -262,6 +266,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       correctifs: new CorrectifsVulnerabilites(db, reglagePriorite),
       /** Lot R1 : barre de recherche globale du module (CVE, machines, actifs exposés, applications), lecture seule. */
       recherche: new RechercheVulnerabilites(db, failles, surfaceExterne, produitsSurveilles),
+      /** Lot PRIO-1 : purge du journal des collectes et des exécutions des connecteurs au-delà de 90 jours (tic de l'API). */
+      purgeJournaux: new PurgeJournaux(db, veille),
     },
     modules,
     flux,

@@ -9,6 +9,9 @@
      monde), majoration du lot ALH5 comprise pour une CVE exposée sur un actif qui mène à une machine interne vulnérable. Une
      faille est « présente » par un constat de Tenable présent et non traité (présence « détectée »), une faille déclarée
      rattachée et non traitée (« déclarée »), ou une exposition sur Internet (« exposée »).
+   - Ordre (décision du RSSI du 20/11/2026, lot PERF-04) : à priorité égale, les faits d'une faille sont ceux du contrôle
+     détecté le plus récemment, puis du plus petit identifiant (comparerControlesGlobal) ; failles rendues dans l'ordre de
+     leur clé, objets suivis dans l'ordre de leur identifiant : rien ne dépend de l'ordre des lignes en base.
    - Seuil (décision du RSSI du 18/11/2026, lot V6b) : critique en P1 ; simple en P2 seulement si la faille est
      exploitable (une source exploitable sur l'une de ses présences non traitées) et exposée directement sur Internet
      (présence « exposée ») ; une alerte simple qui ne satisfait plus la règle se clôt « sous le seuil ».
@@ -33,6 +36,7 @@ import {
   type AlerteVulnerabiliteDto,
   calculerPriorite,
   cleAlerte,
+  comparerControlesGlobal,
   deciderAlerte,
   effectivePermissions,
   empreinteAlerte,
@@ -73,7 +77,7 @@ import {
   titreResumeAlertes,
 } from '@suivi/shared';
 import { randomUUID } from 'node:crypto';
-import { sql } from 'kysely';
+import { sql, type RawBuilder } from 'kysely';
 import type { SessionUser } from '../auth.js';
 import { surConnexion, type Client, type Db, type Kdb } from '../db/db.js';
 import { conflict } from '../http/concurrency.js';
@@ -85,8 +89,8 @@ import { tientLeRoleRssi } from './rssi.js';
 import { actifsMenantAUneMachineVulnerable } from './majoration.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { type FaitsTenable, lireFaitsCve, sourcesDe } from './sources.js';
-import { lisible, premiereConstat, present } from './sql.js';
-import { close } from './suivi.js';
+import { lisible, machinesFinSupport, present, produitSurMachineFinSupport } from './sql.js';
+import { close, sousException } from './suivi.js';
 import type { SurfaceExterneAlh } from './surface-externe.js';
 
 const SYSTEME = { username: 'système' };
@@ -167,6 +171,13 @@ export interface Cumul {
   /** Lot N2 : un contrôle présent et non traité qui porte la faille est marqué « exploité par un logiciel malveillant »
       par Tenable (exploitation avérée propre au contrôle, absente des sources de la CVE). */
   malware: boolean;
+  /** Lot PRIO-1 (décision du RSSI du 20/11/2026) : priorités P1 des objets suivis sous exception (risque accepté en
+      vigueur), leurs présences et leurs machines. Ils ne comptent pas dans `priorites` (la faille y reste traitée pour la
+      vue d'ensemble, les délais et le rapport) ; ils gardent seulement l'alerte critique ouverte, marquée « risque
+      accepté ». */
+  exceptionsP1: Priorite[];
+  presencesException: Set<Presence>;
+  machinesException: Set<string>;
 }
 
 /** Objet suivi présent (constat de Tenable présent, faille déclarée rattachée), pour son délai de correction (lot S1) : état
@@ -274,7 +285,7 @@ export class AlertesVulnerabilites {
     );
     const titres = await this.titres(
       k,
-      [...cumuls.values()].filter((x) => x.cve && x.priorites.length).map((x) => x.cve!),
+      [...cumuls.values()].filter((x) => x.cve && (x.priorites.length || x.exceptionsP1.length)).map((x) => x.cve!),
     );
     const bilan: BilanAlertes = { creees: 0, misesAJour: 0, closes: 0, notifiees: 0 };
     const aNotifier: { id: string; niveau: NiveauAlerte; cve: string | null; produit: string | null }[] = [];
@@ -282,12 +293,21 @@ export class AlertesVulnerabilites {
     for (const cle of cles) {
       const x = cumuls.get(cle);
       const ex = existantes.get(cle) ?? null;
-      const p = x ? prioriteLaPlusHaute(x.priorites) : null;
-      const niveau =
+      let p = x ? prioriteLaPlusHaute(x.priorites) : null;
+      let niveau =
         x && p
           ? niveauAlerte({ priorite: p.niveau, exploitable: x.exploitable, exposee: x.presences.has('exposee') })
           : null;
-      const faits = x && p && niveau ? this.faits(x, p, titres, sources) : null;
+      // Lot PRIO-1 (décision du RSSI du 20/11/2026) : une faille P1 dont un objet suivi est sous exception garde son alerte
+      // critique, marquée « risque accepté », tant que rien d'autre ne la rend critique.
+      let risqueAccepte = false;
+      const exception = x ? prioriteLaPlusHaute(x.exceptionsP1) : null;
+      if (niveau !== 'critique' && exception) {
+        p = exception;
+        niveau = 'critique';
+        risqueAccepte = true;
+      }
+      const faits = x && p && niveau ? this.faits(x, p, titres, sources, risqueAccepte) : null;
       const situation: SituationFaille = {
         priorite: p?.niveau ?? null,
         traitee: !!x && x.objets > 0 && x.traites === x.objets && !x.priorites.length,
@@ -396,14 +416,25 @@ export class AlertesVulnerabilites {
   }
 
   /** Vue d'ensemble (lot PC1) : faits de chaque faille suivie, sur tous les faits connus (sans droits), propositions comprises
-      (présence « produit à confirmer »), titres et produits. Lecture seule, nombre de requêtes fixe (aucune par faille). */
-  async situationGlobale(k: Kdb, propositions: readonly PropositionCumul[]) {
+      (présence « produit à confirmer »), titres et produits. Lecture seule, nombre de requêtes fixe (aucune par faille).
+      Lot PERF-04 : `titres` à false, aucun titre n'est lu (la vue d'ensemble lit ceux des seules failles qu'elle rend) ;
+      `machines` à false, les machines des contrôles de Tenable ne sont pas lues (Cumul.machines et ObjetDelai.machines n'ont
+      alors que celles des failles déclarées), pour qui ne les compte pas (vue d'ensemble, dépassements de délai). Priorités,
+      faits et nombres de failles inchangés. */
+  async situationGlobale(
+    k: Kdb,
+    propositions: readonly PropositionCumul[],
+    options: { titres?: boolean; machines?: boolean } = {},
+  ) {
     const reglage = await this.reglage.valeurs();
-    const { cumuls, sources, objets } = await this.calculer(k, reglage, propositions);
-    const titres = await this.titres(
-      k,
-      [...cumuls.values()].flatMap((x) => (x.cve ? [x.cve] : [])),
-    );
+    const { cumuls, sources, objets } = await this.calculer(k, reglage, propositions, options.machines ?? true);
+    const titres =
+      (options.titres ?? true)
+        ? await this.titres(
+            k,
+            [...cumuls.values()].flatMap((x) => (x.cve ? [x.cve] : [])),
+          )
+        : new Map<string, { titre: string | null; produit: string | null }>();
     return { cumuls, sources, titres, objets, reglage };
   }
 
@@ -422,15 +453,20 @@ export class AlertesVulnerabilites {
   }
 
   /** Faits de chaque faille présente, sur tous les faits connus (sans droits). `propositions` (vue d'ensemble seulement) :
-      rapprochements proposés, comptés en présence « produit à confirmer » à part, sans effet sur les alertes. */
+      rapprochements proposés, comptés en présence « produit à confirmer » à part, sans effet sur les alertes. `machines` à
+      false : machines des constats non lues (Cumul.machines et ObjetDelai.machines vides pour les constats). */
   private async calculer(
     k: Kdb,
     reglage: ReglagePriorite,
     propositions: readonly PropositionCumul[] = [],
+    machines = true,
   ): Promise<{ cumuls: Map<string, Cumul>; sources: Map<string, SourcesFailleDto>; objets: ObjetDelai[] }> {
     // Constats de Tenable présents (au moins une détection vue par la dernière synchronisation complète de l'instance de sa
-    // machine), avec leurs CVE, leurs machines et leur état de suivi.
-    const { rows: constats } = await sql<{
+    // machine), avec leurs CVE, leurs machines (présentes, rangées), leur dernière détection présente et leur état de suivi.
+    // Lot PERF-04 : un agrégat des détections par constat et un des CVE, au lieu de sous-requêtes par constat. Mêmes règles
+    // qu'avant : machines où le constat est présent ; première présence sur TOUTES ses détections, sinon son entrée dans la
+    // plateforme (premiereConstat) ; état de suivi lu dans vulnerabilites_suivis (un suivi au plus par constat).
+    const { rows: lignes } = await sql<{
       id: string;
       nom: string;
       gravite: GraviteTenable;
@@ -438,29 +474,54 @@ export class AlertesVulnerabilites {
       epss_score: string | null;
       exploitable: boolean;
       exploite_malware: boolean;
+      kits_exploitation: string[];
+      /** Lot PRIO-1 : présent sur au moins une machine en fin de support. */
+      fin_support_machine: boolean;
       clos: boolean;
       etat: EtatSuiviFaille | null;
-      cves: string[];
-      machines: string[];
+      /** Listes séparées par des virgules (CVE rangées, identifiants de machines rangés) : plus rapides à lire qu'un tableau
+          PostgreSQL pour des dizaines de milliers de lignes. */
+      cves: string;
+      machines: string | null;
       premiere: Date;
+      derniere: Date | null;
       repart: Date | null;
       correctif_publie_le: Date | null;
       fin_support_le: Date | null;
-    }>`SELECT c.id, c.nom, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, c.exploite_malware,
-         ${close('constat')} AS clos,
-         c.correctif_publie_le, c.fin_support_le,
-         (SELECT sc.etat FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id) AS etat,
-         ${premiereConstat} AS premiere,
-         (SELECT sc.delai_repart_le FROM vulnerabilites_suivis sc WHERE sc.constat_id = c.id) AS repart,
-         coalesce((SELECT array_agg(cc.cve ORDER BY cc.cve) FROM vulnerabilites_constat_cves cc
-                   WHERE cc.constat_id = c.id), '{}') AS cves,
-         p.machines
-       FROM vulnerabilites_constats c
-       JOIN LATERAL (
-         SELECT array_agg(DISTINCT d.machine_id) AS machines FROM vulnerabilites_detections d
+    }>`WITH fsm AS MATERIALIZED (${machinesFinSupport}),
+       p AS (
+         SELECT d.constat_id,
+                bool_or(${present} AND d.machine_id IN (SELECT fsm.machine_id FROM fsm)) AS fin_support_machine,
+                ${machines ? sql`array_to_string(array_agg(DISTINCT d.machine_id) FILTER (WHERE ${present}), ',')` : sql`NULL::text`}
+                  AS machines,
+                max(d.derniere_detection) FILTER (WHERE ${present}) AS derniere,
+                min(d.premiere_detection) AS premiere
+         FROM vulnerabilites_detections d
          JOIN vulnerabilites_machines m ON m.id = d.machine_id
          LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
-         WHERE d.constat_id = c.id AND ${present}) p ON p.machines IS NOT NULL`.execute(k);
+         GROUP BY d.constat_id HAVING bool_or(${present})),
+       cv AS (
+         SELECT cc.constat_id, string_agg(cc.cve, ',' ORDER BY cc.cve) AS cves FROM vulnerabilites_constat_cves cc
+         GROUP BY cc.constat_id)
+       SELECT c.id, c.nom, c.gravite, c.cvss3_score, c.epss_score, c.exploitable, c.exploite_malware,
+         c.kits_exploitation,
+         -- Lot PRIO-1 : le contrôle de fin de support lui-même ne monte pas (décision du RSSI du 20/11/2026).
+         (p.fin_support_machine AND NOT (c.fin_support_le IS NOT NULL AND c.fin_support_le <= now())) AS fin_support_machine,
+         ${close('constat')} AS clos,
+         c.correctif_publie_le, c.fin_support_le, s.etat, coalesce(p.premiere, c.cree_le) AS premiere,
+         p.derniere, s.delai_repart_le AS repart, coalesce(cv.cves, '') AS cves, p.machines
+       FROM p JOIN vulnerabilites_constats c ON c.id = p.constat_id
+       LEFT JOIN vulnerabilites_suivis s ON s.constat_id = c.id
+       LEFT JOIN cv ON cv.constat_id = c.id`.execute(k);
+    // Ordre des contrôles (décision du RSSI du 20/11/2026) : à priorité égale, le contrôle détecté le plus récemment fournit
+    // les faits d'une faille, puis le plus petit identifiant. Fixé ici, il ne dépend plus de l'ordre des lignes en base.
+    const constats = lignes
+      .map((c) => ({
+        c: { ...c, cves: c.cves ? c.cves.split(',') : [], machines: c.machines ? c.machines.split(',') : [] },
+        o: { id: c.id, dernierePresente: iso(c.derniere) },
+      }))
+      .sort((a, b) => comparerControlesGlobal(a.o, b.o))
+      .map((x) => x.c);
     // Failles déclarées : CVE rattachées (d'office ou confirmées) à un produit surveillé ; présentes même sans machine
     // reliée (V22).
     const { rows: declarees } = await sql<{
@@ -475,14 +536,16 @@ export class AlertesVulnerabilites {
       machines: string[];
       premiere: Date;
       repart: Date | null;
+      fin_support: boolean;
     }>`SELECT r.id, r.cve, r.produit_id, p.editeur, p.nom, p.famille, ${close('declaree')} AS clos,
+         ${produitSurMachineFinSupport} AS fin_support,
          (SELECT sc.etat FROM vulnerabilites_suivis sc WHERE sc.rapprochement_id = r.id) AS etat,
          r.cree_le AS premiere,
          (SELECT sc.delai_repart_le FROM vulnerabilites_suivis sc WHERE sc.rapprochement_id = r.id) AS repart,
          coalesce((SELECT array_agg(pm.machine_id) FROM vulnerabilites_produits_machines pm
                    WHERE pm.produit_id = r.produit_id), '{}') AS machines
        FROM vulnerabilites_rapprochements r JOIN vulnerabilites_produits p ON p.id = r.produit_id
-       WHERE r.statut IN ('rattachee', 'confirmee')`.execute(k);
+       WHERE r.statut IN ('rattachee', 'confirmee') ORDER BY r.id`.execute(k);
     const expositions = await this.surface.expositionsGlobales(k);
     const menants = expositions.size ? await actifsMenantAUneMachineVulnerable(k, reglage) : new Set<string>();
     const faits = await lireFaitsCve(k, [
@@ -500,8 +563,9 @@ export class AlertesVulnerabilites {
       }
       return s;
     };
-    const priorite = (s: SourcesFailleDto, presence: Presence) =>
-      calculerPriorite({ ...faitsDepuisSources(s), presence }, reglage);
+    // Lot PRIO-1 : `finDeSupport`, la présence est sur une machine en fin de support (un cran de plus).
+    const priorite = (s: SourcesFailleDto, presence: Presence, finDeSupport = false) =>
+      calculerPriorite({ ...faitsDepuisSources(s), presence, finDeSupport }, reglage);
     /** PC1 : garde la gravité et le score EPSS les plus sévères d'une présence non traitée. */
     const RANG: Record<GraviteTenable, number> = { critique: 4, elevee: 3, moyenne: 2, faible: 1 };
     const retenir = (x: Cumul, s: SourcesFailleDto) => {
@@ -540,49 +604,19 @@ export class AlertesVulnerabilites {
             aConfirmer: null,
             correctifTenableLe: null,
             malware: false,
+            exceptionsP1: [],
+            presencesException: new Set(),
+            machinesException: new Set(),
           }),
         );
       return x;
     };
     // Lot S1 : chaque objet suivi présent (constat présent, faille déclarée rattachée), avec la priorité qui fixe son délai
     // (celle des listes : toutes les CVE du constat et Tenable, présence « détectée » ; la CVE, présence « déclarée »).
-    const objets: ObjetDelai[] = [
-      ...constats.map((c): ObjetDelai => ({
-        nature: 'constat',
-        id: c.id,
-        etat: c.etat ?? 'nouvelle',
-        priorite: priorite(
-          sourcesDe(
-            c.cves.flatMap((cve) => (faits.has(cve) ? [faits.get(cve)!] : [])),
-            {
-              gravite: c.gravite,
-              cvss3: nombre(c.cvss3_score),
-              epss: nombre(c.epss_score),
-              exploitable: c.exploitable,
-              malware: c.exploite_malware,
-            },
-          ),
-          'detectee',
-        ).niveau,
-        premiere: c.premiere.toISOString(),
-        repart: iso(c.repart),
-        machines: c.machines,
-        cves: c.cves,
-        nom: c.nom,
-        finSupportLe: iso(c.fin_support_le),
-      })),
-      ...declarees.map((r): ObjetDelai => ({
-        nature: 'declaree',
-        id: r.id,
-        etat: r.etat ?? 'nouvelle',
-        priorite: priorite(sourcesCve(r.cve), 'declaree').niveau,
-        premiere: r.premiere.toISOString(),
-        repart: iso(r.repart),
-        machines: r.machines,
-        cves: [r.cve],
-        nom: `${r.editeur} ${r.nom}`,
-      })),
-    ];
+    // Lot PERF-04 : une seule passe par constat. Les sources de toutes ses CVE (et de Tenable) donnent la priorité de son
+    // délai ; pour un constat d'au plus une CVE, ce sont aussi celles de sa faille (même priorité, calculée une fois). Les
+    // sources d'une faille ne sont calculées que pour un constat non traité (seul à donner une priorité).
+    const objets: ObjetDelai[] = [];
     for (const c of constats) {
       const tenable: FaitsTenable = {
         gravite: c.gravite,
@@ -590,23 +624,55 @@ export class AlertesVulnerabilites {
         epss: nombre(c.epss_score),
         exploitable: c.exploitable,
         malware: c.exploite_malware,
+        kits: c.kits_exploitation,
       };
+      const sTout = sourcesDe(
+        c.cves.flatMap((cve) => (faits.has(cve) ? [faits.get(cve)!] : [])),
+        tenable,
+      );
+      const pTout = priorite(sTout, 'detectee', c.fin_support_machine);
+      objets.push({
+        nature: 'constat',
+        id: c.id,
+        etat: c.etat ?? 'nouvelle',
+        priorite: pTout.niveau,
+        premiere: c.premiere.toISOString(),
+        repart: iso(c.repart),
+        machines: c.machines,
+        cves: c.cves,
+        nom: c.nom,
+        finSupportLe: iso(c.fin_support_le),
+      });
+      const seule = c.cves.length <= 1;
       const cibles = c.cves.length
-        ? c.cves.map((cve) => ({
-            x: cumul(cleAlerte({ cve }), cve),
-            s: sourcesDe(faits.has(cve) ? [faits.get(cve)!] : [], tenable),
-          }))
-        : [{ x: cumul(cleAlerte({ constatId: c.id }), null), s: sourcesDe([], tenable) }];
-      for (const { x, s } of cibles) {
+        ? c.cves.map((cve) => ({ x: cumul(cleAlerte({ cve }), cve), cve }))
+        : [{ x: cumul(cleAlerte({ constatId: c.id }), null), cve: null }];
+      const publie = iso(c.correctif_publie_le);
+      for (const { x, cve } of cibles) {
         x.objets++;
         x.constats.push(c.nom);
-        const publie = iso(c.correctif_publie_le);
         if (publie && (!x.correctifTenableLe || publie < x.correctifTenableLe)) x.correctifTenableLe = publie;
         if (c.clos) {
           x.traites++;
+          // Lot PRIO-1 : sous exception (risque accepté) et en P1, l'objet garde l'alerte critique de la faille.
+          if (c.etat === 'risque_accepte') {
+            const pe = seule
+              ? pTout
+              : priorite(
+                  sourcesDe(cve && faits.has(cve) ? [faits.get(cve)!] : [], tenable),
+                  'detectee',
+                  c.fin_support_machine,
+                );
+            if (pe.niveau === 'P1') {
+              x.exceptionsP1.push(pe);
+              x.presencesException.add('detectee');
+              for (const m of c.machines) x.machinesException.add(m);
+            }
+          }
           continue;
         }
-        x.priorites.push(priorite(s, 'detectee'));
+        const s = seule ? sTout : sourcesDe(cve && faits.has(cve) ? [faits.get(cve)!] : [], tenable);
+        x.priorites.push(seule ? pTout : priorite(s, 'detectee', c.fin_support_machine));
         x.presences.add('detectee');
         if (s.exploitable.length) x.exploitable = true;
         // Lot N2 : exploitation avérée selon Tenable (contrôle présent, non traité), gardée avec la faille.
@@ -617,15 +683,41 @@ export class AlertesVulnerabilites {
         x.etats.push(c.etat ?? 'nouvelle');
       }
     }
+    for (const r of declarees)
+      objets.push({
+        nature: 'declaree',
+        id: r.id,
+        etat: r.etat ?? 'nouvelle',
+        priorite: priorite(sourcesCve(r.cve), 'declaree', r.fin_support).niveau,
+        premiere: r.premiere.toISOString(),
+        repart: iso(r.repart),
+        machines: r.machines,
+        cves: [r.cve],
+        nom: `${r.editeur} ${r.nom}`,
+      });
+    // Objets suivis rendus dans l'ordre de leur identifiant (constats, puis failles déclarées) : les listes du rapport qui
+    // les rangent par date (dépassements, fins de support) départagent les dates égales toujours de la même façon.
+    objets.sort((a, b) =>
+      a.nature !== b.nature ? (a.nature === 'constat' ? -1 : 1) : a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
+    );
     for (const r of declarees) {
       const x = cumul(cleAlerte({ cve: r.cve }), r.cve);
       x.objets++;
       x.produitsDeclares.push({ editeur: r.editeur, nom: r.nom });
       if (r.clos) {
         x.traites++;
+        // Lot PRIO-1 : même règle que pour un constat sous exception.
+        if (r.etat === 'risque_accepte') {
+          const pe = priorite(sourcesCve(r.cve), 'declaree', r.fin_support);
+          if (pe.niveau === 'P1') {
+            x.exceptionsP1.push(pe);
+            x.presencesException.add('declaree');
+            for (const m of r.machines) x.machinesException.add(m);
+          }
+        }
         continue;
       }
-      x.priorites.push(priorite(sourcesCve(r.cve), 'declaree'));
+      x.priorites.push(priorite(sourcesCve(r.cve), 'declaree', r.fin_support));
       x.presences.add('declaree');
       if (sourcesCve(r.cve).exploitable.length) x.exploitable = true;
       x.produits.add(r.produit_id);
@@ -660,11 +752,14 @@ export class AlertesVulnerabilites {
     }
     // Sources de l'exploitation (rangées, avec leur date), gardées avec la CVE.
     for (const x of cumuls.values()) if (x.cve) sourcesCve(x.cve);
-    return { cumuls, sources: cache, objets };
+    // Failles rendues dans l'ordre de leur clé (CVE, puis « constat:<identifiant> ») : les listes qui en reprennent l'ordre
+    // (failles critiques du rapport, bornées) ne dépendent plus de l'ordre des lignes en base (lot PERF-04).
+    const ranges = new Map([...cumuls].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+    return { cumuls: ranges, sources: cache, objets };
   }
 
   /** Titre et produit des CVE à alerter, lus dans la veille (catalogue KEV, puis produit de NVD). */
-  private async titres(k: Kdb, cves: readonly string[]) {
+  async titres(k: Kdb, cves: readonly string[]) {
     const liste = [...new Set(cves)];
     if (!liste.length) return new Map<string, { titre: string | null; produit: string | null }>();
     const { rows } = await sql<{
@@ -684,15 +779,20 @@ export class AlertesVulnerabilites {
     p: Priorite,
     titres: Map<string, { titre: string | null; produit: string | null }>,
     sources: Map<string, SourcesFailleDto>,
+    risqueAccepte = false,
   ): FaitsAlerte {
     const { titre, produit } = this.titreEtProduit(x, titres);
+    // Lot PRIO-1 : une alerte gardée sous exception compte aussi ce que porte l'exception (présences, machines).
+    const presences = risqueAccepte ? new Set([...x.presences, ...x.presencesException]) : x.presences;
+    const machines = risqueAccepte ? new Set([...x.machines, ...x.machinesException]) : x.machines;
     return {
       priorite: p,
-      presences: PRESENCES.filter((s) => x.presences.has(s)),
+      presences: PRESENCES.filter((s) => presences.has(s)),
       exploitation: exploitationDeCumul(x, sources),
-      nombres: { machines: x.machines.size, produits: x.produits.size, actifs: x.actifs },
+      nombres: { machines: machines.size, produits: x.produits.size, actifs: x.actifs },
       titre,
       produit,
+      ...(risqueAccepte ? { risqueAccepte: true } : {}),
     };
   }
 
@@ -807,6 +907,7 @@ export class AlertesVulnerabilites {
     const machines = await this.machinesLisibles(
       user,
       actives.map((l) => l.cle),
+      actives.filter((l) => l.faits.risqueAccepte === true).map((l) => l.cle),
     );
     const cves = actives.flatMap((l) => (l.cve ? [l.cve] : []));
     const surface = cves.length ? await this.surface.surfaceDesCves(user, cves) : new Map();
@@ -837,6 +938,7 @@ export class AlertesVulnerabilites {
         machines: actif ? (machines.get(l.cle) ?? vide) : vide,
         actifs: s ? { lisibles: s.actifs, horsLecture: s.horsLecture } : vide,
         produits: actif ? l.faits.nombres.produits : 0,
+        risqueAccepte: actif && l.faits.risqueAccepte === true,
         version: l.version,
       };
     });
@@ -844,10 +946,19 @@ export class AlertesVulnerabilites {
 
   /** Machines touchées par chaque faille (constats présents et non traités, failles déclarées rattachées et non traitées),
       comptées parmi celles que la personne lit, avec un drapeau quand il y en a d'autres. */
-  private async machinesLisibles(user: SessionUser, cles: readonly string[]): Promise<Map<string, NombreLisible>> {
+  private async machinesLisibles(
+    user: SessionUser,
+    cles: readonly string[],
+    /** Lot PRIO-1 : clés des alertes gardées sous exception : leurs objets sous risque accepté comptent aussi. */
+    exceptions: readonly string[] = [],
+  ): Promise<Map<string, NombreLisible>> {
     const cves = cles.filter((c) => c.startsWith('CVE-'));
     const constats = cles.filter((c) => c.startsWith('constat:')).map((c) => c.slice('constat:'.length));
     if (!cves.length && !constats.length) return new Map();
+    const exc = [...exceptions];
+    const ouvertC = (cle: RawBuilder<string>) =>
+      sql<boolean>`(NOT ${close('constat')} OR (${cle} = ANY(${exc}::text[]) AND ${sousException('constat')}))`;
+    const ouvertD = sql<boolean>`(NOT ${close('declaree')} OR (r.cve = ANY(${exc}::text[]) AND ${sousException('declaree')}))`;
     const { rows } = await sql<{ cle: string; lisibles: number; total: number }>`
       SELECT x.cle, count(DISTINCT x.machine_id) FILTER (WHERE x.lu)::int AS lisibles,
         count(DISTINCT x.machine_id)::int AS total
@@ -858,20 +969,20 @@ export class AlertesVulnerabilites {
         JOIN vulnerabilites_detections d ON d.constat_id = c.id
         JOIN vulnerabilites_machines m ON m.id = d.machine_id
         LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
-        WHERE cc.cve = ANY(${cves}::text[]) AND ${present} AND NOT ${close('constat')}
+        WHERE cc.cve = ANY(${cves}::text[]) AND ${present} AND ${ouvertC(sql<string>`cc.cve`)}
         UNION ALL
         SELECT 'constat:' || c.id::text, m.id, ${lisible(user)}
         FROM vulnerabilites_constats c
         JOIN vulnerabilites_detections d ON d.constat_id = c.id
         JOIN vulnerabilites_machines m ON m.id = d.machine_id
         LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
-        WHERE c.id = ANY(${constats}::uuid[]) AND ${present} AND NOT ${close('constat')}
+        WHERE c.id = ANY(${constats}::uuid[]) AND ${present} AND ${ouvertC(sql<string>`'constat:' || c.id::text`)}
         UNION ALL
         SELECT r.cve, m.id, ${lisible(user)}
         FROM vulnerabilites_rapprochements r
         JOIN vulnerabilites_produits_machines pm ON pm.produit_id = r.produit_id
         JOIN vulnerabilites_machines m ON m.id = pm.machine_id
-        WHERE r.cve = ANY(${cves}::text[]) AND r.statut IN ('rattachee', 'confirmee') AND NOT ${close('declaree')}
+        WHERE r.cve = ANY(${cves}::text[]) AND r.statut IN ('rattachee', 'confirmee') AND ${ouvertD}
       ) x GROUP BY x.cle`.execute(this.db.k);
     return new Map(rows.map((r) => [r.cle, { lisibles: r.lisibles, horsLecture: r.total > r.lisibles }]));
   }

@@ -45,6 +45,7 @@ const rien = () => undefined;
 
 const avis = (a: Partial<AvisVeilleDto> = {}): AvisVeilleDto => ({
   id: '00000000-0000-4000-8000-0000000000a1',
+  parc: { presentes: [], exposees: [] },
   source: 'cert-fr',
   identifiant: 'CERTFR-2026-ALE-9001',
   nature: 'alerte',

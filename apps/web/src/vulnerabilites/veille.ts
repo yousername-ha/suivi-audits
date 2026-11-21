@@ -147,7 +147,7 @@ export const alerteUrgente = (a: Pick<AvisVeilleDto, 'source' | 'nature'>) =>
     CERT Santé), preuve de concept disponible (fiche du CERT Santé). La présence sur le parc et l'exposition sur Internet ne
     sont pas dans la réponse de la liste : elles se lisent dans la fiche de chaque CVE. */
 export function marquesAvis(
-  a: Pick<AvisVeilleDto, 'source' | 'nature' | 'cves' | 'fiche'>,
+  a: Pick<AvisVeilleDto, 'source' | 'nature' | 'cves' | 'fiche'> & { parc?: AvisVeilleDto['parc'] },
 ): { libelle: string; etat: 'erreur' | 'attention' }[] {
   const out: { libelle: string; etat: 'erreur' | 'attention' }[] = [];
   if (alerteUrgente(a) && a.cves.length)
@@ -155,7 +155,19 @@ export function marquesAvis(
   if (a.fiche?.exploitee === 'oui') out.push({ libelle: 'Exploitée selon le CERT Santé', etat: 'erreur' });
   if (a.fiche?.preuveConcept === 'disponible')
     out.push({ libelle: 'Preuve de concept disponible (CERT Santé)', etat: 'attention' });
+  // Lot PRIO-1 (décision du RSSI du 20/11/2026) : une CVE citée concerne la plateforme.
+  if (a.parc?.presentes.length)
+    out.push({ libelle: marqueParc('Présente sur le parc', a.parc.presentes, a.cves), etat: 'attention' });
+  if (a.parc?.exposees.length)
+    out.push({ libelle: marqueParc('Exposée sur Internet', a.parc.exposees, a.cves), etat: 'erreur' });
   return out;
+}
+
+/** « Présente sur le parc », ou « Présente sur le parc (2 CVE citées sur 5) » quand toutes ne le sont pas. */
+function marqueParc(libelle: string, concernees: readonly string[], citees: readonly string[]): string {
+  return concernees.length === citees.length
+    ? libelle
+    : `${libelle} (${concernees.length} CVE citée${concernees.length > 1 ? 's' : ''} sur ${citees.length})`;
 }
 
 /** Libellé de la nature : « Alerte » ou « Avis ». */

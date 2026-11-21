@@ -11,7 +11,9 @@ import {
   type FailleCorrectifDto,
   MARQUES_VIDES,
   type MachineMarqueeDto,
-  PROPOSITION_ZERO_DAY,
+  estZeroDay,
+  libelleMarqueExploitation,
+  REGLE_ZERO_DAY,
   type VueEnsembleDto,
 } from '@suivi/shared';
 import { readFileSync } from 'node:fs';
@@ -187,7 +189,9 @@ describe('vue « Correctifs »', () => {
         onOuvrir: rien,
       }),
     );
-    expect(html).toContain('Zero-day : exploitation avérée');
+    // Lot PRIO-1 : exploitée sans correctif connu, la faille est dite « zero-day ».
+    expect(html).toContain('Zero-day : exploitée, sans correctif connu');
+    expect(html).not.toContain('Zero-day : exploitation avérée');
     expect(html).toContain('Exploitée, sans correctif connu');
     expect(html).toContain('Aucun correctif connu');
     expect(html).toContain('CERT Santé (mention « Un correctif existe »)');
@@ -263,9 +267,7 @@ describe('fin de support et précision du zero-day sur les machines', () => {
     expect(html).toContain('Fin de support');
     expect(html).toContain('Sans correctif connu');
     expect(html).toContain('parc-marque--zd');
-    expect(nomAccessibleMachine(m())).toContain(
-      'zero-day, exploitation avérée, exploitée, sans correctif connu, fin de support',
-    );
+    expect(nomAccessibleMachine(m())).toContain('exploitation avérée, zero-day, sans correctif connu, fin de support');
     expect(nomAccessibleMachine(m({ finDeSupport: false, marques: MARQUES_VIDES }))).not.toContain('fin de support');
     sansStyle(html);
   });
@@ -338,8 +340,9 @@ describe('vue d’ensemble et fiche illustrée', () => {
     expect(html).toContain('Exploitée, correctif disponible');
     expect(html).toContain('Fin de support le 14/10/2025');
     expect(html).toContain('Tenable : date de fin de support du logiciel (seolDate) passée');
-    // La marque existante n'est pas renommée.
-    expect(html).toContain('Zero-day : exploitation avérée');
+    // Lot PRIO-1 : exploitée avec un correctif disponible, la faille est dite « exploitation avérée », pas « zero-day ».
+    expect(html).toContain('<span>Exploitation avérée</span>');
+    expect(html).not.toContain('Zero-day');
     const nr = rendu(createElement(FicheFailleIllustree, { f: ficheFaille() }));
     expect(nr).toContain('Correctif non renseigné : aucune source rangée ne dit s’il en existe un.');
     expect(nr).toContain('Exploitée, correctif non renseigné');
@@ -352,10 +355,21 @@ describe('aide et sources du lot', () => {
     expect(texte).toContain('« n mises à jour à faire pour m failles »');
     expect(texte).toContain('ce qui ne veut pas dire qu’il n’en existe pas');
     expect(texte).toContain('Fin de support');
-    expect(texte).toContain('La fin de support ne change pas la priorité.');
+    // Lot PRIO-1 : la fin de support monte la priorité d'un cran (décision du RSSI du 19/11/2026).
+    expect(texte).toContain(
+      'Une faille présente sur une machine en fin de support gagne un cran de priorité (P1 reste P1)',
+    );
+    expect(texte).not.toContain('La fin de support ne change pas la priorité.');
   });
-  it('la proposition sur le mot « zero-day » est écrite comme à confirmer, sans être appliquée', () => {
-    expect(PROPOSITION_ZERO_DAY).toContain('à confirmer par le RSSI');
+  it('lot PRIO-1 : le mot « zero-day » est réservé à une faille exploitée sans correctif connu', () => {
+    expect(REGLE_ZERO_DAY).toContain('aucun correctif n’est connu');
+    expect(REGLE_ZERO_DAY).toContain('ni « récente », ni « critique »');
+    expect(libelleMarqueExploitation('sans_correctif')).toBe('Zero-day : exploitée, sans correctif connu');
+    expect(libelleMarqueExploitation('corrigible')).toBe('Exploitation avérée');
+    expect(libelleMarqueExploitation('correctif_non_renseigne')).toBe('Exploitation avérée');
+    expect(libelleMarqueExploitation(null)).toBe('Exploitation avérée');
+    expect(estZeroDay('corrigible')).toBe(false);
+    expect(estZeroDay('sans_correctif')).toBe(true);
   });
   it('aucune prop style dans les sources du lot', () => {
     for (const f of ['Correctifs.tsx', 'correctifs.ts']) {

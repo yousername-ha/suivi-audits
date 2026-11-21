@@ -94,6 +94,25 @@ export const prochaineAffichee = (derniere: Date | string | null, frequenceHeure
   return e.getTime() < maintenant.getTime() ? maintenant : e;
 };
 
+/* ------------------------------------------------------------------ Lot PRIO-1 : quatre réglages (décision du 20/11/2026) */
+/** Plancher de NVD, en heures : vaut pour la planification ET pour « Collecter maintenant » (aucune lecture de NVD moins de
+    deux heures après la précédente demande, manuelle ou automatique). */
+export const PLANCHER_NVD_HEURES = Math.min(...FREQUENCES_VEILLE.nvd);
+/** Une source de la veille passe « En retard » après ce nombre de périodes sans collecte réussie (au lieu de 36 h fixes). */
+export const PERIODES_AVANT_RETARD = 3;
+/** Journal des collectes de la veille et des exécutions des connecteurs : purgé au-delà de ce nombre de jours. */
+export const JOURNAUX_CONSERVATION_JOURS = 90;
+
+/** La source est-elle en retard : aucune collecte réussie, ou la dernière date de plus de trois périodes ? */
+export function sourceEnRetard(
+  derniereReussite: Date | string | null,
+  frequenceHeures: number,
+  maintenant: Date,
+): boolean {
+  if (!derniereReussite) return true;
+  return maintenant.getTime() - date(derniereReussite).getTime() > PERIODES_AVANT_RETARD * frequenceHeures * HEURE_MS;
+}
+
 /* ------------------------------------------------------------------ Avertissements (tableau du RSSI) */
 export const AVERTISSEMENT_NVD =
   'NVD demande de ne pas être lu automatiquement plus d’une fois toutes les deux heures : c’est le plancher, il ne peut pas être abaissé.';

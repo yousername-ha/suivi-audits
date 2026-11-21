@@ -40,6 +40,7 @@ const rien = () => undefined;
 const alerte = (a: Partial<AlerteVulnerabiliteDto> = {}): AlerteVulnerabiliteDto => ({
   id: '00000000-0000-4000-8000-0000000000a1',
   cle: 'CVE-2026-90001',
+  risqueAccepte: false,
   cve: 'CVE-2026-90001',
   titre: 'Fictional Product Remote Code Execution',
   produit: 'Produit fictif',

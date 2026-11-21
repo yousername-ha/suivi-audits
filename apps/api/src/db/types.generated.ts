@@ -1856,6 +1856,7 @@ export interface VulnerabilitesConstats {
   vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
   cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
   exploite_malware: Generated<boolean>;
+  kits_exploitation: Generated<string[]>;
 }
 
 export interface VulnerabilitesDepassements {

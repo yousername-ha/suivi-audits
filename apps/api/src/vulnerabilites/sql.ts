@@ -35,6 +35,40 @@ export const detecteeSurMachine = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabili
   JOIN vulnerabilites_constat_cves cc ON cc.constat_id = d.constat_id
   WHERE d.machine_id = m.id AND cc.cve = r.cve AND ${present})`;
 
+/** Lot PRIO-1 (décision du RSSI du 20/11/2026) : machines en fin de support, la même règle que la fiche d'une machine (lot
+    S3) : au moins un contrôle présent dont la date de fin de support de Tenable (`seolDate`) est passée, quel que soit son
+    état de suivi. Sous-requête sans corrélation (évaluée une fois par requête), à employer en `colonne IN (…)` ; partie des
+    constats datés (peu nombreux), puis de leurs détections. Les mêmes pour tout le monde (un fait, pas un droit). Colonne :
+    machine_id. */
+export const machinesFinSupport = sql<{ machine_id: string }>`SELECT dfs.machine_id
+  FROM vulnerabilites_constats cfs
+  JOIN vulnerabilites_detections dfs ON dfs.constat_id = cfs.id
+  JOIN vulnerabilites_machines mfs ON mfs.id = dfs.machine_id
+  LEFT JOIN vulnerabilites_tenable_etat efs ON efs.integration_id = mfs.integration_id
+  WHERE cfs.fin_support_le IS NOT NULL AND cfs.fin_support_le <= now()
+    AND dfs.vu_numero >= coalesce(efs.numero_complet, 0)`;
+
+/** Lot PRIO-1 : le produit surveillé `p` est relié à au moins une machine en fin de support (toutes machines : un fait
+    commun, comme le calcul global des alertes). */
+export const produitSurMachineFinSupport = sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_produits_machines pfs
+  WHERE pfs.produit_id = p.id AND pfs.machine_id IN (${machinesFinSupport}))`;
+
+/** Lot PRIO-1 : la CVE est présente sur une machine en fin de support, détectée par Tenable (détection présente) ou déclarée
+    (produit surveillé rattaché, relié à la machine). Pour la fiche d'une CVE ; un fait commun à tous. */
+export const cveSurMachineFinSupport = (cve: string): RawBuilder<boolean> =>
+  sql<boolean>`(EXISTS (SELECT 1 FROM vulnerabilites_constat_cves ccf
+      JOIN vulnerabilites_detections df ON df.constat_id = ccf.constat_id
+      JOIN vulnerabilites_machines mf ON mf.id = df.machine_id
+      LEFT JOIN vulnerabilites_tenable_etat ef ON ef.integration_id = mf.integration_id
+      JOIN vulnerabilites_constats cf ON cf.id = ccf.constat_id
+      WHERE ccf.cve = ${cve} AND df.vu_numero >= coalesce(ef.numero_complet, 0)
+        AND df.machine_id IN (${machinesFinSupport})
+        -- Décision du RSSI du 20/11/2026 : le contrôle de fin de support lui-même ne fait pas monter ses CVE.
+        AND NOT (cf.fin_support_le IS NOT NULL AND cf.fin_support_le <= now()))
+    OR EXISTS (SELECT 1 FROM vulnerabilites_rapprochements rf
+      JOIN vulnerabilites_produits_machines pmf ON pmf.produit_id = rf.produit_id
+      WHERE rf.cve = ${cve} AND rf.statut IN ('rattachee', 'confirmee') AND pmf.machine_id IN (${machinesFinSupport})))`;
+
 /** Première présence connue du constat `c` chez nous (lot S1) : la première détection de Tenable sur une de ses machines,
     sinon son entrée dans la plateforme (aucune date inventée). Sert à l'âge et au délai de correction. */
 export const premiereConstat = sql<Date>`coalesce((SELECT min(dp.premiere_detection) FROM vulnerabilites_detections dp

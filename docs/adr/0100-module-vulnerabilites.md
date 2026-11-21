@@ -541,7 +541,7 @@ joué en local seulement, sur une pile sans Docker.
 
 ### Formes constatées sur un espace réel (17/11/2026)
 
-Le RSSI a relevé des réponses anonymisées avec `scripts/dev/exemples-alh.ps1` (aucune n'est dans le dépôt). Elles confirment
+Le RSSI a relevé des réponses anonymisées avec `scripts/dev/exemples-alh.ps1` (aucune n'est dans le dépôt ; le script en a été retiré le 20/11/2026). Elles confirment
 que les listes sont des tableaux directs, sans pagination, et que les volumes tiennent très en dessous des bornes. Trois
 formes ont demandé une adaptation, couverte par un test : la liste des alertes peut rendre une date de création vide (an 1),
 le détail porte la vraie ; « * » tient lieu de valeur absente pour le produit et le nom affiché d'une technologie, dont la
@@ -3205,11 +3205,371 @@ pas, et ce budget est à resserrer quand le calcul global sera réécrit.
 
 1. **JIT** : `jit = off` pour le rôle applicatif ou le serveur ôterait encore environ 0,3 s à la vue d'ensemble (décision du
    socle et du RSSI, non prise ici).
-2. **Ordre du calcul global** (vue d'ensemble, alertes, instantanés) : le fixer explicitement (par exemple par identifiant)
-   rendrait le résultat indépendant de l'ordre physique et permettrait la réécriture ensembliste ; il changerait, à priorité
-   égale, les faits affichés de certaines cibles : à décider.
+2. **Ordre du calcul global** (vue d'ensemble, alertes, instantanés) : **tranché le 20/11/2026 par le RSSI** : à priorité
+   égale, le contrôle détecté le plus récemment. Réalisé par le lot PERF-04 (addendum ci-dessous).
 3. **PERF-09** (bornes de synchronisation) : **tranché le 20/11/2026 par le RSSI** : la synchronisation de Tenable Security
    Center reste bornée à 20 000 détections (`TENABLE_BORNES`) pour la version 7.5.0, sans relèvement ni découpage par dépôt.
    Conséquence connue et acceptée : au-delà de la borne, la synchronisation est rendue « incomplète », ce que l'écran
    affiche, et plus rien n'est marqué comme disparu tant qu'une synchronisation complète n'a pas eu lieu. À réexaminer
    quand le nombre réel de détections du parc sera connu.
+
+## Addendum du 20/11/2026 — lot PERF-04 : ordre du calcul global fixé, calcul ensembliste
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Réalise la décision du
+RSSI du 20/11/2026 sur le point ouvert 2 de l'addendum « lot PERF » et la réécriture du calcul global retirée de ce lot.
+**Aucune migration** (097 et 098 restent réservées ; 099 non utilisée), aucune route nouvelle, aucun champ d'échange changé,
+aucune dépendance, aucun flux sortant ; règles de priorité, d'alerte, de majoration, délais, droits et bornes de
+synchronisation (PERF-09) inchangés ; `apps/api/src/assistant/*` non touché.
+
+### Décision et règle écrite
+
+Quand plusieurs contrôles de Tenable (constats) présents et non traités portent la même faille du calcul global (une CVE, ou
+un constat sans CVE) et donnent la même priorité, l'un d'eux fournit les faits affichés de la priorité (la liste des faits :
+présence, gravité, score EPSS, sources de l'exploitation…). C'était le premier lu dans l'ordre physique de la table, qui
+n'était écrit nulle part et changeait seul (CLUSTER, VACUUM FULL, restauration). **Décision du RSSI** : à priorité égale, le
+contrôle détecté le plus récemment. Règle écrite (`comparerControlesGlobal`, `packages/shared/src/priorite-vulnerabilites.ts`) :
+
+1. la dernière détection **présente** la plus récente du constat (maximum de `derniere_detection` de ses détections
+   présentes au sens de la dernière synchronisation complète de leur instance, toutes machines confondues : le calcul global
+   est le même pour tout le monde, lot ALH5, décision A) ; un constat traité (corrigé, risque accepté, non concerné) ne
+   donne aucune priorité et n'entre pas en compte ; une détection absente non plus ;
+2. un constat dont aucune détection présente n'est datée vient après tous les constats datés ;
+3. à égalité parfaite, le plus petit identifiant du constat.
+
+L'ordre est total : deux calculs rendent le même résultat quel que soit l'ordre des lignes (vérifié par un test qui force un
+`CLUSTER` et réécrit des lignes, et sur le banc par un `CLUSTER` de la table des constats). Les failles déclarées et
+l'exposition sur Internet viennent, comme avant, après les contrôles (une faille déclarée d'une CVE donne toujours la même
+priorité ; l'exposition est unique par CVE). `prioriteLaPlusHaute` est inchangée (la première à niveau égal).
+
+**Ni la priorité, ni le niveau d'une alerte, ni aucun nombre ne changent** : seuls, à priorité égale, les faits montrés.
+
+### Autres ordres fixés (choix de réalisation, à confirmer par le RSSI)
+
+L'ordre physique décidait aussi de deux listes du rapport de pilotage, bornées à 200 lignes : les failles critiques (P1),
+dans l'ordre de rencontre des failles, et les dépassements de même échéance. Pour que le rapport ne dépende plus de l'ordre
+des lignes, le calcul global rend les failles **dans l'ordre de leur clé** (CVE, puis « constat:<identifiant> ») et les
+objets suivis **dans l'ordre de leur identifiant** (constats, puis failles déclarées). Les totaux du rapport ne changent pas ;
+quand une liste dépasse 200 lignes, les lignes listées peuvent changer à la mise à jour. Les fins de support et les autres
+lectures (vue d'ensemble, tendances, alertes, délais) avaient déjà un ordre propre.
+
+**Décision du RSSI du 20/11/2026** : dans le rapport, les failles critiques sont listées **présentes depuis le plus
+longtemps d'abord** (sans date en dernier, puis par clé), et les dépassements de même échéance dans le même ordre (puis par
+identifiant). La borne de 200 lignes garde ainsi les plus anciennes. Les totaux ne changent pas. Test :
+`apps/api/test/vulnerabilites-correctifs.test.ts`.
+
+### Alertes existantes à la mise à jour
+
+L'empreinte d'une alerte contient les faits de la priorité. À la première évaluation après la mise à jour (fin d'une
+synchronisation, d'une collecte, ou décision qui change les faits), une alerte dont le contrôle retenu change est **mise à
+jour** (`deciderAlerte` : même niveau, empreinte différente) : faits, empreinte, date de mise à jour et version avancent ;
+**aucune notification** (la mise à jour ne se rejoue pas), **ni réouverte ni close**, niveau et priorité inchangés, prise en
+compte conservée, pas d'entrée `vulnerabilites.alerte.niveau` (seule l'entrée de synthèse
+`vulnerabilites.alertes.evaluees` compte la mise à jour). Une prise en compte préparée sur l'ancienne version reçoit un
+conflit de version (409) et se refait après rechargement. Aucune migration n'est nécessaire.
+
+### Réécriture du calcul global
+
+- **Constats présents** (`AlertesVulnerabilites.calculer`) : un agrégat des détections par constat (machines présentes,
+  dernière détection présente, première détection) et un agrégat des CVE, au lieu de sous-requêtes par constat ; état de
+  suivi par jointure (un suivi au plus par constat). Mêmes règles qu'avant. Listes de machines et de CVE rendues en texte
+  séparé par des virgules (lecture d'un tableau PostgreSQL trop coûteuse pour 100 000 identifiants). Coût estimé sous le
+  seuil du JIT : la requête n'est plus compilée (`EXPLAIN ANALYZE` sur le jeu du banc : 794 ms dont 418 ms de JIT → 160 à
+  210 ms).
+- **Une passe par constat** : la priorité de son délai et celle de sa faille sont calculées une fois quand il n'a qu'une CVE ;
+  les sources d'une faille ne sont calculées que pour un constat non traité.
+- **Vue d'ensemble** : le calcul global ne lit ni les titres de toutes les failles (seulement ceux des failles rendues) ni
+  leurs machines (inutiles à la vue : ses nombres de machines lisibles ont leur propre requête ; les machines en fin de
+  support sont relues à partir des constats, même requête qu'avant, même nombre) ; les mesures de la variation sur sept jours
+  sont composées sans machines (la vue ne montre pas leur total) ; clés de l'ordre des cibles calculées une fois. Les
+  dépassements de délai (`DelaisVulnerabilites`) lisent aussi le calcul sans titres ni machines.
+- Fonctions de service sans changement de résultat : `parSource` (`sources.ts`) et `valeursRetenues` (paquet partagé)
+  trouvent la valeur retenue en un passage au lieu d'un tri.
+- Nombre de requêtes inchangé : vue d'ensemble 17, évaluation des alertes 14, rapport 44.
+
+### Mesures (banc local, avant / après)
+
+Même jeu et même poste que l'addendum « lot PERF » (1 020 machines, 10 050 constats, 113 800 détections présentes, 20 000
+CVE ; API dans le processus, sources TypeScript chargées par `tsx`, PostgreSQL 16 local, 4 cœurs ; **pas l'image de
+production ni le serveur réel**). Médiane / 95e centile en ms ; 15 appels après échauffement (3 pour les deux lecteurs).
+
+| Mesure | Compte | Avant | Après | Requêtes |
+| --- | --- | --- | --- | --- |
+| `vue-ensemble` | administrateur | 1 386 / 1 606 | 575 / 725 | 17 / 17 |
+| `vue-ensemble` | RSSI non administrateur | 1 332 / 1 580 | 557 / 836 | 17 / 17 |
+| `vue-ensemble` | lecteur d'un périmètre | 1 365 / 1 390 | 598 / 610 | 17 / 17 |
+| `vue-ensemble` | lecteur sans périmètre | 1 288 / 1 487 | 543 / 570 | 17 / 17 |
+| évaluation des alertes (fin de synchronisation) | — | 1 236 / 1 303 | 613 / 641 | 14 / 14 |
+| `rapport` (mois) | administrateur | 1 206 / 1 453 | 824 / 935 | 44 / 44 |
+| `rapport` (mois) | RSSI non administrateur | 1 222 / 1 416 | 844 / 1 009 | 44 / 44 |
+
+Requête la plus lente d'un appel de la vue d'ensemble : 629 à 817 ms → 72 à 108 ms. Sur le code compilé (`tsc`, comme
+l'image), vue d'ensemble de 560 à 590 ms en médiane et 690 à 770 ms au 95e centile. Le banc du 19/11/2026 mesurait sur un
+serveur environ 1,6 à 2 fois plus lent : la vue d'ensemble y est attendue entre 0,9 et 1,5 s au 95e centile, à confirmer
+par un nouveau passage du banc. Alertes, tendances : inchangées (15 à 25 ms et 5 à 9 ms).
+
+Test de non-régression `performance-vulnerabilites` (5 000 constats) : vue d'ensemble 305 à 439 ms au 95e centile sur trois
+passages (761 à 797 ms avant). Le budget de CI de la vue d'ensemble revient de 2,4 s à **1,5 s** (`SEUIL_SYNTHESE_MS`, celui
+de la recherche) : il laisse plus de trois fois la mesure locale, et le premier passage en CI était 2,1 fois plus lent que le
+poste (1 692 ms pour 797 ms).
+
+### Réponses comparées avant / après (quatre comptes)
+
+Réponses complètes de la vue d'ensemble, des alertes (deux pages et fenêtre), des tendances (plateforme et périmètre) et du
+rapport (JSON et CSV, plateforme et périmètre), pour l'administrateur, le RSSI non administrateur, un lecteur d'un périmètre
+et un lecteur sans périmètre, plus le calcul global complet et les objets suivis :
+
+- **calcul global** : 16 554 failles ; **647** dont les faits de la priorité changent, toutes à priorité égale ; aucun autre
+  écart (priorité, présences, nombres de machines et d'objets, traités, « exploitable », gravité et EPSS retenus, correctif,
+  constats, états) ;
+- **vue d'ensemble** : 14 des 208 cibles rendues changent de faits (même niveau, même ordre, mêmes cases) ; tuiles, totaux,
+  niveau, cases, nombres lisibles, journal identiques, pour les quatre comptes ;
+- **alertes** : 1 alerte sur 923 change de faits (même niveau, même priorité) ; listes rendues identiques ; à la première
+  évaluation après la mise à jour (alertes de l'ancien code rechargées) : 1 mise à jour, 0 création, 0 clôture, 0
+  notification, aucun changement d'état (l'alerte prise en compte le reste) ;
+- **tendances** : identiques ;
+- **rapport** : totaux identiques (failles critiques 923 et P2 11 156 pour la plateforme ; 854 et 10 217 pour le
+  périmètre) ; failles critiques listées dans l'ordre des CVE (131 des 200 lignes communes, contenu identique pour celles-ci)
+  ; dépassements : même total (7 611), 200 lignes listées différentes parmi les échéances égales ; fins de support
+  identiques ; le CSV suit ;
+- **droits** : codes de réponse identiques (404 du périmètre illisible pour le RSSI et le lecteur sans périmètre) ; nombres
+  lisibles identiques.
+
+Avec l'ancien code, un `CLUSTER` de la table des constats changeait à lui seul la vue d'ensemble et le rapport ; avec le
+nouveau, les réponses sont identiques (hors heure de production).
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus (ordre des failles critiques et des dépassements du rapport).
+2. JIT (point ouvert 1 de l'addendum « lot PERF ») : n'est plus déclenché par le calcul global ; décision du socle.
+3. Nouveau passage du banc de performance sur le serveur de mesure, pour confirmer la vue d'ensemble sous 1,5 s.
+
+## Addendum du 20/11/2026 — lot ASSISTANT-V1 : outils de l'assistant alignés sur la vue d'ensemble, actifs exposés, « Quoi faire »
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**,
+aucune route nouvelle, aucune dépendance, aucun flux sortant ; `apps/api/src/assistant/*`, `apps/web/src/assistant/*`,
+`docker-compose.yml`, `docker/*` et `scripts/exploitation-worker.py` non touchés (descriptions des outils et consigne
+inchangées). Fichier central : `apps/api/src/vulnerabilites/assistant.ts`.
+
+### Décisions du RSSI (20/11/2026)
+
+1. `failles_prioritaires` lit la **même source que le tableau « Cibles par priorité »** de la vue d'ensemble, avec les mêmes
+   droits de lecture, et signale les produits « à confirmer » : pour une même personne, l'outil et l'écran donnent les mêmes
+   failles dans le même ordre.
+2. `machines_prioritaires` rend aussi les **actifs exposés** (surface externe), sous des repères `E-001…`, à côté des
+   machines `M-001…`.
+3. `evaluer_cve` : la rubrique « Quoi faire » ne contient plus de renvoi interne (« voir chaque constat », « voir
+   surfaceExterne.alertes ») ; elle porte le contenu réel, avec sa source nommée ; une rubrique vide est omise ; sans
+   correctif, la mention explicite « aucun correctif publié par les sources lues ».
+4. `sources: []` gardé tel quel ; `elements` reflète ce que chaque outil rend.
+
+Rien d'identifiant ne part vers l'assistant : ni nom de machine, ni adresse, ni domaine, ni rôle, ni nom de périmètre ;
+seulement des repères et des compteurs, remplacés en local à l'affichage (mécanisme du lot « Assistant » et du lot ALH2,
+inchangé, masque compris).
+
+### Réalisation
+
+- **`failles_prioritaires`** : `VueEnsembleVulnerabilites.cibles(user)` rend les cibles telles que la route de la vue
+  d'ensemble les rend à la personne. `lire` et `cibles` partagent le même code (failles suivies du calcul global, ordre
+  `comparerCibles`, bornes par case, puis titres, machines lisibles par `lisible(user)` — donc `perimetresVisibles(user)` —,
+  actifs lisibles et fiche lisible) : aucune seconde règle à tenir. L'outil rend les premières cibles (25 au plus), dans
+  l'ordre : rang, CVE, titre et produit (ceux de l'écran), priorité et faits, présences (libellés), `produitAConfirmer`
+  (un produit surveillé est seulement proposé), `seulementAConfirmer` (c'est la seule présence), exploitée, exploitable,
+  gravité, EPSS, état de suivi, nombres de machines et d'actifs que la personne lit (drapeau sans nombre pour le reste), et
+  `nature` et `id` de la fiche qu'elle peut ouvrir (repris par `proposer_action_vulnerabilite`), absents sinon. Total :
+  `faillesSuiviesAuTotal` (celui de l'écran). Les failles et leur ordre sont les mêmes pour tout le monde (lot ALH5) ; une
+  personne à périmètre restreint voit donc aussi les failles qu'elle ne lit pas, comme sur l'écran, sans nombre ni fiche.
+- **`machines_prioritaires`** : `actifsExposes` (repères `E-…`, rang, `rangSur`, `faillesExposees`, et sans CVE demandée
+  `faillesParPriorite`), `actifsExposesDansLaPortee`, `actifsExposesSansRepere` (actif lisible inconnu de la cartographie).
+  Sans filtre : les actifs lisibles qui portent une faille suivie exposée sur Internet (calcul global de la vue
+  d'ensemble), rangés par la faille la plus prioritaire qu'ils portent (ordre des cibles), puis par nombre de failles
+  exposées, puis par identifiant. Avec une CVE : les actifs lisibles qui la portent (mêmes porteurs et mêmes repères que la
+  surface externe d'`evaluer_cve`). Avec un constat de Tenable : machines seulement. Même borne que les machines (`nombre`,
+  30 au plus). Lecture par `SurfaceExterneAlh.actifsDesCves` (une requête, mêmes porteurs et même lisibilité que
+  `exposition`). Les actifs vus par Silène seul n'ont pas de repère (la table des repères externes ne vise que les actifs
+  d'AlgoLightHouse) et ne sont pas rendus.
+- **`evaluer_cve`, « Quoi faire »** (`quoiFaire`, remplace `recommandations`) : rubriques `catalogueKev` (action exigée et
+  échéance, « Catalogue KEV de la CISA »), `certSante` (mentions « un correctif existe », « un contournement existe »),
+  `tenable` (un correctif par texte publié, avec les numéros des contrôles lisibles qui le portent et la date de publication
+  la plus ancienne), `algoLightHouse` (défauts et résolutions de l'éditeur des alertes ouvertes lisibles, bornés comme
+  avant) ; chacune nomme sa source et n'apparaît que si elle a un contenu. `correctif` : la mention « aucun correctif publié
+  par les sources lues » quand aucune source ne publie de correctif (ni correctif de Tenable, ni action du catalogue KEV, ni
+  « un correctif existe : oui » du CERT Santé, ni résolution de l'éditeur). Le texte du correctif quitte chaque constat
+  (`correctifPublieParTenable` ; la date `correctifPublieLe` reste) et les recommandations quittent `surfaceExterne.alertes`
+  (`recommandationsDeLEditeur`) : plus de copie en double. Les textes de l'éditeur repassent par le masque avant l'envoi,
+  comme avant.
+- **`elements`** : `evaluer_cve`, 1 (la CVE) + avis rendus + constats rendus + produits surveillés rendus + rubriques de
+  « Quoi faire » qui portent un contenu (la mention n'en est pas une) + 1 si la section de la surface externe est rendue ;
+  0 pour une CVE inconnue. `machines_prioritaires` : machines rendues + actifs exposés rendus. `failles_prioritaires` :
+  failles rendues.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+1. Ordre des actifs exposés sans filtre (faille la plus prioritaire qu'ils portent, puis nombre de failles exposées).
+2. Avec un constat de Tenable, aucun actif exposé n'est rendu (le constat porte sur des machines internes).
+3. Ce qui compte comme « correctif » pour la mention (liste ci-dessus) : une fiche du CERT Santé qui ne dit qu'« un
+   contournement existe » laisse la mention, à côté de la rubrique du CERT Santé.
+4. Les avis du CERT-FR et du CERT Santé restent listés à part (`avis` : source, identifiant, date et titre) : ils ne sont pas une
+   rubrique de « Quoi faire ».
+5. Les descriptions des outils et la consigne de l'assistant (`apps/api/src/assistant/outils.ts`, hors du périmètre du lot)
+   ne sont pas changées : la description de `machines_prioritaires` ne cite que les repères `M-…`, celle de
+   `failles_prioritaires` parle encore des « constats de Tenable et failles déclarées ». La consigne cite déjà les repères
+   `E-…` dans « Actifs à traiter d'abord » ; le champ `note` de chaque résultat explique les nouveaux champs. À reprendre
+   avec la session de l'assistant si le RSSI le souhaite.
+
+### Tests
+
+`apps/api/test/assistant-vulnerabilites-outils.test.ts` (nouveau) : serveur sans connecteur Tenable (les trois outils
+répondent) ; égalité outil / écran pour l'administrateur et deux personnes à périmètre restreint, avant et après l'arrivée
+des machines de Tenable ; produit à confirmer signalé ; actifs exposés rangés, selon les droits, mêmes repères
+qu'`evaluer_cve` ; les trois formes de « Quoi faire » (contenu avec source pour le catalogue KEV, le CERT Santé, Tenable et
+l'éditeur de la surface externe ; rubriques vides omises ; mention « aucun correctif… ») ; `elements` ; aucune sortie des
+trois outils (résultat du service pour trois personnes, puis requêtes réellement remises à un faux modèle) ne contient nom de
+machine, adresse, domaine, fournisseur d'accès, numéro d'AS, rôle ou nom de périmètre. Tests adaptés :
+`assistant-vulnerabilites.test.ts` (« Quoi faire », première faille prioritaire et sa fiche), `assistant-surface-externe.test.ts`
+(recommandations de l'éditeur dans « Quoi faire »).
+
+### Non vérifié
+
+Qualité des réponses avec un modèle réel ; Node 26 ; pile Docker.
+
+## Addendum du 20/11/2026 — lot PRIO-1 : règles de priorité, libellés, fréquences, cartes d'avis
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`097` (colonne `vulnerabilites_constats.kits_exploitation`, liste vide par défaut, contrainte de liste fermée ; aucune donnée
+reprise). Aucune dépendance, **aucun flux sortant nouveau** (un champ de plus gardé dans la réponse déjà lue de
+`/rest/analysis`), aucune route nouvelle (la liste des avis est élargie), aucun rôle ni droit nouveau.
+`apps/api/src/assistant/*`, `apps/web/src/assistant/*`, `docker-compose.yml`, `docker/*` et `scripts/exploitation-worker.py`
+non touchés. Lève la question 1 (mot « zero-day ») et la question 2 (fin de support) de l'addendum « lot S3 », le point à
+trancher et le point ouvert 6 de l'addendum « lot S1 », le point ouvert 1 de l'addendum « lot L1 », les points ouverts 1 et
+2 et deux choix de l'addendum « lot F1 », et les points 8 à 12 et 14 de la reprise du 20/11/2026 (§ 3).
+
+### Décisions du RSSI (19 et 20/11/2026)
+
+1. **Fin de support : un cran de plus.** Une faille sur une machine dont le système ou le produit n'est plus maintenu par
+   l'éditeur gagne un cran (P3 → P2, P2 → P1, P4 → P3 ; P1 reste P1), visible dans l'explication de la priorité.
+2. **P1 sous exception : alerte gardée**, marquée « risque accepté », au lieu d'être close ; pas de nouvelle notification du
+   seul fait de la marque.
+3. **Kit d'exploitation disponible (Tenable)** (« Exploit available », « Exploitable with » : Metasploit, Core Impact,
+   CANVAS), rangé avec « exploitable » : il compte pour la règle des alertes P2 exposées sur Internet, pas comme exploitation
+   avérée.
+4. **Rançongiciels (KEV)** : `knownRansomwareCampaignUse` devient un fait visible (liste, fiche, explication).
+5. **« Zero-day » réservé** à une faille à exploitation avérée sans correctif connu ; sinon « exploitation avérée ».
+6. **« Logiciel malveillant (Tenable) »** dans les listes ; dans la fiche, le terme officiel « Exploited by malware ».
+7. **Fréquences** : plancher de deux heures de NVD aussi pour « Collecter maintenant » ; purge du journal des collectes et des
+   exécutions au-delà de 90 jours ; « En retard » après trois périodes sans collecte réussie ; fréquences gardées à la remise
+   à vide du travail.
+8. **Cartes d'avis** : « présente sur le parc » et « exposée sur Internet » quand une CVE citée concerne la plateforme, en une
+   lecture d'ensemble.
+
+### Réalisation
+
+- **Grille** (`packages/shared/src/priorite-vulnerabilites.ts`) : `calculerPriorite` applique la grille de départ, puis
+  (a) le fait `rancongiciel`, placé après celui de l'exploitation, sans effet sur le niveau ; (b) si `finDeSupport` et que la
+  présence est avérée (détectée, déclarée ou exposée), un cran de plus (`monterDUnCran`, partagé avec la majoration du lot
+  ALH5) et le fait `fin_de_support` à la fin, même en P1. Une faille absente ou « produit à confirmer » ne monte jamais. Sans
+  ces deux faits, le résultat est exactement celui d'avant (test en table). Libellés : « Machine en fin de support (système
+  ou produit plus maintenu par l'éditeur) : un cran de plus », « Utilisée par des rançongiciels (catalogue KEV) ».
+- **Machine en fin de support** (`apps/api/src/vulnerabilites/sql.ts`, `machinesFinSupport`) : même règle que la fiche
+  d'une machine du lot S3 (au moins un contrôle présent dont la `seolDate` de Tenable est passée, quel que soit son état de
+  suivi), toutes machines confondues (un fait commun, comme les priorités du lot ALH5), en sous-requête sans corrélation
+  évaluée une fois. Une faille détectée a le fait si elle est présente sur au moins une telle machine ; une faille déclarée,
+  si le produit surveillé est relié à au moins une telle machine. Appliqué partout où la priorité est calculée : liste et
+  fiche des constats, failles déclarées, marques des machines (et donc la majoration de la surface externe, le parc et les
+  périmètres), calcul global (alertes, vue d'ensemble, délais, tendances, rapport), vue par correctif, délai d'une décision
+  « corrigée », rapprochements, fiche d'une CVE et outil `evaluer_cve` de l'assistant (repères inchangés, aucun nom). Colonnes
+  ajoutées aux requêtes existantes ; une requête de plus seulement pour l'outil `evaluer_cve` (une faille).
+- **Kit d'exploitation** : `scripts/integration-http.py` garde `exploitFrameworks` dans sa liste blanche et en tire les seuls
+  noms connus (`kits_exploitation`, chaîne, casse ignorée ; une liste, un nombre ou tout autre texte ne donnent rien) ;
+  l'import `.nessus` lit `exploit_framework_metasploit`, `_core`, `_canvas` (« true » seulement, autre valeur comptée « hors
+  norme »). Champ `kitsExploitation` facultatif de l'élément reçu (`KitsExploitation`, liste fermée sans doublon), rangé dans
+  la colonne de la migration `097` et remis à vide par un passage suivant sans kit. Source `tenable-kit` de
+  `SOURCES_EXPLOITABLE` (rangée en dernier, sans date) : filtre « Exploitable », compteur des machines, P2 d'une faille
+  élevée, condition « exploitable » de l'alerte simple ; jamais dans `SOURCES_EXPLOITATION`. Marque « Kit d'exploitation :
+  Metasploit (Tenable) » en liste, « Kit d'exploitation disponible selon Tenable (« Exploitable with ») : … » en fiche.
+- **Rançongiciels** : `kev_rancongiciel` (déjà rangé depuis le lot V2) est lu par `lireFaitsCve` ; `SourcesFailleDto` porte
+  `rancongiciel` (absent : non) ; marque « Rançongiciels (KEV) », phrase de la fiche « Utilisée par des rançongiciels selon
+  le catalogue KEV de la CISA (« Known Ransomware Campaign Use ») ».
+- **P1 sous exception** (`apps/api/src/vulnerabilites/alertes.ts`) : un objet suivi (constat ou faille déclarée) en
+  « risque accepté » reste traité pour tout le reste (listes, compteurs, délais, vue d'ensemble, rapport) ; s'il est en P1,
+  sa priorité est gardée à part avec la faille (`exceptionsP1`). Quand rien d'autre ne rend la faille critique, l'alerte est
+  critique et ses faits portent `risqueAccepte` ; l'empreinte change (mise à jour sans rejeu : aucune notification), la
+  fenêtre, la liste et la fiche affichent « Risque accepté » et les machines de l'exception sont comptées. Une faille P2 sous
+  exception n'est pas gardée. À l'échéance (expiration par l'évaluation des délais), l'objet n'est plus sous exception : la
+  marque tombe, l'alerte reste critique, sans notification.
+- **« Zero-day »** (`correctifs-vulnerabilites.ts` : `REGLE_ZERO_DAY`, `estZeroDay`, `libelleMarqueExploitation`) : seule
+  la situation « exploitée, sans correctif connu » (CERT Santé « Un correctif existe : Non », aucune source contraire) est
+  dite « Zero-day : exploitée, sans correctif connu » ; « correctif disponible » et « correctif non renseigné » donnent
+  « Exploitation avérée ». Le triangle des tuiles, des listes, des cartes de périmètre et de la vue par correctif dit
+  « Exploitation avérée » ; son infobulle dit « Zero-day » seulement dans ce cas. Les champs d'API (`zeroDay`,
+  `exploitationAveree`) ne sont pas renommés.
+- **Libellés de Tenable** : `SOURCE_EXPLOITATION_LIBELLES.tenable` = « Logiciel malveillant (Tenable) » (listes, faits,
+  notifications) ; `SOURCE_EXPLOITATION_LIBELLES_COMPLETS` et `libelleFaitPrioriteComplet` pour la fiche : « Exploitée par
+  un logiciel malveillant selon Tenable (« Exploited by malware ») ».
+- **Fréquences** : « Collecter maintenant » refuse NVD (409, message propre) quand une collecte NVD non expirée a été
+  demandée depuis moins de deux heures (`PLANCHER_NVD_HEURES`) ; `sourceEnRetard` (trois périodes de la fréquence réglée,
+  `PERIODES_AVANT_RETARD`) remplace `VEILLE_RETARD_HEURES` ; purge (`apps/api/src/vulnerabilites/purge-journaux.ts`) au tic de
+  l'API, au plus une fois par heure ; la remise à vide « travail » relit les fréquences choisies avant d'effacer et les
+  réinscrit seules.
+- **Cartes d'avis** : `AvisVeilleDto.parc` (`presentes`, `exposees`) : CVE citées détectées (détection présente) ou déclarées
+  (rapprochement rattaché), quel que soit l'état de suivi, et CVE portées par la surface externe (`cvesExposees`, porteurs
+  sans droits) ; deux lectures pour toute la page. Marques « Présente sur le parc » et « Exposée sur Internet » (avec « n CVE
+  citées sur m » quand toutes ne le sont pas) ; rubrique « Sur la plateforme » de la fiche de l'avis.
+- **Vue d'ensemble** : la tuile « Exploitées et présentes » compte désormais les failles à exploitation avérée (une P1 peut
+  venir de la fin de support) ; l'explication du niveau 4 dit « présente chez nous en P1 (exploitation avérée, ou machine en
+  fin de support) ». La fenêtre d'alerte critique titre « Faille P1 présente chez nous » quand l'alerte n'a aucune source
+  d'exploitation.
+
+### Décisions complémentaires du RSSI (20/11/2026, après relecture)
+
+- **a. Le contrôle de fin de support lui-même ne monte pas.** Seules les AUTRES failles présentes sur la machine montent
+  d'un cran ; pas de vague d'alertes critiques sur les contrôles « système / produit non maintenu ». Le fait reste visible au
+  rapport (section « fin de support » existante) et la marque « Fin de support » reste sur le contrôle. Réalisation : partout
+  où le fait est calculé (liste et fiche des constats, marques des machines, calcul global, vue par correctif, délai d'une
+  décision, fiche d'une CVE), un constat dont la `seolDate` est passée est exclu de la montée ; `surMachineFinSupport` y est
+  faux. Une faille déclarée n'est jamais ce contrôle.
+- **b. Rançongiciels : aucun changement de niveau ; à priorité égale, ces failles passent devant**, critère placé juste
+  après le niveau, avant les critères existants : liste des failles détectées, liste des failles déclarées (tris en
+  mémoire, après la lecture SQL, qui n'en dépend pas) et ordre des cibles (`comparerCibles`, qui lit le fait `rancongiciel`
+  de la priorité ; le radar de l'interface et l'outil `failles_prioritaires` de l'assistant, qui reprennent cet ordre,
+  restent identiques à l'écran). La question posée plus haut est ainsi tranchée.
+- **c. Un seul cran au plus** : la fin de support et la majoration par une machine interne vulnérable (lot ALH5) ne se
+  cumulent pas ; `majorerPriorite` n'ajoute plus de cran à une priorité qui porte déjà le fait `fin_de_support`, les deux
+  faits restent affichés. Aujourd'hui, la fin de support ne s'applique qu'aux présences détectées et déclarées et la
+  majoration qu'à la présence exposée : la règle est gardée dans la fonction partagée (testée), sans cas en base. Une
+  faille d'une machine en fin de support qui en devient « vulnérable » peut toujours faire monter, d'un cran, une autre
+  faille portée par un actif exposé relié : ce sont deux failles distinctes.
+
+### Choix de réalisation, à confirmer par le RSSI
+- **Fin de support d'AlgoLightHouse non comptée** : un service exposé en fin de vie (`version_status = eol`) ne fait pas
+  monter les CVE exposées ; aucun lien sûr n'existe entre ce service et les CVE de la technologie.
+- **Fiche d'une CVE de la veille** : elle ne lit que les faits par CVE (choix du lot N2) ; une CVE inconnue de NVD y est en P4
+  et y monte en P3, alors que le constat de Tenable qui la porte est en P1.
+- **Exception en vigueur** : l'état « risque accepté » ; une exception dont l'échéance vient de passer compte encore jusqu'à
+  l'évaluation des délais qui l'expire (au plus un quart d'heure).
+- **Plancher NVD** : vaut pour « Collecter maintenant » seulement ; la planification garde sa règle (une collecte manuelle en
+  file tient lieu de la collecte automatique, puis une par période depuis la référence) : une collecte automatique peut donc
+  suivre une collecte manuelle terminée de moins de deux heures.
+- **Purge** : les exécutions qui portent le journal d'un import de fichier (Nessus, Silène) ne sont jamais purgées ; la
+  dernière exécution de chaque instance et opération, et la dernière collecte de chaque source, sont gardées.
+- **Remise à vide « tout »** : les fréquences de la veille sont effacées avec la configuration.
+- **Kit d'exploitation** : facultatif dans l'élément reçu (un script plus ancien reste accepté) ; « Core » seul n'est pas
+  lu comme Core Impact dans `exploitFrameworks`.
+- **Présence sur le parc des cartes d'avis** : un fait commun, sans tenir compte des droits de lecture (comme l'existence
+  d'une priorité, lot ALH5) ; la fiche de chaque CVE dit ce que la personne lit.
+
+### Question au RSSI
+
+- **Rançongiciels et priorité** : tranchée le 20/11/2026 (décision b ci-dessus : ordre à priorité égale, niveau inchangé).
+
+### Non vérifié
+
+Forme réelle d'`exploitFrameworks` sur une instance (la fixture relevée sur 6.9.1 la donne vide) et des champs
+`exploit_framework_*` d'un export `.nessus` réel ; nombre réel de machines en fin de support et d'alertes critiques qui en
+découlent ; e2e Playwright non joués (CI seulement) ; Node 26 ; pile Docker ; CSP du serveur de production.
+
+### Points ouverts (hors lot)
+
+1. Ordre des autres listes (alertes, correctifs, parc) à priorité égale : inchangé par la décision b.
+2. Fin de support au niveau de la technologie d'AlgoLightHouse et des services exposés (point ouvert 3 de l'addendum « lot
+   S3 »).
+3. Historiser la montée de priorité due à la fin de support (le délai court depuis la première présence, règle du lot S1).
