@@ -12,9 +12,10 @@ import {
   type ReglagePrioriteOut,
   type UniteDelai,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { api, errorMessage, get } from '../api';
 import { useCan } from '../session';
 import { depuisSaisie, type SaisieDelais, versSaisie } from './delais';
@@ -81,7 +82,7 @@ export function SeuilsPrioritePage() {
     );
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Seuils de priorité"
         description="La plateforme calcule la priorité de chaque faille, détectée ou déclarée, par une grille fixe et rejouable : jamais par le modèle. Chaque priorité affiche les faits qui la fondent. Aucun taux n’est calculé."
       />
@@ -89,10 +90,12 @@ export function SeuilsPrioritePage() {
         <ErrorAlert error={reglage.error} />
         {reglage.data && (
           <>
-            <Title order={2} size="h4">
-              Grille appliquée
-            </Title>
-            <GrillePriorite seuilEpss={reglage.data.values.seuilEpss} />
+            <details className="a-propos">
+              <summary>Grille de priorité appliquée</summary>
+              <div className="a-propos__texte">
+                <GrillePriorite seuilEpss={reglage.data.values.seuilEpss} />
+              </div>
+            </details>
             <Title order={2} size="h4">
               Seuil du score EPSS
             </Title>

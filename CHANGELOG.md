@@ -8,8 +8,30 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 Aucune migration, aucune action : correctif de performance du module Vulnérabilités.
 
+Aucune migration, nouvelle dépendance ou modification du contrat API. Reconstruire le frontend lors de l’intégration du code.
+Les préférences explicites de taille et le mode mural sont conservés. Contrôles locaux, captures, mesures et limites dans le
+[dossier du lot](docs/refonte-neon/densite-2026-11-21/README.md) ; recette Docker/API réelle à effectuer avant livraison. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+
+### Changé
+
+- **Densité de travail** : le normal devient plus resserré que l’ancien compact, et le compact resserre encore le cadre,
+  les commandes et les listes. Les profils partagent une source de jetons et du CSS statique compatible avec la CSP.
+  L’agrandissement automatique des grands écrans est réservé au mode mural ; les tailles choisies manuellement restent
+  disponibles. Le planning adapte sa largeur sans étirer textes et lignes, les explications des pages Vulnérabilités se
+  replient dans une aide contextuelle, et les raccourcis en pictogrammes gardent leurs noms accessibles et leurs droits.
+  Lot fondé sur la version 7.5.0 après analyse d’une vidéo privée, absente du dépôt et des preuves publiques.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **En-tête et apparence** : signature d’organisation et badge Live retirés visuellement, bascule de thème en icônes dans
+  l’en-tête et le pied de menu, onglets et actions principales d’ajout en verre transparent. Les couleurs métier restent
+  conservées. Le flux temps réel continue de fonctionner ; les parcours concernés attendent toujours sa connexion via
+  l’attribut `data-temps-reel`. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+
 ### Corrigé
 
+- **Vulnérabilités, Machines → Périmètres** : le bilan par périmètre et les options d’affectation utilisent des clés de
+  cache distinctes. Leur collision pouvait fournir un tableau à la place de l’objet du bilan et provoquer
+  `e.perimetres is not iterable`. Les sélecteurs de Machines et de Surface externe partagent désormais la clé propre aux
+  options, sans changement de contrat serveur. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
 - Vulnérabilités, **lenteur avec la veille chargée** (défaut PERF-13 du banc du 21/11/2026 sur la version 7.5.0,
   [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : la lecture des avis du CERT-FR et du CERT Santé qui citent les CVE
   du parc comparait chaque CVE de chaque avis à toute la liste demandée, soit 3 à 4 secondes à chaque calcul de priorité

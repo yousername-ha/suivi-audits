@@ -26,6 +26,8 @@ import '@suivi/ui/neon-recherche.css';
 import '@suivi/ui/neon-ergonomie.css';
 import '@suivi/ui/neon-tendances.css';
 import '@suivi/ui/neon-veille.css';
+import '@suivi/ui/neon-densite.css';
+import '@suivi/ui/neon-verre.css';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

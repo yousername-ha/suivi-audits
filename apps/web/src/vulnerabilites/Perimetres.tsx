@@ -25,10 +25,11 @@ import {
   visiblesGlobal,
   type ZoneParc,
 } from '@suivi/shared';
-import { ErrorAlert, Page, PageHeader } from '@suivi/ui';
+import { ErrorAlert, Page } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useId, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { get } from '../api';
 import { useCan } from '../session';
 import { libelleMachine } from './failles';
@@ -377,7 +378,7 @@ export function PerimetresPage() {
   const d = detail.data;
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title={perimetre ? (d ? nomPerimetre(d.carte) : 'Périmètre') : 'Périmètres'}
         description={
           perimetre

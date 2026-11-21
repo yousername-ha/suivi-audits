@@ -1,4 +1,4 @@
-/* Mise en page : barre supérieure, navigation, indicateur temps réel, préférences d'affichage.
+/* Mise en page : barre supérieure, navigation et préférences d'affichage.
    Téléphone : menu en tiroir ; tablette : menu replié en icônes ; bureau : menu déplié (packages/ui/src/styles.css).
    Menu bleu nuit opaque de la refonte Neon (packages/ui/src/neon-menu.css) : même charte dans les deux thèmes, teinte par
    identité d'entrée (data-identite), pictogrammes animés en continu (ADR 0099) ; familles, destinations, compteurs et
@@ -6,8 +6,8 @@
    AppShell de Mantine n'est pas utilisé : il injecte des balises <style>, interdites par la CSP. */
 import {
   Anchor,
+  ActionIcon,
   Badge,
-  Box,
   Burger,
   Button,
   Drawer,
@@ -287,18 +287,19 @@ export function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="nav-commandes">
-          {withTip(
-            `Thème : ${THEME_LIBELLE[theme]}`,
-            <Button
+          <Tooltip
+            label={`Thème ${THEME_LIBELLE[theme]} · passer en mode ${THEME_LIBELLE[THEME_SUIVANT[theme]]}`}
+            events={{ hover: true, focus: true, touch: false }}
+          >
+            <ActionIcon
               variant="subtle"
-              size="xs"
-              fullWidth
-              leftSection={<IconeTheme />}
+              className="theme-bascule"
+              aria-label={`Activer le mode ${THEME_LIBELLE[THEME_SUIVANT[theme]]}`}
               onClick={() => void save({ theme: THEME_SUIVANT[theme] })}
             >
-              <span className="nav-libelle">Thème : {THEME_LIBELLE[theme]}</span>
-            </Button>,
-          )}
+              <IconeTheme />
+            </ActionIcon>
+          </Tooltip>
         </div>
         <Text size="xs" c="dimmed" ta="center" className="app-version nav-annexe">
           Version {me.version}
@@ -314,7 +315,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <CleSecoursNotice />
         <AlerteSecuriteNotice />
         <RetexInvitationNotice />
-        <header className="shell-header">
+        <header className="shell-header" data-temps-reel={live.connected ? 'connecte' : 'reconnexion'}>
           <Group h="100%" px="md" justify="space-between" wrap="nowrap">
             <Group gap="sm" wrap="nowrap">
               <Burger opened={opened} onClick={toggle} hiddenFrom="xs" size="sm" aria-label="Ouvrir le menu" />
@@ -338,33 +339,21 @@ export function Layout({ children }: { children: ReactNode }) {
                   </div>
                 </Group>
               </Anchor>
-              {me.orgName && (
-                <Box className="org-signature" visibleFrom="lg">
-                  <span className="org-signature__carre" aria-hidden="true" />
-                  <span className="org-signature__nom">{me.orgName}</span>
-                </Box>
-              )}
             </Group>
             <Group gap="xs" wrap="nowrap">
               <Tooltip
-                label={
-                  live.connected ? 'Mises à jour en temps réel actives' : 'Temps réel déconnecté : reconnexion en cours'
-                }
+                label={schema === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
+                events={{ hover: true, focus: true, touch: false }}
               >
-                <Badge color={live.connected ? 'teal' : 'gray'} variant="dot" visibleFrom="xs" className="live-badge">
-                  {live.connected ? 'En direct' : 'Hors ligne'}
-                </Badge>
+                <ActionIcon
+                  variant="default"
+                  className="theme-bascule"
+                  aria-label={schema === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
+                  onClick={() => void save({ theme: schema === 'dark' ? 'clair' : 'sombre' })}
+                >
+                  <IconeTheme />
+                </ActionIcon>
               </Tooltip>
-              {/* Bascule rapide clair / sombre de la refonte Neon (même préférence que le réglage du pied de menu). */}
-              <Button
-                size="xs"
-                variant="default"
-                visibleFrom="md"
-                leftSection={<IconeTheme />}
-                onClick={() => void save({ theme: schema === 'dark' ? 'clair' : 'sombre' })}
-              >
-                {schema === 'dark' ? 'Mode clair' : 'Mode sombre'}
-              </Button>
               <Text size="sm" fw={600} visibleFrom="sm" className="header-user">
                 {me.user?.displayName || me.user?.username}
               </Text>

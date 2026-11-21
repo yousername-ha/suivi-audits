@@ -21,10 +21,11 @@ import {
   type NiveauAlerte,
   type PageAlertesVulnerabilites,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { api, ApiError, get } from '../api';
 import { useCan } from '../session';
 import {
@@ -274,7 +275,7 @@ export function AlertesPage() {
   const pages = liste.data ? nombrePages(liste.data.total, liste.data.parPage) : 1;
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Alertes"
         description="Alertes décidées par la plateforme, par règle, jamais par l’assistant : critique quand une faille exploitée est présente chez nous (priorité P1 : détectée par Tenable, déclarée par un produit surveillé ou exposée sur Internet) ; simple quand une faille en P2 est exploitable (code d’exploitation ou preuve de concept connus) et exposée directement sur Internet (actif vu par AlgoLightHouse). Une alerte par faille ; elle se met à jour sans se rejouer et se clôt d’elle-même quand la faille n’est plus présente, est traitée ou passe sous le seuil. Seul le RSSI peut prendre en compte une alerte. Les nombres ne comptent que ce que vous pouvez lire."
       />
