@@ -2,6 +2,9 @@
 
 ## Jeu court à lire d'abord (18/10/2026)
 
+0. [Proportions et alignements du 21/11/2026](refonte-neon/proportions-fenetres-2026-11-21/README.md) : complément à
+   l’harmonisation, champs courts différenciés, aides sous les saisies, menus et fenêtres resserrés ; recette et images.
+
 0. [Harmonisation de la plateforme du 21/11/2026](refonte-neon/harmonisation-plateforme-2026-11-21/README.md) :
    barres communes de vues/recherche/filtres, fenêtres et formulaires compacts, icônes centrées ; inventaire,
    résultats vérifiés, limites, outils de reproduction et images de validation.

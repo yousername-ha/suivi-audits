@@ -89,7 +89,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--mantine-spacing-md);
-  align-items: end;
+  align-items: start;
 }
 .barre-filtres-champs > :is(.mantine-CheckboxGroup-root, .mantine-Group-root, .mantine-Stack-root) {
   grid-column: 1 / -1;
@@ -98,15 +98,85 @@
   max-inline-size: 100%;
 }
 /* Les listes de choix et les menus d'actions utilisent le même contour, relief et rythme. */
-:is(.mantine-Menu-dropdown, .mantine-Popover-dropdown, .mantine-Combobox-dropdown) {
+:is(
+  .mantine-Menu-dropdown,
+  .mantine-Popover-dropdown,
+  .mantine-Combobox-dropdown,
+  .mantine-Select-dropdown,
+  .mantine-MultiSelect-dropdown,
+  .mantine-Autocomplete-dropdown,
+  .mantine-TagsInput-dropdown
+) {
   border-color: var(--suivi-trait);
   border-radius: var(--mantine-radius-md);
   box-shadow: var(--suivi-ombre-haute);
 }
-:is(.mantine-Menu-item, .mantine-Combobox-option) {
+:is(.mantine-Menu-item, .mantine-Combobox-option, .mantine-Select-option, .mantine-MultiSelect-option) {
   padding-block: var(--mantine-spacing-xs);
   font-size: var(--mantine-font-size-sm);
   line-height: 1.4;
+}
+:is(
+  .mantine-Combobox-dropdown,
+  .mantine-Select-dropdown,
+  .mantine-MultiSelect-dropdown,
+  .mantine-Autocomplete-dropdown,
+  .mantine-TagsInput-dropdown
+) {
+  min-inline-size: min(10rem, calc(100vw - 2rem));
+  max-inline-size: min(32rem, calc(100vw - 2rem));
+}
+:is(.mantine-Combobox-option, .mantine-Select-option, .mantine-MultiSelect-option) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Un code n'occupe pas la largeur d'un nom. La limite porte sur la saisie ; l'aide conserve la largeur de sa colonne. */
+:root {
+  --champ-largeur-code: 10rem;
+  --champ-largeur-date: 12rem;
+  --champ-largeur-nombre: 9rem;
+  --champ-largeur-court: 13rem;
+  --champ-largeur-moyen: 18rem;
+  --champ-largeur-personne: 22rem;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body, .filtres-avances) .champ-format-code {
+  --champ-largeur: var(--champ-largeur-code);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body, .filtres-avances) .champ-format-date {
+  --champ-largeur: var(--champ-largeur-date);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body, .filtres-avances) .champ-format-nombre {
+  --champ-largeur: var(--champ-largeur-nombre);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body, .filtres-avances) .champ-format-court {
+  --champ-largeur: var(--champ-largeur-court);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body, .filtres-avances) .champ-format-moyen {
+  --champ-largeur: var(--champ-largeur-moyen);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body, .filtres-avances) .champ-format-personne {
+  --champ-largeur: var(--champ-largeur-personne);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body, .filtres-avances) .champ-format-large {
+  --champ-largeur: 100%;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body, .filtres-avances)
+  :is(.mantine-Select-root, .mantine-NativeSelect-root).champ-format-libre {
+  --champ-largeur: var(--champ-largeur-moyen);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body, .filtres-avances)
+  .mantine-InputWrapper-root:not(.mantine-Textarea-root, .mantine-MultiSelect-root, .mantine-JsonInput-root)
+  > .mantine-Input-wrapper {
+  inline-size: min(100%, var(--champ-largeur, 100%));
+  max-inline-size: 100%;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body, .filtres-avances)
+  :is(.mantine-InputWrapper-label, .mantine-InputWrapper-description, .mantine-Input-input) {
+  text-align: start;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body, .filtres-avances) .mantine-InputWrapper-description {
+  margin-block: var(--mantine-spacing-2xs) 0;
 }
 
 /* Chaque pictogramme occupe le centre géométrique de sa commande, y compris les icônes dans un span nav-icone. */
@@ -297,44 +367,42 @@ html .mantine-Modal-content.retex-modal > .mantine-Modal-body {
   }
 }
 
-/* Dans une grande fiche sur bureau, les champs courts se partagent la ligne. Textes libres, aides, tableaux,
-   relations, calendriers et actions gardent toute la largeur. L'ordre du DOM et du clavier est inchangé. */
-@media (min-width: 64em) {
-  .fenetre-large .fenetre-formulaire,
-  .fenetre-large .fenetre-champs,
-  .fenetre-large
-    > .mantine-Modal-body
-    > .mantine-Stack-root:where(
-      :has(> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root ~ .mantine-InputWrapper-root)
-    ) {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-    gap: var(--mantine-spacing-md);
-  }
-  .fenetre-large :is(.fenetre-formulaire, .fenetre-champs) > *,
-  .fenetre-large
-    > .mantine-Modal-body
-    > .mantine-Stack-root:where(
-      :has(> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root ~ .mantine-InputWrapper-root)
-    )
-    > * {
-    grid-column: 1 / -1;
-    min-inline-size: 0;
-  }
-  .fenetre-large
-    :is(.fenetre-formulaire, .fenetre-champs)
-    > .mantine-InputWrapper-root:not(.mantine-Textarea-root, .mantine-MultiSelect-root),
-  .fenetre-large
-    > .mantine-Modal-body
-    > .mantine-Stack-root:where(
-      :has(> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root ~ .mantine-InputWrapper-root)
-    )
-    > .mantine-InputWrapper-root:not(.mantine-Textarea-root, .mantine-MultiSelect-root) {
-    grid-column: auto;
-  }
-  .fenetre-large .fenetre-formulaire > .mantine-InputWrapper-root:first-child,
-  .fenetre-large > .mantine-Modal-body > .mantine-Stack-root > .mantine-InputWrapper-root:first-child {
-    grid-column: 1 / -1;
-  }
+/* Les colonnes suivent la largeur réelle du formulaire, plutôt que celle de l'écran. L'ordre du DOM et du clavier
+   est conservé ; les textes, sections, listes multiples et boutons restent sur toute la ligne. */
+.fenetre-large .fenetre-formulaire,
+.fenetre-large .fenetre-champs,
+.fenetre-large
+  > .mantine-Modal-body
+  > .mantine-Stack-root:where(
+    :has(> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root ~ .mantine-InputWrapper-root)
+  ) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  align-items: start;
+  gap: var(--mantine-spacing-md);
+}
+.fenetre-large :is(.fenetre-formulaire, .fenetre-champs) > *,
+.fenetre-large
+  > .mantine-Modal-body
+  > .mantine-Stack-root:where(
+    :has(> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root ~ .mantine-InputWrapper-root)
+  )
+  > * {
+  grid-column: 1 / -1;
+  min-inline-size: 0;
+}
+.fenetre-large
+  :is(.fenetre-formulaire, .fenetre-champs)
+  > .mantine-InputWrapper-root:not(.mantine-Textarea-root, .mantine-MultiSelect-root),
+.fenetre-large
+  > .mantine-Modal-body
+  > .mantine-Stack-root:where(
+    :has(> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root ~ .mantine-InputWrapper-root)
+  )
+  > .mantine-InputWrapper-root:not(.mantine-Textarea-root, .mantine-MultiSelect-root) {
+  grid-column: auto;
+}
+.fenetre-large .fenetre-formulaire > .mantine-InputWrapper-root:first-child,
+.fenetre-large > .mantine-Modal-body > .mantine-Stack-root > .mantine-InputWrapper-root:first-child {
+  grid-column: 1 / -1;
 }

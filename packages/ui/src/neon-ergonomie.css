@@ -490,12 +490,11 @@
   font-size: 1rem;
 }
 
-/* Tailles communes des fenêtres (décision du RSSI du 18/11/2026) : trois largeurs seulement. Petite (dialogues courts,
-   440 px, inchangée), fiche (anciennes tailles lg et xl, 1 024 px) et présentation (Contexte, Parties intéressées,
-   Processus, 1 152 px). */
+/* Tailles des fiches resserrées le 21/11/2026 : lg = 736 px, xl = 864 px à 100 %.
+   Les dialogues courts gardent leur largeur naturelle ; les présentations graphiques restent distinctes. */
 .mantine-Modal-root {
-  --modal-size-lg: 64rem;
-  --modal-size-xl: 64rem;
+  --modal-size-lg: 46rem;
+  --modal-size-xl: 54rem;
 }
 .mantine-Modal-root.contexte-fenetre {
   --modal-size-xl: 72rem;

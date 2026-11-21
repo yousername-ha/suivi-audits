@@ -8,12 +8,18 @@ import {
   createTheme,
   defaultCssVariablesResolver,
   Drawer,
+  InputWrapper,
   Modal,
+  NativeSelect,
   Notification,
+  NumberInput,
+  Select,
   Table,
+  TextInput,
   type CSSVariablesResolver,
 } from '@mantine/core';
 import { rendreFocusFiche } from './focus-fiche.ts';
+import { proportionChamp } from './proportions-champs.ts';
 import {
   BRAND,
   ENCRE,
@@ -52,6 +58,16 @@ export const theme = createTheme({
   spacing: ESPACEMENTS,
   breakpoints: POINTS_DE_RUPTURE,
   components: {
+    InputWrapper: InputWrapper.extend({
+      defaultProps: { inputWrapperOrder: ['label', 'input', 'description', 'error'] },
+    }),
+    TextInput: TextInput.extend({ classNames: (_theme, props) => ({ root: proportionChamp(props) }) }),
+    NativeSelect: NativeSelect.extend({ classNames: (_theme, props) => ({ root: proportionChamp(props) }) }),
+    Select: Select.extend({
+      classNames: (_theme, props) => ({ root: proportionChamp(props) }),
+      defaultProps: { comboboxProps: { width: 'max-content', position: 'bottom-start' } },
+    }),
+    NumberInput: NumberInput.extend({ classNames: { root: 'champ-format-nombre' } }),
     // Le verrouillage du défilement (react-remove-scroll) injecte une balise <style> : interdit par la CSP stricte.
     /* Retour du focus à la ligne ou au bouton qui a ouvert la fiche (lignes ouvrables, refonte Neon lot 2). Le bouton
        de fermeture reçoit un nom précis en français ; les tests visant un bouton métier « Fermer » utilisent son nom exact. */

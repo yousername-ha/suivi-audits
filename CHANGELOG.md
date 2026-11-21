@@ -12,6 +12,12 @@ Les préférences explicites de taille et le mode mural sont conservés. Contrô
 
 ### Changé
 
+- **Proportions des formulaires** : codes, dates, états et responsables reçoivent des largeurs adaptées. Les aides passent
+  sous les saisies pour aligner les champs voisins ; les listes longues se replient dans un menu borné. Les fiches lg/xl
+  deviennent moins larges, avec des colonnes adaptées à leur espace réel. Les grands graphiques et tableaux gardent leur
+  place utile. [Détails et recette](docs/refonte-neon/proportions-fenetres-2026-11-21/README.md) ; aucune migration,
+  dépendance ou modification du contrat API.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
 - **Harmonisation des outils et fenêtres** : vues en icônes, recherche et filtres réunis dans la même boîte de verre
   bleu nuit sur les deux thèmes. Les écrans existants conservent leurs champs, callbacks et soumissions ; les filtres
   fermés restent dans leur formulaire. Fenêtres centrées et moins volumineuses, champs courts en colonnes, aides et

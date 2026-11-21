@@ -1,5 +1,8 @@
 # Harmonisation de la plateforme — reprise du 21 novembre 2026
 
+> Complément suivant : [proportions et alignements](../proportions-fenetres-2026-11-21/README.md). Les mesures et captures
+> ci-dessous restent celles de ce premier lot ; les nouvelles largeurs et preuves sont dans le complément.
+
 Date : 21 novembre 2026, Europe/Paris. Session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`).
 
 **Implémenté et contrôlé localement, à valider visuellement.** Ce lot complète la

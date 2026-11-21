@@ -1,5 +1,11 @@
 # Reprendre Suivi des audits
 
+> **21/11/2026 — proportions et alignements des fenêtres** : [complément documenté](docs/refonte-neon/proportions-fenetres-2026-11-21/README.md).
+> Largeurs différenciées pour codes, dates, états et responsables ; aides sous les saisies et alignement à gauche.
+> Fiches lg/xl ramenées à 736/864 px à 100 %, grandes présentations graphiques conservées. Inventaire de 302 sélecteurs,
+> sans prétendre les avoir tous ouverts individuellement. Validation des images et recette Docker réelle à effectuer.
+>
+
 > **21/11/2026 — harmonisation transversale de l’interface** : le [dossier et les images](docs/refonte-neon/harmonisation-plateforme-2026-11-21/README.md)
 > décrivent le complément au lot de densité : 58 points d’intégration dans 50 fichiers consommateurs pour les vues,
 > recherches et filtres ; cadre commun des fenêtres, formulaires courts en colonnes, aides repliées et icônes centrées.
