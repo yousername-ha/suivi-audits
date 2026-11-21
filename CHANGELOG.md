@@ -2,6 +2,23 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+Aucune migration, aucune action : correctif de performance du module Vulnérabilités.
+
+### Corrigé
+
+- Vulnérabilités, **lenteur avec la veille chargée** (défaut PERF-13 du banc du 21/11/2026 sur la version 7.5.0,
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : la lecture des avis du CERT-FR et du CERT Santé qui citent les CVE
+  du parc comparait chaque CVE de chaque avis à toute la liste demandée, soit 3 à 4 secondes à chaque calcul de priorité
+  (listes des failles et des machines, parc, vue d'ensemble, correctifs, rapport mensuel, et le passage périodique de
+  l'application). Elle joint désormais les avis à la liste, lue une fois ; le résultat est le même. Le test de performance
+  du module porte maintenant une veille chargée (10 000 avis) : sur ce jeu, la lecture passe de 2,7 s à 0,13 s, la liste
+  des failles de 3,0 s à 0,4 s et la vue d'ensemble de 3,2 s à 0,4 s (poste de développement)
+  (session « Module surveillance vulnérabilités SMSI »).
+
 ## [7.5.0] — 2026-11-21
 
 ### Notes de mise à jour
