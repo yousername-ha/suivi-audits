@@ -60,8 +60,15 @@
    (préfixe) et le système.
    Lot F1 : fréquence des collectes automatiques de chaque source de la veille (`administrer`, If-Match sur la version de la
    source, liste fermée de la source, 422 hors liste, EPSS fixe, journal `vulnerabilites.veille.frequence`) ; celle d'un
-   connecteur se règle par la modification de l'instance (module Intégrations, `integrations:administrer`). */
+   connecteur se règle par la modification de l'instance (module Intégrations, `integrations:administrer`).
+   Lot AD-1 : rapport de l'Active Directory (ADS de l'ANSSI) ; lecture en nombres avec `lire`, noms d'un point par une route
+   à part, avec `lire` aussi (droit « Analyste » branché sur l'accès au module ; consultation tracée, sans les noms), import (limite horaire partagée) et suppression (If-Match)
+   avec `administrer`. */
 import {
+  ADS_BORNES,
+  IdentifiantPointAdsParams,
+  ImportAds,
+  MESSAGE_LIMITE_IMPORTS,
   RechercheGlobaleReponse,
   RechercheGlobaleVulnerabilites,
   CleCorrectif,
@@ -1157,5 +1164,58 @@ export const vulnerabilitesRoutes = [
       setEtag(reply, r.version);
       return r;
     },
+  }),
+  // Lot AD-1 : rapport de l'Active Directory (ADS de l'ANSSI). Lecture en nombres avec `lire` ; noms d'un point par une route
+  // à part, avec `lire` (décision du RSSI du 20/11/2026), consultation tracée ; import et suppression avec `administrer`.
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/annuaire',
+    summary:
+      'Rapport de l’Active Directory : note globale et son évolution, progression par niveau, points ouverts (nombre d’objets et variation), corrigés depuis l’import précédent ; nombres seulement, jamais de nom',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc }) => svc.vulnerabilites.annuaire.lire(),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/annuaire/points/:identifiant/noms',
+    summary:
+      'Noms des objets d’un point de contrôle (dernier import, apparus et corrigés depuis le précédent)  : route à part, chaque consultation tracée au journal sans les noms',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: IdentifiantPointAdsParams,
+    handler: async ({ svc, s, params, ip }) =>
+      svc.vulnerabilites.annuaire.noms(params.identifiant, (s as Session).user, ip),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/annuaire/imports',
+    summary:
+      'Importer le rapport de l’Active Directory (extrait en liste blanche lu dans le navigateur, revalidé) ; noms des imports plus anciens que les deux derniers effacés',
+    tags,
+    access: 'vulnerabilites:administrer',
+    body: ImportAds,
+    bodyLimit: ADS_BORNES.corps,
+    status: 201,
+    handler: async ({ svc, s, body, ip }) => {
+      const sess = s as Session;
+      // Même limite que les imports Nessus et Silène : fichiers commencés par heure et par personne, tous imports confondus.
+      if (!svc.limits.importNessus(sess.user.id)) throw new HttpError(429, MESSAGE_LIMITE_IMPORTS);
+      const bilan = await svc.vulnerabilites.annuaire.importer(body, sess.user, ip);
+      // Transaction validée : statistiques des tables qui grossissent, sans jamais faire échouer la réponse.
+      await svc.vulnerabilites.annuaire.apresValidation();
+      return bilan;
+    },
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/vulnerabilites/annuaire/imports/:id',
+    summary:
+      'Supprimer un import du rapport de l’Active Directory, ses points et ses noms (If-Match : version de l’import)',
+    tags,
+    access: 'vulnerabilites:administrer',
+    params: id,
+    handler: async ({ svc, s, params, req, ip }) =>
+      svc.vulnerabilites.annuaire.supprimer(params.id, requireIfMatch(req), (s as Session).user, ip),
   }),
 ];

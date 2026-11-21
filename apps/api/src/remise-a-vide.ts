@@ -233,6 +233,11 @@ export const TABLES_TRAVAIL = [
   'vulnerabilites_silene_constats',
   'vulnerabilites_silene_constat_hotes',
   'vulnerabilites_silene_lignes',
+  // Rapport de l'Active Directory importé (ADR 0100, lot AD-1) : imports, points non conformes et noms des objets, relus au
+  // prochain import.
+  'vulnerabilites_ad_objets',
+  'vulnerabilites_ad_points',
+  'vulnerabilites_ad_imports',
   // Alertes du module (ADR 0100, lot V6) : décidées par la plateforme à partir des faits ci-dessus (réévaluées à la collecte
   // ou à la synchronisation suivante) et prises en compte par les utilisateurs ; effacées avec le travail.
   'vulnerabilites_alertes',

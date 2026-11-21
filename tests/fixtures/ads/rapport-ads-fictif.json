@@ -1,0 +1,73 @@
+{
+  "domain": "INTERDIT-exemple.invalid",
+  "generated_at": "2026-11-18T07:30:00Z",
+  "score": 2,
+  "collector": "INTERDIT-version-collecte",
+  "levels": {
+    "1": { "passed": 18, "total": 20 },
+    "2": { "passed": 10, "total": 16 },
+    "3": { "passed": 4, "total": 12 },
+    "4": { "percent": 25 },
+    "5": { "percent": 0 }
+  },
+  "totals": { "passed": 32, "failed": 4 },
+  "rules": [
+    {
+      "id": "vuln1_fictif_privileged_members",
+      "type": 3,
+      "level": 1,
+      "reference": "fictif_privileged_members",
+      "title": "Comptes fictifs trop privilégiés",
+      "description_longue": "INTERDIT-description",
+      "objects": [
+        {
+          "sAMAccountName": "compte-fictif-01",
+          "objectClass": ["top", "person", "organizationalPerson", "user"],
+          "distinguishedName": "CN=compte-fictif-01,OU=INTERDIT-ou,DC=exemple,DC=invalid",
+          "objectSid": "S-1-5-21-1111111111-2222222222-3333333333-1104",
+          "pwdLastSet": "INTERDIT-date-mot-de-passe",
+          "unicodePwd": "INTERDIT-mot-de-passe",
+          "ntHash": "INTERDIT-empreinte"
+        },
+        {
+          "sAMAccountName": "svc-fictif-01",
+          "objectClass": ["top", "msDS-GroupManagedServiceAccount"],
+          "servicePrincipalName": "INTERDIT-spn/srv-fictif-01.exemple.invalid"
+        },
+        { "objectSid": "S-1-5-21-1111111111-2222222222-3333333333-1999" }
+      ]
+    },
+    {
+      "id": "warn3_fictif_inactive_accounts",
+      "type": 2,
+      "level": 3,
+      "reference": "fictif_inactive_accounts",
+      "title": "Comptes fictifs inactifs",
+      "count": 1250,
+      "objects": {
+        "users": ["EXEMPLE\\compte-fictif-02", "compte-fictif-03@exemple.invalid", "compte-fictif-02"],
+        "computers": ["CN=poste-fictif-01,OU=INTERDIT-postes,DC=exemple,DC=invalid"]
+      }
+    },
+    {
+      "id": "info2_fictif_dc_settings",
+      "type": 1,
+      "level": 2,
+      "reference": "fictif_dc_settings",
+      "title": "Réglage fictif des contrôleurs de domaine",
+      "objects": [{ "name": "dc-fictif-01", "type": "domainController" }]
+    },
+    {
+      "type": 2,
+      "level": 4,
+      "reference": "fictif_gpo_rights",
+      "title": "Droits fictifs sur une stratégie de groupe",
+      "objects": [{ "displayName": "gpo-fictive-01", "objectClass": "groupPolicyContainer" }]
+    },
+    {
+      "id": "vuln2_fictif_trusts",
+      "title": "Relation d’approbation fictive",
+      "objects": [{ "name": "partenaire-fictif", "type": "trustedDomain" }]
+    }
+  ]
+}
