@@ -92,6 +92,15 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 
 ### Ajouté
 
+- **Tâches d'une action et avancement** (décisions du RSSI du 20/11/2026,
+  [ADR 0111](docs/adr/0111-taches-d-une-action-et-avancement.md)). Une action du plan d'actions peut contenir jusqu'à 50
+  tâches : intitulé, case « faite », responsable et échéance. La fiche de l'action les liste avec « n faites sur N » et
+  une jauge d'avancement. Dans la frise, la part faite du tube est plus foncée, avec « n/N · p % » au bout, et un petit
+  losange marque sous le tube l'échéance de chaque tâche (à faire, faite, en retard). Le responsable d'une tâche est un
+  simple affichage : il n'ouvre l'action à personne, et seul qui peut modifier l'action gère ses tâches. Cocher toutes les
+  tâches ne termine pas l'action. Champ facultatif des données d'une action, sans migration.
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
+
 - Vulnérabilités, **carte « Lignes d'approche » à deux sources, regroupement par adresse IP, filtre par nom de domaine, carte
   en page entière** (lot SI2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md), sans migration) : la route de la carte
   réunit AlgoLightHouse et Silène (un actif vu par les deux est un seul nœud, pastilles ALH et SIL ; un actif vu par Silène
@@ -187,6 +196,18 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
   (session « Module surveillance vulnérabilités SMSI »)
 
 ### Modifié
+
+- **Frises (vue Timeline) du plan d'actions et des tâches récurrentes refaites** (décisions du RSSI du 20/11/2026, sur
+  maquettes). Colonnes à gauche (action ou série, responsable, échéance, état ou rythme, prochaine, dernier résultat),
+  frise à droite avec la ligne « Aujourd'hui », et pied qui compte les échéances ou occurrences de chaque période.
+  Plan d'actions : groupes repliables (« Regrouper par » priorité, responsable, état ou aucun), échelles Semaines, Mois,
+  Trimestres ou Année, actions en tubes de la teinte de leur état ; une action sans date de début part de sa date de
+  création ; terminées et annulées masquées par défaut, avec leurs interrupteurs. Tâches récurrentes : occurrences en
+  icônes de verre (carré vert OK, losange rouge KO, carré gris NA, carré orange « résultat attendu », carré pointillé « à
+  venir », triangle rouge dont la lueur pulse pour le retard, fixe si les animations sont réduites) ; actions hors série
+  repliées. Infobulle au survol (intitulé, dates, état), ligne survolée teintée de bleu nuit, jours de fond dans la
+  légende. Aucune occurrence n'est inventée, et les dates incohérentes restent listées.
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 
 - Base de données : cache partagé porté de 128 à 256 Mo, mémoire de tri de 4 à 16 Mo, estimation du cache disponible ramenée
   à la taille du conteneur (768 Mo) et compilation à la volée (JIT) coupée, paramètres du service `db` dans

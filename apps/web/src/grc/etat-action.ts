@@ -1,7 +1,7 @@
 /* État d'une action tel que l'écran le dit en toutes lettres : jamais par la couleur seule. Le retard est dérivé de
    l'échéance, du statut terminal de la politique publiée et de la validation d'une occurrence récurrente (une occurrence
    validée n'est pas en retard) ; il ne change jamais le statut. Même règle que les compteurs du serveur. */
-import type { BusinessPolicy, GrcObject } from '@suivi/shared';
+import { avancementTaches, type BusinessPolicy, type GrcObject, type TacheAction } from '@suivi/shared';
 
 const SYMBOLES: Record<string, string> = { todo: '○', progress: '▶', blocked: '⏸', done: '✓', cancelled: '✕' };
 
@@ -85,6 +85,55 @@ export function classeResultat(o: GrcObject): 'attente' | 'ok' | 'ko' | 'na' {
 export function commandeRepere(o: GrcObject): string {
   if (o.id.startsWith('legacy:')) return 'Réaliser la tâche historique';
   return estOccurrence(o) ? 'Saisir le résultat' : 'Suivi de réalisation';
+}
+
+const JOUR = 86_400_000;
+const jourIso = (s: unknown) => (typeof s === 'string' && s ? Math.floor(Date.parse(s) / JOUR) * JOUR : Number.NaN);
+const dateLongue = (n: number) => new Date(n).toLocaleDateString('fr-FR', { timeZone: 'UTC' });
+
+/** Lignes de l'infobulle d'un repère de frise (survol ou focus), affichées à l'écran seulement : le nom accessible du
+    repère dit déjà tout. Intitulé, dates, puis état (tube, losange) ou résultat (carré d'occurrence), « En retard » s'il
+    y a lieu. `creation` : jour de création servant de début à une action qui n'a qu'une échéance (proposition B). */
+export function infobulleRepere(
+  o: GrcObject,
+  policy: BusinessPolicy,
+  maintenant: number,
+  { creation = null, carre = false }: { creation?: number | null; carre?: boolean } = {},
+): string[] {
+  const debut = jourIso(o.data.startAt),
+    fin = jourIso(o.data.dueAt);
+  const lignes = [o.name];
+  let derniere: string;
+  if (carre) {
+    if (Number.isFinite(fin)) lignes.push(`échéance ${dateLongue(fin)}`);
+    const v = validationDe(o);
+    derniere = v ? `Résultat : ${v}` : 'Résultat attendu';
+  } else {
+    if (creation !== null && Number.isFinite(fin))
+      lignes.push(`depuis la création le ${dateLongue(creation)} (pas de date de début) · échéance ${dateLongue(fin)}`);
+    else if (Number.isFinite(debut) && Number.isFinite(fin))
+      lignes.push(`du ${dateLongue(debut)} au ${dateLongue(fin)}`);
+    else if (Number.isFinite(fin)) lignes.push(`échéance ${dateLongue(fin)}`);
+    else if (Number.isFinite(debut)) lignes.push(`à partir du ${dateLongue(debut)}`);
+    derniere = libelleStatut(policy, o);
+  }
+  lignes.push(enRetard(o, policy, maintenant) ? `${derniere} · En retard` : derniere);
+  // Avancement des tâches de l'action (ADR 0111), pour un tube ou un losange.
+  const av = carre ? null : avancementTaches(Array.isArray(o.data.taches) ? (o.data.taches as TacheAction[]) : null);
+  if (av) lignes.push(`Tâches : ${av.faites}/${av.total} (${av.pourcentage} %)`);
+  return lignes;
+}
+
+/** Infobulle du losange d'une tâche (ADR 0111) : intitulé, responsable affiché, échéance et état. */
+export function infobulleTache(t: TacheAction, responsable: string | null, maintenant: number): string[] {
+  const jour = typeof t.echeance === 'string' ? Date.parse(t.echeance + 'T00:00:00Z') : Number.NaN;
+  const enRetardTache = !t.faite && Number.isFinite(jour) && jour < Math.floor(maintenant / JOUR) * JOUR;
+  return [
+    t.intitule,
+    `Responsable : ${responsable ?? 'non désigné'}`,
+    Number.isFinite(jour) ? `échéance ${dateLongue(jour)}` : 'sans échéance',
+    t.faite ? 'Tâche faite' : enRetardTache ? 'Tâche à faire · En retard' : 'Tâche à faire',
+  ];
 }
 
 /** Ce que dit un repère de la Timeline, sans l'intitulé (porté par la ligne) : état, résultat, retard et période. */

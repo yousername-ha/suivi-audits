@@ -184,7 +184,7 @@ export function Tasks({
   });
   const proposables = useProposables(smsi);
   const ownerOf = (o: GrcObject) => libelleDesignation(o.data, proposables.data);
-  const items = (
+  const filtrees = (
     view === 'list' || view === 'kanban' || view === 'timeline'
       ? (all.data?.pages.flatMap((p) => p.items) ?? [])
       : (list.data?.items ?? [])
@@ -193,11 +193,16 @@ export function Tasks({
       o.name.toLowerCase().includes(search.toLowerCase()) &&
       (!owner || o.data.ownerId === owner) &&
       (!registre || o.registreId === registre) &&
-      (!status || o.data.status === status) &&
-      (showClosed ||
-        (!(o.data.legacy && o.data.status === 'done') &&
-          !policy.statuses.find((s) => s.id === o.data.status)?.terminal)),
+      (!status || o.data.status === status),
   );
+  const items = filtrees.filter(
+    (o) =>
+      showClosed ||
+      (!(o.data.legacy && o.data.status === 'done') && !policy.statuses.find((s) => s.id === o.data.status)?.terminal),
+  );
+  // Frise du plan d'actions : elle reçoit aussi les actions closes, qu'elle masque par ses bascules « Terminées » et
+  // « Annulées » (par défaut, le filtre « Afficher les actions closes »).
+  const itemsFrise = view === 'timeline' && !occurrences ? filtrees : items;
   // La liste affichée (ordre et filtres compris) sert à enchaîner la validation sur l'occurrence suivante de cette liste.
   const idsAffiches = items.map((o) => o.id).join(',');
   useEffect(() => {
@@ -389,12 +394,9 @@ export function Tasks({
           setStatus(null);
         }}
       />
-      {(view === 'calendar' || view === 'timeline') && (
-        <>
-          <BasculesFond actives={fondActif} onChange={basculerFond} />
-          <ErrorAlert error={fond.erreur} />
-        </>
-      )}
+      {/* Jours de fond : bascules au-dessus du calendrier ; dans la Timeline, elles sont dans la légende de la frise. */}
+      {view === 'calendar' && <BasculesFond actives={fondActif} onChange={basculerFond} />}
+      {(view === 'calendar' || view === 'timeline') && <ErrorAlert error={fond.erreur} />}
       <ErrorAlert error={list.error ?? all.error} />
       {occurrences && view === 'timeline' && <ErrorAlert error={series.error} />}
       {(view === 'list' || view === 'kanban' || view === 'timeline') && all.hasNextPage && (
@@ -537,7 +539,7 @@ export function Tasks({
       )}
       {view === 'timeline' && (
         <TimelineStudio
-          items={items}
+          items={itemsFrise}
           series={seriesItems}
           occurrences={occurrences}
           policy={policy}
@@ -545,6 +547,9 @@ export function Tasks({
           onResultat={ouvrirResultat}
           ownerOf={ownerOf}
           fond={fond.jours}
+          fondActif={fondActif}
+          onFond={basculerFond}
+          closes={showClosed}
         />
       )}
       {view === 'gantt' && (
@@ -633,7 +638,7 @@ export function Tasks({
           ))}
         </>
       )}
-      {!items.length && view !== 'dashboard' && <Alert>Aucune action dans cette période et ces filtres.</Alert>}
+      {!itemsFrise.length && view !== 'dashboard' && <Alert>Aucune action dans cette période et ces filtres.</Alert>}
     </Stack>
   );
 }
