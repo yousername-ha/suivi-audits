@@ -1615,6 +1615,40 @@ export interface VDocuments {
   updated_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
+export interface VulnerabilitesAdImports {
+  id: Generated<string>;
+  numero: number;
+  date_rapport: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  note: number;
+  progression: ColumnType<JsonValue, string, string>;
+  conformes: number | null;
+  points: number;
+  objets: number;
+  ecartes: ColumnType<JsonValue, string, string>;
+  noms_conserves: Generated<boolean>;
+  version: Generated<number>;
+  importe_par: string;
+  importe_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesAdObjets {
+  point_id: string;
+  rang: number;
+  nom: string;
+  nature: "utilisateur" | "service" | "groupe" | "ordinateur" | "controleur" | "gpo" | "approbation" | "autre";
+}
+
+export interface VulnerabilitesAdPoints {
+  id: Generated<string>;
+  import_id: string;
+  identifiant: string;
+  reference: string;
+  type: number;
+  niveau: number;
+  titre: string;
+  objets: number;
+}
+
 export interface VulnerabilitesAlertes {
   id: Generated<string>;
   cle: string;
@@ -2454,6 +2488,9 @@ export interface DB {
   user_roles: UserRoles;
   users: Users;
   v_documents: VDocuments;
+  vulnerabilites_ad_imports: VulnerabilitesAdImports;
+  vulnerabilites_ad_objets: VulnerabilitesAdObjets;
+  vulnerabilites_ad_points: VulnerabilitesAdPoints;
   vulnerabilites_alertes: VulnerabilitesAlertes;
   vulnerabilites_alh_actifs: VulnerabilitesAlhActifs;
   vulnerabilites_alh_alerte_cves: VulnerabilitesAlhAlerteCves;

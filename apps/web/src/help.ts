@@ -269,6 +269,19 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'vulnerabilites-annuaire',
+    title: 'Vulnérabilités : rapport de l’Active Directory (ADS de l’ANSSI)',
+    permission: 'vulnerabilites:lire',
+    link: '/vulnerabilites/annuaire',
+    steps: [
+      'Ouvrez Risques > Vulnérabilités > Active Directory. La page reprend le rapport d’analyse de l’Active Directory remis par le service ADS de l’ANSSI à partir de votre collecte ORADAD : note globale (1 à 5) et son évolution d’un import à l’autre, progression par niveau, points de contrôle non conformes par niveau et par type, et pour chaque point le nombre d’objets de l’annuaire concernés et sa variation depuis l’import précédent (« apparu » pour un point nouveau). Les points corrigés depuis l’import précédent sont listés à part. Le type d’un point est donné en numéro, avec son libellé : 1 information, 2 avertissement, 3 vulnérabilité.',
+      'Noms des objets (comptes, groupes, ordinateurs, GPO, relations d’approbation) : ils ne sont pas chargés avec la page, qui ne montre que des nombres. « Voir les noms » d’un point (lecture du module) montre les objets concernés au dernier import, ceux apparus et ceux corrigés depuis l’import précédent ; chaque consultation est inscrite au journal d’audit (qui, quand, quel point), sans les noms.',
+      'Les noms ne quittent jamais la plateforme : ni l’assistant, ni les courriels, ni les notifications, ni le rapport de pilotage, ni le journal d’audit, ni la recherche du module ne les reçoivent. Seuls les deux derniers imports gardent leurs noms ; les plus anciens ne gardent que leurs nombres (effacement à chaque import). Seuls le nom court et la nature d’un objet sont gardés, 200 noms au plus par point (les autres comptés) ; jamais un mot de passe, une empreinte, un attribut de compte, un SID ni un chemin LDAP complet.',
+      'Importer un rapport (droit d’administrer le module) : en bas de la page, choisissez le rapport JSON (50 Mo au plus). Il est lu dans votre navigateur ; seuls partent la note, la progression, les points non conformes et, pour chacun, le nombre d’objets et les noms courts. Le nom du fichier et le nom de domaine ne partent pas. Un rapport dont la forme n’est pas reconnue est refusé en entier, avec la partie en cause : rien n’est importé à moitié. Même limite que les imports Nessus et Silène : trente imports de fichiers commencés par heure et par personne.',
+      '« Supprimer » un import (droit d’administrer le module) efface sa note, ses points, ses nombres et ses noms, après saisie de SUPPRIMER. Le journal d’audit reste ; il ne contient aucun nom.',
+    ],
+  },
+  {
     id: 'vulnerabilites-tendances',
     title: 'Vulnérabilités : tendances et rapport de pilotage',
     permission: 'vulnerabilites:lire',

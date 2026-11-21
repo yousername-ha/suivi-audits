@@ -3573,3 +3573,162 @@ découlent ; e2e Playwright non joués (CI seulement) ; Node 26 ; pile Docker ; 
 2. Fin de support au niveau de la technologie d'AlgoLightHouse et des services exposés (point ouvert 3 de l'addendum « lot
    S3 »).
 3. Historiser la montée de priorité due à la fin de support (le délai court depuis la première présence, règle du lot S1).
+## Addendum du 20/11/2026 — lot AD-1 : rapport de l'Active Directory (service ADS de l'ANSSI, à partir d'une collecte ORADAD)
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`099`, quatre routes nouvelles, aucun droit nouveau, aucune dépendance, **aucun flux sortant** ;
+`apps/api/src/assistant/*`, `apps/web/src/assistant/*`, `docker-compose.yml`, `docker/*`, `scripts/exploitation-worker.py`
+et `apps/api/src/vulnerabilites/recherche.ts` inchangés.
+
+### Décisions du RSSI (20/11/2026)
+
+1. Le rapport d'analyse de l'Active Directory remis par le service ADS de l'ANSSI (à partir d'une collecte ORADAD) s'importe
+   **par fichier JSON lu dans le navigateur**, sur le modèle des imports Nessus et Silène : liste blanche revalidée par
+   l'API, limite d'imports par heure, suppression d'un import, statistiques des tables recalculées après l'import.
+2. Le **type** d'un point est gardé en numéro, avec son libellé : 1 information, 2 avertissement, 3 vulnérabilité.
+3. L'import garde le **nombre et les noms** des objets concernés par point, avec ces protections :
+   1. **voir les noms fait partie du droit « Analyste »** : pas de droit à part ; en attendant le lot 3 de
+      l'[ADR 0092](0092-refonte-des-droits-pyramide-des-perimetres.md), il se branche sur l'existant, l'accès au module
+      Vulnérabilités (`vulnerabilites:lire`). Cette décision du 20/11/2026, confirmée en direct, remplace celle du même jour
+      qui demandait un droit de lecture réservé (réalisé un temps puis retiré, sans avoir été publié) ;
+   2. les noms ne sortent jamais de la plateforme : ni assistant, ni courriels, ni notifications, ni rapports, ni journal
+      d'audit, ni journaux applicatifs ; ces canaux ne reçoivent que des nombres ;
+   3. chaque consultation des noms est **tracée au journal d'audit** (qui, quand, quel point de contrôle), sans les noms ;
+   4. **conservation limitée** : les noms des deux derniers imports seulement ; les plus anciens ne gardent que les nombres
+      (purge à chaque import) ;
+   5. jamais conservés : mots de passe, empreintes, attributs détaillés des comptes, SID complets, chemins LDAP complets si un
+      nom court suffit ; seulement le nom affichable et la nature de l'objet, bornés en longueur et en nombre par point, avec
+      compteur du surplus ;
+   6. **bouton de suppression** d'un import (noms et nombres).
+4. **Écran** : une page du module (pas une fenêtre) : note globale et son évolution, points ouverts par niveau et par type,
+   pour chaque point le nombre d'objets et la variation, et les noms, « corrigés depuis » et « apparus depuis ».
+
+### Réalisation
+
+- **Droits** : aucun droit nouveau ; `packages/shared/src/permissions.ts` et l'écran des rôles sont inchangés. Les nombres
+  et les noms se lisent avec `vulnerabilites:lire` ; les noms seulement par une route à part, point par point, chaque
+  consultation tracée ; import et suppression avec `vulnerabilites:administrer`.
+- **Lecture du rapport** (`apps/web/src/vulnerabilites/ads.ts`, une fonction, `lireRapportAds`) : JSON seulement, 50 Mo au
+  plus. Toutes les clés supposées sont dans `CLES_RAPPORT_ADS` ; pour chaque information, la première clé présente dont la
+  valeur a la forme attendue l'emporte ; une enveloppe (`report`, `data`…) est descendue d'un niveau. Note globale,
+  progression et liste des points exigées ; chaque point exige un type (sinon lu dans l'identifiant public supposé), un
+  niveau (idem), une référence, un titre et des objets ou un nombre. Toute absence ou forme illisible fait **refuser tout le
+  rapport** (« Forme non reconnue : … (clés cherchées : …). Rien n'a été importé. »), jamais un import partiel silencieux.
+  Seuls les objets sans nom lisible, désignés par leur seul SID, au-delà de la borne ou en double sont écartés, et comptés.
+- **Noms courts** : chemin LDAP réduit à la valeur de son premier élément (`CN=compte,OU=…` → `compte`), `DOMAINE\nom` et
+  `nom@domaine` réduits au nom, SID jamais gardé, texte nettoyé (caractères de contrôle et invisibles), 64 caractères au plus
+  (« … » et compté). Nature lue de la classe ou du type de l'objet (ou du groupe qui le range : `users`, `computers`…), du
+  plus précis au plus général : contrôleur de domaine, compte de service, ordinateur, GPO, groupe, relation d'approbation,
+  compte d'utilisateur, sinon « autre » (« ordinateur » pour un nom terminé par `$`).
+- **Envoi** : `POST /api/vulnerabilites/annuaire/imports` (droit `vulnerabilites:administrer`, CSRF, corps de 8 Mio au plus,
+  limite des imports de fichiers commencés **partagée** avec Nessus et Silène : trente par heure et par personne). Corps
+  `ImportAds` (zod strict à chaque niveau) : synthèse (date sans heure, note entière 1 à 5, progression de cinq niveaux au
+  plus, total des conformes), 300 points au plus, éléments écartés. Les nombres d'aperçu restent sur le poste. Les formes
+  admises par le schéma sont au moins aussi strictes que les contraintes de la base : une contrainte violée (dont le message
+  de PostgreSQL recopierait la ligne refusée) ne peut pas venir d'un corps accepté.
+- **Rangement** (`apps/api/src/vulnerabilites/annuaire-ad.ts`) : un numéro par import (table verrouillée le temps de
+  l'attribution) ; dans la même transaction, les noms des imports plus anciens que les deux derniers sont effacés et leur
+  marque `noms_conserves` passe à faux. Après la validation, `ANALYZE` des points et des objets.
+- **Lecture** : `GET /api/vulnerabilites/annuaire` (`vulnerabilites:lire`) rend des **nombres seulement**, quel que soit le
+  droit de la personne : historique de vingt-quatre imports (note, date, nombres, noms gardés ou non), dernier et précédent,
+  points ouverts du dernier import (objets, objets du précédent, « apparu »), points corrigés (présents au précédent, absents
+  du dernier). `GET /api/vulnerabilites/annuaire/points/:identifiant/noms` (`vulnerabilites:lire`, route à part ; sans
+  accès au module, 403) : noms du dernier import, objets comptés sans nom, apparus et corrigés depuis le
+  précédent (si ses noms sont gardés ; comparaison marquée partielle si l'un des deux n'a pas gardé tous les noms du point).
+  Chaque appel écrit `vulnerabilites.annuaire.noms.consultes` (compte, horodatage, import, identifiant du point, nombres de
+  noms, d'apparus et de corrigés) dans la même transaction que la lecture.
+- **Suppression** : `DELETE /api/vulnerabilites/annuaire/imports/:id` (`vulnerabilites:administrer`, If-Match sur la version
+  de l'import) : points et noms en cascade ; journal `vulnerabilites.annuaire.import.supprime` en nombres.
+- **Journal** : `vulnerabilites.annuaire.importe` (numéro, note, nombres de points, d'objets, de noms, d'imports purgés,
+  écartés) ; aucun nom d'objet ni titre (test d'API).
+- **Interface** (`apps/web/src/vulnerabilites/AnnuaireAd.tsx`, Risques > Vulnérabilités > « Active Directory ») : note
+  globale et son évolution, notes successives, progression par niveau, tableau des points ouverts par niveau et par type,
+  liste des points (titre, identifiant, référence, type en numéro et libellé, niveau, objets, variation), « Voir les noms »
+  par point, sur clic, avec la mention que la consultation est tracée (une requête par ouverture, ni relance ni cache gardé), points corrigés, imports
+  (supprimer : saisie de SUPPRIMER), section d'import. Aucune fenêtre ; composants de la charte, CSP stricte. Aide de la page
+  (`vulnerabilites-annuaire`).
+
+### Tables (migration `099`)
+
+| Table | Contenu | Remise à vide |
+|---|---|---|
+| `vulnerabilites_ad_imports` | numéro, date du rapport, note, progression, total des conformes, nombres, écartés, `noms_conserves`, version, auteur | avec le travail |
+| `vulnerabilites_ad_points` | point non conforme d'un import : identifiant, référence, type (1 à 3), niveau (1 à 5), titre, objets | avec le travail |
+| `vulnerabilites_ad_objets` | nom court (1 à 64 caractères, ni SID, ni chemin LDAP, ni `\`) et nature d'un objet d'un point, rang | avec le travail |
+
+### Bornes choisies
+
+300 points non conformes par import ; 200 noms par point (au-delà, comptés « sans nom conservé ») ; 64 caractères par nom ;
+200 caractères par titre (« … » et compté) ; 64 par référence ; 96 par identifiant ; 10 000 000 objets annoncés par point ;
+50 Mo de fichier ; 8 Mio de corps (le pire corps admis, vérifié par un test, tient sous cette borne) ; deux imports gardent
+leurs noms ; vingt-quatre imports dans l'historique.
+
+### Clés supposées du rapport (`CLES_RAPPORT_ADS`, aucune vérifiée)
+
+Enveloppe : `report`, `rapport`, `data`, `result`, `results`. Note : `score`, `note`, `level`, `niveau`, `global_level`,
+`globalLevel`, `maturity_level`, `maturity`. Date : `date`, `generated`, `generated_at`, `generatedAt`, `generation_date`,
+`collect_date`, `collection_date`, `timestamp`. Progression : `levels`, `niveaux`, `progression`, `progress`,
+`level_progress`, `levelProgress` (tableau, ou objet indexé `1` à `5` ou `level1`…) ; dans un niveau : `level`, `niveau`,
+`id` ; conformes `passed`, `ok`, `conformes`, `compliant`, `success`, `validated` ; total `total`, `count`, `nombre`,
+`checks` ; pourcentage `percent`, `percentage`, `pourcentage`, `progress`, `ratio` (lu de 0 à 100), ou un nombre seul.
+Totaux : `totals`, `summary`, `stats`, `statistics`, `synthese` ; conformes `passed`, `ok`, `conformes`, `compliant`,
+`success`. Points : `rules`, `checks`, `points`, `findings`, `controles`, `vulnerabilities`, `anomalies` (tableau, ou objet
+indexé par identifiant). Point : identifiant `id`, `identifier`, `identifiant`, `code`, `rule_id`, `ruleId` ; type `type`,
+`severity`, `kind` ; niveau `level`, `niveau` ; référence `reference`, `ref`, `module`, `rule`, `check` ; titre `title`,
+`titre`, `name`, `nom`, `label`, `description` ; objets `objects`, `objets`, `members`, `items`, `affected`, `details`,
+`entries`, `accounts` (tableau de textes ou d'objets, ou objet de tableaux rangés par nature) ; nombre `count`, `nombre`,
+`total`, `objects_count`, `objectsCount`. Objet : nom `samaccountname`, `sAMAccountName`, `name`, `nom`, `displayName`,
+`displayname`, `cn`, `dnshostname`, `dNSHostName`, `distinguishedName`, `dn` ; nature `type`, `objectClass`, `objectclass`,
+`class`, `category`, `nature`, `kind`. Identifiant public supposé d'un point : `{vuln|warn|info}{niveau}_{référence}` (sert
+à lire le type et le niveau quand ils manquent, et à former l'identifiant quand le rapport n'en donne pas).
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Données de l'organisation, sans périmètre** : tout lecteur du module voit les nombres (comme les produits surveillés) ;
+  aucun rattachement d'un rapport à un périmètre de la plateforme.
+- **Une seule série d'imports** pour l'organisation : deux domaines ou deux forêts importés l'un après l'autre seraient
+  comparés entre eux (« corrigés », « apparus ») ; le nom de domaine n'est pas lu.
+- **Import et suppression** avec le droit d'administrer le module (la réponse de l'import ne contient que des nombres).
+- **Suppression du dernier import** : l'import d'avant redevient le dernier ; celui qui le précède a pu perdre ses noms à un
+  import antérieur : la comparaison des noms n'est alors plus possible (« pas d'import précédent dont les noms sont
+  gardés »).
+- **Note globale entière** de 1 à 5 ; un rapport à note décimale est refusé (« forme non reconnue »).
+- **Réduction des noms** : `nom@domaine` réduit à `nom` et un chemin LDAP à son premier élément (deux objets homonymes de deux
+  unités d'organisation différentes ne font alors qu'un nom, compté « en double »).
+- **Identité d'un point** d'un import à l'autre : son identifiant ; un identifiant qui change fait un point « corrigé » et un
+  point « apparu ».
+
+### Limites
+
+- **Noms en clair dans la base et dans ses sauvegardes** : les noms des deux derniers imports sont rangés sans chiffrement ;
+  une sauvegarde faite avant une purge ou une suppression les garde jusqu'à sa rotation.
+- Les nombres (note, points, objets) et les noms sont vus de tout lecteur du module ; seuls les nombres figurent au journal
+  d'audit. Le droit « Analyste » du lot 3 de l'ADR 0092 restreindra les noms à ses titulaires.
+- Les journaux applicatifs ne reçoivent aucun nom de ce lot (ni le corps des requêtes, ni les messages de validation, qui ne
+  reprennent jamais une valeur refusée) ; ce point est garanti par la construction, non par un test qui lirait les journaux.
+
+### Tests
+
+`packages/shared/test/import-ads.test.ts` (schémas, liste blanche stricte, noms admis, bornes, pire corps sous 8 Mio,
+libellés) ; `apps/api/test/vulnerabilites-annuaire-ad.test.ts` (migration et contraintes, aucun droit nouveau, nombres
+seulement sur la page, 403 sans accès au module, 409 module désactivé, noms, apparus et corrigés pour un lecteur du module, consultation tracée sans nom, purge au troisième
+import, suppression avec If-Match, droit d'import, limite horaire, liste blanche, aucun nom dans le journal ni dans la
+recherche) ; `apps/web/test/vulnerabilites-annuaire-ad.test.ts` (lecture du rapport fictif `tests/fixtures/ads/`, champs
+marqués « INTERDIT » jamais envoyés, formes tolérées, « forme non reconnue », noms courts et nature, page (noms sur clic, consultation
+annoncée comme tracée ; import et suppression pour l'administration), aide).
+
+### Non vérifié
+
+**Aucun rapport réel n'a été lu** : forme et noms de clés supposés (liste ci-dessus), identifiant public
+`{vuln|warn|info}{niveau}_{référence}`, échelle de la progression (pourcentage de 0 à 100 ou nombres), forme des objets
+(textes ou objets, attributs de nom et de classe), présence d'un nombre d'objets distinct de la liste. Aucun parcours
+Playwright n'a été écrit ni joué ; Node 26, pile Docker et CSP du serveur de production non vérifiés localement.
+
+### Points ouverts (hors lot)
+
+1. Les choix ci-dessus ; le sens du champ « type » reste celui de la décision (numéro et libellé).
+2. Corriger `CLES_RAPPORT_ADS` et le fichier fictif `tests/fixtures/ads/rapport-ads-fictif.json` sur la forme d'un rapport
+   réel, relevée sans aucune valeur (comme pour Silène).
+3. Plusieurs domaines ou forêts : une série d'imports par annuaire (libellé saisi à l'import) si le besoin existe.
+4. Chiffrement des noms au repos (coffre de la plateforme), si la limite « noms en clair dans les sauvegardes » n'est pas
+   acceptée.

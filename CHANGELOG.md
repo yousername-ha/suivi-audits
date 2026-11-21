@@ -33,6 +33,14 @@ du journal des collectes de la veille et des exécutions des connecteurs de plus
 chaque source, de chaque instance et de chaque opération, les files en cours et les imports de fichiers sont gardés) ; le
 journal d'audit n'est pas touché. Une remise à vide du travail garde désormais les fréquences choisies pour la veille.
 (session « Module surveillance vulnérabilités SMSI »)
+**Migration automatique `099`** (lot AD-1 : rapport de l'Active Directory, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
+additive (trois tables `vulnerabilites_ad_*`), durée négligeable, sans reprise de données. Aucune action sur le serveur, aucune
+règle de pare-feu : l'import ne fait aucun appel réseau. Aucun droit nouveau : toute personne qui lit le module
+Vulnérabilités (`vulnerabilites:lire`) peut afficher, point par point, les noms des objets de l'annuaire, et chaque
+consultation est inscrite au journal d'audit ; relire avant la mise à jour qui détient ce droit. Les noms des objets de
+l'annuaire (deux derniers imports) sont en clair dans la base et donc dans ses sauvegardes. (session « Module surveillance vulnérabilités
+SMSI »)
+
 **Lot PERF-04 du module Vulnérabilités** (ordre du calcul global, décision du RSSI du 20/11/2026,
 [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : sans migration, aucune action sur le serveur. À la mise à jour, le
 détail affiché de quelques failles peut changer à priorité égale ; aucune priorité, aucune alerte, aucun compteur ne change.
@@ -153,6 +161,21 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 - Vulnérabilités, **purge des journaux** (lot PRIO-1) : journal des collectes de la veille et des exécutions des connecteurs
   purgé au-delà de 90 jours, au tic de l'API, au plus une fois par heure ; journal d'audit `vulnerabilites.journaux.purges`
   (nombres seulement) (session « Module surveillance vulnérabilités SMSI »).
+- Vulnérabilités, **rapport de l'Active Directory (service ADS de l'ANSSI, à partir d'une collecte ORADAD)** (lot AD-1,
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md), migration `099`) : nouvelle page « Active Directory » du module. Le
+  rapport JSON est lu dans le navigateur ; seuls partent la note globale (1 à 5), la progression par niveau, les points de
+  contrôle non conformes (type gardé en numéro avec son libellé : 1 information, 2 avertissement, 3 vulnérabilité ; niveau ;
+  référence ; titre) et, par point, le nombre d'objets concernés et au plus 200 noms courts (64 caractères) avec leur nature,
+  le surplus compté ; jamais un mot de passe, une empreinte, un attribut de compte, un SID, un chemin LDAP complet, le nom de
+  domaine ni le nom du fichier. L'API revalide la liste blanche (champ en trop : tout est refusé) ; un rapport de forme non
+  reconnue est refusé en entier, sans import partiel. La page montre à tout lecteur du module la note et son évolution, la
+  progression, les points ouverts par niveau et par type, le nombre d'objets et sa variation par point, les points corrigés ;
+  les noms, avec « apparus depuis » et « corrigés depuis », se demandent point par point par une route à part (décision du
+  RSSI : ils font partie du droit « Analyste », branché sur `vulnerabilites:lire` en attendant le lot 3 de l'ADR 0092 ; pas
+  de droit à part), et chaque consultation est tracée au journal d'audit sans les noms. Seuls les deux derniers imports gardent leurs noms (purge à chaque import) ; un import se supprime (If-Match).
+  Les noms ne vont ni à l'assistant, ni aux courriels, notifications, rapports, journaux ou à la recherche du module. Import
+  et suppression avec le droit d'administrer le module, limite horaire commune aux imports de fichiers. Forme du rapport
+  supposée, jamais vérifiée sur un rapport réel. (session « Module surveillance vulnérabilités SMSI »)
 - Vulnérabilités, **carte « Lignes d'approche » à deux sources, regroupement par adresse IP, filtre par nom de domaine, carte
   en page entière** (lot SI2, [ADR 0100](docs/adr/0100-module-vulnerabilites.md), sans migration) : la route de la carte
   réunit AlgoLightHouse et Silène (un actif vu par les deux est un seul nœud, pastilles ALH et SIL ; un actif vu par Silène
