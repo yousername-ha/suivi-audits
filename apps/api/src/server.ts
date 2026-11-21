@@ -63,6 +63,16 @@ async function main() {
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'veille des vulnérabilités')),
       )
+      // Veille réglementaire (ADR 0110) : au plus une collecte par source activée et par période réglée, rien si le module est
+      // désactivé ou son flux fermé. L'exécutant d'exploitation lit les sources ; l'API ne fait qu'inscrire.
+      .then(() =>
+        svc.modules
+          .run(true, async () => {
+            if ((await svc.modules.state()).disabled.includes('veille_reglementaire')) return;
+            await svc.veilleReglementaire.planifier();
+          })
+          .catch((e: unknown) => log.warn({ err: String(e) }, 'veille réglementaire')),
+      )
       // Synchronisation de Tenable (ADR 0100, lot V5) : une par période réglée (lot F1) et par instance active, rien si le module Intégrations
       // ou le module Vulnérabilités est désactivé, ou si le flux « tenable » est fermé.
       .then(() =>

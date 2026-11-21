@@ -79,6 +79,7 @@ jobs:
           python3 -m unittest discover -s scripts/tests -p test_canal_mise_a_jour.py
           python3 -m unittest discover -s scripts/tests -p test_integration_http.py
           python3 -m unittest discover -s scripts/tests -p test_veille_vulnerabilites.py
+          python3 -m unittest discover -s scripts/tests -p test_veille_reglementaire.py
       - name: OpenAPI
         run: pnpm --filter @suivi/api openapi "$GITHUB_WORKSPACE/openapi.json"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

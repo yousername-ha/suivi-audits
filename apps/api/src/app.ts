@@ -42,6 +42,7 @@ import { cartoRoutes } from './routes/carto.js';
 import { notificationsRoutes } from './routes/notifications.js';
 import { assistantRoutes } from './routes/assistant.js';
 import { vulnerabilitesRoutes } from './routes/vulnerabilites.js';
+import { veilleReglementaireRoutes } from './routes/veille-reglementaire.js';
 import { integrationsRoutes } from './routes/integrations.js';
 import { lastMigration, pendingMigrations } from './systeme.js';
 import { ReadyOut, VersionOut } from '@suivi/shared';
@@ -148,6 +149,7 @@ export function allRoutes(): RouteDef[] {
     ...calendriersPlateformeRoutes,
     ...assistantRoutes,
     ...vulnerabilitesRoutes,
+    ...veilleReglementaireRoutes,
     ...integrationsRoutes,
     ...notificationsRoutes,
     ...pilotageRoutes,

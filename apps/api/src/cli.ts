@@ -20,6 +20,7 @@
      mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
      integrations-claim | integrations-lot <id> | integrations-finish <id>  connecteurs : réclame une exécution, rapporte un lot (synchronisation), son résultat (JSON sur l'entrée standard)
      veille-claim | veille-lot <id> | veille-finish <id>  veille des vulnérabilités : réclame une collecte, rapporte un lot, la termine (JSON sur l'entrée standard)
+     veille-reglementaire-claim | -lot <id> | -finish <id>  veille réglementaire : mêmes commandes, file propre au module
      flux-souhaites              flux vers l'extérieur voulus ouverts (JSON, ADR 0097)
      flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
      flux-reprise                reprise des modules en service jamais décidés (JSON sur l'entrée standard), puis flux voulus ouverts
@@ -74,6 +75,7 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   mail-claim | mail-finish <id>  courriels : réclame une demande, rapporte l'envoi (JSON sur l'entrée standard)
   integrations-claim | integrations-lot <id> | integrations-finish <id>  connecteurs : réclame une exécution, rapporte un lot (synchronisation), son résultat (JSON sur l'entrée standard)
   veille-claim | veille-lot <id> | veille-finish <id>  veille des vulnérabilités : réclame une collecte, rapporte un lot, la termine (JSON sur l'entrée standard)
+  veille-reglementaire-claim | -lot <id> | -finish <id>  veille réglementaire : mêmes commandes, file propre au module
   flux-souhaites              flux vers l'extérieur voulus ouverts (JSON)
   flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
   flux-reprise                modules en service jamais décidés enregistrés ouverts (JSON sur l'entrée standard), puis flux voulus ouverts
@@ -265,6 +267,38 @@ async function main() {
         else await svc.vulnerabilites.veille.terminer(arg!, valeur);
       } catch (e) {
         // Lot refusé (élément mal formé : 422) : code 2, comme un envoi invalide ; collecte close (409) : code 1.
+        console.error((e as Error).message);
+        process.exit((e as { status?: number }).status === 422 ? 2 : 1);
+      }
+      break;
+    }
+    case 'veille-reglementaire-claim': {
+      // Veille réglementaire (ADR 0110) : module désactivé ou flux fermé, rien n'est remis.
+      const actif = !(await svc.modules.state(true)).disabled.includes('veille_reglementaire');
+      const job = await svc.veilleReglementaire.reclamer(actif);
+      if (job) console.log(JSON.stringify(job));
+      break;
+    }
+    case 'veille-reglementaire-lot':
+    case 'veille-reglementaire-finish': {
+      // Même contrôle que la veille des vulnérabilités : taille bornée, champ inattendu ou élément mal formé refusés.
+      const brut = await readStdin(VEILLE_REGLEMENTAIRE_ENTREE_MAX);
+      let valeur: unknown;
+      try {
+        valeur = brut === null ? null : JSON.parse(brut);
+      } catch {
+        valeur = null;
+      }
+      const lot = cmd === 'veille-reglementaire-lot';
+      const schema = lot ? LotVeille : RapportCollecte;
+      if (!z.uuid().safeParse(arg).success || valeur === null || !schema.safeParse(valeur).success) {
+        console.error('Envoi refusé : identifiant, taille ou contenu invalide.');
+        process.exit(2);
+      }
+      try {
+        if (lot) console.log(JSON.stringify(await svc.veilleReglementaire.lot(arg!, valeur)));
+        else await svc.veilleReglementaire.terminer(arg!, valeur);
+      } catch (e) {
         console.error((e as Error).message);
         process.exit((e as { status?: number }).status === 422 ? 2 : 1);
       }
@@ -633,6 +667,8 @@ async function main() {
 /** Lot de la veille : 500 éléments d'au plus quelques kilooctets chacun ; une faille NVD porte depuis le lot V4a jusqu'à
     vingt produits touchés avec leur plage de versions (au pire une douzaine de kilooctets). */
 const VEILLE_ENTREE_MAX = 16 * 1024 * 1024;
+/** Lot de la veille réglementaire : 200 publications d'au plus deux kilooctets chacune. */
+const VEILLE_REGLEMENTAIRE_ENTREE_MAX = 2 * 1024 * 1024;
 /** Lot d'une synchronisation de Tenable : 500 éléments, dont des constats qui citent jusqu'à 500 CVE. */
 const INTEGRATIONS_LOT_MAX = 8 * 1024 * 1024;
 
