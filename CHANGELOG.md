@@ -6,7 +6,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune migration, nouvelle dépendance ou modification de l’API. Reconstruire le frontend lors de l’intégration du code.
+Aucune migration, aucune action : correctif de performance du module Vulnérabilités.
+
+Aucune migration, nouvelle dépendance ou modification du contrat API. Reconstruire le frontend lors de l’intégration du code.
 Les préférences explicites de taille et le mode mural sont conservés. Contrôles locaux, captures, mesures et limites dans le
 [dossier du lot](docs/refonte-neon/densite-2026-11-21/README.md) ; recette Docker/API réelle à effectuer avant livraison. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
 
@@ -30,6 +32,14 @@ Les préférences explicites de taille et le mode mural sont conservés. Contrô
   cache distinctes. Leur collision pouvait fournir un tableau à la place de l’objet du bilan et provoquer
   `e.perimetres is not iterable`. Les sélecteurs de Machines et de Surface externe partagent désormais la clé propre aux
   options, sans changement de contrat serveur. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- Vulnérabilités, **lenteur avec la veille chargée** (défaut PERF-13 du banc du 21/11/2026 sur la version 7.5.0,
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : la lecture des avis du CERT-FR et du CERT Santé qui citent les CVE
+  du parc comparait chaque CVE de chaque avis à toute la liste demandée, soit 3 à 4 secondes à chaque calcul de priorité
+  (listes des failles et des machines, parc, vue d'ensemble, correctifs, rapport mensuel, et le passage périodique de
+  l'application). Elle joint désormais les avis à la liste, lue une fois ; le résultat est le même. Le test de performance
+  du module porte maintenant une veille chargée (10 000 avis) : sur ce jeu, la lecture passe de 2,7 s à 0,13 s, la liste
+  des failles de 3,0 s à 0,4 s et la vue d'ensemble de 3,2 s à 0,4 s (poste de développement)
+  (session « Module surveillance vulnérabilités SMSI »).
 
 ## [7.5.0] — 2026-11-21
 

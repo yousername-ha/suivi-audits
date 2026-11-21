@@ -3732,3 +3732,26 @@ Playwright n'a été écrit ni joué ; Node 26, pile Docker et CSP du serveur de
 3. Plusieurs domaines ou forêts : une série d'imports par annuaire (libellé saisi à l'import) si le besoin existe.
 4. Chiffrement des noms au repos (coffre de la plateforme), si la limite « noms en clair dans les sauvegardes » n'est pas
    acceptée.
+
+## Addendum du 21/11/2026 — correctif PERF-13 : lecture des faits des avis avec la veille chargée
+
+**Constat** (banc de performance du 21/11/2026 sur la version 7.5.0, veille remplie : 14 150 avis, 12 898 CVE demandées) :
+`lireFaitsCve` (`apps/api/src/vulnerabilites/sources.ts`) filtrait les avis par `a.cves && liste AND c.cve = ANY(liste)`.
+Avec une longue liste, l'opérateur de recouvrement compare chaque CVE de chaque avis à toute la liste : 3,3 à 4,2 s à chaque
+appel, soit l'essentiel du temps de six routes (constats, machines, parc, vue d'ensemble, correctifs, rapport) et du passage
+périodique de l'application. Le défaut était invisible sans avis, donc dans le test de performance du lot PERF.
+
+**Décision du RSSI du 21/11/2026** : correctif immédiat, publié seul.
+
+**Réalisation** : au-delà de 50 CVE demandées, les avis sont joints par hachage à la liste dédoublonnée (`JOIN (SELECT
+DISTINCT … FROM unnest(liste))`) ; en dessous (fiche d'une CVE, délai d'une décision), le filtre par l'index des CVE citées
+est gardé, plus court pour une liste brève. Les lignes rendues sont les mêmes dans les deux cas. Aucune migration, aucun
+changement de priorité, de droit ni de contrat.
+
+**Test** : `apps/api/test/performance-vulnerabilites.test.ts` porte désormais une veille chargée (10 000 avis, 1 à 6 CVE
+citées, la moitié présentes sur le parc) et vérifie la lecture seule (médiane sous 300 ms, résultat comparé à une requête
+de référence indépendante, cas d'une seule CVE compris). Sur le code d'avant, ce test échoue : 2,7 s pour la lecture, 3,0 à
+3,7 s pour les constats, les machines et la vue d'ensemble ; après : 0,13 s, puis 0,25 à 0,45 s (poste de développement).
+
+**Non traité ici** : les autres défauts du banc (PERF-01, 02, 04, 05, 16), à remesurer après ce correctif ; la lecture des
+CVE d'AlgoLightHouse de la même fonction (`c.cve = ANY(liste)`, sans recouvrement de tableaux), non mesurée lente.

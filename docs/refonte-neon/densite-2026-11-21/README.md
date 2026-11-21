@@ -4,7 +4,11 @@ Date : 21 novembre 2026, Europe/Paris. Session « Codex » (`01a193c1-316c-7677-
 
 **État : implémenté et contrôlé localement après la dernière correction Layout/verre.** Base :
 `15dc5a6748f6105b6a1367fa7e3a3c944521efd5`, version 7.5.0, branche `codex/refonte-densite-2026-11-21`.
-Le commit contenant ce dossier porte la livraison ; le SHA est consultable dans l’historique Git de la branche.
+Le code contrôlé est celui de `16f58d1` ; `f17b521` précise la commande de reproduction.
+La branche de travail a ensuite avancé vers `a44fe46` (PR #352/#353) : elle est fusionnée dans cette branche de refonte.
+Le raccordement conserve ces travaux ; le seul conflit était documentaire dans CHANGELOG, et les deux entrées sont conservées.
+Le frontend, `packages/ui` et les specs E2E sont identiques au code contrôlé (`git diff 16f58d1 -- apps/web packages/ui tests/e2e`, vide).
+Les nouveaux fichiers API/performance proviennent intégralement de la branche cible et n’ont pas été retestés dans ce lot UI.
 Aucune fusion, publication de version ou mise en production n’a été effectuée. La validation visuelle par l’utilisateur reste à recueillir.
 
 ## Demande et analyse
