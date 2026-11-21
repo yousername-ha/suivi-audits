@@ -373,6 +373,34 @@ export function validDate(s: string) {
   const d = new Date(s + 'T12:00:00Z');
   return Number.isFinite(d.getTime()) && d.toISOString().slice(0, 10) === s;
 }
+/** Nombre maximal de tâches d'une action (ADR 0111) : au-delà, la fiche est refusée (422). */
+export const TACHES_ACTION_MAX = 50;
+/** Tâche d'une action (ADR 0111) : intitulé d'une ligne (caractères de contrôle et espaces superflus retirés), case
+    « faite », responsable affiché (simple affichage : il n'ouvre l'action à personne), échéance AAAA-MM-JJ. */
+export const TacheAction = z
+  .object({
+    id: z.uuid(),
+    intitule: z
+      .string()
+      .max(2000)
+      .transform((s) =>
+        s
+          // eslint-disable-next-line no-control-regex
+          .replace(/[\u0000-\u001f\u007f]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim(),
+      )
+      .pipe(z.string().min(1, 'Intitulé de tâche vide.').max(200, 'Intitulé de tâche limité à 200 caractères.')),
+    faite: z.boolean(),
+    responsable: ResponsableRef.nullable().optional(),
+    echeance: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Échéance de tâche attendue au format AAAA-MM-JJ.')
+      .refine(validDate, 'Échéance de tâche : date inexistante.')
+      .nullable(),
+  })
+  .strict();
+export type TacheAction = z.infer<typeof TacheAction>;
 export const TaskData = z
   .object({
     description: z.string().max(10000),
@@ -389,12 +417,26 @@ export const TaskData = z
     dependencies: z.array(z.uuid()).max(100),
     seriesId: z.uuid().optional(),
     occurrenceKey: z.string().max(200).optional(),
+    /** Tâches de l'action (ADR 0111) ; absent : aucune tâche. Cochées toutes, elles ne terminent pas l'action. */
+    taches: z
+      .array(TacheAction)
+      .max(TACHES_ACTION_MAX, `Une action compte au plus ${TACHES_ACTION_MAX} tâches.`)
+      .optional(),
   })
   .strict()
   .superRefine((v, c) => {
     if (v.startAt && v.dueAt && v.startAt > v.dueAt)
       c.addIssue({ code: 'custom', message: 'Le début doit précéder l’échéance.' });
+    if (v.taches && new Set(v.taches.map((t) => t.id)).size !== v.taches.length)
+      c.addIssue({ code: 'custom', path: ['taches'], message: 'Identifiants de tâches dupliqués.' });
   });
+
+/** Avancement d'une action selon ses tâches (ADR 0111) : nombre faites, total et pourcentage arrondi ; null sans tâche. */
+export function avancementTaches(taches: readonly { faite: boolean }[] | undefined | null) {
+  if (!taches?.length) return null;
+  const faites = taches.filter((t) => t.faite).length;
+  return { faites, total: taches.length, pourcentage: Math.round((faites / taches.length) * 100) };
+}
 export type TaskData = z.infer<typeof TaskData>;
 export const SeriesData = z
   .object({

@@ -156,6 +156,14 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 
 ### Ajouté
 
+- **Tâches d'une action et avancement** (décisions du RSSI du 20/11/2026,
+  [ADR 0111](docs/adr/0111-taches-d-une-action-et-avancement.md)). Une action du plan d'actions peut contenir jusqu'à 50
+  tâches : intitulé, case « faite », responsable et échéance. La fiche de l'action les liste avec « n faites sur N » et
+  une jauge d'avancement. Dans la frise, la part faite du tube est plus foncée, avec « n/N · p % » au bout, et un petit
+  losange marque sous le tube l'échéance de chaque tâche (à faire, faite, en retard). Le responsable d'une tâche est un
+  simple affichage : il n'ouvre l'action à personne, et seul qui peut modifier l'action gère ses tâches. Cocher toutes les
+  tâches ne termine pas l'action. Champ facultatif des données d'une action, sans migration.
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 - **Veille réglementaire** (lot VR-1, [ADR 0110](docs/adr/0110-veille-reglementaire.md)) : nouveau module
   `veille_reglementaire` et page Conformité et audits > Veille réglementaire. Publications de la CNIL, du CEPD, d'EUR-Lex et
   de l'ANSSI lues par l'exécutant d'exploitation avec le script isolé de la veille des vulnérabilités (liste fermée, HTTPS
@@ -298,6 +306,16 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 
 ### Modifié
 
+- **Frises (vue Timeline) du plan d'actions et des tâches récurrentes refaites** (décisions du RSSI du 20/11/2026, sur
+  maquettes). Colonnes à gauche (action ou série, responsable, échéance, état ou rythme, prochaine, dernier résultat),
+  frise à droite avec la ligne « Aujourd'hui », et pied qui compte les échéances ou occurrences de chaque période.
+  Plan d'actions : groupes repliables (« Regrouper par » priorité, responsable, état ou aucun), échelles Semaines, Mois,
+  Trimestres ou Année, actions en tubes de la teinte de leur état ; une action sans date de début part de sa date de
+  création ; terminées et annulées masquées par défaut, avec leurs interrupteurs. Tâches récurrentes : occurrences en
+  icônes de verre (carré vert OK, losange rouge KO, carré gris NA, carré orange « résultat attendu », carré pointillé « à
+  venir », triangle rouge dont la lueur pulse pour le retard, fixe si les animations sont réduites) ; actions hors série
+  repliées. Infobulle au survol (intitulé, dates, état), ligne survolée teintée de bleu nuit, jours de fond dans la
+  légende. Aucune occurrence n'est inventée, et les dates incohérentes restent listées.
 - **Boîte d'outils et en-tête des pages de tâches en verre « maintenance », bleu nuit à l'essai en clair** (choix du RSSI du
   20/11/2026). En mode clair, la boîte d'outils (vues, recherche, filtres) n'est plus fondue dans le fond blanc : elle
   devient un bloc clair, au contour fin teinté de violet, avec un léger fondu à gauche et une ombre douce. Un réglage à
