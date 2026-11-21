@@ -474,7 +474,7 @@ test('12. versions : « Revue de direction », modification, restauration exacte
   await dlg.getByLabel('Nouvelle version').fill('Revue de direction');
   await dlg.getByRole('button', { name: 'Enregistrer une version' }).click();
   await expect(p.getByText('Version enregistrée.')).toBeVisible();
-  await dlg.getByRole('button', { name: 'Fermer' }).click();
+  await dlg.getByRole('button', { name: 'Fermer', exact: true }).click();
   await editer(p);
   await glisser(p, 'isms', 80, 0);
   await enregistrer(p);

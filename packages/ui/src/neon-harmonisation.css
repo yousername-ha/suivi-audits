@@ -1,0 +1,340 @@
+/* Harmonisation plateforme — 21/11/2026. Modèle Fournisseurs : vues, recherche et entonnoir dans une seule boîte.
+   Même composant dans les pages et les fenêtres rendues en portail ; aucune règle ne dépend du module affiché. */
+.barre-boite-ligne {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.barre-boite.barre-boite {
+  flex-wrap: wrap;
+  max-inline-size: 100%;
+  border-inline-start: var(--suivi-trait-focus) solid var(--menu-teinte-pilotage);
+  background: linear-gradient(
+    112deg,
+    color-mix(in srgb, var(--menu-fond-haut) 94%, transparent),
+    color-mix(in srgb, var(--menu-fond-bas) 90%, transparent)
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--menu-texte) 12%, transparent),
+    0 4px 12px -8px var(--menu-fond-haut);
+  backdrop-filter: blur(12px) saturate(115%);
+  -webkit-backdrop-filter: blur(12px) saturate(115%);
+  color: var(--menu-texte);
+}
+/* Le verre crée un contexte d'empilement : le panneau ouvert doit passer devant les tableaux voisins,
+   tout en restant sous les listes de choix Mantine rendues en portail. */
+.barre-boite:has(.barre-boite__outil[aria-expanded='true']) {
+  position: relative;
+  z-index: 10;
+}
+.barre-boite__vues {
+  flex: none;
+}
+.barre-boite .barre-boite__recherche {
+  min-inline-size: 0;
+  flex: 0 1 auto;
+}
+.barre-boite .barre-boite__recherche .mantine-Input-input {
+  inline-size: clamp(12rem, 21vw, 24rem);
+  max-inline-size: 100%;
+}
+/* Les libellés et aides restent associés au champ ; ils ne prennent pas une deuxième ligne permanente. */
+.barre-boite__recherche :is(.mantine-InputWrapper-label, .mantine-InputWrapper-description) {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.barre-boite .barre-boite__soumettre {
+  flex: none;
+  inline-size: var(--suivi-controle-h);
+  block-size: var(--suivi-controle-h);
+  min-inline-size: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--menu-commande);
+}
+.barre-boite .barre-boite__soumettre:is(:hover, :focus-visible) {
+  border-color: var(--menu-teinte-pilotage);
+  background: var(--menu-survol);
+}
+.barre-boite__soumettre .barre-loupe {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+.barre-outils__ajout {
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filtres-avances.filtres-avances {
+  z-index: 310;
+  inline-size: min(34rem, calc(100vw - 2rem));
+  max-inline-size: calc(100vw - 2rem);
+  max-block-size: min(65dvh, 34rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding: var(--suivi-padding-dialogue);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-block-start-color: var(--neon-accent);
+  box-shadow: var(--suivi-ombre-haute);
+  background: var(--suivi-surface);
+  color: var(--mantine-color-text);
+}
+.barre-filtres-champs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mantine-spacing-md);
+  align-items: end;
+}
+.barre-filtres-champs > :is(.mantine-CheckboxGroup-root, .mantine-Group-root, .mantine-Stack-root) {
+  grid-column: 1 / -1;
+}
+.barre-filtres-champs .mantine-Input-input {
+  max-inline-size: 100%;
+}
+/* Les listes de choix et les menus d'actions utilisent le même contour, relief et rythme. */
+:is(.mantine-Menu-dropdown, .mantine-Popover-dropdown, .mantine-Combobox-dropdown) {
+  border-color: var(--suivi-trait);
+  border-radius: var(--mantine-radius-md);
+  box-shadow: var(--suivi-ombre-haute);
+}
+:is(.mantine-Menu-item, .mantine-Combobox-option) {
+  padding-block: var(--mantine-spacing-xs);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.4;
+}
+
+/* Chaque pictogramme occupe le centre géométrique de sa commande, y compris les icônes dans un span nav-icone. */
+.mantine-ActionIcon-root .mantine-ActionIcon-icon,
+.mantine-ActionIcon-root > .nav-icone {
+  display: grid;
+  place-items: center;
+  line-height: 0;
+}
+.mantine-ActionIcon-icon > .nav-icone {
+  display: grid;
+  place-items: center;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+}
+.mantine-ActionIcon-root svg {
+  display: block;
+  flex: none;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+  margin: 0;
+}
+.mantine-ActionIcon-root .nav-icone > svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+.mantine-ActionIcon-icon > svg {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+/* Un tableau peut élargir la fiche, mais ne transforme pas une fenêtre de travail en dalle géante sur un écran 4K. */
+html .mantine-Modal-content:not([data-full-screen]):has(.mantine-Modal-body :is(table, .table-wrap)) {
+  max-inline-size: min(100%, 80rem);
+}
+/* Cadre de TOUTES les fenêtres, dont RETEX : même hiérarchie, même barre de titre et mêmes commandes.
+   Les contenus et états critiques conservent leurs couleurs et leurs parcours ; seul le menu de navigation reste un tiroir dédié. */
+html :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir)) {
+  color: var(--mantine-color-text);
+  font-family: var(--mantine-font-family);
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.45;
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-header, .mantine-Drawer-header) {
+  min-block-size: var(--suivi-entete-h);
+  gap: var(--mantine-spacing-sm);
+  padding: var(--suivi-padding-dialogue);
+  border-block-end: var(--suivi-trait-l) solid var(--suivi-trait);
+  background: linear-gradient(120deg, var(--suivi-verre-reflet), transparent 65%), var(--suivi-surface);
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-title, .mantine-Drawer-title) {
+  color: var(--neon-titre);
+  font-size: var(--suivi-titre-section);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: normal;
+  overflow-wrap: anywhere;
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-close, .mantine-Drawer-close) {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: var(--suivi-petit-controle-h);
+  block-size: var(--suivi-petit-controle-h);
+  border-radius: var(--mantine-radius-sm);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  background: var(--suivi-surface);
+  color: var(--mantine-color-text);
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body) {
+  min-inline-size: 0;
+  padding: var(--suivi-padding-dialogue);
+  overflow-wrap: anywhere;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) :is(.a-propos, .a-propos__texte) {
+  margin-block: 0;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .a-propos > summary {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 500;
+  padding-block: var(--mantine-spacing-2xs);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .data-table :is(th, td) {
+  padding: var(--suivi-cellule-py) var(--mantine-spacing-sm);
+  line-height: 1.4;
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .data-table table {
+  font-size: var(--mantine-font-size-sm);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-InputWrapper-label {
+  margin-block-end: var(--mantine-spacing-2xs);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 500;
+  line-height: 1.4;
+}
+.fenetre-fiche-corps .mantine-Tabs-panel > .mantine-Stack-root {
+  gap: var(--suivi-section-gap);
+}
+:is(.mantine-Modal-body, .mantine-Drawer-body) .fenetre-actions {
+  padding-block: var(--mantine-spacing-sm);
+  gap: var(--mantine-spacing-xs);
+}
+/* Le fond du pied couvre aussi le retrait du corps : aucun texte ne dépasse sous les boutons fixes. */
+:is(.mantine-Modal-body, .mantine-Drawer-body) .fenetre-actions,
+:is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  > .mantine-Stack-root
+  > .mantine-Group-root:last-child:has(> .mantine-Button-root) {
+  box-shadow: 0 var(--suivi-padding-dialogue) 0 var(--suivi-surface);
+}
+/* Les sept fenêtres RETEX rejoignent le cadre commun ; leur chronologie et leurs états restent spécifiques. */
+html .mantine-Modal-content.retex-modal:not([data-full-screen]) {
+  display: flex;
+  flex-direction: column;
+  max-block-size: calc(100dvh - 2 * var(--modal-y-offset));
+  inline-size: min(var(--modal-size), 100%);
+  overflow: hidden;
+  border-radius: var(--fenetre-rayon);
+}
+html .mantine-Modal-content.retex-modal > .mantine-Modal-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+/* La recherche globale des vulnérabilités conserve son combobox et ses raccourcis ; même gabarit que les recherches locales. */
+.rv.rv {
+  inline-size: min(100%, 28rem);
+  margin-block: 0;
+}
+.rv .rv__champ {
+  min-block-size: var(--suivi-controle-h);
+  padding-block: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-md);
+  border-color: var(--menu-trait);
+  background: var(--menu-fond);
+  color: var(--menu-texte);
+}
+.rv .rv__champ input {
+  color: var(--menu-texte);
+  font-size: var(--mantine-font-size-sm);
+}
+.rv .rv__champ input::placeholder {
+  color: var(--menu-secondaire);
+}
+.rv .rv__etiquette {
+  display: none;
+}
+.rv .rv__panneau {
+  min-inline-size: 100%;
+  inline-size: min(44rem, calc(100vw - 2rem));
+}
+@media (max-width: 36em) {
+  .barre-filtres-champs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .barre-boite .barre-boite__recherche {
+    flex: 1 1 10rem;
+  }
+  .barre-boite .barre-boite__recherche .mantine-Input-input {
+    inline-size: 100%;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .barre-boite.barre-boite {
+    background: var(--menu-fond);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+@media (forced-colors: active) {
+  .barre-boite.barre-boite {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
+}
+
+/* Dans une grande fiche sur bureau, les champs courts se partagent la ligne. Textes libres, aides, tableaux,
+   relations, calendriers et actions gardent toute la largeur. L'ordre du DOM et du clavier est inchangé. */
+@media (min-width: 64em) {
+  .fenetre-large .fenetre-formulaire,
+  .fenetre-large .fenetre-champs,
+  .fenetre-large
+    > .mantine-Modal-body
+    > .mantine-Stack-root:where(
+      :has(> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root ~ .mantine-InputWrapper-root)
+    ) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--mantine-spacing-md);
+  }
+  .fenetre-large :is(.fenetre-formulaire, .fenetre-champs) > *,
+  .fenetre-large
+    > .mantine-Modal-body
+    > .mantine-Stack-root:where(
+      :has(> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root ~ .mantine-InputWrapper-root)
+    )
+    > * {
+    grid-column: 1 / -1;
+    min-inline-size: 0;
+  }
+  .fenetre-large
+    :is(.fenetre-formulaire, .fenetre-champs)
+    > .mantine-InputWrapper-root:not(.mantine-Textarea-root, .mantine-MultiSelect-root),
+  .fenetre-large
+    > .mantine-Modal-body
+    > .mantine-Stack-root:where(
+      :has(> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root ~ .mantine-InputWrapper-root)
+    )
+    > .mantine-InputWrapper-root:not(.mantine-Textarea-root, .mantine-MultiSelect-root) {
+    grid-column: auto;
+  }
+  .fenetre-large .fenetre-formulaire > .mantine-InputWrapper-root:first-child,
+  .fenetre-large > .mantine-Modal-body > .mantine-Stack-root > .mantine-InputWrapper-root:first-child {
+    grid-column: 1 / -1;
+  }
+}

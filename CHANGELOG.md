@@ -14,6 +14,13 @@ Les préférences explicites de taille et le mode mural sont conservés. Contrô
 
 ### Changé
 
+- **Harmonisation des outils et fenêtres** : vues en icônes, recherche et filtres réunis dans la même boîte de verre
+  bleu nuit sur les deux thèmes. Les écrans existants conservent leurs champs, callbacks et soumissions ; les filtres
+  fermés restent dans leur formulaire. Fenêtres centrées et moins volumineuses, champs courts en colonnes, aides et
+  historique repliés, actions maintenues en bas et pictogrammes centrés. Détails, captures fictives et contrôles dans le
+  [dossier de reprise](docs/refonte-neon/harmonisation-plateforme-2026-11-21/README.md). Aucune migration ou dépendance ;
+  recette Docker/API réelle et validation des images à effectuer.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
 - **Densité de travail** : le normal devient plus resserré que l’ancien compact, et le compact resserre encore le cadre,
   les commandes et les listes. Les profils partagent une source de jetons et du CSS statique compatible avec la CSP.
   L’agrandissement automatique des grands écrans est réservé au mode mural ; les tailles choisies manuellement restent

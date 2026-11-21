@@ -42,7 +42,8 @@
     "./neon-tendances.css": "./src/neon-tendances.css",
     "./neon-veille.css": "./src/neon-veille.css",
     "./neon-densite.css": "./src/neon-densite.css",
-    "./neon-verre.css": "./src/neon-verre.css"
+    "./neon-verre.css": "./src/neon-verre.css",
+    "./neon-harmonisation.css": "./src/neon-harmonisation.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",

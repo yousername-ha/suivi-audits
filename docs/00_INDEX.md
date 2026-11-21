@@ -2,6 +2,10 @@
 
 ## Jeu court à lire d'abord (18/10/2026)
 
+0. [Harmonisation de la plateforme du 21/11/2026](refonte-neon/harmonisation-plateforme-2026-11-21/README.md) :
+   barres communes de vues/recherche/filtres, fenêtres et formulaires compacts, icônes centrées ; inventaire,
+   résultats vérifiés, limites, outils de reproduction et images de validation.
+
 0. [Refonte de densité du 21/11/2026](refonte-neon/densite-2026-11-21/README.md) : reprise du lot d’interface fondé sur
    la 7.5.0, changements et invariants, contrôles finaux, mesures et captures après la finition verre. Vidéo privée analysée, non publiée ;
    preuves de présentation sur données fictives, sans validation du serveur ou du déploiement.

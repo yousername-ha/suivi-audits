@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lots V6 et V6b) : onglet « Alertes ». Alertes décidées par la plateforme, par règle :
    critique (P1, faille exploitée présente chez nous), simple (P2 exploitable sur un actif exposé directement sur Internet).
    Liste (niveau, faille, priorité et ses faits, présence en nombres que la personne lit, état : ouverte, prise en compte ou
@@ -281,7 +282,7 @@ export function AlertesPage() {
       />
       <Stack>
         <ErrorAlert error={liste.error} />
-        <Group align="flex-end">
+        <BarreFiltres label="Alertes">
           <Select
             label="État"
             data={OPTIONS_ETAT}
@@ -302,7 +303,7 @@ export function AlertesPage() {
               setPage(1);
             }}
           />
-        </Group>
+        </BarreFiltres>
         {liste.data && (
           <>
             <Text size="sm" c="dimmed">

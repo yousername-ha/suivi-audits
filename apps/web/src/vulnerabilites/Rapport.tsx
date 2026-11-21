@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lot S2) : rapport de pilotage pour la direction et l'audit. La plateforme ne produit
    aucun PDF côté serveur et le lot n'ajoute aucune dépendance : le rapport est une page imprimable (A4, feuille
    d'impression de packages/ui/src/neon-tendances.css : ni menu ni bouton à l'impression, lisible en noir et blanc), que le
@@ -163,7 +164,7 @@ export function RapportPage() {
               { value: 'libre', label: 'Période libre' },
             ]}
           />
-          <Group align="flex-end">
+          <BarreFiltres label="Affichage et filtres">
             {mode === 'mois' ? (
               <Select
                 label="Mois"
@@ -206,7 +207,7 @@ export function RapportPage() {
             <Button onClick={() => setDemande(urlRapport(q, 'json'))} loading={rapport.isFetching}>
               Produire le rapport
             </Button>
-          </Group>
+          </BarreFiltres>
           <Text size="xs" c="dimmed">
             Le rapport ne contient aucun nom de machine, de domaine ni d’adresse. Le détail des machines n’est pas
             proposé. Toute personne qui lit le module peut le produire, pour ce qu’elle lit (règle à confirmer par le

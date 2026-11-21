@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lot S1) : onglet « Délais et exceptions ». Délais cibles par priorité (réglés dans
    « Seuils de priorité »), mesure des corrections sur une période (délai moyen et médian par priorité, part des corrections
    faites dans les délais ; les mêmes nombres pour tout le monde, sans nom) et exceptions (risques acceptés) en cours,
@@ -186,7 +187,7 @@ export function DelaisExceptionsPage() {
             <Title order={2} size="h4">
               Mesure des corrections
             </Title>
-            <Group align="flex-end">
+            <BarreFiltres label="Affichage et filtres">
               <Select
                 label="Période"
                 allowDeselect={false}
@@ -199,7 +200,7 @@ export function DelaisExceptionsPage() {
                 Du <span className="horodatage">{fmtDate(v.du)}</span> au{' '}
                 <span className="horodatage">{fmtDate(v.au)}</span>
               </Text>
-            </Group>
+            </BarreFiltres>
             <Text size="sm" c="dimmed">
               Failles passées à « Corrigée » sur la période : durée entre le départ du délai (première présence, ou fin
               d’une exception) et la correction (la proposition « corrigée » de la source, si la décision la confirme),
@@ -225,15 +226,17 @@ export function DelaisExceptionsPage() {
                 </StatusChip>
               ))}
             </Group>
-            <Select
-              label="Statut de l’exception"
-              placeholder="Tous"
-              clearable
-              value={statut || null}
-              onChange={(x) => setStatut((x ?? '') as StatutException | '')}
-              data={STATUTS_EXCEPTION.map((s) => ({ value: s, label: STATUT_EXCEPTION_LIBELLES[s] }))}
-              comboboxProps={{ withinPortal: false }}
-            />
+            <BarreFiltres label="Affichage et filtres">
+              <Select
+                label="Statut de l’exception"
+                placeholder="Tous"
+                clearable
+                value={statut || null}
+                onChange={(x) => setStatut((x ?? '') as StatutException | '')}
+                data={STATUTS_EXCEPTION.map((s) => ({ value: s, label: STATUT_EXCEPTION_LIBELLES[s] }))}
+                comboboxProps={{ withinPortal: false }}
+              />
+            </BarreFiltres>
             <ExceptionsTable exceptions={v.exceptions.filter((e) => !statut || e.statut === statut)} />
           </>
         )}

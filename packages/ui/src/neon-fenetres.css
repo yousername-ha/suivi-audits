@@ -9,8 +9,8 @@
      constante autour ; pleine largeur sous la largeur d'une tablette.
    - Seul le corps défile, verticalement : l'en-tête (titre, fermeture) et le pied (boutons) restent visibles ; jamais de
      défilement horizontal de la fenêtre (un tableau large défile dans son propre cadre .table-wrap).
-   Exclusions : fenêtres RETEX (.retex-modal, habillage et défilement propres), menu mobile (.nav-tiroir, lot 1) et
-   fenêtres plein écran ([data-full-screen], sans cadre). */
+   Le complément neon-harmonisation.css unifie également le titre et le rythme des fenêtres RETEX.
+   Le menu mobile (.nav-tiroir) garde sa navigation, et les fenêtres plein écran restent sans cadre extérieur. */
 .mantine-Modal-root {
   --modal-size-lg: 50rem;
   --modal-size-xl: 64rem;
@@ -63,9 +63,9 @@
   > :is(.mantine-Modal-header, .mantine-Drawer-header) {
   flex: none;
   gap: 1rem;
-  min-height: 5rem;
+  min-height: var(--suivi-entete-h);
   margin-bottom: 0;
-  padding: 1.35rem 1.75rem;
+  padding: var(--suivi-padding-dialogue);
   border-bottom: 1px solid var(--suivi-trait);
   background: var(--suivi-surface);
 }
@@ -73,7 +73,7 @@
   :is(.mantine-Modal-title, .mantine-Drawer-title) {
   color: var(--neon-titre);
   font-size: 1.125rem;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.45;
   letter-spacing: -0.025em;
   overflow-wrap: anywhere;
@@ -99,7 +99,7 @@
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
-  padding: 1.5rem 1.75rem;
+  padding: var(--suivi-padding-dialogue);
   overflow: hidden auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -129,10 +129,10 @@
 :is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
   > :is(.mantine-Modal-body, .mantine-Drawer-body)
   .mantine-InputWrapper-label {
-  margin-bottom: 0.45rem;
+  margin-bottom: var(--mantine-spacing-2xs);
   color: var(--neon-titre);
   font-size: 0.8125rem;
-  font-weight: 550;
+  font-weight: 500;
   line-height: 1.5;
   letter-spacing: normal;
   text-transform: none;
@@ -172,7 +172,7 @@
   .mantine-Button-root {
   border-radius: 0.65rem;
   font-size: 0.8125rem;
-  font-weight: 550;
+  font-weight: 500;
   letter-spacing: normal;
 }
 /* Liens des fenêtres : forme commune à toute la plateforme (styles.css, choix du RSSI du 19/11/2026). */
@@ -205,7 +205,7 @@
   padding: 0.2rem;
 }
 .fenetre-fiche-corps .mantine-Tabs-panel > .mantine-Stack-root {
-  gap: 1.25rem;
+  gap: var(--suivi-section-gap);
 }
 .fenetre-actions {
   flex: none;
@@ -311,7 +311,7 @@ html[data-fenetres='lisere']
 }
 .contexte-fenetre .contexte-presentation .mantine-Modal-title {
   font-size: 0.9375rem;
-  font-weight: 550;
+  font-weight: 500;
 }
 .contexte-fenetre .contexte-presentation > .contexte-presentation-corps {
   padding-bottom: 0;
@@ -410,7 +410,7 @@ html[data-fenetres='lisere']
   margin: 0.2rem 0 0;
   color: var(--neon-titre);
   font-size: 0.8rem;
-  font-weight: 550;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 .contexte-meta > div:last-child dd {
@@ -497,7 +497,7 @@ html[data-fenetres='lisere']
 .contexte-section[data-champ='organisation'] > .contexte-texte {
   color: var(--neon-titre);
   font-size: 1rem;
-  font-weight: 550;
+  font-weight: 500;
 }
 .contexte-responsable {
   grid-column: 2;
@@ -572,7 +572,7 @@ html[data-fenetres='lisere']
   margin: 0;
   color: var(--neon-titre);
   font-size: 0.9rem;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.5;
 }
 .contexte-categorie > header p {
@@ -592,7 +592,7 @@ html[data-fenetres='lisere']
   background: color-mix(in srgb, var(--categorie-accent) 10%, var(--suivi-surface));
   color: var(--neon-titre);
   font-size: 0.6rem;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0.025em;
 }
 .contexte-categorie-nombre {
@@ -672,11 +672,11 @@ html[data-fenetres='lisere']
 }
 @media (max-width: 48em) {
   .contexte-document {
-    gap: 1.25rem;
+    gap: var(--suivi-section-gap);
   }
   .contexte-entete {
     grid-template-columns: minmax(0, 1fr);
-    gap: 1.25rem;
+    gap: var(--suivi-section-gap);
     padding-bottom: 1.25rem;
   }
   .contexte-meta {

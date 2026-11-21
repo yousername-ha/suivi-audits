@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lot V5) : écran « Machines ». Machines lues dans Tenable Security Center (ou importées
    d'un scan Nessus, lot N1 : marquées de leur source, une machine vue par les deux apparaît deux fois), visibles à
    travers les droits du périmètre de chacune (une machine sans périmètre n'est visible qu'avec le droit d'administrer le
@@ -671,15 +672,6 @@ function OngletMachines() {
     <>
       <Stack>
         <Group align="center" gap="md">
-          <SegmentedControl
-            value={vue}
-            onChange={(v) => regler({ vue: v as VueMachines })}
-            data={[
-              { value: 'liste', label: 'Liste' },
-              { value: 'parc', label: 'Parc' },
-            ]}
-            aria-label="Présentation des machines"
-          />
           {vue === 'parc' && (
             <SegmentedControl
               value={echelle}
@@ -701,7 +693,16 @@ function OngletMachines() {
         </Group>
         {vue === 'liste' && machines.data && <BandeauSansRole n={machines.data.sansRole} />}
         <form onSubmit={chercher} role="search">
-          <Group align="flex-end">
+          <BarreFiltres label="Machines">
+            <SegmentedControl
+              value={vue}
+              onChange={(v) => regler({ vue: v as VueMachines })}
+              data={[
+                { value: 'liste', label: 'Liste' },
+                { value: 'parc', label: 'Parc' },
+              ]}
+              aria-label="Présentation des machines"
+            />
             <TextInput
               label="Rechercher"
               description="Nom, adresse IP (début ou adresse exacte) ou système."
@@ -745,7 +746,7 @@ function OngletMachines() {
               checked={!!filtres.finSupport}
               onChange={(e) => changer({ finSupport: e.currentTarget.checked })}
             />
-          </Group>
+          </BarreFiltres>
         </form>
         {vue === 'liste' && modifier && (
           <Group align="flex-end" role="group" aria-label="Affectation des machines choisies">

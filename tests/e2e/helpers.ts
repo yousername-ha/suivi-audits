@@ -5,6 +5,25 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import type { APIRequestContext, APIResponse, Browser, BrowserContext, Page } from '@playwright/test';
+import { expect } from '@playwright/test';
+
+/** Les critères sont repliés dans la boîte d'outils. Ouvre uniquement le panneau qui possède le champ demandé,
+ * puis vérifie son accès ; les assertions métier des scénarios restent inchangées. */
+export async function ouvrirFiltres(page: Page, nom: string | RegExp) {
+  const champs = page
+    .getByLabel(nom, { exact: true })
+    .and(page.locator('input:not([type="hidden"]), select, textarea, button'));
+  await champs.first().waitFor({ state: 'attached' });
+  for (const candidat of await champs.all()) if (await candidat.isVisible()) return;
+  const champ = champs.first();
+  const panneau = champ.locator(
+    'xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " filtres-avances ")][1]',
+  );
+  const declencheur = await panneau.getAttribute('aria-labelledby');
+  if (!declencheur) throw new Error(`Le filtre « ${String(nom)} » n'a pas de bouton d'ouverture associé`);
+  await page.locator(`[id=${JSON.stringify(declencheur)}]`).click();
+  await expect(champ).toBeVisible();
+}
 
 export const PASSWORD = 'E2e-Mot-de-passe-2026!';
 

@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lot S2) : onglet « Tendances ». Courbes jour par jour (30 jours) ou semaine après semaine
    (13, 26 ou 52 semaines) des failles présentes par priorité, des failles exploitées, en dépassement, sous exception et
    corrigées, du niveau d'alerte de la plateforme et, pour un périmètre, des machines et actifs touchés ; indicateur
@@ -241,7 +242,7 @@ export function TendancesPage() {
       />
       <Stack>
         <ErrorAlert error={vue.error} />
-        <Group align="flex-end">
+        <BarreFiltres label="Affichage et filtres">
           <Select
             label="Période"
             allowDeselect={false}
@@ -258,7 +259,7 @@ export function TendancesPage() {
             data={v ? optionsPortee(v) : [{ value: PORTEE_TOUT, label: 'Toute la plateforme' }]}
             comboboxProps={{ withinPortal: false }}
           />
-        </Group>
+        </BarreFiltres>
         {v && (
           <>
             <Text size="xs" c="dimmed">

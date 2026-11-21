@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, point 17 et V12 ; lot PC3) : onglet « Périmètres », poste de commandement vu par
    périmètre, d'après la maquette 05-perimetre de docs/unification/maquettes-vulnerabilites.
    - Liste : une carte par périmètre que la personne lit (nom, machines lues, priorité la plus haute en couleur ET en texte,
@@ -12,7 +13,7 @@
    - Aucun trait entre machines : le lien front → back → base entre machines n'existe pas en données (point ouvert 5).
    Sous la CSP stricte (ADR 0006) : aucun style en ligne ; classes de packages/ui/src/neon-commandement.css (poste) et
    neon-parc.css (parc, cartes), jetons de la charte, clair et sombre ; `lockScroll={false}` sur la fenêtre. */
-import { Alert, Anchor, Group, Modal, SegmentedControl, Text } from '@mantine/core';
+import { Alert, Anchor, Modal, SegmentedControl, Text } from '@mantine/core';
 import {
   type CartePerimetreDto,
   type DetailPerimetreDto,
@@ -288,7 +289,7 @@ export function DetailPerimetre({
               : 'Aucune faille présente'}
         </span>
       </p>
-      <Group justify="space-between" align="center" gap="sm">
+      <BarreFiltres label="Présentation des périmètres">
         <Anchor component={Link} to={ADRESSE_PERIMETRES} size="sm">
           Tous les périmètres
         </Anchor>
@@ -301,7 +302,7 @@ export function DetailPerimetre({
           ]}
           aria-label="Présentation du périmètre"
         />
-      </Group>
+      </BarreFiltres>
       {bandeau && (
         <div className="pc-bandeau" role="status">
           <svg viewBox="0 0 24 24" className="pc-bandeau__icone" aria-hidden="true">

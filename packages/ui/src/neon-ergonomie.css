@@ -56,14 +56,14 @@
 /* Boîte d'outils (choix du RSSI du 16/11/2026) : une seule forme de barre, une petite boîte bleu nuit aux couleurs du
    menu avec les vues, la recherche et les filtres avancés ; plus de bande de champs pleine largeur. Les autres filtres se
    posent sur le titre des colonnes. Action principale (ajouter, créer) en bleu du menu, au bout de la ligne. */
-.app-main .barre-boite-ligne {
+.barre-boite-ligne {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--mantine-spacing-sm);
 }
-.app-main .barre-boite {
+.barre-boite {
   display: inline-flex;
   align-items: center;
   gap: var(--mantine-spacing-2xs);
@@ -73,7 +73,7 @@
   background: var(--menu-fond);
   color: var(--menu-texte);
 }
-.app-main .barre-boite__vues {
+.barre-boite__vues {
   display: inline-flex;
   gap: var(--mantine-spacing-2xs);
   padding: 0;
@@ -81,42 +81,42 @@
   background: transparent;
   box-shadow: none;
 }
-.app-main .barre-boite__sep {
+.barre-boite__sep {
   align-self: stretch;
   inline-size: 1px;
   margin-inline: var(--mantine-spacing-2xs);
   background: var(--menu-trait);
 }
-.app-main .barre-boite__recherche .mantine-Input-input {
+.barre-boite__recherche .mantine-Input-input {
   inline-size: calc(var(--mantine-spacing-xl) * 8);
   border-color: var(--menu-commande-trait);
   background: var(--menu-famille-fond);
   color: var(--menu-texte);
 }
-.app-main .barre-boite__recherche .mantine-Input-input::placeholder,
-.app-main .barre-boite__recherche .mantine-Input-section {
+.barre-boite__recherche .mantine-Input-input::placeholder,
+.barre-boite__recherche .mantine-Input-section {
   color: var(--menu-secondaire);
 }
-.app-main .barre-boite :is(.mantine-ActionIcon-root, .barre-boite__outil) {
+.barre-boite :is(.mantine-ActionIcon-root, .barre-boite__outil) {
   --ai-bg: transparent;
   position: relative;
   border: 1px solid transparent;
   background: transparent;
   color: var(--menu-commande);
 }
-.app-main .barre-boite :is(.mantine-ActionIcon-root, .barre-boite__outil):hover {
+.barre-boite :is(.mantine-ActionIcon-root, .barre-boite__outil):hover {
   background: var(--menu-survol);
 }
-.app-main .barre-boite [aria-pressed='true'] {
+.barre-boite [aria-pressed='true'] {
   border-color: var(--menu-teinte-pilotage);
   background: var(--menu-destination-fond);
   color: var(--menu-selection);
 }
-.app-main .barre-boite .barre-filtre {
+.barre-boite .barre-filtre {
   inline-size: 1.15em;
   block-size: 1.15em;
 }
-.app-main .barre-boite__compte {
+.barre-boite__compte {
   position: absolute;
   inset-block-start: calc(var(--mantine-spacing-2xs) * -1);
   inset-inline-end: calc(var(--mantine-spacing-2xs) * -1);
@@ -179,16 +179,16 @@
   background: var(--menu-teinte-pilotage);
   color: var(--menu-fond-haut);
 }
-.app-main .barre-outils__ajout {
+.barre-outils__ajout {
   display: flex;
   gap: var(--mantine-spacing-xs);
 }
 /* Verre « maintenance » (choix du RSSI du 20/11/2026) : liseré épais à gauche de la boîte d'outils, liseré intérieur et
    ombre portée des boutons d'ajout. Classe doublée : même poids que la règle commune des boîtes (:is), placée après elle. */
-.app-main .barre-boite.barre-boite {
+.barre-boite.barre-boite {
   border-inline-start: 3px solid var(--menu-teinte-pilotage);
 }
-.app-main .barre-outils__ajout .mantine-Button-root {
+.barre-outils__ajout .mantine-Button-root {
   box-shadow:
     inset 3px 0 0 color-mix(in srgb, var(--menu-fond-haut) 35%, transparent),
     0 1em 2em -1.2em color-mix(in srgb, var(--menu-fond-haut) 45%, transparent);
@@ -223,12 +223,12 @@
    fait le tour du rectangle ; le contour reste fin et discret ; intérieur en fondu violet transparent de gauche à
    droite. Seule la rotation (transform) est animée, en continu (ADR 0099) ; arrêtée par le mouvement réduit,
    l'impression, les couleurs forcées et l'onglet masqué. */
-.app-main .barre-boite__recherche {
+.barre-boite__recherche {
   position: relative;
   isolation: isolate;
 }
 /* Couloir de la lueur : quelques pixels autour du champ, découpés au rectangle arrondi. */
-.app-main .barre-boite__recherche .mantine-Input-wrapper {
+.barre-boite__recherche .mantine-Input-wrapper {
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -236,7 +236,7 @@
   border-radius: calc(var(--mantine-radius-md) + 3px);
 }
 /* Lueur : un seul éclat violet à tête claire, avec sa traîne, adouci par un flou fixe ; seule la rotation est animée. */
-.app-main .barre-boite__recherche .mantine-Input-wrapper::before {
+.barre-boite__recherche .mantine-Input-wrapper::before {
   position: absolute;
   z-index: -1;
   top: 50%;
@@ -258,7 +258,7 @@
 }
 /* Intérieur : fondu violet transparent de gauche à droite, sans violet sur la droite ; le bleu nuit de la boîte reste
    visible au travers. */
-.app-main .barre-boite__recherche .mantine-Input-input {
+.barre-boite__recherche .mantine-Input-input {
   border-color: color-mix(in srgb, var(--mantine-color-violet-3) 38%, transparent);
   background:
     linear-gradient(
@@ -270,10 +270,10 @@
     var(--menu-famille-fond);
   color: var(--mantine-color-white);
 }
-.app-main .barre-boite__recherche .mantine-Input-input::placeholder {
+.barre-boite__recherche .mantine-Input-input::placeholder {
   color: color-mix(in srgb, var(--mantine-color-violet-1) 75%, transparent);
 }
-.app-main .barre-boite__recherche .mantine-Input-section {
+.barre-boite__recherche .mantine-Input-section {
   color: var(--mantine-color-violet-2);
 }
 @keyframes barre-lueur {
@@ -281,145 +281,31 @@
     transform: translate(-50%, -50%) rotate(1turn);
   }
 }
-.app-main [data-mouvement='pause'] .barre-boite__recherche .mantine-Input-wrapper::before {
+[data-mouvement='pause'] .barre-boite__recherche .mantine-Input-wrapper::before {
   animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce), print, (forced-colors: active) {
-  .app-main .barre-boite__recherche .mantine-Input-wrapper::before {
+  .barre-boite__recherche .mantine-Input-wrapper::before {
     animation: none;
   }
 }
 
 /* Téléphone : la boîte d'outils ne dépasse jamais la largeur de l'écran ; le champ de recherche se rétrécit. */
 @media (max-width: 36em) {
-  .app-main .barre-boite {
+  .barre-boite {
     max-inline-size: 100%;
   }
-  .app-main .barre-boite__recherche {
+  .barre-boite__recherche {
     flex: 1 1 auto;
     min-inline-size: 0;
   }
-  .app-main .barre-boite__recherche .mantine-Input-input {
+  .barre-boite__recherche .mantine-Input-input {
     inline-size: 100%;
   }
 }
 
-/* Mode clair : bloc clair au contour fin, teinté de violet, léger fondu à gauche et ombre douce (choix du RSSI du
-   20/11/2026, il remplace la boîte sans fond ni cadre du 18/11/2026) ; le champ de recherche garde un contour violet fin,
-   un fondu violet léger à gauche et la même lueur qui fait le tour. À l'essai : la préférence « Bloc bleu nuit »
-   (`data-boite-outils`) garde en mode clair la boîte du mode sombre, ces règles ne s'appliquent alors pas. */
-html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
-  .app-main
-  :is(
-    .barre-boite,
-    .fs-views,
-    .pr-views,
-    .pi-views,
-    .fs-toolbar-end,
-    .pr-toolbar-end,
-    .pi-toolbar-end,
-    .bb-toolbar .bb-search
-  ) {
-  border-color: color-mix(in srgb, var(--mantine-color-violet-4) 30%, var(--suivi-trait));
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--mantine-color-violet-5) 7%, transparent) 0%, transparent 60%),
-    var(--suivi-surface);
-  box-shadow:
-    0 1px 2px color-mix(in srgb, var(--menu-fond-haut) 6%, transparent),
-    0 6px 18px color-mix(in srgb, var(--mantine-color-violet-9) 7%, transparent);
-  color: var(--mantine-color-text);
-}
-/* Boîte d'outils en clair : verre de la page de maintenance (choix du RSSI du 20/11/2026), bords teintés de violet,
-   liseré violet à gauche, dégradé en biais. Classe doublée : passe devant la règle commune des boîtes en clair. */
-html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit']) .app-main .barre-boite.barre-boite {
-  border: 1.5px solid var(--suivi-trait);
-  border-block-start-color: color-mix(in srgb, var(--mantine-color-violet-3) 32%, var(--suivi-trait));
-  border-inline-start: 3px solid var(--mantine-color-violet-4);
-  background: linear-gradient(
-    110deg,
-    color-mix(in srgb, var(--mantine-color-violet-5) 8%, var(--suivi-surface)),
-    var(--suivi-surface)
-  );
-  box-shadow: 0 1.4em 3em -1.6em color-mix(in srgb, var(--menu-fond-haut) 38%, transparent);
-}
-html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit']) .app-main .barre-boite__sep {
-  background: var(--suivi-trait);
-}
-html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
-  .app-main
-  :is(
-    .barre-boite .mantine-ActionIcon-root,
-    .barre-boite__outil,
-    .fs-tool,
-    .pr-tool,
-    .pi-tool,
-    .bb-toolbar .bb-search
-  ) {
-  color: var(--mantine-color-dimmed);
-}
-html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
-  .app-main
-  :is(.barre-boite .mantine-ActionIcon-root, .barre-boite__outil, .fs-tool, .pr-tool, .pi-tool):hover {
-  background: var(--neon-doux);
-  color: var(--neon-accent);
-}
-html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
-  .app-main
-  :is(
-    .barre-boite [aria-pressed='true'],
-    :is(.fs-tool, .pr-tool, .pi-tool):is([aria-pressed='true'], [data-active='true'])
-  ) {
-  border-color: color-mix(in srgb, var(--neon-accent) 45%, transparent);
-  background: var(--neon-doux);
-  color: var(--neon-accent);
-}
-html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
-  .app-main
-  :is(.fs-toolbar-end, .pr-toolbar-end, .pi-toolbar-end)
-  .mantine-Button-root[data-variant='default'] {
-  border-color: var(--mantine-color-default-border);
-  color: var(--mantine-color-text);
-}
-html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
-  .app-main
-  .barre-boite__recherche
-  .mantine-Input-input {
-  border-color: color-mix(in srgb, var(--mantine-color-violet-4) 45%, transparent);
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--mantine-color-violet-5) 12%, transparent) 0%,
-      color-mix(in srgb, var(--mantine-color-violet-5) 4%, transparent) 45%,
-      transparent 75%
-    ),
-    var(--suivi-surface);
-  color: var(--mantine-color-text);
-}
-html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
-  .app-main
-  .barre-boite__recherche
-  .mantine-Input-input::placeholder {
-  color: var(--mantine-color-dimmed);
-}
-html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
-  .app-main
-  .barre-boite__recherche
-  .mantine-Input-section {
-  color: var(--neon-accent);
-}
-html[data-mantine-color-scheme='light']:not([data-boite-outils='bleu-nuit'])
-  .app-main
-  .barre-boite__recherche
-  .mantine-Input-wrapper::before {
-  background: conic-gradient(
-    from 0deg,
-    transparent 0turn 0.74turn,
-    color-mix(in srgb, var(--mantine-color-violet-5) 25%, transparent) 0.84turn,
-    var(--mantine-color-violet-5) 0.93turn,
-    var(--mantine-color-violet-3) 0.97turn,
-    transparent 0.995turn
-  );
-}
+/* 21/11/2026 : le modèle de boîte d'outils fourni devient commun aux deux thèmes.
+   L'ancienne variante « bloc clair » est retirée ; aucune préférence métier n'est modifiée. */
 
 /* Recherche de pages dans le menu, sous le logo (demande du RSSI du 18/11/2026) : même champ que la boîte d'outils,
    aux couleurs du menu, avec sa lueur qui fait le tour ; la liste des pages trouvées s'ouvre dessous. */

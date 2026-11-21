@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lot ALH4) : carte « Lignes d'approche » de l'écran « Surface externe », d'après les
    maquettes retenues par le RSSI le 17/11/2026 (08d, 08e). Dessin SVG sans aucun style en ligne (CSP stricte, ADR 0006) :
    positions par attributs, couleurs, traits et animations par les classes de packages/ui/src/neon-surface.css (jetons de la
@@ -753,7 +754,7 @@ export function CarteSurface({
           </Group>
         </Alert>
       )}
-      <Group align="flex-end" wrap="wrap" gap="sm">
+      <BarreFiltres label="Carte de la surface externe">
         <TextInput
           label="Filtrer la carte"
           description="Domaine, adresse, CVE, port (443, 443/tcp) ou produit."
@@ -779,8 +780,7 @@ export function CarteSurface({
           data={OPTIONS_TYPE}
           comboboxProps={{ withinPortal: false }}
         />
-      </Group>
-      <Group align="center" wrap="wrap" gap="md">
+
         <Checkbox.Group
           label="Criticité"
           value={filtres.criticites}
@@ -797,10 +797,23 @@ export function CarteSurface({
           checked={filtres.enAlerteSeulement}
           onChange={(e) => changer({ enAlerteSeulement: e.currentTarget.checked })}
         />
-      </Group>
+      </BarreFiltres>
+
       {/* Repères collants pendant le défilement de la page : regroupement, filtre par nom, repli, titres des colonnes. */}
       <div className="sc-collant">
-        <Group align="flex-end" wrap="wrap" gap="sm" className="sc-barre">
+        <BarreFiltres
+          label="Présentation de la surface externe"
+          actions={
+            <Group gap="xs">
+              <Button size="compact-sm" variant="default" onClick={() => setReplis(toutReplier())}>
+                Tout replier
+              </Button>
+              <Button size="compact-sm" variant="default" onClick={() => setReplis(toutDeplier(filtre))}>
+                Tout déplier
+              </Button>
+            </Group>
+          }
+        >
           <Select
             label="Regrouper par"
             allowDeselect={false}
@@ -819,15 +832,7 @@ export function CarteSurface({
           <Button size="compact-sm" variant="default" disabled={!filtres.nom} onClick={() => changer({ nom: '' })}>
             Effacer le filtre par nom
           </Button>
-          <Group gap="xs">
-            <Button size="compact-sm" variant="default" onClick={() => setReplis(toutReplier())}>
-              Tout replier
-            </Button>
-            <Button size="compact-sm" variant="default" onClick={() => setReplis(toutDeplier(filtre))}>
-              Tout déplier
-            </Button>
-          </Group>
-        </Group>
+        </BarreFiltres>
         <Text size="sm" role="status" aria-live="polite" className="sc-annonce">
           {annonceFiltreNom(filtres.nom, filtre.correspondances)}
         </Text>

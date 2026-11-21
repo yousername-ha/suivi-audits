@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lots V2 et V3) : écran « Veille ». État de chaque source (dernière collecte réussie,
    erreur, retard), activation de la veille (destinations et ce qui sort, validation explicite d'un administrateur), failles
    exploitées récentes (catalogue KEV) avec l'action exigée et l'échéance, alertes et avis récents, barre de recherche.
@@ -686,7 +687,7 @@ export function VeillePage() {
           </>
         )}
         <form onSubmit={chercher} role="search">
-          <Group align="flex-end">
+          <BarreFiltres label="Veille des vulnérabilités">
             <TextInput
               label="Rechercher"
               description="Identifiant CVE, éditeur, produit, ou texte du titre d’un avis."
@@ -711,7 +712,7 @@ export function VeillePage() {
                 Effacer
               </Button>
             )}
-          </Group>
+          </BarreFiltres>
         </form>
         {recherche && (
           <>

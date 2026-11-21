@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Plans du SMSI (reprise du Calendrier, du Planning, des plans de formation, de sensibilisation, d'audit interne et
    d'exercices de l'outil de suivi) : les données restent dans l'état historique (clé `plans`), l'écran les lit et les
    modifie sous verrou. Le planning annuel est un SVG (aucun style en ligne : CSP stricte, ADR 0006) dont les barres se
@@ -506,16 +507,18 @@ function Planning({
   return (
     <Stack>
       <Group justify="space-between">
-        <Select
-          label="Plan affiché"
-          allowDeselect={false}
-          value={filtre}
-          onChange={(v) => setFiltre(v ?? 'all')}
-          data={[
-            { value: 'all', label: 'Tous les plans' },
-            ...TYPES_ACTION_PLAN.map((t) => ({ value: t, label: PLANS[t].libelle })),
-          ]}
-        />
+        <BarreFiltres label="Affichage et filtres">
+          <Select
+            label="Plan affiché"
+            allowDeselect={false}
+            value={filtre}
+            onChange={(v) => setFiltre(v ?? 'all')}
+            data={[
+              { value: 'all', label: 'Tous les plans' },
+              ...TYPES_ACTION_PLAN.map((t) => ({ value: t, label: PLANS[t].libelle })),
+            ]}
+          />
+        </BarreFiltres>
         <Group gap="md" component="ul" className="plan-legende">
           {(
             [

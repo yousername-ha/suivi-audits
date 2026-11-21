@@ -53,13 +53,17 @@ export const theme = createTheme({
   breakpoints: POINTS_DE_RUPTURE,
   components: {
     // Le verrouillage du défilement (react-remove-scroll) injecte une balise <style> : interdit par la CSP stricte.
-    /* Retour du focus à la ligne ou au bouton qui a ouvert la fiche (lignes ouvrables, refonte Neon lot 2). Le nom
-       accessible par défaut du bouton de fermeture de la référence n'est pas repris : des tests existants cherchent un
-       bouton « Fermer » par nom partiel dans les fenêtres. */
+    /* Retour du focus à la ligne ou au bouton qui a ouvert la fiche (lignes ouvrables, refonte Neon lot 2). Le bouton
+       de fermeture reçoit un nom précis en français ; les tests visant un bouton métier « Fermer » utilisent son nom exact. */
     Modal: Modal.extend({
+      classNames: (_theme, props) => ({
+        content: props.fullScreen || ['lg', 'xl'].includes(String(props.size)) ? 'fenetre-large' : '',
+      }),
       defaultProps: {
         lockScroll: false,
         radius: 'lg',
+        centered: true,
+        closeButtonProps: { 'aria-label': 'Fermer la fenêtre' },
         onExitTransitionEnd: () => requestAnimationFrame(rendreFocusFiche),
         // Le corps défile seul quand il dépasse (taille automatique, addendum de l'ADR 0093) : il doit être atteignable
         // au clavier pour défiler sans souris (règle axe « scrollable-region-focusable », WCAG 2.1.1).
@@ -69,6 +73,7 @@ export const theme = createTheme({
     Drawer: Drawer.extend({
       defaultProps: {
         lockScroll: false,
+        closeButtonProps: { 'aria-label': 'Fermer le panneau' },
         onExitTransitionEnd: () => requestAnimationFrame(rendreFocusFiche),
         attributes: { body: { tabIndex: 0 } },
       },

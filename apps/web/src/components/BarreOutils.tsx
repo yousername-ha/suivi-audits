@@ -17,7 +17,19 @@ import {
   Tooltip,
   UnstyledButton,
 } from '@mantine/core';
-import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useMergedRef } from '@mantine/hooks';
+import {
+  cloneElement,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactElement,
+  type ReactNode,
+  type Ref,
+  type RefObject,
+} from 'react';
+import type { TextInputProps } from '@mantine/core';
 import { useOngletVisible } from '../parcours-iso/mouvement';
 
 /** Loupe du champ de recherche (décorative : le champ garde son libellé). */
@@ -55,7 +67,9 @@ export function useRaccourciRecherche(champ: RefObject<HTMLInputElement | null>)
     const surTouche = (e: KeyboardEvent) => {
       const element = champ.current;
       if (!element || !element.getClientRects().length) return;
-      const fenetreOuverte = !!document.querySelector('[role="dialog"]');
+      const fenetreOuverte = [...document.querySelectorAll('[role="dialog"], [role="alertdialog"]')].some(
+        (dialogue) => dialogue.getClientRects().length > 0,
+      );
       if (!doitOuvrirRecherche(e, e.target as HTMLElement | null, fenetreOuverte)) return;
       e.preventDefault();
       element.focus();
@@ -135,12 +149,23 @@ export function FiltresAvances({
   children,
 }: {
   actifs: number;
-  onReinitialiser: () => void;
+  onReinitialiser?: () => void;
   children: ReactNode;
 }) {
   const nom = actifs ? `Filtres avancés (${actifs} actif${actifs > 1 ? 's' : ''})` : 'Filtres avancés';
+  // Le panneau reste dans le formulaire et dans le DOM : valeurs, contraintes et propriétaires des champs sont
+  // conservés quand il est fermé. display-none évite de suspendre ses effets/références via React Activity.
   return (
-    <Popover position="bottom-start" shadow="md" trapFocus withArrow>
+    <Popover
+      position="bottom-start"
+      shadow="md"
+      trapFocus
+      returnFocus
+      withArrow
+      withinPortal={false}
+      keepMounted
+      keepMountedMode="display-none"
+    >
       <Popover.Target>
         <ActionIcon size="lg" variant="subtle" aria-label={nom} title={nom} className="barre-boite__outil">
           <IconeFiltre />
@@ -151,14 +176,19 @@ export function FiltresAvances({
           )}
         </ActionIcon>
       </Popover.Target>
-      <Popover.Dropdown className="filtres-avances">
+      <Popover.Dropdown className="filtres-avances" aria-label="Filtres avancés">
         <Stack gap="sm">
+          <Text size="sm" fw={500}>
+            Filtres
+          </Text>
           {children}
-          <Group justify="flex-end">
-            <Button size="xs" variant="subtle" disabled={!actifs} onClick={onReinitialiser}>
-              Réinitialiser
-            </Button>
-          </Group>
+          {onReinitialiser && (
+            <Group justify="flex-end">
+              <Button size="xs" variant="subtle" disabled={!actifs} onClick={onReinitialiser}>
+                Réinitialiser
+              </Button>
+            </Group>
+          )}
         </Stack>
       </Popover.Dropdown>
     </Popover>
@@ -377,6 +407,7 @@ export interface VueBoite {
   value: string;
   label: string;
   icone: ReactNode;
+  disabled?: boolean;
 }
 
 /** Boîte d'outils commune aux registres (version 7.3.0, modèle validé par le RSSI le 16/11/2026) : petite boîte bleu
@@ -385,9 +416,11 @@ export interface VueBoite {
 export function BoiteOutils({
   label,
   vues,
+  nomVues = 'Vues',
   vue,
   onVue,
   recherche,
+  champRecherche,
   filtres,
   ajout,
   children,
@@ -395,15 +428,19 @@ export function BoiteOutils({
   /** Nom de la barre d'outils, lu par les lecteurs d'écran. */
   label: string;
   vues?: readonly VueBoite[];
+  nomVues?: string;
   vue?: string;
   onVue?: (v: string) => void;
   recherche?: { label: string; value: string; onChange: (v: string) => void; placeholder?: string };
-  filtres?: { actifs: number; onReinitialiser: () => void; contenu: ReactNode };
+  /** Champ existant d'un formulaire : mêmes événements, nom, contraintes et soumission. */
+  champRecherche?: ReactElement<TextInputProps & { ref?: Ref<HTMLInputElement> }>;
+  filtres?: { actifs: number; onReinitialiser?: () => void; contenu: ReactNode };
   ajout?: ReactNode;
   /** Outils supplémentaires, placés dans la boîte avant l'entonnoir. */
   children?: ReactNode;
 }) {
   const champ = useRef<HTMLInputElement>(null);
+  const reference = useMergedRef(champ, champRecherche?.props.ref);
   useRaccourciRecherche(champ);
   // Lueur du champ de recherche : arrêtée quand l'onglet est masqué (ADR 0099).
   const ongletVisible = useOngletVisible();
@@ -412,14 +449,21 @@ export function BoiteOutils({
       <div className="barre-boite" role="toolbar" aria-label={label}>
         {vues && vues.length > 0 && (
           <>
-            <div className="barre-boite__vues" role="group" aria-label="Vues">
+            <div className="barre-boite__vues" role="group" aria-label={nomVues}>
               {vues.map((v) => (
-                <Tooltip key={v.value} label={v.label} withArrow openDelay={250}>
+                <Tooltip
+                  key={v.value}
+                  label={v.label}
+                  withArrow
+                  openDelay={250}
+                  events={{ hover: true, focus: true, touch: false }}
+                >
                   <ActionIcon
                     size="lg"
                     variant={vue === v.value ? 'filled' : 'subtle'}
                     aria-label={v.label}
                     aria-pressed={vue === v.value}
+                    disabled={v.disabled}
                     onClick={() => onVue?.(v.value)}
                   >
                     {v.icone}
@@ -427,7 +471,9 @@ export function BoiteOutils({
                 </Tooltip>
               ))}
             </div>
-            {(recherche || filtres || children) && <span className="barre-boite__sep" aria-hidden="true" />}
+            {(recherche || champRecherche || filtres || children) && (
+              <span className="barre-boite__sep" aria-hidden="true" />
+            )}
           </>
         )}
         {recherche && (
@@ -442,6 +488,22 @@ export function BoiteOutils({
             onChange={(e) => recherche.onChange(e.currentTarget.value)}
           />
         )}
+        {champRecherche &&
+          cloneElement(champRecherche, {
+            ref: reference,
+            className: [champRecherche.props.className, 'barre-recherche barre-boite__recherche']
+              .filter(Boolean)
+              .join(' '),
+            leftSection: champRecherche.props.leftSection ?? <IconeLoupe />,
+            title:
+              champRecherche.props.title ??
+              (typeof champRecherche.props.description === 'string'
+                ? champRecherche.props.description
+                : 'Raccourci : touche /'),
+            placeholder:
+              champRecherche.props.placeholder ??
+              (typeof champRecherche.props.label === 'string' ? `${champRecherche.props.label}…` : 'Rechercher…'),
+          })}
         {children}
         {filtres && (
           <FiltresAvances actifs={filtres.actifs} onReinitialiser={filtres.onReinitialiser}>

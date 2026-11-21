@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Critères d'évaluation des fournisseurs (ADR 0032, lot M4) : définis par l'organisme, aucun n'est fourni. Les usages
    viennent de l'ISO 9001:2015, 8.4.1 ; les exigences visées viennent des référentiels de la bibliothèque. */
 import {
@@ -429,12 +430,14 @@ function FournisseursConcernes({
         comme leur ligne du registre montreront la dernière réponse donnée.
       </Text>
       <ErrorAlert error={erreur} />
-      <TextInput
-        label="Rechercher un fournisseur"
-        placeholder="Nom du fournisseur…"
-        value={recherche}
-        onChange={(e) => setRecherche(e.currentTarget.value)}
-      />
+      <BarreFiltres label="Rechercher un fournisseur">
+        <TextInput
+          label="Rechercher un fournisseur"
+          placeholder="Nom du fournisseur…"
+          value={recherche}
+          onChange={(e) => setRecherche(e.currentTarget.value)}
+        />
+      </BarreFiltres>
       {!fournisseurs.length ? (
         <Text>Aucun fournisseur dans le registre.</Text>
       ) : (

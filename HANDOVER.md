@@ -1,5 +1,14 @@
 # Reprendre Suivi des audits
 
+> **21/11/2026 — harmonisation transversale de l’interface** : le [dossier et les images](docs/refonte-neon/harmonisation-plateforme-2026-11-21/README.md)
+> décrivent le complément au lot de densité : 58 points d’intégration dans 50 fichiers consommateurs pour les vues,
+> recherches et filtres ; cadre commun des fenêtres, formulaires courts en colonnes, aides repliées et icônes centrées.
+> **1 214 tests web/UI réussis**, TypeScript web/UI/E2E, lint, format et build verts ; 72 cas de pages et 56 ouvertures de
+> 7 variantes de fenêtres, API simulée et données fictives. Les 127 déclarations de fenêtres sont inventoriées, sans
+> prétendre avoir testé chaque formulaire. Prochaine action : validation des images puis recette Docker/API réelle,
+> non exécutée ici. Aucune fusion de PR, publication de version ou mise en production.
+>
+
 > **21/11/2026 — refonte de densité contrôlée localement** : le [dossier de reprise et de recette](docs/refonte-neon/densite-2026-11-21/README.md)
 > décrit le lot parti de `15dc5a6748f6105b6a1367fa7e3a3c944521efd5` (7.5.0), après analyse d’une vidéo privée non publiée.
 > Le nouveau normal est resserré au-delà de l’ancien compact ; le nouveau compact resserre encore le cadre et les commandes.

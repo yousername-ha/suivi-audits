@@ -81,8 +81,6 @@ function useAffichage() {
     appliquerStyleFenetres(html, me.appearance.fenetres);
     // Onglets de page : forme à l'essai (préférence « onglets », barre bleu nuit par défaut).
     html.dataset.onglets = prefs.onglets ?? 'barre';
-    // Boîte d'outils en mode clair : forme à l'essai (préférence « boiteOutils », bloc clair par défaut).
-    html.dataset.boiteOutils = prefs.boiteOutils ?? 'claire';
     if (colorScheme !== SCHEME[theme]) setColorScheme(SCHEME[theme]);
   }, [
     prefs.taille,
@@ -90,7 +88,6 @@ function useAffichage() {
     me.appearance.style,
     me.appearance.fenetres,
     prefs.onglets,
-    prefs.boiteOutils,
     theme,
     colorScheme,
     setColorScheme,

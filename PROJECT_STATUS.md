@@ -1,5 +1,14 @@
 # État synthétique du projet
 
+> **21/11/2026 — harmonisation transversale de l’interface** : le [dossier et les images](docs/refonte-neon/harmonisation-plateforme-2026-11-21/README.md)
+> décrivent le complément au lot de densité : 58 points d’intégration dans 50 fichiers consommateurs pour les vues,
+> recherches et filtres ; cadre commun des fenêtres, formulaires courts en colonnes, aides repliées et icônes centrées.
+> **1 214 tests web/UI réussis**, TypeScript web/UI/E2E, lint, format et build verts ; 72 cas de pages et 56 ouvertures de
+> 7 variantes de fenêtres, API simulée et données fictives. Les 127 déclarations de fenêtres sont inventoriées, sans
+> prétendre avoir testé chaque formulaire. Prochaine action : validation des images puis recette Docker/API réelle,
+> non exécutée ici. Aucune fusion de PR, publication de version ou mise en production.
+>
+
 > **21/11/2026 — refonte de densité, branche dédiée** : lot local fondé sur `15dc5a6` (7.5.0), après analyse d’une vidéo privée
 > conservée hors dépôt. Le normal devient plus dense que l’ancien compact et le compact resserre encore l’affichage ;
 > planning SVG sans agrandissement des textes, aides contextuelles des Vulnérabilités repliées, cache bilan/affectation des

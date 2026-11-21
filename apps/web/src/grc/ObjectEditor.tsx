@@ -7,6 +7,7 @@ import { TachesAction } from './TachesAction';
 import {
   Alert,
   Button,
+  Group,
   Checkbox,
   Modal,
   MultiSelect,
@@ -17,6 +18,7 @@ import {
   TextInput,
   Text,
 } from '@mantine/core';
+import { APropos } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import {
@@ -256,7 +258,7 @@ export function ObjectEditor({
         ? ({ size: 'lg', centered: true } as const)
         : ({ size: 'xl' } as const))}
     >
-      <Stack>
+      <Stack className="fenetre-formulaire">
         <ErrorAlert error={error ?? owners.error ?? history.error} />
         {object?.id.startsWith('legacy:') ? (
           <>
@@ -591,20 +593,17 @@ export function ObjectEditor({
             )}
           </>
         )}
-        {!readonly && (
-          <Button loading={saving} onClick={() => void save()}>
-            {object?.id.startsWith('legacy:') ? 'Confirmer la réalisation dans la source' : 'Enregistrer la fiche'}
-          </Button>
-        )}
         {object && acces && (
           <PanneauElement smsi={smsi} object={object} policy={policy} acces={acces} onOpenObject={onOpenObject} />
         )}
         {object && (
-          <Relations
-            smsi={smsi}
-            source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id}
-            sourceKind={object.id.startsWith('legacy:') ? undefined : object.kind}
-          />
+          <APropos label="Liens et preuves">
+            <Relations
+              smsi={smsi}
+              source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id}
+              sourceKind={object.id.startsWith('legacy:') ? undefined : object.kind}
+            />
+          </APropos>
         )}
         {object && !object.id.startsWith('legacy:') && can(GRC_MODULES[kind], 'supprimer') && (
           <>
@@ -634,15 +633,21 @@ export function ObjectEditor({
             )}
           </>
         )}
-        {history.data && (
-          <>
-            <Text fw={600}>Historique de la fiche</Text>
+        {history.data && history.data.length > 0 && (
+          <APropos label="Historique de la fiche">
             {history.data.map((h) => (
               <Text key={h.version}>
                 Version {h.version} · {h.createdBy} · {h.reason}
               </Text>
             ))}
-          </>
+          </APropos>
+        )}
+        {!readonly && (
+          <Group justify="flex-end" className="fenetre-actions">
+            <Button loading={saving} onClick={() => void save()}>
+              {object?.id.startsWith('legacy:') ? 'Confirmer la réalisation dans la source' : 'Enregistrer la fiche'}
+            </Button>
+          </Group>
         )}
       </Stack>
     </Modal>

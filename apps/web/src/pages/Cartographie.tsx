@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Cartographie du SMSI (CARTO-01 à CARTO-19, ADR 0013 et 0016) : vue contexte et vue processus, générées à partir
    des données de la plateforme ou construites de zéro (palette, clic droit), puis ajustées à la main. La carte ne
    garde que la présentation ; un objet créé depuis la carte est enregistré dans son module. Les objets sont relus à
@@ -915,30 +916,32 @@ function CartographieContenu() {
           </Button>
         ))}
       </div>
-      <TextInput
-        className="carte-recherche"
-        aria-label="Rechercher un objet sur la carte"
-        placeholder="Rechercher un objet sur la carte"
-        value={q}
-        onChange={(e) => setQ(e.currentTarget.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && scene?.hits.size) {
-            const r = [...scene.hits][0]!;
-            setSel({ k: 'n', ref: r });
-            setInfo(false);
-            centrer(r);
+      <BarreFiltres label="Rechercher un objet sur la carte">
+        <TextInput
+          className="carte-recherche"
+          aria-label="Rechercher un objet sur la carte"
+          placeholder="Rechercher un objet sur la carte"
+          value={q}
+          onChange={(e) => setQ(e.currentTarget.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && scene?.hits.size) {
+              const r = [...scene.hits][0]!;
+              setSel({ k: 'n', ref: r });
+              setInfo(false);
+              centrer(r);
+            }
+            if (e.key === 'Escape') setQ('');
+          }}
+          rightSection={
+            q.trim() && scene ? (
+              <Text size="xs" c="dimmed" className="carte-compteur">
+                {scene.hits.size}
+              </Text>
+            ) : null
           }
-          if (e.key === 'Escape') setQ('');
-        }}
-        rightSection={
-          q.trim() && scene ? (
-            <Text size="xs" c="dimmed" className="carte-compteur">
-              {scene.hits.size}
-            </Text>
-          ) : null
-        }
-        rightSectionWidth="auto"
-      />
+          rightSectionWidth="auto"
+        />
+      </BarreFiltres>
       {q.trim() && scene && (
         <Text size="sm" c="dimmed" aria-live="polite">
           {scene.hits.size} résultat{scene.hits.size > 1 ? 's' : ''}

@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Vue des accès (dossier 022) : on choisit une personne ou un groupe, puis on lit pour chaque registre le rôle attribué, son
    origine et ce que la personne peut réellement faire. Tout est calculé par le serveur avec les contrôles réels : l'écran ne
    déduit aucun droit et ne modifie rien (les droits se donnent depuis la fiche du registre). */
@@ -93,15 +94,17 @@ export function AccesSujets() {
           }}
           nothingFoundMessage="Aucun résultat"
         />
-        <TextInput
-          label="Nom du registre"
-          placeholder="Filtrer"
-          value={q}
-          onChange={(e) => {
-            setQ(e.currentTarget.value);
-            setPage(1);
-          }}
-        />
+        <BarreFiltres label="Affichage et filtres">
+          <TextInput
+            label="Nom du registre"
+            placeholder="Filtrer"
+            value={q}
+            onChange={(e) => {
+              setQ(e.currentTarget.value);
+              setPage(1);
+            }}
+          />
+        </BarreFiltres>
       </Group>
       <ErrorAlert error={acces.error ?? personnes.error ?? groupes.error} />
       {!sujet && <Text c="dimmed">Choisissez une personne ou un groupe pour voir ses accès aux registres.</Text>}

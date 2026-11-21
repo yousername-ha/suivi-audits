@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lot ALH1) : écran « Surface externe ». Alertes, actifs (hôtes et domaines) et
    technologies lus dans AlgoLightHouse (éditeur AlgoSecure), visibles à travers les droits du périmètre de la plateforme
    relié à chaque périmètre de l'éditeur ; un périmètre non relié n'est visible qu'avec le droit d'administrer le module.
@@ -1278,7 +1279,7 @@ function OngletAlertes() {
   return (
     <Stack>
       <form onSubmit={chercher} role="search">
-        <Group align="flex-end">
+        <BarreFiltres label="Alertes de la surface externe">
           <TextInput
             label="Rechercher une alerte"
             description="Titre, cible (domaine, adresse) ou identifiant CVE."
@@ -1289,45 +1290,45 @@ function OngletAlertes() {
           <Button type="submit" variant="default">
             Rechercher
           </Button>
-        </Group>
+
+          <Select
+            label="Type d’alerte"
+            placeholder="Tous"
+            clearable
+            value={filtres.type || null}
+            onChange={(v) => changer({ type: (v ?? '') as FiltresAlertesAlh['type'] })}
+            data={OPTIONS_TYPE}
+            comboboxProps={{ withinPortal: false }}
+          />
+          <Select
+            label="Criticité"
+            placeholder="Toutes"
+            clearable
+            value={filtres.criticite || null}
+            onChange={(v) => changer({ criticite: (v ?? '') as FiltresAlertesAlh['criticite'] })}
+            data={OPTIONS_CRITICITE}
+            comboboxProps={{ withinPortal: false }}
+          />
+          <Select
+            label="Statut chez l’éditeur"
+            placeholder="Ouvertes"
+            clearable
+            value={filtres.statut || null}
+            onChange={(v) => changer({ statut: (v ?? '') as FiltresAlertesAlh['statut'] })}
+            data={OPTIONS_STATUT}
+            comboboxProps={{ withinPortal: false }}
+          />
+          <Select
+            label="Trier les alertes par"
+            allowDeselect={false}
+            value={filtres.tri || 'criticite'}
+            onChange={(v) => changer({ tri: triDepuis(v) })}
+            data={OPTIONS_TRI_ALERTES}
+            comboboxProps={{ withinPortal: false }}
+          />
+        </BarreFiltres>
       </form>
-      <Group align="flex-end">
-        <Select
-          label="Type d’alerte"
-          placeholder="Tous"
-          clearable
-          value={filtres.type || null}
-          onChange={(v) => changer({ type: (v ?? '') as FiltresAlertesAlh['type'] })}
-          data={OPTIONS_TYPE}
-          comboboxProps={{ withinPortal: false }}
-        />
-        <Select
-          label="Criticité"
-          placeholder="Toutes"
-          clearable
-          value={filtres.criticite || null}
-          onChange={(v) => changer({ criticite: (v ?? '') as FiltresAlertesAlh['criticite'] })}
-          data={OPTIONS_CRITICITE}
-          comboboxProps={{ withinPortal: false }}
-        />
-        <Select
-          label="Statut chez l’éditeur"
-          placeholder="Ouvertes"
-          clearable
-          value={filtres.statut || null}
-          onChange={(v) => changer({ statut: (v ?? '') as FiltresAlertesAlh['statut'] })}
-          data={OPTIONS_STATUT}
-          comboboxProps={{ withinPortal: false }}
-        />
-        <Select
-          label="Trier les alertes par"
-          allowDeselect={false}
-          value={filtres.tri || 'criticite'}
-          onChange={(v) => changer({ tri: triDepuis(v) })}
-          data={OPTIONS_TRI_ALERTES}
-          comboboxProps={{ withinPortal: false }}
-        />
-      </Group>
+
       <ErrorAlert error={q.error} />
       {q.data && <AlertesAlhTable alertes={q.data.elements} onOuvrir={setOuverte} />}
       {q.data && <Pages donnees={q.data} page={page} onPage={setPage} nom="alertes" />}
@@ -1398,7 +1399,7 @@ function OngletActifs() {
           setPage(1);
         }}
       >
-        <Group align="flex-end">
+        <BarreFiltres label="Actifs exposés">
           <TextInput
             label="Rechercher un actif"
             description="Adresse IP ou nom de domaine."
@@ -1438,7 +1439,7 @@ function OngletActifs() {
               Relier en masse
             </Button>
           )}
-        </Group>
+        </BarreFiltres>
       </form>
       <ErrorAlert error={q.error} />
       {q.data && <ActifsAlhTable actifs={q.data.elements} onOuvrir={setOuvert} />}
@@ -1515,7 +1516,7 @@ function OngletTechnologies() {
           setPage(1);
         }}
       >
-        <Group align="flex-end">
+        <BarreFiltres label="Technologies exposées">
           <TextInput
             label="Rechercher une technologie"
             description="Nom, éditeur, produit ou identifiant CVE."
@@ -1545,7 +1546,7 @@ function OngletTechnologies() {
             data={OPTIONS_TRI_TECHNOLOGIES}
             comboboxProps={{ withinPortal: false }}
           />
-        </Group>
+        </BarreFiltres>
       </form>
       <ErrorAlert error={q.error} />
       {q.data && <TechnologiesAlh technologies={q.data.elements} />}
