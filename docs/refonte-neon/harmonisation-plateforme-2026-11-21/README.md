@@ -9,6 +9,12 @@ Il part de `919ffa8129143e42e536b6e8f6690906ed6c535c`, sur
 vers `claude-suivi-smsi`. Le travail applicatif est dans le dépôt ; ce dossier explique les choix et la recette.
 Aucune fusion de PR, publication d’image ou mise en production n’est effectuée.
 
+Le code contrôlé du complément est dans **`e29d6f656e3142b870be0a6f5a05ab99b7cd71b3`**. La branche reprend ensuite la version 7.5.1
+(`01130ce47e0e2fa92fb4ef0efc233aff7d965126`) publiée pendant le travail : seuls les numéros de version, le manifeste de publication et le
+journal changent par ce raccordement. Les sources frontend/UI et les specs E2E sont identiques au code contrôlé.
+Les entrées UI restent **Non publié** ; elles ne font pas partie de la 7.5.1 déjà publiée. Les captures proviennent
+du frontend avant ce raccordement de métadonnées. Aucun test serveur de la version amont n’est réattribué au lot UI.
+
 ## Demande et références
 
 Le RSSI demande une application entière moins encombrée : même barre de vues/recherche/filtres dans les différents

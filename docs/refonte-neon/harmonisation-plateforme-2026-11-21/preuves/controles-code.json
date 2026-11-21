@@ -312,5 +312,11 @@
     "Aucune exécution API/base/Docker/E2E serveur",
     "Pas de validation humaine ni approbation des références visuelles",
     "Finitions CSS de superposition et de fond du pied : format, build, UI et captures rejoués ; suite web exécutée avant ces finitions, sans changement de logique TS/TSX."
-  ]
+  ],
+  "codeUiControle": "e29d6f656e3142b870be0a6f5a05ab99b7cd71b3",
+  "raccordementAmont": {
+    "commit": "01130ce47e0e2fa92fb4ef0efc233aff7d965126",
+    "version": "7.5.1",
+    "portee": "Numéros de version, manifeste de publication et CHANGELOG ; sources fonctionnelles web/UI/E2E inchangées."
+  }
 }

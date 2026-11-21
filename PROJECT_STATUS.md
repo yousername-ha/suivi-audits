@@ -7,6 +7,7 @@
 > 7 variantes de fenêtres, API simulée et données fictives. Les 127 déclarations de fenêtres sont inventoriées, sans
 > prétendre avoir testé chaque formulaire. Prochaine action : validation des images puis recette Docker/API réelle,
 > non exécutée ici. Aucune fusion de PR, publication de version ou mise en production.
+> Code du complément : `e29d6f6` ; raccordement de la 7.5.1 (`01130ce`), métadonnées seulement. Les changements UI restent non publiés.
 >
 
 > **21/11/2026 — refonte de densité, branche dédiée** : lot local fondé sur `15dc5a6` (7.5.0), après analyse d’une vidéo privée

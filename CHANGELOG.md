@@ -6,8 +6,6 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune migration, aucune action : correctif de performance du module Vulnérabilités.
-
 Aucune migration, nouvelle dépendance ou modification du contrat API. Reconstruire le frontend lors de l’intégration du code.
 Les préférences explicites de taille et le mode mural sont conservés. Contrôles locaux, captures, mesures et limites dans le
 [dossier du lot](docs/refonte-neon/densite-2026-11-21/README.md) ; recette Docker/API réelle à effectuer avant livraison. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
@@ -39,6 +37,17 @@ Les préférences explicites de taille et le mode mural sont conservés. Contrô
   cache distinctes. Leur collision pouvait fournir un tableau à la place de l’objet du bilan et provoquer
   `e.perimetres is not iterable`. Les sélecteurs de Machines et de Surface externe partagent désormais la clé propre aux
   options, sans changement de contrat serveur. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+
+## [7.5.1] — 2026-11-21
+
+### Notes de mise à jour
+
+**En bref.** Correctif de performance du module Vulnérabilités (défaut PERF-13 du banc du 21/11/2026) : aucune migration,
+aucune commande sur le serveur, aucune action dans l'application. Les écrans des failles, des machines, du parc, la vue
+d'ensemble, les correctifs et le rapport mensuel redeviennent rapides une fois la veille remplie.
+
+### Corrigé
+
 - Vulnérabilités, **lenteur avec la veille chargée** (défaut PERF-13 du banc du 21/11/2026 sur la version 7.5.0,
   [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : la lecture des avis du CERT-FR et du CERT Santé qui citent les CVE
   du parc comparait chaque CVE de chaque avis à toute la liste demandée, soit 3 à 4 secondes à chaque calcul de priorité
