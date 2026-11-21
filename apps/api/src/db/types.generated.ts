@@ -1615,6 +1615,51 @@ export interface VDocuments {
   updated_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
+export interface VeilleReglementaireCollectes {
+  id: Generated<string>;
+  source: "cnil" | "cepd" | "eur-lex" | "anssi";
+  origine: "manuel" | "planifie";
+  etat: Generated<"en_file" | "en_cours" | "recu" | "echec" | "expire">;
+  demande_par: string;
+  demande_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  debute_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  termine_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  lots: Generated<number>;
+  elements: Generated<number>;
+  ecartes: Generated<number>;
+  tronque: Generated<boolean>;
+  erreur: string | null;
+}
+
+export interface VeilleReglementairePublications {
+  id: Generated<string>;
+  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "ans" | "legifrance";
+  domaine: "securite" | "donnees-personnelles";
+  identifiant: string;
+  titre: string;
+  resume: string | null;
+  lien: string;
+  publie_le: ColumnType<Date, Date | string, Date | string>;
+  collecte_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  statut: Generated<"a-qualifier" | "sans-objet" | "a-suivre" | "impactant">;
+  qualifie_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  qualifie_par: string | null;
+  version: Generated<number>;
+}
+
+export interface VeilleReglementaireSources {
+  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "ans" | "legifrance";
+  activee: Generated<boolean>;
+  frequence_heures: number | null;
+  planifiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  derniere_reussite: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  dernier_essai: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  erreur: string | null;
+  mots_cles: ColumnType<JsonValue | null, string | null, string | null>;
+  version: Generated<number>;
+}
+
 export interface VulnerabilitesAdImports {
   id: Generated<string>;
   numero: number;
@@ -2488,6 +2533,9 @@ export interface DB {
   user_roles: UserRoles;
   users: Users;
   v_documents: VDocuments;
+  veille_reglementaire_collectes: VeilleReglementaireCollectes;
+  veille_reglementaire_publications: VeilleReglementairePublications;
+  veille_reglementaire_sources: VeilleReglementaireSources;
   vulnerabilites_ad_imports: VulnerabilitesAdImports;
   vulnerabilites_ad_objets: VulnerabilitesAdObjets;
   vulnerabilites_ad_points: VulnerabilitesAdPoints;

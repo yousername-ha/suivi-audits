@@ -46,6 +46,7 @@ import { RelaisModele, type TransportModele } from './assistant/modele.js';
 import { FluxExternes } from './flux-externes.js';
 import { ProduitsSurveilles } from './vulnerabilites/produits.js';
 import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
+import { VeilleReglementaire } from './veille-reglementaire.js';
 import { PurgeJournaux } from './vulnerabilites/purge-journaux.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
@@ -227,6 +228,9 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     historique,
     /** Contacts de crise issus des comptes (ADR 0107) : fiche de l'administrateur, mise à jour par la personne. */
     contactsCrise: new ContactsCriseComptes(db, grc),
+    /** Veille réglementaire (ADR 0110) : publications de sources officielles (file traitée par l'exécutant), qualification
+        par le rôle RSSI ou DPO. */
+    veilleReglementaire: new VeilleReglementaire(db, flux, mandataire),
     /** Module Vulnérabilités (ADR 0100) : produits surveillés, veille sur les sources publiques (file traitée par l'exécutant),
         failles et machines lues dans Tenable (synchronisation par l'exécutant, lecture par périmètre). */
     vulnerabilites: {

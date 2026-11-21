@@ -48,6 +48,7 @@ import { ExportsPage } from './pages/Exports';
 import { RegistresPage } from './registres/Registres';
 import { ProduitsSurveillesPage } from './vulnerabilites/ProduitsSurveilles';
 import { VeillePage } from './vulnerabilites/Veille';
+import { VeilleReglementairePage } from './veille-reglementaire/VeilleReglementaire';
 import { FaillesDetecteesPage } from './vulnerabilites/FaillesDetectees';
 import { MachinesPage } from './vulnerabilites/Machines';
 import { SurfaceExternePage } from './vulnerabilites/SurfaceExterne';
@@ -147,6 +148,7 @@ const router = createBrowserRouter([
       { path: '/vulnerabilites/vue', element: <VueEnsemblePage /> },
       { path: '/vulnerabilites/produits', element: <ProduitsSurveillesPage /> },
       { path: '/vulnerabilites/veille', element: <VeillePage /> },
+      { path: '/veille-reglementaire', element: <VeilleReglementairePage /> },
       { path: '/vulnerabilites/failles', element: <FaillesDetecteesPage /> },
       { path: '/vulnerabilites/machines', element: <MachinesPage /> },
       { path: '/vulnerabilites/perimetres', element: <PerimetresPage /> },

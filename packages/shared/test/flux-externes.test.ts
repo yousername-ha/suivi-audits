@@ -30,6 +30,7 @@ describe('registre des flux vers l’extérieur', () => {
       'tenable',
       'veille-vulnerabilites',
       'algolighthouse',
+      'veille-reglementaire',
     ]);
     expect(FLUX_EXTERNES.map((f) => f.id)).toEqual([...FLUX_MODULES]);
   });
@@ -46,8 +47,10 @@ describe('registre des flux vers l’extérieur', () => {
       if (f.porteur.type === 'conteneur') expect(f.porteur.profil, f.id).toBeTruthy();
       expect(f.donnees, f.id).not.toBe('');
       // Page de réglage : Configuration système, Plateforme, rubrique Intégrations pour les connecteurs (ADR 0076), ou
-      // écran de la veille du module Vulnérabilités (ADR 0100).
-      expect(f.reglage.lien, f.id).toMatch(/^\/(systeme\/|plateforme\/|integrations$|vulnerabilites\/veille$)/);
+      // écran de la veille du module Vulnérabilités (ADR 0100), écran de la veille réglementaire (ADR 0110).
+      expect(f.reglage.lien, f.id).toMatch(
+        /^\/(systeme\/|plateforme\/|integrations$|vulnerabilites\/veille$|veille-reglementaire$)/,
+      );
       expect(f.pareFeu.length, f.id).toBeGreaterThan(0);
       expect(f.siFerme, f.id).not.toBe('');
     }
@@ -107,8 +110,10 @@ describe('geste d’activation (précision du RSSI du 15/11/2026)', () => {
       'antivirus',
       'mises-a-jour',
       'veille-vulnerabilites',
+      'veille-reglementaire',
     ]);
     expect(fluxExterne('veille-vulnerabilites').activation.geste).toBe('Bouton « Activer la veille »');
+    expect(fluxExterne('veille-reglementaire').activation.geste).toBe('Bouton « Activer la veille réglementaire »');
     expect(fluxExterne('antivirus').reglage.lien).toBe('/systeme/securite');
     // Activation globale (ADR 0019) : l'assistant, le module Intégrations (connecteur Tenable) et le module Vulnérabilités
     // (veille) sont des modules dont la désactivation referme le flux.
@@ -117,6 +122,7 @@ describe('geste d’activation (précision du RSSI du 15/11/2026)', () => {
       ['tenable', 'integrations'],
       ['veille-vulnerabilites', 'vulnerabilites'],
       ['algolighthouse', 'integrations'],
+      ['veille-reglementaire', 'veille_reglementaire'],
     ]);
     expect(fluxExterne('tenable').activation.par).toBe('module');
     expect(fluxExterne('algolighthouse').activation.par).toBe('module');
@@ -169,7 +175,12 @@ describe('reprise de l’existant (précision du RSSI du 16/11/2026)', () => {
     expect(FLUX_REPRISE_ACTEUR).toBe('reprise-mise-a-jour');
     // Les flux nés avec le registre (Tenable, AlgoLightHouse, veille des vulnérabilités) n'ont rien à reprendre : ils sont
     // nommés, pas oubliés.
-    expect([...FLUX_SANS_REPRISE].sort()).toEqual(['algolighthouse', 'tenable', 'veille-vulnerabilites']);
+    expect([...FLUX_SANS_REPRISE].sort()).toEqual([
+      'algolighthouse',
+      'tenable',
+      'veille-reglementaire',
+      'veille-vulnerabilites',
+    ]);
     const repris = FLUX_MODULES.filter(estFluxRepris);
     expect(Object.keys(FLUX_REPRISE_MOTIFS).sort()).toEqual([...repris].sort());
     for (const m of repris)

@@ -25,6 +25,20 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'veille-reglementaire',
+    title: 'Veille réglementaire',
+    permission: 'veille_reglementaire:lire',
+    link: '/veille-reglementaire',
+    steps: [
+      'Ouvrez Conformité et audits > Veille réglementaire. La plateforme lit quatre flux officiels, en liste fermée : les actualités de la CNIL, les publications du CEPD, le flux des actes du Journal officiel de l’Union européenne (EUR-Lex) et les actualités de l’ANSSI. L’Agence du numérique en santé (aucun flux public connu) et le Journal officiel (Légifrance) sont prévus, sans collecte pour l’instant.',
+      'Activer la veille : un administrateur clique « Activer la veille réglementaire » ; une fenêtre détaille les destinations (TCP 443 vers les quatre hôtes) et ce qui sort (l’adresse IP du serveur et la demande de lecture de chaque flux, aucune donnée de la plateforme), à valider. Chaque source s’active ensuite à part dans le tableau des sources, avec sa fréquence (toutes les 4 ou 12 heures, une fois par jour par défaut, ou une fois par semaine) ; il faut pour cela le droit d’administrer le module. Désactiver le module referme le flux.',
+      'Chaque flux est lu par l’exécutant d’exploitation du serveur, jamais par l’application elle-même, et par le mandataire de l’établissement s’il est actif. Le tableau des sources donne la dernière collecte réussie, l’erreur éventuelle et la prochaine collecte ; une source sans réussite depuis trois périodes est signalée en retard. « Collecter maintenant » relance les sources activées.',
+      'Ce qui est gardé : le titre, la date, le lien et, pour la CNIL, le CEPD et EUR-Lex, le résumé du flux, repris tels quels (licence CC BY-ND de la CNIL : aucun texte n’est modifié ; un résumé trop long n’est pas gardé plutôt que coupé). Pour l’ANSSI, seuls le titre, la date et le lien sont gardés. EUR-Lex publie tous les actes du Journal officiel : seuls ceux dont le titre contient un mot de la liste « Filtre d’EUR-Lex » sont gardés (majuscules et accents ignorés, mot entier), et le domaine de l’acte est celui du mot trouvé (données personnelles si les deux domaines le sont). La liste par défaut couvre, en français et en anglais, les données personnelles, la protection des données, la cybersécurité, la sécurité des réseaux, les données de santé, les dispositifs médicaux, l’intelligence artificielle, l’identité numérique et la résilience ; elle se règle avec le droit d’administrer le module, et peut être rétablie. Les textes sont affichés comme texte simple ; le lien s’ouvre dans un nouvel onglet, seulement s’il pointe vers le site de la source.',
+      'Qualification : chaque publication arrive « À qualifier ». Le rôle RSSI qualifie le domaine sécurité (ANSSI, et les actes d’EUR-Lex de ce domaine) ; le droit spécial « DPO » qualifie le domaine données personnelles (CNIL, CEPD, et les actes d’EUR-Lex de ce domaine), en un clic : « Sans objet », « À suivre » ou « Impactant ». Le droit « DPO » se coche dans un rôle personnalisé (Administration, Rôles, table « Droits réservés ») et s’ajoute à n’importe quel profil ; il ouvre à lui seul la lecture de la veille réglementaire. Aucun rôle ne le donne d’office, pas même Administrateur ou RSSI : avant le lot 3 de la refonte des droits, un RSSI qui doit qualifier les données personnelles le reçoit par un rôle personnalisé. Chaque qualification est inscrite au journal d’audit ; une publication modifiée entre-temps par quelqu’un d’autre est refusée : rechargez la page.',
+      'Les filtres par statut, domaine et source et la recherche dans le titre et le résumé restreignent la liste ; la synthèse en tête donne le nombre de publications par statut. Le rattachement d’une publication « Impactant » à une exigence, une action ou une revue de document n’est pas encore disponible.',
+    ],
+  },
+  {
     id: 'preuves-controles',
     title: 'Preuves et plan de contrôle',
     permission: 'pilotage:lire',

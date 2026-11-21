@@ -6,6 +6,25 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+**Migration automatique `098`** (lot VR-1 : veille réglementaire, [ADR 0110](docs/adr/0110-veille-reglementaire.md)) :
+**additive** (trois tables `veille_reglementaire_*`, dont la liste des mots-clés d'EUR-Lex ; contrainte des modules recréée
+pour admettre `veille_reglementaire`), durée négligeable, sans reprise de données ; **aucun compte ni aucun rôle existant
+n'est touché**. Aucune action sur le serveur à la mise à jour.
+- **Rien n'est collecté** tant que le flux « Veille réglementaire » n'est pas ouvert (un administrateur, Conformité et audits,
+  Veille réglementaire, « Activer la veille réglementaire ») **et** que les sources ne sont pas activées une à une dans le
+  tableau des sources (toutes désactivées au départ). Relire la liste de mots-clés du filtre d'EUR-Lex (liste par défaut
+  fournie) avant d'activer cette source.
+- **Nouveaux sites en sortie**, une fois le flux ouvert : `www.cnil.fr`, `www.edpb.europa.eu`, `eur-lex.europa.eu` et
+  `cyber.gouv.fr`, en TCP 443, par l'exécutant d'exploitation (`updater`) ; à faire autoriser par l'équipe infrastructure, ou
+  par le mandataire de l'établissement s'il est réglé (la sortie va alors au mandataire, sur son port).
+- **Droit DPO** (`veille_reglementaire:dpo`) : il se coche dans un rôle personnalisé (Administration, Rôles, table « Droits
+  réservés ») et n'est donné d'office à personne, ni à l'administrateur ni au RSSI ; **avant le lot 3, un RSSI qui doit
+  qualifier les données personnelles le reçoit par un rôle personnalisé** (addendum du 20/11/2026 de
+  l'[ADR 0092](docs/adr/0092-refonte-des-droits-pyramide-des-perimetres.md), point 5). Il ouvre à lui seul la lecture de la
+  veille réglementaire.
+(session « Module surveillance vulnérabilités SMSI »)
+
+
 **Migration automatique `097`** (lot PRIO-1 du module Vulnérabilités : règles de priorité, libellés, fréquences, cartes
 d'avis, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : additive (colonne `kits_exploitation` des constats, liste vide
 par défaut, et sa contrainte), durée négligeable, sans reprise de données. Aucune action sur le serveur, aucun flux nouveau.
@@ -137,6 +156,21 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 
 ### Ajouté
 
+- **Veille réglementaire** (lot VR-1, [ADR 0110](docs/adr/0110-veille-reglementaire.md)) : nouveau module
+  `veille_reglementaire` et page Conformité et audits > Veille réglementaire. Publications de la CNIL, du CEPD, d'EUR-Lex et
+  de l'ANSSI lues par l'exécutant d'exploitation avec le script isolé de la veille des vulnérabilités (liste fermée, HTTPS
+  vérifié, aucune redirection, RSS sans déclaration de type ni entité, 200 éléments et 2 Mio au plus) ; titre, date, lien et
+  résumé du flux tels quels, jamais de résumé pour l'ANSSI, lien gardé seulement en https sur l'hôte de la source. EUR-Lex
+  (tous les actes du Journal officiel de l'Union) : seuls les actes dont le titre contient un mot-clé d'une liste réglable
+  (français et anglais, casse et accents ignorés, 60 mots au plus) sont gardés, leur domaine est celui du mot trouvé
+  (données personnelles si les deux domaines le sont) ; réglage avec `If-Match` et journal. ANS (aucun flux public connu) et
+  Légifrance prévues, sans collecteur. Flux « Veille réglementaire » au registre des flux, sources activables une à une, fréquence réglable (4, 12, 24 ou
+  168 heures). Qualification en un clic (« sans objet », « à suivre », « impactant ») par le rôle RSSI pour la sécurité et
+  par le nouveau droit spécial cumulable « DPO » (`veille_reglementaire:dpo`, droit réservé coché dans un rôle
+  personnalisé, qui ouvre aussi la lecture du module ; aucun rôle ne l'a d'office, administrateur et RSSI compris) pour les
+  données personnelles ; `route()` admet une liste de permissions d'un même module dont l'une suffit, `If-Match`, journal d'audit. API de lecture pour le
+  tableau de bord : synthèse, publications filtrées, état des sources. Suites données à une publication « impactant » hors
+  de ce lot. (session « Module surveillance vulnérabilités SMSI »)
 - Vulnérabilités, **kit d'exploitation disponible selon Tenable** (lot PRIO-1, [ADR 0100](docs/adr/0100-module-vulnerabilites.md),
   migration `097`) : Metasploit, Core Impact et CANVAS (« Exploitable with »), lus dans la chaîne `exploitFrameworks` de
   Security Center et dans `exploit_framework_metasploit`, `exploit_framework_core` et `exploit_framework_canvas` d'un fichier

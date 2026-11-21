@@ -27,6 +27,8 @@ const ACTION_TEXT: Record<string, string> = {
   supprimer: 'supprimer',
   exporter: 'exporter',
   administrer: 'administrer',
+  // Droit réservé « DPO » (veille réglementaire, ADR 0110).
+  dpo: 'qualifier les publications « données personnelles » (droit DPO)',
 };
 export function permissionDenied(p: Permission): HttpError {
   const [m, a] = p.split(':') as [Module, string];

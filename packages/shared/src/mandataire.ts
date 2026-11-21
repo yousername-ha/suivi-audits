@@ -152,6 +152,8 @@ export const USAGE_MANDATAIRE: Record<FluxModule, UsageMandataire> = {
   'mises-a-jour': 'non_pris_en_charge',
   antivirus: 'non_pris_en_charge',
   acme: 'non_pris_en_charge',
+  // Veille réglementaire (ADR 0110) : même script et même tunnel que la veille des vulnérabilités.
+  'veille-reglementaire': 'utilise',
 };
 export const LIBELLES_USAGE_MANDATAIRE: Record<UsageMandataire, string> = {
   utilise: 'Utilise le mandataire',
@@ -170,6 +172,8 @@ export const MOTIFS_USAGE_MANDATAIRE: Record<FluxModule, string> = {
   'mises-a-jour': 'Sort encore directement : le passage par le mandataire n’est pas réalisé (lot à venir).',
   antivirus: 'Sort encore directement : le passage par le mandataire n’est pas réalisé (lot à venir).',
   acme: 'Sort encore directement : le passage par le mandataire n’est pas réalisé (lot à venir).',
+  'veille-reglementaire':
+    'Les demandes vers les flux des sources réglementaires passent par un tunnel à travers le mandataire ; le certificat de chaque source reste vérifié.',
 };
 
 /** Ligne de pare-feu d'un flux qui passe par le mandataire : la sortie va au mandataire, pas aux destinations. */
