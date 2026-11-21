@@ -243,25 +243,19 @@
   border-radius: 0.6rem;
   color: var(--mantine-color-text);
 }
-.frise-choix select {
-  padding: 0.05rem 0.15rem;
-  border: 0;
-  border-radius: 0.375rem;
-  background: transparent;
+.frise-choix__liste {
+  inline-size: 8.5rem;
+}
+.frise-choix__liste .mantine-Select-input {
+  min-block-size: 0;
+  block-size: auto;
+  padding-block: 0.05rem;
+  padding-inline-start: 0.15rem;
   color: var(--mantine-color-text);
-  font: inherit;
   font-weight: 600;
-  color-scheme: light;
   cursor: pointer;
 }
-[data-mantine-color-scheme='dark'] .frise-choix select {
-  color-scheme: dark;
-}
-.frise-choix select option {
-  background: var(--suivi-surface);
-  color: var(--mantine-color-text);
-}
-.frise-choix select:focus-visible {
+.frise-choix__liste .mantine-Select-input:focus-visible {
   outline: 2px solid var(--neon-accent);
   outline-offset: 1px;
 }

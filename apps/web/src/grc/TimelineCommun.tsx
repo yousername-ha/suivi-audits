@@ -406,7 +406,8 @@ export function PiedTemps({
       width={largeur}
       height={hauteur}
       role="img"
-      aria-label={`${titre} : ${colonnes.map((c, i) => `${c.libelle}, ${comptes[i] ?? 0}`).join(' · ')}`}
+      // Nom accessible sans l'unité (« … du mois ») : il ne doit pas se confondre avec un champ « Mois » de la page.
+      aria-label={`${titre.split(' ')[0]} par période : ${colonnes.map((c, i) => `${c.libelle}, ${comptes[i] ?? 0}`).join(' · ')}`}
     >
       {colonnes.map((c, i) => {
         const n = comptes[i] ?? 0,

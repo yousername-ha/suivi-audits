@@ -9,7 +9,7 @@
    - Ligne (intitulé, fond de la ligne) : fiche complète, comme la commande existante.
    - Repère (barre, losange ou carré d'occurrence) : petite fenêtre de résultat (ValidationRapide).
    Les teintes disent l'état ; le retard a son propre repère (contour rouge et texte), distinct de l'état et du résultat. */
-import { ActionIcon, Alert, Button, Group, Text } from '@mantine/core';
+import { ActionIcon, Alert, Button, Group, Select, Text } from '@mantine/core';
 import { useElementSize, useMergedRef } from '@mantine/hooks';
 import { avancementTaches, type BusinessPolicy, type GrcObject } from '@suivi/shared';
 import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
@@ -691,13 +691,21 @@ function FriseActions({
         <PeriodeAffichee debut={fr(p.debut)} fin={fr(p.fin - JOUR)} />
         <span className="frise-choix">
           <label htmlFor={idGroupe}>Regrouper par</label>
-          <select id={idGroupe} value={critere} onChange={(e) => setGroupe(e.currentTarget.value)}>
-            {(Object.keys(CRITERES_GROUPE) as CritereGroupe[]).map((k) => (
-              <option key={k} value={k}>
-                {CRITERES_GROUPE[k]}
-              </option>
-            ))}
-          </select>
+          {/* Liste Mantine et non liste native : ses options n'existent qu'à l'ouverture, aucune option cachée ne reste
+              dans la page (une liste native en laisse, que d'autres listes de la page pourraient croiser). */}
+          <Select
+            id={idGroupe}
+            variant="unstyled"
+            size="xs"
+            className="frise-choix__liste"
+            allowDeselect={false}
+            data={(Object.keys(CRITERES_GROUPE) as CritereGroupe[]).map((k) => ({
+              value: k,
+              label: CRITERES_GROUPE[k],
+            }))}
+            value={critere}
+            onChange={(v) => v && setGroupe(v)}
+          />
         </span>
         <span className="frise-espace" />
         <Segmente
