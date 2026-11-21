@@ -101,7 +101,10 @@ export class VueEnsembleVulnerabilites {
       entreesInstantane(cumuls, sources, objets, reglage, maintenant, undefined, false),
     );
     // Lot S3 : précision des failles exploitées et présentes selon l'état de leur correctif (sans renommer la marque).
-    const p1 = suivies.filter((s) => !s.aConfirmer && s.priorite.niveau === 'P1');
+    // Lot PRIO-1 : une faille peut être en P1 sans exploitation avérée (montée d'un cran sur une machine en fin de support) ;
+    // « exploitées et présentes » compte donc l'exploitation avérée, plus seulement le niveau P1.
+    const exploiteesPresentes = suivies.filter((s) => !s.aConfirmer && s.exploitee);
+    const p1 = exploiteesPresentes;
     const etats = p1.map((s) => correctifDeCumul(s.x, sources).etat);
     // Lot S3 : fin de support (constats présents selon Tenable, machines et services exposés lus).
     const fin = objets.filter(
@@ -115,7 +118,7 @@ export class VueEnsembleVulnerabilites {
     return {
       niveau,
       tuiles: {
-        exploiteesPresentes: suivies.filter((s) => !s.aConfirmer && s.priorite.niveau === 'P1').length,
+        exploiteesPresentes: exploiteesPresentes.length,
         aTraiter: { p1: parPriorite.P1, p2: parPriorite.P2 },
         aConfirmer: {
           failles: new Set(propositions.map((p) => p.cve)).size,

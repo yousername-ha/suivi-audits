@@ -3,7 +3,8 @@
    égaux, même décision (rejouable). La priorité vient de la grille partagée (priorite-vulnerabilites.ts), majoration du lot
    ALH5 comprise ; ce fichier ne dit que quand une alerte s'ouvre, se met à jour, monte, descend ou se clôt.
    - Alerte CRITIQUE : une faille présente chez nous (détectée par Tenable, déclarée par un produit surveillé rattaché, ou
-     exposée sur Internet) est en P1, c'est-à-dire exploitation avérée et présence.
+     exposée sur Internet) est en P1, c'est-à-dire exploitation avérée et présence, ou (lot PRIO-1) P2 montée d'un cran sur
+     une machine en fin de support.
    - Alerte SIMPLE (décision du RSSI du 18/11/2026, lot V6b : « P1 et P2 exploitable sur les asset qui sont exposé
      directement sur internet ») : une faille en P2 qui est à la fois « exploitable » au sens de la grille (une source dit
      qu'un code d'exploitation existe : Tenable, preuve de concept du CERT Santé ou d'AlgoLightHouse, SOURCES_EXPLOITABLE) et
@@ -12,7 +13,10 @@
      Rien pour P3 et P4.
    - Une seule alerte ouverte par faille (CVE, ou constat de Tenable sans CVE) ; elle se met à jour sans se rejouer.
    - Elle se clôt d'elle-même quand la faille n'est plus présente, est traitée (corrigée, risque accepté, non concernée) ou
-     redescend sous le seuil ; la clôture porte son motif. */
+     redescend sous le seuil ; la clôture porte son motif.
+   - Lot PRIO-1 (décision du RSSI du 20/11/2026) : une faille P1 dont un objet suivi est sous exception (risque accepté en
+     vigueur) garde son alerte critique, marquée « risque accepté », au lieu d'être close ; la marque seule ne notifie
+     personne (même niveau : mise à jour sans rejeu). */
 import { z } from 'zod';
 import { type NiveauPriorite } from './failles-tenable.js';
 import type { SystemRole } from './permissions.js';
@@ -47,7 +51,7 @@ export interface FaitsSeuilAlerte {
 
 /** Libellé de la règle, repris par l'écran, l'aide et le motif de clôture. */
 export const REGLE_ALERTE_LIBELLE =
-  'critique : P1 (faille exploitée présente chez nous) ; simple : P2 exploitable sur un actif exposé directement sur Internet';
+  'critique : P1 (faille exploitée présente chez nous, ou montée en P1 sur une machine en fin de support) ; simple : P2 exploitable sur un actif exposé directement sur Internet';
 
 /** Niveau d'alerte d'une faille présente (décision du RSSI du 18/11/2026) : critique en P1 ; simple en P2 si la faille est
     exploitable ET exposée directement sur Internet ; sinon null (sous le seuil). */
@@ -111,9 +115,18 @@ export interface FaitsAlerte {
   nombres: NombresFaille;
   titre: string;
   produit: string | null;
+  /** Lot PRIO-1 (décision du RSSI du 20/11/2026) : l'alerte critique ne tient qu'à des objets suivis en P1 sous exception
+      (risque accepté en vigueur) ; elle reste ouverte et visible, marquée « risque accepté ». Absent : non. */
+  risqueAccepte?: boolean;
 }
 
-/** Empreinte stable des faits : une alerte n'est mise à jour (et sa version avancée) que si elle change. */
+/** Marque d'une alerte critique gardée sous exception (lot PRIO-1). */
+export const MARQUE_RISQUE_ACCEPTE = 'Risque accepté';
+export const DEFINITION_RISQUE_ACCEPTE =
+  'Risque accepté : la faille est en P1, mais une exception (risque accepté) est en vigueur sur ce qui la porte. L’alerte critique reste visible jusqu’à la fin de l’exception ou de la faille.';
+
+/** Empreinte stable des faits : une alerte n'est mise à jour (et sa version avancée) que si elle change. La marque « risque
+    accepté » n'y entre que lorsqu'elle est posée : les alertes sans elle gardent leur empreinte d'avant le lot PRIO-1. */
 export function empreinteAlerte(f: FaitsAlerte): string {
   return JSON.stringify([
     f.priorite.niveau,
@@ -123,6 +136,7 @@ export function empreinteAlerte(f: FaitsAlerte): string {
     [f.nombres.machines, f.nombres.produits, f.nombres.actifs],
     f.titre,
     f.produit,
+    ...(f.risqueAccepte ? ['risque_accepte'] : []),
   ]);
 }
 
@@ -278,6 +292,8 @@ export interface AlerteVulnerabiliteDto {
   actifs: NombreLisible;
   /** Produits surveillés rattachés (registre de l'organisation, lisible avec le module). */
   produits: number;
+  /** Lot PRIO-1 : alerte critique gardée sous exception (marque « risque accepté »). */
+  risqueAccepte: boolean;
   version: number;
 }
 

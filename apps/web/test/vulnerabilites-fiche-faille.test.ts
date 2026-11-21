@@ -47,7 +47,7 @@ describe('lot PC4 : en-tête de la fiche', () => {
       'Priorité 1 (P1)',
       'Exploitation avérée (catalogue KEV) · Détectée par Tenable',
       'Priorité et faits calculés par la plateforme, les mêmes pour tous.',
-      'Zero-day : exploitation avérée',
+      '<span>Exploitation avérée</span>',
       'Présence : 3 machines et 1 actif exposé que vous lisez.',
       'Alerte critique ouverte sur cette faille (P1)',
       'href="/vulnerabilites/alertes?alerte=00000000-0000-4000-8000-0000000000a1"',
@@ -67,6 +67,11 @@ describe('lot PC4 : en-tête de la fiche', () => {
     expect(autre).toContain('Sans CVE');
     expect(autre).toContain('touche aussi des éléments que vous ne lisez pas');
     expect(autre).not.toContain('ouvrir l’alerte');
+    // Lot PRIO-1 : faille de la fiche par défaut (correctif non renseigné) : jamais « zero-day ».
+    expect(html).not.toContain('Zero-day');
+    const zd = fiche({ situationExploitation: 'sans_correctif' });
+    expect(zd).toContain('<span>Zero-day : exploitée, sans correctif connu</span>');
+    expect(zd).toContain('title="Zero-day : exploitée, sans correctif connu"');
   });
 });
 

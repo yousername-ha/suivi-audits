@@ -1640,6 +1640,13 @@ export class SurfaceExterneAlh implements OperationEnLots {
     return out;
   }
 
+  /** Lot PRIO-1 (cartes d'avis de la veille) : CVE demandées exposées sur Internet, oui ou non, sur tous les faits connus et
+      sans droits (décision A du lot ALH5 : un fait de la priorité, le même pour tout le monde). Une lecture pour toutes les
+      CVE ; aucun nom ni nombre rendu. */
+  async cvesExposees(cves: readonly string[]): Promise<Set<string>> {
+    return new Set((await this.porteurs(null, cves)).map((r) => r.cve));
+  }
+
   /** Pour la veille : sur combien d'actifs lisibles chaque CVE est vue, et par combien d'alertes ouvertes lisibles ;
       `horsLecture` (lot ALH5) : elle l'est aussi sur un actif ou par une alerte que la personne ne lit pas (sans nom ni
       nombre). Une CVE que la surface externe ne porte pas du tout est absente de la table rendue. */

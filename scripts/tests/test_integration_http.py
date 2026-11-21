@@ -344,6 +344,8 @@ class IntegrationHttp(unittest.TestCase):
             "cvss3Vecteur": "AV:N/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H/E:U/RL:O/RC:C", "cvss3Score": 9.1, "vpr": 5.0,
             # 0,56 % rendu par Tenable : 0,0056 rangé, comme la veille.
             "epss": 0.0056, "exploitable": True, "exploitLibelle": "Exploits are available",
+            # Lot PRIO-1 : `exploitFrameworks` vide, aucun kit.
+            "kitsExploitation": [],
             "failleLe": "2026-07-14T12:00:00.000Z", "correctifLe": "2026-07-14T12:00:00.000Z", "finSupportLe": None,
             "voirAussi": "https://example.org/advisory", "cves": ["CVE-2026-90001", "CVE-2026-90002"], "cvesTronquees": False})
         self.assertEqual((c2["cves"], c2["finSupportLe"], c2["epss"], c2["vpr"], c2["exploitable"]),
@@ -476,8 +478,21 @@ class IntegrationHttp(unittest.TestCase):
                 client.requete(methode, chemin, parametres=parametres)
         self.assertEqual(Faux.recues, [])
 
+    def test_exploit_frameworks_is_a_string_and_only_three_kits_are_kept(self):
+        # Lot PRIO-1 : Security Center rend `exploitFrameworks` en CHAÎNE ; seuls Metasploit, Core Impact et CANVAS sortent,
+        # dans un ordre fixe ; tout autre texte, une liste ou un nombre ne donnent rien.
+        self.assertEqual(h.kits_exploitation("CANVAS (EXEMPLE), Metasploit (exploit/exemple/fictif)"),
+                         ["metasploit", "canvas"])
+        self.assertEqual(h.kits_exploitation("Core Impact"), ["core_impact"])
+        self.assertEqual(h.kits_exploitation("core"), [])
+        self.assertEqual(h.kits_exploitation("Exploit-DB, autre outil"), [])
+        self.assertEqual(h.kits_exploitation(""), [])
+        self.assertEqual(h.kits_exploitation(["Metasploit"]), [])
+        self.assertEqual(h.kits_exploitation(None), [])
+
     def test_field_parsers(self):
         self.assertIsNone(h.instant("-1"))
+
         self.assertIsNone(h.instant(""))
         self.assertIsNone(h.instant("99999999999"))
         self.assertEqual(h.instant("0000001"), "1970-01-01T00:00:01.000Z")

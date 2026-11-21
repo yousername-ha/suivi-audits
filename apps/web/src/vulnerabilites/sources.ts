@@ -10,6 +10,7 @@ import {
   type Signalement,
   SOURCE_EXPLOITABLE_LIBELLES,
   SOURCE_EXPLOITATION_LIBELLES,
+  SOURCE_EXPLOITATION_LIBELLES_COMPLETS,
   SOURCE_VALEUR_LIBELLES,
   type SourceExploitable,
   type SourceExploitation,
@@ -22,11 +23,17 @@ import { dateCourte } from './veille';
 /** Libellé d'un signalement : source, et date (JJ/MM/AAAA) quand elle est connue. */
 const avecDate = (libelle: string, le: string | null) => (le ? `${libelle} (le ${dateCourte(le)})` : libelle);
 
-/** Sources de l'exploitation avérée, de la première à la dernière, chacune avec sa date ; null s'il n'y en a pas. */
-export function resumeExploitation(s: Pick<SourcesFailleDto, 'exploitation'>): string | null {
+/** Sources de l'exploitation avérée, de la première à la dernière, chacune avec sa date ; null s'il n'y en a pas.
+    `complet` (fiche d'une faille, lot PRIO-1) : libellés complets, terme officiel de Tenable (« Exploited by malware »). */
+export function resumeExploitation(s: Pick<SourcesFailleDto, 'exploitation'>, complet = false): string | null {
   if (!s.exploitation.length) return null;
-  return s.exploitation.map((x) => avecDate(SOURCE_EXPLOITATION_LIBELLES[x.source], x.le)).join(', ');
+  const libelles = complet ? SOURCE_EXPLOITATION_LIBELLES_COMPLETS : SOURCE_EXPLOITATION_LIBELLES;
+  return s.exploitation.map((x) => avecDate(libelles[x.source], x.le)).join(', ');
 }
+
+/** Lot PRIO-1 : mention du catalogue KEV « utilisée par des rançongiciels » (`knownRansomwareCampaignUse`). */
+export const MENTION_RANCONGICIEL =
+  'Utilisée par des rançongiciels selon le catalogue KEV de la CISA (« Known Ransomware Campaign Use »)';
 
 /** Sources de « exploitable », de la première à la dernière ; null s'il n'y en a pas. */
 export function resumeExploitable(s: Pick<SourcesFailleDto, 'exploitable'>): string | null {
@@ -61,6 +68,9 @@ export function marquesSources(
       detail: premiere(s.exploitable, SOURCE_EXPLOITABLE_LIBELLES)!,
       etat: 'attention',
     });
+  // Lot PRIO-1 : en dernier (les pastilles des deux premières marques suivent leur rang).
+  if (s.rancongiciel)
+    out.push({ libelle: 'Rançongiciels (KEV)', detail: 'utilisée par des rançongiciels', etat: 'erreur' });
   return out;
 }
 

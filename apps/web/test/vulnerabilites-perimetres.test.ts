@@ -155,7 +155,7 @@ describe('lot PC3 : adresses et libellés', () => {
   });
   it('nom accessible d’une carte, exposition d’une tuile, bandeau de première ligne', () => {
     expect(nomAccessibleCarte(carte())).toBe(
-      'Portail fictif : 5 machines lues, priorité P1, failles présentes : 6 critiques, 3 élevées, 0 moyenne, 1 faible, 2 machines zero-day, exploitation avérée, 1 machine exploitable, 2 actifs exposés sur Internet',
+      'Portail fictif : 5 machines lues, priorité P1, failles présentes : 6 critiques, 3 élevées, 0 moyenne, 1 faible, 2 machines à exploitation avérée, 1 machine exploitable, 2 actifs exposés sur Internet',
     );
     expect(
       nomAccessibleCarte(
@@ -201,8 +201,10 @@ describe('lot PC3 : cartes des périmètres', () => {
     expect(html).toContain('Portail fictif');
     expect(html).toMatch(/class="parc-g parc-g--c parc-mono"[^>]*>6</i);
     expect(html).toMatch(/class="parc-g parc-g--m parc-g--zero parc-mono"[^>]*>0</i);
-    expect(html).toContain('title="Zero-day : exploitation avérée"');
-    expect(html).toContain('2 zero-day');
+    expect(html).toContain('title="Exploitation avérée"');
+    expect(html).toContain('2 à exploitation avérée');
+    // Lot PRIO-1 : le mot « zero-day » est réservé aux failles exploitées sans correctif connu.
+    expect(html).not.toContain('zero-day');
     expect(html).toContain('1 exploitable');
     expect(html).toContain('2 actifs exposés sur Internet');
   });

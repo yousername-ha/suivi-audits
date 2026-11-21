@@ -350,7 +350,7 @@ export function FicheConstat({ c }: { c: ConstatDto }) {
     <Stack>
       <Group gap="xs">
         <StatusChip etat={GRAVITE_TENABLE_ETAT[c.gravite]}>{libelleGravite(c.gravite)}</StatusChip>
-        {marquesConstat(c).map((m) => (
+        {marquesConstat(c, true).map((m) => (
           <StatusChip key={m.libelle} etat={m.etat}>
             {m.libelle}
           </StatusChip>

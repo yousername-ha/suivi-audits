@@ -131,9 +131,21 @@ export function situationExploitation(exploitee: boolean, correctif: EtatCorrect
       : 'correctif_non_renseigne';
 }
 
-/** Proposition écrite pour le RSSI, NON APPLIQUÉE : la marque actuelle reste « Zero-day : exploitation avérée ». */
-export const PROPOSITION_ZERO_DAY =
-  'Proposition à confirmer par le RSSI : réserver le mot « zero-day » à une faille exploitée sans correctif connu, et afficher « exploitation avérée » pour une faille exploitée dont un correctif est disponible. Tant qu’il n’a pas tranché, la marque reste « Zero-day : exploitation avérée » et la précision est ajoutée à côté.';
+/** Lot PRIO-1 (décision du RSSI du 20/11/2026) : le mot « zero-day » est réservé à une faille à exploitation avérée SANS
+    correctif connu (une source dit qu'aucun correctif n'existe : « Un correctif existe : Non » du CERT Santé, et aucune
+    source ne dit le contraire). Une faille exploitée qui a un correctif, ou dont le correctif n'est pas renseigné, est dite
+    « exploitation avérée ». Jamais synonyme de « récente » ni de « critique ». Ni la priorité ni les alertes n'en
+    dépendent. */
+export const REGLE_ZERO_DAY =
+  'Le mot « zero-day » est réservé à une faille dont l’exploitation est avérée et pour laquelle aucun correctif n’est connu ; une faille exploitée qui a un correctif (ou dont le correctif n’est pas renseigné) est dite « exploitation avérée ». Il ne veut dire ni « récente », ni « critique ».';
+export const LIBELLE_ZERO_DAY = 'Zero-day : exploitée, sans correctif connu';
+export const LIBELLE_EXPLOITATION_AVEREE = 'Exploitation avérée';
+
+/** Zero-day : exploitation avérée sans correctif connu (situation « sans_correctif »). */
+export const estZeroDay = (s: SituationExploitation | null | undefined): boolean => s === 'sans_correctif';
+/** Libellé de la marque d'une faille exploitée : « Zero-day : … » sans correctif connu, sinon « Exploitation avérée ». */
+export const libelleMarqueExploitation = (s: SituationExploitation | null | undefined): string =>
+  estZeroDay(s) ? LIBELLE_ZERO_DAY : LIBELLE_EXPLOITATION_AVEREE;
 
 /* ------------------------------------------------------------------ Fin de support */
 export const FIN_SUPPORT_LIBELLE = 'Fin de support';

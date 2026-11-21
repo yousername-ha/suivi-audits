@@ -238,6 +238,28 @@ export function FicheAvis({ a, onOuvrirCve }: { a: AvisVeilleDto; onOuvrirCve?: 
           <MentionsCertSante a={a} />
         </section>
       )}
+      {(a.parc?.presentes.length ?? 0) + (a.parc?.exposees.length ?? 0) > 0 && (
+        <section className="va-section" aria-label="Sur la plateforme">
+          <p className="va-etiquette">Sur la plateforme</p>
+          {a.parc!.presentes.length > 0 && (
+            <>
+              <Text size="sm">Présentes sur le parc :</Text>
+              <PucesCve cves={a.parc!.presentes} onOuvrir={onOuvrirCve} libelle="Présentes sur le parc" />
+            </>
+          )}
+          {a.parc!.exposees.length > 0 && (
+            <>
+              <Text size="sm">Exposées sur Internet :</Text>
+              <PucesCve cves={a.parc!.exposees} onOuvrir={onOuvrirCve} libelle="Exposées sur Internet" />
+            </>
+          )}
+          <Text size="xs" c="dimmed">
+            Présente sur le parc : détectée par Tenable ou déclarée par un produit surveillé ; exposée sur Internet :
+            vue sur un actif de la surface externe. Les mêmes pour tous ; la fiche de chaque CVE dit ce que vous pouvez
+            lire.
+          </Text>
+        </section>
+      )}
       <section className="va-section" aria-label="CVE citées">
         <p className="va-etiquette">CVE citées</p>
         {a.cves.length ? (

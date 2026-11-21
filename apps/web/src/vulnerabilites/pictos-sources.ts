@@ -88,11 +88,12 @@ export const PICTO_EXPLOITATION: Record<SourceExploitation, SourcePicto> = {
   alh: 'algolighthouse',
   tenable: 'tenable',
 };
-/** Source de « exploitable » (Tenable, CERT Santé, AlgoLightHouse). */
+/** Source de « exploitable » (Tenable, CERT Santé, AlgoLightHouse ; kit d'exploitation selon Tenable, lot PRIO-1). */
 export const PICTO_EXPLOITABLE: Record<SourceExploitable, SourcePicto> = {
   tenable: 'tenable',
   'cert-sante': 'cert-sante',
   alh: 'algolighthouse',
+  'tenable-kit': 'tenable',
 };
 /** Source d'une gravité ou d'un score (le score EPSS est publié par FIRST). */
 export const PICTO_VALEUR: Record<SourceValeur, SourcePicto> = {

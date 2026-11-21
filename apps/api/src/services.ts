@@ -46,6 +46,7 @@ import { RelaisModele, type TransportModele } from './assistant/modele.js';
 import { FluxExternes } from './flux-externes.js';
 import { ProduitsSurveilles } from './vulnerabilites/produits.js';
 import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
+import { PurgeJournaux } from './vulnerabilites/purge-journaux.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
 import { ImportNessus } from './vulnerabilites/import-nessus.js';
@@ -265,6 +266,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       correctifs: new CorrectifsVulnerabilites(db, reglagePriorite),
       /** Lot R1 : barre de recherche globale du module (CVE, machines, actifs exposés, applications), lecture seule. */
       recherche: new RechercheVulnerabilites(db, failles, surfaceExterne, produitsSurveilles),
+      /** Lot PRIO-1 : purge du journal des collectes et des exécutions des connecteurs au-delà de 90 jours (tic de l'API). */
+      purgeJournaux: new PurgeJournaux(db, veille),
     },
     modules,
     flux,
