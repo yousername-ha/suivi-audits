@@ -187,6 +187,7 @@ describe('menu et aide', () => {
       'vulnerabilites-machines',
       'vulnerabilites-perimetres',
       'vulnerabilites-surface',
+      'vulnerabilites-annuaire',
       'vulnerabilites-alertes',
       'vulnerabilites-delais',
       'vulnerabilites-tendances',
