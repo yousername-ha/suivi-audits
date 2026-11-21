@@ -458,6 +458,7 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
         '094_vulnerabilites_exploite_malware.sql',
         '095_vulnerabilites_silene.sql',
         '096_tableaux_de_bord_multiples.sql',
+        '097_vulnerabilites_kits_exploitation.sql',
       ]);
       const st = await t2.svc.legacy.recompose();
       expect(deepEqual(st!.data.maps as Json, fixture.maps as Json)).toBe(true);

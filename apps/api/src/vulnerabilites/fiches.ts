@@ -46,7 +46,7 @@ import { HttpError } from '../http/errors.js';
 import type { FaillesDetectees } from './failles.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
 import { lireFaitsCve, sourcesDe } from './sources.js';
-import { lisible, present } from './sql.js';
+import { cveSurMachineFinSupport, lisible, present } from './sql.js';
 import type { SurfaceExterneAlh } from './surface-externe.js';
 
 const B = FICHE_FAILLE_BORNES;
@@ -211,9 +211,10 @@ export class FichesFailles {
         JOIN vulnerabilites_produits_machines pm ON pm.produit_id = r.produit_id
         JOIN vulnerabilites_machines m ON m.id = pm.machine_id
         WHERE r.cve = ${cve} AND r.statut IN ('rattachee', 'confirmee')`.execute(k);
-    const { rows: rr } = await sql<{ rattachee: boolean; proposee: boolean; connue: boolean }>`
+    const { rows: rr } = await sql<{ rattachee: boolean; proposee: boolean; connue: boolean; fin_support: boolean }>`
       SELECT EXISTS (SELECT 1 FROM vulnerabilites_rapprochements WHERE cve = ${cve}
                        AND statut IN ('rattachee', 'confirmee')) AS rattachee,
+             ${cveSurMachineFinSupport(cve)} AS fin_support,
              EXISTS (SELECT 1 FROM vulnerabilites_rapprochements WHERE cve = ${cve} AND statut = 'proposee') AS proposee,
              EXISTS (SELECT 1 FROM vulnerabilites_constat_cves WHERE cve = ${cve}) AS connue`.execute(k);
     const r = rr[0]!;
@@ -246,7 +247,11 @@ export class FichesFailles {
     return {
       nature: 'cve',
       cves: [cve],
-      priorite: calculerPriorite({ ...faitsDepuisSources(sources), presence }, await this.reglage.valeurs()),
+      // Lot PRIO-1 : un cran de plus si la CVE est présente sur une machine en fin de support.
+      priorite: calculerPriorite(
+        { ...faitsDepuisSources(sources), presence, finDeSupport: r.fin_support },
+        await this.reglage.valeurs(),
+      ),
       sources,
       presente: presence === 'detectee' || presence === 'declaree' || presence === 'exposee',
       machines: n[0]!.lues,

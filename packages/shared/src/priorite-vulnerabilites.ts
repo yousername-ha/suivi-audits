@@ -63,23 +63,33 @@ export const presenceAveree = (p: Presence): boolean => p === 'detectee' || p ==
     du 19/11/2026 ; un fait du contrôle, sans date : rangé après les sources datées). */
 export const SOURCES_EXPLOITATION = ['kev', 'cert-fr', 'cert-sante', 'alh', 'tenable'] as const;
 export type SourceExploitation = (typeof SOURCES_EXPLOITATION)[number];
+/** Libellés courts : ceux des listes, des faits de la priorité et des notifications (lot PRIO-1, décision du RSSI du
+    20/11/2026 : « Logiciel malveillant (Tenable) » dans les listes). */
 export const SOURCE_EXPLOITATION_LIBELLES: Record<SourceExploitation, string> = {
   kev: 'catalogue KEV',
   'cert-fr': 'alerte du CERT-FR',
   'cert-sante': 'fiche du CERT Santé',
   alh: 'AlgoLightHouse',
-  tenable: 'Exploitée par un logiciel malveillant (selon Tenable)',
+  tenable: 'Logiciel malveillant (Tenable)',
+};
+/** Libellés complets : ceux de la fiche d'une faille, avec le terme officiel de Tenable (« Exploited by malware »). */
+export const SOURCE_EXPLOITATION_LIBELLES_COMPLETS: Record<SourceExploitation, string> = {
+  ...SOURCE_EXPLOITATION_LIBELLES,
+  tenable: 'Exploitée par un logiciel malveillant selon Tenable (« Exploited by malware »)',
 };
 
 /** Sources de « exploitable » (un code d'exploitation existe, sans exploitation observée ; V26) : champ `exploitAvailable`
     de Tenable, preuve de concept disponible selon la fiche du CERT Santé (V23), champ `has_poc` d'AlgoLightHouse (lot
-    ALH2). */
-export const SOURCES_EXPLOITABLE = ['tenable', 'cert-sante', 'alh'] as const;
+    ALH2), kit d'exploitation disponible selon Tenable (lot PRIO-1, décision du RSSI du 20/11/2026 : « Exploitable with »
+    Metasploit, Core Impact ou CANVAS ; rangé avec « exploitable », jamais compté comme exploitation avérée ; fait du
+    contrôle, sans date). */
+export const SOURCES_EXPLOITABLE = ['tenable', 'cert-sante', 'alh', 'tenable-kit'] as const;
 export type SourceExploitable = (typeof SOURCES_EXPLOITABLE)[number];
 export const SOURCE_EXPLOITABLE_LIBELLES: Record<SourceExploitable, string> = {
   tenable: 'Tenable',
   'cert-sante': 'preuve de concept selon le CERT Santé',
   alh: 'preuve de concept selon AlgoLightHouse',
+  'tenable-kit': 'kit d’exploitation disponible (Tenable)',
 };
 
 /** Un fait signalé par une source, avec la date à laquelle elle l'a signalé (null : date inconnue, par exemple Tenable). */
@@ -163,8 +173,14 @@ export function valeursRetenues(v: ValeursFaille): {
   epss: ScoreSource | null;
 } {
   const ordre = (s: SourceValeur) => SOURCES_VALEUR.indexOf(s);
-  const plus = <T extends { source: SourceValeur }>(liste: readonly T[], valeur: (x: T) => number): T | null =>
-    [...liste].sort((a, b) => valeur(b) - valeur(a) || ordre(a.source) - ordre(b.source))[0] ?? null;
+  // La première de la liste rangée par valeur décroissante puis par ordre des sources, trouvée en un passage (lot PERF-04 :
+  // même résultat que le tri, sans copie ; à égalité parfaite, la première rencontrée, comme le tri stable).
+  const plus = <T extends { source: SourceValeur }>(liste: readonly T[], valeur: (x: T) => number): T | null => {
+    let m: T | null = null;
+    for (const x of liste)
+      if (!m || valeur(x) > valeur(m) || (valeur(x) === valeur(m) && ordre(x.source) < ordre(m.source))) m = x;
+    return m;
+  };
   return {
     gravite: plus(v.gravites, (x) => RANG_GRAVITE[x.gravite]),
     cvss: plus(
@@ -189,6 +205,9 @@ export interface SourcesFailleDto {
   exploitable: Signalement<SourceExploitable>[];
   valeurs: ValeursFaille;
   certSante: { correctif: MentionCertSante | null; contournement: MentionCertSante | null } | null;
+  /** Lot PRIO-1 : le catalogue KEV dit la faille utilisée par des rançongiciels (`knownRansomwareCampaignUse` = « Known »).
+      Fait rendu visible ; il ne change pas le niveau de priorité. Absent : non. */
+  rancongiciel?: boolean;
 }
 
 /** Part des faits d'une priorité tirée de ce que disent les sources : exploitation, « exploitable », gravité et score
@@ -200,6 +219,7 @@ export function faitsDepuisSources(s: SourcesFailleDto): Omit<FaitsFaille, 'pres
     exploitable: s.exploitable.map((x) => x.source),
     gravite: r.gravite?.gravite ?? null,
     epss: r.epss?.score ?? null,
+    ...(s.rancongiciel ? { rancongiciel: true } : {}),
   };
 }
 
@@ -213,6 +233,11 @@ export interface FaitsFaille {
   epss: number | null;
   /** Sources selon lesquelles un code d'exploitation existe (Tenable, preuve de concept du CERT Santé). */
   exploitable: readonly SourceExploitable[];
+  /** Lot PRIO-1 (décision du RSSI du 20/11/2026) : la faille est présente sur une machine en fin de support (un système ou
+      un produit qu'elle porte n'est plus maintenu par l'éditeur) : un cran de plus. Absent : non. */
+  finDeSupport?: boolean;
+  /** Lot PRIO-1 : utilisée par des rançongiciels selon le catalogue KEV ; fait montré, sans effet sur le niveau. */
+  rancongiciel?: boolean;
 }
 
 export type FaitPriorite =
@@ -223,7 +248,11 @@ export type FaitPriorite =
   | { fait: 'exploit_disponible'; sources: SourceExploitable[] }
   /** Lot ALH5 (décision B) : l'actif exposé est relié (liaison confirmée) à une machine interne qui porte elle-même une
       faille présente en P1 ou P2. Aucun nom : la machine n'est montrée qu'à qui la lit, ailleurs. */
-  | { fait: 'machine_interne_vulnerable' };
+  | { fait: 'machine_interne_vulnerable' }
+  /** Lot PRIO-1 : présente sur une machine en fin de support ; la priorité a monté d'un cran (P1 reste P1). */
+  | { fait: 'fin_de_support' }
+  /** Lot PRIO-1 : utilisée par des rançongiciels selon le catalogue KEV ; sans effet sur le niveau. */
+  | { fait: 'rancongiciel' };
 
 export interface Priorite {
   niveau: NiveauPriorite;
@@ -237,11 +266,34 @@ export interface Priorite {
     - P3 : présente et élevée ;
     - P4 : le reste.
     Les faits rendus sont ceux des règles remplies au niveau retenu (dans l'ordre de la grille, sans doublon) ; au niveau
-    P4, la présence, la gravité et, le cas échéant, l'exploitation. */
+    P4, la présence, la gravité et, le cas échéant, l'exploitation.
+    Lot PRIO-1 (décisions du RSSI des 19 et 20/11/2026), après la grille :
+    - fin de support : une faille présente sur une machine en fin de support monte d'un cran (P4 → P3, P3 → P2, P2 → P1 ;
+      P1 reste P1), avec le fait « fin de support » ajouté à la fin, toujours visible ;
+    - rançongiciels : le fait « utilisée par des rançongiciels (catalogue KEV) » suit celui de l'exploitation, sans changer
+      le niveau (une faille du catalogue présente est déjà en P1 ; question posée au RSSI). */
 export function calculerPriorite(
   f: FaitsFaille,
   reglage: Pick<ReglagePriorite, 'seuilEpss'> = REGLAGE_PRIORITE_DEFAUT,
 ): Priorite {
+  const p = grille(f, reglage);
+  let faits = p.faits;
+  if (f.rancongiciel) {
+    const i = faits.findIndex((x) => x.fait === 'exploitation');
+    const r: FaitPriorite = { fait: 'rancongiciel' };
+    faits = i < 0 ? [...faits, r] : [...faits.slice(0, i + 1), r, ...faits.slice(i + 1)];
+  }
+  if (f.finDeSupport && presenceAveree(f.presence))
+    return { niveau: monterDUnCran(p.niveau), faits: [...faits, { fait: 'fin_de_support' }] };
+  return faits === p.faits ? p : { niveau: p.niveau, faits };
+}
+
+/** Un cran de plus : P4 → P3, P3 → P2, P2 → P1 ; P1 reste P1. */
+export const monterDUnCran = (n: NiveauPriorite): NiveauPriorite =>
+  NIVEAUX_PRIORITE[Math.max(0, NIVEAUX_PRIORITE.indexOf(n) - 1)]!;
+
+/** Grille de départ seule, sans la fin de support ni le fait des rançongiciels. */
+function grille(f: FaitsFaille, reglage: Pick<ReglagePriorite, 'seuilEpss'>): Priorite {
   const sources = SOURCES_EXPLOITATION.filter((s) => f.exploitation.includes(s));
   const exploitables = SOURCES_EXPLOITABLE.filter((s) => f.exploitable.includes(s));
   const exploitee = sources.length > 0;
@@ -274,6 +326,32 @@ export function prioriteLaPlusHaute(liste: readonly Priorite[]): Priorite | null
   return m;
 }
 
+/** Contrôle de Tenable (constat présent) vu par le calcul global des failles : son identifiant et sa dernière détection
+    présente (la plus récente des détections présentes du constat, toutes machines confondues, ISO 8601), ou null si
+    aucune n'est datée. */
+export interface ControleGlobal {
+  id: string;
+  dernierePresente: string | null;
+}
+
+/** Ordre des contrôles du calcul global (décision du RSSI du 20/11/2026, lot PERF-04). Quand plusieurs contrôles présents et
+    non traités d'une même faille (une CVE, ou un constat sans CVE) donnent la même priorité, celui qui vient en premier
+    fournit les faits affichés (prioriteLaPlusHaute garde la première à niveau égal) : le contrôle détecté le plus
+    récemment (dernière détection présente la plus récente ; sans date, après tous les contrôles datés), puis, à égalité
+    parfaite, le plus petit identifiant. Ordre total : il ne dépend ni de l'ordre des lignes en base ni de l'ordre reçu. Ne
+    change ni la priorité, ni le niveau d'une alerte, ni aucun nombre : seulement, à priorité égale, le contrôle dont les
+    faits sont montrés. Les failles déclarées et l'exposition viennent après les contrôles (même priorité retenue). */
+export function comparerControlesGlobal(a: ControleGlobal, b: ControleGlobal): number {
+  if (a.dernierePresente !== b.dernierePresente) {
+    if (a.dernierePresente === null) return 1;
+    if (b.dernierePresente === null) return -1;
+    const ta = Date.parse(a.dernierePresente);
+    const tb = Date.parse(b.dernierePresente);
+    if (ta !== tb) return tb - ta;
+  }
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}
+
 /* ------------------------------------------------------------------ Majoration par la machine interne (lot ALH5) */
 /** Niveaux d'une faille présente qui rendent une machine interne « vulnérable » (décision B du RSSI du 17/11/2026). */
 export const NIVEAUX_MACHINE_VULNERABLE: readonly NiveauPriorite[] = ['P1', 'P2'];
@@ -287,20 +365,37 @@ export const machineVulnerable = (priorites: readonly Pick<Priorite, 'niveau'>[]
     l'actif est relié, par une liaison CONFIRMÉE, à une machine interne vulnérable : un cran de plus (P4 → P3, P3 → P2,
     P2 → P1 ; P1 reste P1), avec le fait « mène à une machine interne vulnérable » ajouté à la fin. Sans liaison
     confirmée vers une telle machine (proposition non confirmée comprise), la priorité est rendue telle quelle. Seconde
-    étape de la grille, jamais appliquée aux failles des machines elles-mêmes (pas de cycle). */
+    étape de la grille, jamais appliquée aux failles des machines elles-mêmes (pas de cycle).
+    Lot PRIO-1 (décision du RSSI du 20/11/2026, point c) : la fin de support et cette majoration ne se cumulent pas, UN
+    SEUL cran au plus au total ; quand la priorité a déjà monté par la fin de support, le fait est ajouté sans nouveau
+    cran (les deux faits restent affichés). */
 export function majorerPriorite(p: Priorite, meneAUneMachineVulnerable: boolean): Priorite {
   if (!meneAUneMachineVulnerable) return p;
-  const niveau = NIVEAUX_PRIORITE[Math.max(0, rangPriorite(p) - 2)]!;
-  return { niveau, faits: [...p.faits, { fait: 'machine_interne_vulnerable' }] };
+  const dejaMontee = p.faits.some((f) => f.fait === 'fin_de_support');
+  return {
+    niveau: dejaMontee ? p.niveau : monterDUnCran(p.niveau),
+    faits: [...p.faits, { fait: 'machine_interne_vulnerable' }],
+  };
 }
+
+/** Lot PRIO-1 (décision du RSSI du 20/11/2026, point b) : la faille est utilisée par des rançongiciels selon le catalogue
+    KEV (fait de sa priorité). À priorité égale, elle passe devant dans les listes et dans les cibles de la vue d'ensemble ;
+    son niveau ne change pas. */
+export const prioriteRancongiciel = (p: Pick<Priorite, 'faits'>): boolean =>
+  p.faits.some((f) => f.fait === 'rancongiciel');
 
 const pourcent = (x: number) => `${(x * 100).toLocaleString('fr-FR', { maximumFractionDigits: 2 })} %`;
 
-/** Libellé d'un fait, pour l'affichage. */
-export function libelleFaitPriorite(f: FaitPriorite): string {
+/** Libellé d'un fait, pour l'affichage des listes (libellés courts). */
+export const libelleFaitPriorite = (f: FaitPriorite): string => libelleFait(f, SOURCE_EXPLOITATION_LIBELLES);
+/** Libellé d'un fait pour la fiche d'une faille : terme officiel de Tenable (« Exploited by malware »). */
+export const libelleFaitPrioriteComplet = (f: FaitPriorite): string =>
+  libelleFait(f, SOURCE_EXPLOITATION_LIBELLES_COMPLETS);
+
+function libelleFait(f: FaitPriorite, libelles: Record<SourceExploitation, string>): string {
   switch (f.fait) {
     case 'exploitation':
-      return `Exploitation avérée (${f.sources.map((s) => SOURCE_EXPLOITATION_LIBELLES[s]).join(', ')})`;
+      return `Exploitation avérée (${f.sources.map((s) => libelles[s]).join(', ')})`;
     case 'presence':
       return PRESENCE_LIBELLES[f.presence];
     case 'gravite':
@@ -311,6 +406,10 @@ export function libelleFaitPriorite(f: FaitPriorite): string {
       return `Code d’exploitation disponible (${f.sources.map((s) => SOURCE_EXPLOITABLE_LIBELLES[s]).join(', ')})`;
     case 'machine_interne_vulnerable':
       return 'Mène à une machine interne vulnérable';
+    case 'fin_de_support':
+      return 'Machine en fin de support (système ou produit plus maintenu par l’éditeur) : un cran de plus';
+    case 'rancongiciel':
+      return 'Utilisée par des rançongiciels (catalogue KEV)';
   }
 }
 

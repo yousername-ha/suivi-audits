@@ -19,6 +19,7 @@ import {
   type NiveauPriorite,
   SANS_CORRECTIF_LIBELLE,
   SITUATION_EXPLOITATION_LIBELLES,
+  libelleMarqueExploitation,
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, StatusChip } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
@@ -51,7 +52,7 @@ function MarquesGroupe({ g }: { g: CorrectifDto }) {
     <Stack gap="2xs">
       {g.exploitees > 0 && (
         <Group gap="2xs" wrap="nowrap">
-          <MarqueZeroDay />
+          <MarqueZeroDay zeroDay={g.exploiteesSansCorrectif > 0} />
           <Text size="xs">
             {g.exploitees} à exploitation avérée
             {g.exploiteesSansCorrectif > 0 ? `, dont ${g.exploiteesSansCorrectif} sans correctif connu` : ''}
@@ -204,7 +205,8 @@ export function FaillesCorrectifTable({
                     {f.lisible ? '' : ' · aucune de ses machines n’est lue par vous'}
                   </Text>
                   <Group gap="2xs">
-                    {f.exploitee && <StatusChip etat="erreur">Zero-day : exploitation avérée</StatusChip>}
+                    {/* Lot PRIO-1 : « zero-day » réservé à une faille exploitée sans correctif connu. */}
+                    {f.exploitee && <StatusChip etat="erreur">{libelleMarqueExploitation(f.situation)}</StatusChip>}
                     {f.situation && (
                       <StatusChip etat={f.situation === 'sans_correctif' ? 'erreur' : 'neutre'}>
                         {SITUATION_EXPLOITATION_LIBELLES[f.situation]}

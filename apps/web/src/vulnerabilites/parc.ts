@@ -2,6 +2,8 @@
    de la route, nom accessible d'une tuile, libellés des marques, poids des zones en grand écran. La répartition par zone,
    la borne et le mode réduit sont dans le paquet partagé (parc-machines.ts). */
 import {
+  LIBELLE_EXPLOITATION_AVEREE,
+  LIBELLE_ZERO_DAY,
   type MachineMarqueeDto,
   type NiveauPriorite,
   type ParcMachinesDto,
@@ -25,22 +27,27 @@ export function urlParc(f: FiltresMachines): string {
   return `/api/vulnerabilites/machines/parc${s ? `?${s}` : ''}`;
 }
 
-/** Libellés exacts des marques (infobulle, légende, nom accessible). La marque « zero-day » suit la définition du lot V6 :
-    une faille présente dont l'exploitation est avérée. */
-export const MARQUE_ZERO_DAY = 'Zero-day : exploitation avérée';
+/** Libellés exacts des marques (infobulle, légende, nom accessible). Lot PRIO-1 (décision du RSSI du 20/11/2026) : le
+    triangle dit « exploitation avérée » (une faille présente exploitée) ; le mot « zero-day » est réservé à une faille
+    exploitée sans correctif connu (REGLE_ZERO_DAY du paquet partagé). */
+export const MARQUE_ZERO_DAY = LIBELLE_ZERO_DAY;
+export const MARQUE_EXPLOITATION_AVEREE = LIBELLE_EXPLOITATION_AVEREE;
 export const MARQUE_EXPLOITABLE = 'Exploitable : code d’exploitation disponible, sans exploitation avérée';
+export const LEGENDE_EXPLOITATION_AVEREE =
+  'Exploitation avérée : une faille présente est exploitée (catalogue KEV, CERT-FR, CERT Santé, AlgoLightHouse ou logiciel malveillant selon Tenable)';
 export const LEGENDE_ZERO_DAY =
-  'Zero-day : une faille présente dont l’exploitation est avérée (catalogue KEV, CERT-FR, CERT Santé ou AlgoLightHouse)';
+  'Zero-day : une faille présente dont l’exploitation est avérée et pour laquelle aucun correctif n’est connu (le CERT Santé écrit « Un correctif existe : Non ») ; ni « récente », ni « critique »';
 export const LEGENDE_EXPLOITABLE =
-  'Exploitable : une faille présente pour laquelle un code d’exploitation existe (Tenable, preuve de concept), sans exploitation avérée';
+  'Exploitable : une faille présente pour laquelle un code d’exploitation existe (Tenable, kit d’exploitation, preuve de concept), sans exploitation avérée';
 
-/** Lot S3 : précision ajoutée à côté de la marque « zero-day » (la marque n'est pas renommée) et marque « Fin de support ». */
-export const PRECISION_SANS_CORRECTIF = 'Exploitée, sans correctif connu';
+/** Lot S3, précisé par le lot PRIO-1 : mention écrite à côté du triangle quand une faille exploitée n'a aucun correctif
+    connu (le seul cas « zero-day ») ; marque « Fin de support ». */
+export const PRECISION_SANS_CORRECTIF = LIBELLE_ZERO_DAY;
 export const MARQUE_FIN_SUPPORT = 'Fin de support : plus de correctif de sécurité de l’éditeur';
 export const LEGENDE_FIN_SUPPORT =
   'Fin de support : un système ou un logiciel présent sur la machine ne reçoit plus de correctif de sécurité de l’éditeur (date de fin de support publiée par Tenable, passée)';
 export const LEGENDE_SANS_CORRECTIF =
-  'Sans correctif connu : précision ajoutée à la marque zero-day quand une source dit qu’aucun correctif n’existe (CERT Santé) ; un correctif non renseigné n’est pas un correctif absent';
+  'Zero-day : mention écrite à côté du triangle quand une source dit qu’aucun correctif n’existe (CERT Santé) ; un correctif non renseigné n’est pas un correctif absent, la faille reste dite « exploitation avérée »';
 
 export const libellePrioriteMachine = (p: NiveauPriorite | null) => (p ? p : 'Aucune');
 
@@ -57,15 +64,16 @@ export function libelleGravites(c: MachineMarqueeDto['compteurs']): string {
   return parts.length ? parts.join(', ') : 'aucune faille présente';
 }
 
-/** Nom accessible d'une tuile : « srv-… : rang 3 sur 150, front, 2 critiques, priorité P1, zero-day, exploitation avérée ». */
+/** Nom accessible d'une tuile : « srv-… : rang 3 sur 150, front, 2 critiques, priorité P1, exploitation avérée,
+    zero-day, sans correctif connu ». */
 export function nomAccessibleMachine(m: MachineMarqueeDto): string {
   const parts = [
     `rang ${m.rang.position} sur ${m.rang.total}`,
     ZONE_PARC_LIBELLES[zoneParc(m.role)].toLowerCase(),
     libelleGravites(m.compteurs),
     m.marques.priorite ? `priorité ${m.marques.priorite}` : 'aucune priorité',
-    ...(m.marques.exploitationAveree ? ['zero-day, exploitation avérée'] : []),
-    ...(m.marques.exploiteeSansCorrectif ? ['exploitée, sans correctif connu'] : []),
+    ...(m.marques.exploitationAveree ? ['exploitation avérée'] : []),
+    ...(m.marques.exploiteeSansCorrectif ? ['zero-day, sans correctif connu'] : []),
     ...(m.marques.exploitable ? ['exploitable, code d’exploitation disponible'] : []),
     ...(m.finDeSupport ? ['fin de support'] : []),
   ];

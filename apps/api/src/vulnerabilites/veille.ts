@@ -54,7 +54,9 @@ import {
   type SurfaceCveDto,
   VEILLE_BORNES,
   VEILLE_PAR_PAGE,
-  VEILLE_RETARD_HEURES,
+  JOURNAUX_CONSERVATION_JOURS,
+  PLANCHER_NVD_HEURES,
+  sourceEnRetard,
 } from '@suivi/shared';
 import { sql, type Selectable } from 'kysely';
 import { z } from 'zod';
@@ -79,6 +81,9 @@ const EXPIRATION_FILE = sql<Date>`now() - interval '30 minutes'`;
 const ABANDON_EN_COURS = sql<Date>`now() - interval '20 minutes'`;
 /** « Collecter maintenant » : une source déjà demandée à la main depuis moins de ce délai n'est pas redemandée. */
 const INTERVALLE_MANUEL = sql<Date>`now() - interval '15 minutes'`;
+/** Lot PRIO-1 : refus de « Collecter maintenant » pour NVD sous le plancher de deux heures. */
+export const MESSAGE_PLANCHER_NVD =
+  'NVD demande de ne pas être lu plus d’une fois toutes les deux heures : une collecte NVD a été demandée il y a moins de deux heures. Réessayez plus tard.';
 /** Fenêtre NVD : la suivante part de la fin de la précédente réussie ; jamais plus de sept jours en arrière (le rattrapage
     d'une longue interruption est borné), un jour pour la première collecte. */
 const NVD_PREMIERE_FENETRE_MS = 24 * 3_600_000;
@@ -147,7 +152,6 @@ export class VeilleVulnerabilites {
       ).map((c) => [c.source, versCollecte(c)]),
     );
     const maintenant = new Date();
-    const limite = maintenant.getTime() - VEILLE_RETARD_HEURES * 3_600_000;
     const fiches = await this.db.k
       .selectFrom('vulnerabilites_veille_avis')
       .select([
@@ -183,7 +187,8 @@ export class VeilleVulnerabilites {
           derniereReussite: reussite?.toISOString() ?? null,
           dernierEssai: l?.dernier_essai?.toISOString() ?? null,
           erreur: l?.erreur ?? null,
-          enRetard: flux.ouvert && (!reussite || reussite.getTime() < limite),
+          // Lot PRIO-1 : en retard après trois périodes de la source sans collecte réussie (au lieu de 36 h fixes).
+          enRetard: flux.ouvert && sourceEnRetard(reussite, frequence, maintenant),
           derniereCollecte: dernieres.get(d.id) ?? null,
           frequenceHeures: frequence,
           prochaineCollecte: flux.ouvert
@@ -240,11 +245,21 @@ export class VeilleVulnerabilites {
       .limit(VEILLE_PAR_PAGE)
       .offset((q.page - 1) * VEILLE_PAR_PAGE)
       .execute();
+    // Lot PRIO-1 (décision du RSSI du 20/11/2026) : CVE citées présentes sur le parc et exposées sur Internet, en deux
+    // lectures d'ensemble pour toute la page (aucune par avis), sur tous les faits connus (lot ALH5, décision A : un fait,
+    // le même pour tout le monde ; ni nom ni nombre).
+    const citees = [...new Set(lignes.flatMap((l) => l.cves))];
+    const presentes = await this.cvesPresentes(citees);
+    const exposees = citees.length && this.surface ? await this.surface.cvesExposees(citees) : new Set<string>();
     return {
       total: n,
       page: q.page,
       parPage: VEILLE_PAR_PAGE,
       elements: lignes.map((l) => ({
+        parc: {
+          presentes: l.cves.filter((c) => presentes.has(c)),
+          exposees: l.cves.filter((c) => exposees.has(c)),
+        },
         id: l.id,
         source: l.source,
         identifiant: l.identifiant,
@@ -270,6 +285,22 @@ export class VeilleVulnerabilites {
           : null,
       })),
     };
+  }
+
+  /** Lot PRIO-1 : CVE présentes sur le parc : détectées par Tenable (détection présente) ou déclarées (produit surveillé
+      rattachée, d'office ou confirmée), quel que soit leur état de suivi (un fait). Une lecture pour toutes les CVE. */
+  private async cvesPresentes(cves: readonly string[]): Promise<Set<string>> {
+    if (!cves.length) return new Set();
+    const { rows } = await sql<{ cve: string }>`
+      SELECT x.cve FROM unnest(${[...cves]}::text[]) AS x(cve)
+      WHERE EXISTS (SELECT 1 FROM vulnerabilites_constat_cves cc
+              JOIN vulnerabilites_detections d ON d.constat_id = cc.constat_id
+              JOIN vulnerabilites_machines m ON m.id = d.machine_id
+              LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+              WHERE cc.cve = x.cve AND d.vu_numero >= coalesce(e.numero_complet, 0))
+         OR EXISTS (SELECT 1 FROM vulnerabilites_rapprochements r
+              WHERE r.cve = x.cve AND r.statut IN ('rattachee', 'confirmee'))`.execute(this.db.k);
+    return new Set(rows.map((r) => r.cve));
   }
 
   /** Failles connues de la veille ; `kev` : celles du catalogue des failles exploitées, les plus récemment ajoutées d'abord.
@@ -376,11 +407,18 @@ export class VeilleVulnerabilites {
         'L’exécutant d’exploitation du serveur n’est pas disponible : c’est lui qui lit les sources (guide d’installation, étape 11.6).',
       );
     const voulues = source ? [source] : [...SOURCES_VEILLE];
+    let plancherNvd = false;
     const crees = await this.db.tx(async (c, k) => {
       await verrouFile(k);
       await this.menage(k, c);
       const out: LigneCollecte[] = [];
       for (const s of voulues) {
+        // Lot PRIO-1 (décision du RSSI du 20/11/2026) : NVD n'est jamais lu moins de deux heures après la précédente
+        // demande, manuelle ou automatique, « Collecter maintenant » compris.
+        if (s === 'nvd' && (await this.nvdSousPlancher(k))) {
+          plancherNvd = true;
+          continue;
+        }
         const occupee = await k
           .selectFrom('vulnerabilites_veille_collectes')
           .select('id')
@@ -401,9 +439,38 @@ export class VeilleVulnerabilites {
     if (!crees.length)
       throw new HttpError(
         409,
-        'Collecte déjà en cours, ou demandée il y a moins de quinze minutes : réessayez plus tard.',
+        plancherNvd && source === 'nvd'
+          ? MESSAGE_PLANCHER_NVD
+          : 'Collecte déjà en cours, ou demandée il y a moins de quinze minutes : réessayez plus tard.',
       );
     return crees.map(versCollecte);
+  }
+
+  /** Lot PRIO-1 : une collecte NVD (manuelle ou automatique, sauf une collecte expirée, que l'exécutant n'a jamais lancée)
+      a été demandée il y a moins de deux heures. */
+  private async nvdSousPlancher(k: Kdb): Promise<boolean> {
+    return !!(await k
+      .selectFrom('vulnerabilites_veille_collectes')
+      .select('id')
+      .where('source', '=', 'nvd')
+      .where('etat', '<>', 'expire')
+      .where('demande_le', '>', sql<Date>`now() - make_interval(hours => ${PLANCHER_NVD_HEURES})`)
+      .executeTakeFirst());
+  }
+
+  /** Lot PRIO-1 (décision du RSSI du 20/11/2026) : journal des collectes purgé au-delà de 90 jours. Les collectes en file
+      ou en cours sont gardées, ainsi que la dernière de chaque source (état affiché). Rend le nombre de lignes effacées. */
+  async purgerJournal(k: Kdb): Promise<number> {
+    const r = await sql<{ n: number }>`
+      WITH effacees AS (
+        DELETE FROM vulnerabilites_veille_collectes x
+        WHERE x.etat NOT IN ('en_file', 'en_cours')
+          AND x.demande_le < now() - make_interval(days => ${JOURNAUX_CONSERVATION_JOURS})
+          AND x.id <> (SELECT y.id FROM vulnerabilites_veille_collectes y WHERE y.source = x.source
+                       ORDER BY y.demande_le DESC, y.id LIMIT 1)
+        RETURNING 1)
+      SELECT count(*)::int AS n FROM effacees`.execute(k);
+    return r.rows[0]?.n ?? 0;
   }
 
   /* ---------------------------------------------------------------- Planification (tic de l'API) */

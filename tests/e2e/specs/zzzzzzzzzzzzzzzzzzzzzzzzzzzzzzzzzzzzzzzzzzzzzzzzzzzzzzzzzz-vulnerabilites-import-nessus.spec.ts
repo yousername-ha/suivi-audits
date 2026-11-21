@@ -24,7 +24,8 @@ const SCAN1 = path.join(FIXTURES, 'scan-fictif-1.nessus');
 const SCAN2 = path.join(FIXTURES, 'scan-fictif-2.nessus');
 
 const LIBELLE_SUPPRESSION = 'Supprimer ce connecteur et tout ce qu’il a importé';
-const MALWARE = 'Exploitée par un logiciel malveillant (selon Tenable)';
+// Lot PRIO-1 : libellé court des listes (le terme officiel de Tenable, « Exploited by malware », est dans la fiche).
+const MALWARE = 'Logiciel malveillant (Tenable)';
 const LIMITE = 'Trop d’imports de fichiers commencés (30 par heure). Réessayez dans une heure.';
 
 /** Fenêtre d'alerte critique (lot N2 : ouverte par le contrôle exploité par un logiciel malveillant) : écartée pour la

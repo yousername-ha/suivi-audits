@@ -20,6 +20,8 @@ import {
   ETAT_CORRECTIF_LIBELLES,
   libelleEtatCorrectif,
   SITUATION_EXPLOITATION_LIBELLES,
+  estZeroDay,
+  libelleMarqueExploitation,
   SOURCE_FIN_SUPPORT_LIBELLES,
   conditionsTraduites,
   decoderVecteurCvss,
@@ -55,7 +57,7 @@ import {
   STATUT_EXCEPTION_PUCE,
 } from './delais';
 import { ETAT_CORRECTIF_PUCE } from './correctifs';
-import { ETAT_PRIORITE, faitsPriorite } from './failles';
+import { ETAT_PRIORITE, faitsPrioriteComplets } from './failles';
 import {
   DETAIL,
   fmtJour,
@@ -67,7 +69,7 @@ import {
   urlFicheFaille,
   type MiseEnPageSchema,
 } from './fiche-faille';
-import { MARQUE_EXPLOITABLE, MARQUE_ZERO_DAY } from './parc';
+import { MARQUE_EXPLOITABLE } from './parc';
 import { MarqueExploitable, MarqueZeroDay } from './ParcMachines';
 import { PictoSource, PictosSources } from './PictoSource';
 import { type SourcePicto, sourcesFiche } from './pictos-sources';
@@ -198,7 +200,7 @@ function EnTete({ f }: { f: FicheFailleDto }) {
                 Priorité {f.priorite.niveau.slice(1)} ({f.priorite.niveau})
               </StatusChip>
               <Text size="xs" c="dimmed">
-                {faitsPriorite(f.priorite).join(' · ')}
+                {faitsPrioriteComplets(f.priorite).join(' · ')}
               </Text>
             </>
           ) : (
@@ -214,8 +216,9 @@ function EnTete({ f }: { f: FicheFailleDto }) {
           <ul className="ff-tete__marques" aria-label="Marques de la faille">
             {f.marques.zeroDay && (
               <li>
-                <MarqueZeroDay />
-                <span>{MARQUE_ZERO_DAY}</span>
+                {/* Lot PRIO-1 : « zero-day » seulement sans correctif connu, sinon « exploitation avérée ». */}
+                <MarqueZeroDay zeroDay={estZeroDay(f.situationExploitation)} />
+                <span>{libelleMarqueExploitation(f.situationExploitation)}</span>
               </li>
             )}
             {f.marques.exploitable && (

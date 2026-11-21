@@ -44,6 +44,7 @@ const source = (s: Partial<EtatSourceVeilleDto> = {}): EtatSourceVeilleDto => ({
 });
 const avis = (a: Partial<AvisVeilleDto> = {}): AvisVeilleDto => ({
   id: '00000000-0000-4000-8000-000000000001',
+  parc: { presentes: [], exposees: [] },
   source: 'cert-fr',
   identifiant: 'CERTFR-2026-AVI-0001',
   nature: 'avis',

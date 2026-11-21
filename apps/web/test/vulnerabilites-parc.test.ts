@@ -24,6 +24,7 @@ import { MachinesTable } from '../src/vulnerabilites/Machines';
 import {
   libelleGravites,
   MARQUE_EXPLOITABLE,
+  MARQUE_EXPLOITATION_AVEREE,
   MARQUE_ZERO_DAY,
   nomAccessibleMachine,
   poidsZones,
@@ -116,8 +117,13 @@ describe('lot PC2 : fonctions pures du parc', () => {
       { critique: 2 },
     );
     m.rang = { position: 3, total: 150, faits: [] };
+    // Lot PRIO-1 : « zero-day » seulement pour une faille exploitée sans correctif connu.
     expect(nomAccessibleMachine(m)).toBe(
-      'srv-web-03.exemple.invalid : rang 3 sur 150, front, 2 critiques, priorité P1, zero-day, exploitation avérée',
+      'srv-web-03.exemple.invalid : rang 3 sur 150, front, 2 critiques, priorité P1, exploitation avérée',
+    );
+    m.marques = { ...m.marques, exploiteeSansCorrectif: true };
+    expect(nomAccessibleMachine(m)).toBe(
+      'srv-web-03.exemple.invalid : rang 3 sur 150, front, 2 critiques, priorité P1, exploitation avérée, zero-day, sans correctif connu',
     );
     const e = machine(
       'srv-app-07.exemple.invalid',
@@ -134,7 +140,9 @@ describe('lot PC2 : fonctions pures du parc', () => {
   });
 
   it('libellés exacts des marques', () => {
-    expect(MARQUE_ZERO_DAY).toBe('Zero-day : exploitation avérée');
+    // Lot PRIO-1 (décision du RSSI du 20/11/2026) : le mot « zero-day » est réservé.
+    expect(MARQUE_ZERO_DAY).toBe('Zero-day : exploitée, sans correctif connu');
+    expect(MARQUE_EXPLOITATION_AVEREE).toBe('Exploitation avérée');
     expect(MARQUE_EXPLOITABLE).toContain('sans exploitation avérée');
   });
 
@@ -191,7 +199,7 @@ describe('lot PC2 : rendu du parc', () => {
     );
     const tuiles = noms(html);
     expect(tuiles[0]).toBe(
-      'srv-web-01.exemple.invalid : rang 1 sur 150, front, 3 critiques, 6 élevées, priorité P1, zero-day, exploitation avérée, exploitable, code d’exploitation disponible',
+      'srv-web-01.exemple.invalid : rang 1 sur 150, front, 3 critiques, 6 élevées, priorité P1, exploitation avérée, exploitable, code d’exploitation disponible',
     );
     expect(html).toMatch(/<button type="button" class="parc-tuile parc-p--P1 parc-tuile--zd"/i);
     expect(html).toMatch(/class="parc-tuile parc-p--aucune"/i);
@@ -201,13 +209,13 @@ describe('lot PC2 : rendu du parc', () => {
     expect((html.match(/<svg class="parc-appareil"[^>]*aria-hidden="true"/gi) ?? []).length).toBe(tuiles.length);
   });
 
-  it('marques : triangle zero-day et éclair exploitable, infobulles exactes', () => {
+  it('marques : triangle de l’exploitation avérée et éclair exploitable, infobulles exactes', () => {
     const html = rendu(
       createElement(ParcMachines, { parc: parcDe(parc()), echelle: 'reduit', onOuvrir: rien, onVoirListe: rien }),
     );
-    expect(
-      (html.match(/class="parc-marque parc-marque--zd" title="Zero-day : exploitation avérée"/gi) ?? []).length,
-    ).toBe(1);
+    // Lot PRIO-1 : sans « sans correctif connu », le triangle dit « Exploitation avérée », jamais « zero-day ».
+    expect((html.match(/class="parc-marque parc-marque--zd" title="Exploitation avérée"/gi) ?? []).length).toBe(1);
+    expect(html).not.toContain('title="Zero-day');
     expect(
       (html.match(/class="parc-marque parc-marque--ex" title="Exploitable : [^"]*sans exploitation avérée"/gi) ?? [])
         .length,
@@ -267,9 +275,23 @@ describe('lot PC2 : rendu du parc', () => {
     );
     expect(liste).toContain('Priorité et marques');
     expect(liste).toMatch(/>P1</);
-    expect(liste).toContain('title="Zero-day : exploitation avérée"');
+    expect(liste).toContain('title="Exploitation avérée"');
     // Texte lisible par les lecteurs d'écran, en plus des icônes.
-    expect(liste).toContain('Zero-day : exploitation avérée ; Exploitable');
+    expect(liste).toContain('Exploitation avérée ; Exploitable');
+    // Lot PRIO-1 : une faille exploitée sans correctif connu, et elle seule, est dite « zero-day ».
+    const zd = rendu(
+      createElement(MachinesTable, {
+        machines: [
+          machine('srv-web-02.exemple.invalid', 'front', {
+            priorite: 'P1',
+            exploitationAveree: true,
+            exploiteeSansCorrectif: true,
+          }),
+        ],
+      }),
+    );
+    expect(zd).toContain('title="Zero-day : exploitée, sans correctif connu"');
+    expect(zd).toContain('Exploitation avérée ; Zero-day : exploitée, sans correctif connu');
   });
 });
 
@@ -280,7 +302,7 @@ describe('lot PC2 : aide et feuille de style', () => {
       '« Parc »',
       'Rôle non indiqué',
       'mur rouge',
-      'Zero-day : exploitation avérée',
+      'Zero-day : exploitée, sans correctif connu',
       'Grand écran',
       'et n autres',
     ])

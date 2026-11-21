@@ -50,6 +50,17 @@ export function GrillePriorite({ seuilEpss }: { seuilEpss: number }) {
       <List.Item>
         <strong>P4</strong> : le reste.
       </List.Item>
+      <List.Item>
+        <strong>Fin de support</strong> : une faille présente sur une machine en fin de support (un système ou un
+        produit qu’elle porte n’est plus maintenu par l’éditeur, date de Tenable passée) gagne un cran : P4 devient P3,
+        P3 devient P2, P2 devient P1 ; P1 reste P1. Le fait est cité dans l’explication de la priorité. Le contrôle qui
+        signale lui-même la fin de support ne monte pas, et ce cran ne se cumule pas avec celui d’un actif exposé relié
+        à une machine interne vulnérable (un seul cran au plus).
+      </List.Item>
+      <List.Item>
+        <strong>Rançongiciels</strong> : la mention du catalogue KEV « utilisée par des rançongiciels » est citée dans
+        l’explication ; elle ne change pas le niveau, mais à priorité égale ces failles passent devant dans les listes.
+      </List.Item>
     </List>
   );
 }

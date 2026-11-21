@@ -43,6 +43,7 @@ import {
   erreurTaille,
   erreurTexte,
   exploiteParMalware,
+  kitsNessus,
   extraireNessus,
   instantHote,
   libelleEcartes,
@@ -120,6 +121,8 @@ describe('extraction d’un scan .nessus fictif', () => {
       exploitLibelle: 'Exploits are available',
       // Lot N2 : `exploited_by_malware` lu (exploitation avérée selon Tenable).
       exploiteMalware: true,
+      // Lot PRIO-1 : aucun `exploit_framework_*` dans la fixture.
+      kitsExploitation: [],
       failleLe: '2026-10-01T00:00:00.000Z',
       correctifLe: '2026-10-02T00:00:00.000Z',
       voirAussi: 'https://example.org/avis-fictif-919101',
@@ -242,6 +245,30 @@ describe('extraction d’un scan .nessus fictif', () => {
     expect(x.machines[1]!.machine.systeme!.endsWith('…')).toBe(true);
     // 203.0.113.999 n'est pas une adresse : la machine reste identifiée par le nom du ReportHost, ici une adresse valide.
     expect(x.machines[2]!.machine.adresse).toBe('203.0.113.23');
+  });
+
+  it('lot PRIO-1 : kits d’exploitation lus (exploit_framework_metasploit, _core, _canvas), « true » seulement', () => {
+    expect(kitsNessus({})).toEqual([]);
+    expect(
+      kitsNessus({
+        exploit_framework_canvas: 'true',
+        exploit_framework_metasploit: ' TRUE ',
+        exploit_framework_core: 'false',
+      }),
+    ).toEqual(['metasploit', 'canvas']);
+    const x = extraireNessus(
+      lire(
+        SCAN1.replace(
+          '<exploited_by_malware>true</exploited_by_malware>',
+          '<exploited_by_malware>true</exploited_by_malware><exploit_framework_core>true</exploit_framework_core><exploit_framework_canvas>peut-être</exploit_framework_canvas>',
+        ),
+      ),
+      [...DEFAUT],
+    );
+    expect(x.constats.get('919101')!.kitsExploitation).toEqual(['core_impact']);
+    // Contrôle sans ces champs : aucun kit ; valeur hors norme : non, comptée.
+    expect(x.constats.get('919102')!.kitsExploitation).toEqual([]);
+    expect(x.ecartes.valeursInvalides).toBe(1);
   });
 
   it('lot N2 : « exploité par un logiciel malveillant » lu, « true » seulement, valeur hors norme comptée', () => {

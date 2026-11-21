@@ -126,8 +126,8 @@ Tout autre appel est refusé par le socle, en particulier `PATCH /hosts/{uuid}/a
 nécessaire.
 
 Pour produire des exemples de réponses anonymisés depuis un poste Windows sans droits d'administrateur :
-[`scripts/dev/exemples-tenable.ps1`](../../scripts/dev/exemples-tenable.ps1) (lecture seule, **non essayé** : aucun PowerShell
-ni aucune instance dans la session).
+`exemples-tenable.ps1`, script en lecture seule retiré du dépôt le 20/11/2026 et conservé par le RSSI hors du dépôt (**non
+essayé** dans une session : aucun PowerShell ni aucune instance).
 
 **Inventaire des machines, lui aussi expérimental** (indication du RSSI du 15/11/2026, d'après sa console). La documentation
 publique ne marque « expérimental » que l'accès aux correctifs ; elle ne le dit pas de `/hosts`. Le connecteur traite donc les
