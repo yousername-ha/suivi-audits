@@ -1,7 +1,12 @@
-// Client HTTP du banc : cookie de session, jeton CSRF, origine identique. Pile de test au certificat interne.
+// Client HTTP du banc : cookie de session, jeton CSRF, origine identique. Pile de test au certificat interne : le
+// certificat est vérifié avec l'autorité locale de la pile (BANC_CA_PILE, copie de
+// gateway:/data/caddy/pki/authorities/local/root.crt, comme scripts/ci/update-integree.py), jamais désactivé.
 import https from 'node:https';
+import fs from 'node:fs';
 export const BASE = process.env.BANC_URL || 'https://127.0.0.77';
-const agent = new https.Agent({ rejectUnauthorized: false, keepAlive: true, maxSockets: 64 });
+const CA = process.env.BANC_CA_PILE;
+if (!CA) throw new Error('BANC_CA_PILE : autorité locale de la pile de test (root.crt) à fournir.');
+const agent = new https.Agent({ ca: fs.readFileSync(CA), keepAlive: true, maxSockets: 64 });
 export class Client {
   constructor() { this.cookies = new Map(); this.csrf = null; }
   req(method, path, body, extra = {}) {
@@ -46,15 +51,20 @@ export class Client {
     return this.refreshCsrf();
   }
 }
-import fs from 'node:fs';
 const SESS = '/srv/suivi-banc-perf/sessions';
 /** Session réutilisée (limite de 20 connexions par adresse et par 15 min) : cookie rangé hors dépôt, 0600. */
 export async function session(username, password) {
   fs.mkdirSync(SESS, { recursive: true, mode: 0o700 });
   const f = `${SESS}/${username}.json`;
   const c = new Client();
-  if (fs.existsSync(f)) {
-    c.cookies = new Map(JSON.parse(fs.readFileSync(f)));
+  let enregistree = null;
+  try {
+    enregistree = fs.readFileSync(f, 'utf8');
+  } catch {
+    // pas de session enregistrée : connexion ci-dessous
+  }
+  if (enregistree) {
+    c.cookies = new Map(JSON.parse(enregistree));
     const me = await c.refreshCsrf();
     if (me?.stage === 'ok') return c;
     c.cookies = new Map();

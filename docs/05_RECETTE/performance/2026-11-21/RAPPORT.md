@@ -739,6 +739,12 @@ PERF-13.
 
 ## 10. Reproduire
 
+Variables d'environnement attendues : `BANC` et `DEPOT_750` (dossiers de travail), `BANC_CA_PILE` (autorité locale de la
+pile, copie de `gateway:/data/caddy/pki/authorities/local/root.crt` : le client vérifie le certificat, il ne désactive
+jamais la vérification), `BANC_CA` et `BANC_PROXY` (autorité et mandataire de sortie du poste, pour `construire.sh`).
+Ajout du 21/11 à la relecture de la session Coeur, après le passage du banc : client sans désactivation du contrôle du
+certificat et lecture de la session enregistrée sans test d'existence préalable (alertes CodeQL), non rejoué depuis.
+
 Scripts du banc dans [`mesures/`](mesures/) (le dossier ne contient que des scripts, des mesures sans secret et des plans
 d'exécution ; les identifiants de recette restent hors dépôt, dans `/srv/suivi-banc-perf`, effacé à la fin) :
 `pile.sh` (pile jetable, `demarrer` en 7.4.0, `maj` en 7.5.0, `arreter`), `construire.sh` (images), `installer.mjs`,
