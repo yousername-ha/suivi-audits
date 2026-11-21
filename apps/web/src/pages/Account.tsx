@@ -94,6 +94,13 @@ const ONGLETS = [
   { value: 'pastilles', label: 'Pastilles' },
 ];
 
+/** Boîte d'outils en mode clair à l'essai (demande du RSSI du 20/11/2026) : deux formes, à réduire à une seule une fois le
+    choix fait. */
+const BOITES_OUTILS = [
+  { value: 'claire', label: 'Bloc clair' },
+  { value: 'bleu-nuit', label: 'Bloc bleu nuit' },
+];
+
 /** Préférences d'affichage : enregistrées sur le serveur, appliquées sur tous les appareils de la personne. */
 function AffichageCard() {
   const { prefs, save } = usePreferences();
@@ -154,6 +161,18 @@ function AffichageCard() {
             data={ONGLETS}
             value={prefs.onglets ?? 'barre'}
             onChange={(v) => set({ onglets: v as NonNullable<Preferences['onglets']> })}
+          />
+        </div>
+        <div>
+          <Text size="sm" fw={500} mb="2xs" id="boite-outils-label">
+            Boîte d’outils en mode clair (essai)
+          </Text>
+          <SegmentedControl
+            aria-labelledby="boite-outils-label"
+            fullWidth
+            data={BOITES_OUTILS}
+            value={prefs.boiteOutils ?? 'claire'}
+            onChange={(v) => set({ boiteOutils: v as NonNullable<Preferences['boiteOutils']> })}
           />
         </div>
         <div>

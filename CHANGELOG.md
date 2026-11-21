@@ -264,6 +264,16 @@ rôle personnalisé qui portait déjà l'action « Administrer » du module « T
 
 ### Modifié
 
+- **Boîte d'outils et en-tête des pages de tâches en verre « maintenance », bleu nuit à l'essai en clair** (choix du RSSI du
+  20/11/2026). En mode clair, la boîte d'outils (vues, recherche, filtres) n'est plus fondue dans le fond blanc : elle
+  devient un bloc clair, au contour fin teinté de violet, avec un léger fondu à gauche et une ombre douce. Un réglage à
+  l'essai, « Boîte d'outils en mode clair », dans Mon compte > Affichage, garde au choix ce bloc clair (par défaut) ou
+  le bloc bleu nuit du mode sombre. Le réglage sera retiré une fois la forme choisie. Puis, sur choix du RSSI du même jour,
+  l'en-tête des pages de tâches (Plan d'actions, Tâches récurrentes) prend le verre de la page de maintenance, sans changer
+  les formes : cartes de synthèse avec un liseré épais de leur teinte à gauche, des bords teintés de violet, un dégradé en
+  biais et un trait lumineux. La boîte d'outils prend un liseré à gauche (violet en clair, bleu du menu en sombre) et les
+  boutons d'ajout un liseré intérieur et une ombre portée. Aucune migration.
+  _(Session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`).)_
 - Vulnérabilités, **règles de priorité** (lot PRIO-1, décisions du RSSI des 19 et 20/11/2026,
   [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : une faille présente sur une machine en fin de support gagne un cran
   (P1 reste P1), fait cité dans l'explication, sauf le contrôle de fin de support lui-même, et sans cumul avec la majoration
