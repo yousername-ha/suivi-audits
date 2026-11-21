@@ -42,9 +42,10 @@ import {
   TYPE_POINT_ADS_LIBELLES,
   variationAds,
 } from '@suivi/shared';
-import { ErrorAlert, Page, PageHeader } from '@suivi/ui';
+import { ErrorAlert, Page } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useId, useState } from 'react';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { api, errorMessage, get } from '../api';
 import { RefusImport } from '../integrations/ImportNessus';
 import { MOT_SUPPRESSION } from '../integrations/SuppressionNessus';
@@ -683,7 +684,7 @@ export function AnnuaireAdPage() {
   const q = useQuery({ queryKey: CLE, queryFn: () => get<AnnuaireAdsDto>(URL) });
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Active Directory"
         description="Rapport d’analyse de l’Active Directory par le service ADS de l’ANSSI (collecte ORADAD) : note globale, progression par niveau et points de contrôle non conformes. Le type d’un point est donné en numéro : 1 information, 2 avertissement, 3 vulnérabilité."
       />

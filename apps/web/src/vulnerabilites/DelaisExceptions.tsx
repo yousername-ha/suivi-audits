@@ -19,10 +19,11 @@ import {
   STATUTS_EXCEPTION,
   type StatutException,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan } from '../session';
@@ -153,7 +154,7 @@ export function DelaisExceptionsPage() {
   const v = vue.data;
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Délais et exceptions"
         description="Délai cible de correction par priorité, mesure des corrections et exceptions (risques acceptés) avec leur échéance. Les délais, les échéances et les mesures sont calculés par la plateforme, les mêmes pour tout le monde ; les exceptions ne portent que sur les failles que vous pouvez lire. Aucun nom de machine ici."
       />

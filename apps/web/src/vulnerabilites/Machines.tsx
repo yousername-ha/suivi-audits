@@ -51,10 +51,11 @@ import {
   type VueMachines,
   type ZoneParc,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan, usePreferences } from '../session';
@@ -69,7 +70,7 @@ import {
   urlMachines,
 } from './failles';
 import { libellePrioriteMachine, urlParc } from './parc';
-import { adressePerimetre, filtresDepuisAdresse } from './perimetres';
+import { adressePerimetre, CLE_PERIMETRES_AFFECTABLES, filtresDepuisAdresse } from './perimetres';
 import { LegendeMarques, MarquesMachine, MentionFinSupport, MentionSansCorrectif, ParcMachines } from './ParcMachines';
 import { libelleExposition, urlExpositionMachine } from './surface';
 import { ouvertureMachines } from './recherche';
@@ -317,7 +318,7 @@ function OngletDepots() {
     queryFn: () => get<DepotTenableDto[]>('/api/vulnerabilites/depots'),
   });
   const options = useQuery({
-    queryKey: ['vulnerabilites', 'perimetres-affectables'],
+    queryKey: CLE_PERIMETRES_AFFECTABLES,
     queryFn: () => get<PerimetreAffectableDto[]>('/api/vulnerabilites/perimetres'),
   });
   const lier = async (d: DepotTenableDto, perimetreId: string | null) => {
@@ -625,7 +626,7 @@ function OngletMachines() {
     regler({ vue: 'liste' });
   };
   const perimetres = useQuery({
-    queryKey: [...CLE, 'perimetres'],
+    queryKey: CLE_PERIMETRES_AFFECTABLES,
     queryFn: () => get<PerimetreAffectableDto[]>('/api/vulnerabilites/perimetres'),
     enabled: modifier,
   });
@@ -847,7 +848,7 @@ export function MachinesPage() {
     );
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Machines"
         description="Machines lues dans Tenable Security Center ou importées d’un scan Nessus, chacune marquée de sa source (une machine vue par les deux apparaît deux fois), de la plus critique à la moins critique : exploitation avérée d’abord, puis rôle (front, back applicatif, base de données), puis nombre de failles critiques et élevées. Vous voyez celles des périmètres que vous pouvez lire ; une machine sans périmètre n’est visible qu’avec le droit d’administrer le module. Le périmètre d’une machine vient de son dépôt Tenable relié (onglet « Dépôts Tenable »), sauf s’il est indiqué à la main, ce qui prime ; une machine importée d’un scan Nessus n’a pas de dépôt : son périmètre s’indique ici. Le rôle et le périmètre sont indiqués ici, une machine à la fois ou en masse ; la fiche d’une machine relie ses produits surveillés."
       />

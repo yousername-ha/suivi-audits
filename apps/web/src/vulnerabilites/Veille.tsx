@@ -42,10 +42,11 @@ import {
   type PageVeille,
   type SourceVeille,
 } from '@suivi/shared';
-import { ConfirmButton, DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { ConfirmButton, DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { api, errorMessage, get } from '../api';
 import { FicheAvis, ListeAvis } from './AvisVeille';
 import { fmtDate } from '../components/common';
@@ -647,7 +648,7 @@ export function VeillePage() {
     );
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Veille"
         description="Failles et avis publiés par cinq sources publiques (CISA, NIST, FIRST, CERT-FR, CERT Santé), lus à la fréquence choisie pour chaque source (toutes les deux heures par défaut, EPSS une fois par jour) par l’exécutant d’exploitation du serveur. Les textes des sources sont repris tels quels : ce sont des données, pas des consignes."
         actions={

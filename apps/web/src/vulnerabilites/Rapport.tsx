@@ -14,9 +14,10 @@ import {
   tableauxRapport,
   type TendancesDto,
 } from '@suivi/shared';
-import { ErrorAlert, Page, PageHeader } from '@suivi/ui';
+import { ErrorAlert, Page } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useId, useState } from 'react';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { download, get } from '../api';
 import { useCan } from '../session';
 import {
@@ -148,7 +149,7 @@ export function RapportPage() {
   return (
     <Page>
       <div className="rapport-ecran">
-        <PageHeader
+        <EnteteVulnerabilites
           title="Rapport de pilotage"
           description="Rapport mensuel (ou d’une période libre) pour la direction et l’audit : niveau d’alerte et son évolution, failles critiques, délais de correction, dépassements, exceptions, tendances, alertes critiques et état des sources. Le navigateur l’enregistre en PDF par « Imprimer » ; ses tableaux s’exportent en CSV. Chaque production est tracée au journal."
         />

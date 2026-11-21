@@ -1,6 +1,15 @@
 # Reprendre Suivi des audits
 
-> **Reprise la plus récente : [20/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-20.md)** (module Vulnérabilités,
+> **21/11/2026 — refonte de densité contrôlée localement** : le [dossier de reprise et de recette](docs/refonte-neon/densite-2026-11-21/README.md)
+> décrit le lot parti de `15dc5a6748f6105b6a1367fa7e3a3c944521efd5` (7.5.0), après analyse d’une vidéo privée non publiée.
+> Le nouveau normal est resserré au-delà de l’ancien compact ; le nouveau compact resserre encore le cadre et les commandes.
+> Sont inclus : planning SVG à l’échelle 1:1, aides Vulnérabilités repliées, correction de collision du cache des périmètres,
+> retrait visuel de la signature d’organisation et du badge Live, thème en icônes et onglets/actions d’ajout en verre transparent.
+> Authentification, API, base et sources de cartographie/génération SMSI inchangées. **352 tests ciblés réussis**, TypeScript/lint/format/build verts ; 60 rendus finaux et 24 cas
+> d’interaction client sans erreur (API interceptée, données fictives). Captures et mesures dans le dossier. Prochaine action :
+> validation visuelle et recette Docker/API réelle, non exécutée ici ; aucune fusion ou mise en production effectuée.
+>
+> **Dernière reprise générale : [20/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-20.md)** (module Vulnérabilités,
 > [ADR 0100](docs/adr/0100-module-vulnerabilites.md) : recherche du module, intégrations dans la page Plateforme, fréquences de
 > synchronisation, imports Nessus et Silène, surface externe à deux sources en page entière, migrations `090`, `093`, `094` et
 > `095` ; correctifs de performance PERF-01 à PERF-04 en PR ; décisions du RSSI prises et en attente, ordre de la file).

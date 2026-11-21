@@ -1,5 +1,14 @@
 # État synthétique du projet
 
+> **21/11/2026 — refonte de densité, branche dédiée** : lot local fondé sur `15dc5a6` (7.5.0), après analyse d’une vidéo privée
+> conservée hors dépôt. Le normal devient plus dense que l’ancien compact et le compact resserre encore l’affichage ;
+> planning SVG sans agrandissement des textes, aides contextuelles des Vulnérabilités repliées, cache bilan/affectation des
+> périmètres séparé. Dernier retour intégré : signature d’organisation et badge Live retirés visuellement, thème en icônes,
+> onglets et ajouts en verre transparent ; couleurs métier et attente de connexion SSE conservées.
+> **Contrôles finaux locaux** : 352 tests ciblés, TypeScript/lint/format/build réussis ; 60 rendus et 24 cas d’interaction
+> avec frontend réel, API interceptée et données fictives, sans erreur. Recette Docker/API réelle et validation humaine
+> à faire ; aucune fusion ni mise en production. Détail, invariants et commandes : [dossier du lot](docs/refonte-neon/densite-2026-11-21/README.md).
+>
 > **20/11/2026** : module Vulnérabilités ([ADR 0100](docs/adr/0100-module-vulnerabilites.md)) sur `claude-suivi-smsi` depuis
 > la 7.4.0 : recherche du module, alertes de la veille en cartes, intégrations dans la page Plateforme, fréquences de
 > synchronisation (migration `090`, PR #326), imports `.nessus` et exploitation par logiciel malveillant (migrations `093` et

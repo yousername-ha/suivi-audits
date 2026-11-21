@@ -50,11 +50,12 @@ import {
   type Priorite,
   STATUT_RAPPROCHEMENT_LIBELLES,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router';
 import { ouvertureConstat } from './recherche';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
 import { EtatIntegration } from '../integrations/EtatIntegration';
@@ -651,7 +652,7 @@ export function FaillesDetecteesPage() {
   const pages = donnees ? nombrePages(donnees.total, donnees.parPage) : 1;
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Failles détectées"
         description="Failles rapportées par Tenable Security Center, ou importées d’un scan Nessus (carte « Intégrations » de la page Plateforme), sur les machines que vous pouvez lire (périmètre de chaque machine), puis failles déclarées : CVE rattachées à un produit surveillé relié à ces machines. Un constat par contrôle de Tenable ; « exploitation avérée » : une source le signale pour une de ses CVE (catalogue KEV, alerte du CERT-FR, fiche du CERT Santé) ; « exploitable » : selon Tenable ou la fiche du CERT Santé ; « non maintenu » : constat sans CVE. La priorité est calculée par la plateforme, avec les faits qui la fondent. Par défaut, seules les failles encore à traiter sont listées : le filtre « Suivi » montre les autres états et les failles à clore. Textes de Tenable en anglais, tels quels."
         actions={

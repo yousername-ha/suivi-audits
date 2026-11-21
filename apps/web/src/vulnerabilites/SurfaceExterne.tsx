@@ -78,11 +78,13 @@ import {
   TYPES_ALERTE_ALH,
   type TypeActifAlh,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { type OngletSurface, ouvertureSurface } from './recherche';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
+import { CLE_PERIMETRES_AFFECTABLES } from './perimetres';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { EtatIntegration } from '../integrations/EtatIntegration';
@@ -1707,7 +1709,7 @@ function OngletPerimetres() {
     queryFn: () => get<PerimetreAlhDto[]>('/api/vulnerabilites/surface/perimetres'),
   });
   const options = useQuery({
-    queryKey: ['vulnerabilites', 'perimetres-affectables'],
+    queryKey: CLE_PERIMETRES_AFFECTABLES,
     queryFn: () => get<PerimetreAffectableDto[]>('/api/vulnerabilites/perimetres'),
   });
   const lier = async (p: PerimetreAlhDto, perimetreId: string | null) => {
@@ -1782,7 +1784,7 @@ export function SurfaceExternePage() {
     );
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Surface externe"
         description="Ce que deux sources voient de l’organisation sur Internet. AlgoLightHouse (éditeur AlgoSecure) : alertes de ses analystes, hôtes et domaines exposés, technologies détectées et leurs CVE. Silène (ANSSI) : note du rapport importé, ports ouverts par hôte et constats. Un actif (adresse IP ou nom de domaine) vu par les deux n’apparaît qu’une fois. Une CVE portée par un actif exposé est une faille présente chez nous : sa priorité est calculée par la plateforme avec toutes les sources. Lecture seule : AlgoLightHouse est synchronisé chaque jour par l’exécutant d’exploitation, Silène est importé par fichier ; rien n’est écrit chez l’éditeur. Vous voyez ce qui relève des périmètres que vous pouvez lire ; un périmètre d’AlgoLightHouse ou une instance Silène non reliés ne sont visibles qu’avec le droit d’administrer le module. L’onglet « Carte » trace les lignes d’approche, de l’Internet aux machines internes reliées. Dans l’onglet « Actifs », chaque actif exposé se relie à la ou aux machines internes vers lesquelles va la connexion, à la main ou sur proposition de la plateforme confirmée par une personne. Textes de l’éditeur tels quels."
       />

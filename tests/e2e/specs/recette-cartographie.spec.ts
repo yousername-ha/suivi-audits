@@ -255,7 +255,7 @@ async function objets(s: Session) {
 }
 /** Flux temps réel connecté (sinon un changement fait juste après l'ouverture de la page serait manqué). */
 async function enLigne(p: Page) {
-  await expect(p.locator('.live-badge')).toHaveText('En direct');
+  await expect(p.locator('.shell-header')).toHaveAttribute('data-temps-reel', 'connecte');
   await expect(p.locator('g.noeud').first()).toBeAttached();
 }
 async function editer(p: Page) {

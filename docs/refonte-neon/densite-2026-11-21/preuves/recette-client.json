@@ -1,0 +1,6189 @@
+{
+  "dateLocale": "2026-11-21T15:13:25+01:00",
+  "navigateur": "Chromium 151.0.7922.173 built on Debian GNU/Linux 13 (trixie)",
+  "dispositif": "Vrai frontend Vite, API entièrement interceptée, données fictives. Comparaisons avec base 15dc5a6. Pas de preuve serveur.",
+  "campagnes": [
+    {
+      "nom": "final-1440-1920",
+      "rendus": 40,
+      "taille": "100",
+      "erreurs": [],
+      "routesImprevues": [],
+      "mutationsReelles": [],
+      "interactions": [],
+      "decalagesSimules": [],
+      "mesures": [
+        {
+          "case": "risques-1440-900-clair-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 384.609375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1201.28125,
+            "height": 37,
+            "top": 221.53125,
+            "left": 218.359375,
+            "bottom": 258.53125,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "fournisseurs-1440-900-clair-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1041.625,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1185.28125,
+            "height": 84.765625,
+            "top": 380.390625,
+            "left": 226.359375,
+            "bottom": 465.15625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 6,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-1440-900-clair-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 683.421875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 1213,
+            "height": 404,
+            "top": 209.234375,
+            "left": 217.359375,
+            "bottom": 613.234375,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "produits-1440-900-clair-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1107.984375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1211.28125,
+            "height": 49.71875,
+            "top": 299.5,
+            "left": 218.359375,
+            "bottom": 349.21875,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-1440-900-clair-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 1710,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1089.546875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1191.78125,
+            "height": 58.671875,
+            "top": 1151.171875,
+            "left": 228.859375,
+            "bottom": 1209.84375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 0,
+          "planning": null,
+          "radar": {
+            "width": 792.9375,
+            "height": 564.953125,
+            "top": 249.6875,
+            "left": 624.6875,
+            "bottom": 814.640625,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-1440-900-clair-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 398.609375,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1180.96875,
+            "height": 39,
+            "top": 256.59375,
+            "left": 236.515625,
+            "bottom": 295.59375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "fournisseurs-1440-900-clair-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1057.625,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1156.96875,
+            "height": 91.765625,
+            "top": 447.25,
+            "left": 248.515625,
+            "bottom": 539.015625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 4,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-1440-900-clair-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 699.421875,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 1192,
+            "height": 404,
+            "top": 244.296875,
+            "left": 235.515625,
+            "bottom": 648.296875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "produits-1440-900-clair-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1171.984375,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1190.96875,
+            "height": 55.296875,
+            "top": 345.0625,
+            "left": 236.515625,
+            "bottom": 400.359375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-1440-900-clair-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 1818,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1153.546875,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1163.46875,
+            "height": 62.671875,
+            "top": 1187.3125,
+            "left": 251.015625,
+            "bottom": 1249.984375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 0,
+          "planning": null,
+          "radar": {
+            "width": 769.1875,
+            "height": 548.03125,
+            "top": 286.75,
+            "left": 641.296875,
+            "bottom": 834.78125,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-1440-900-sombre-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 384.609375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1201.28125,
+            "height": 37,
+            "top": 221.53125,
+            "left": 218.359375,
+            "bottom": 258.53125,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "fournisseurs-1440-900-sombre-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1041.625,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1185.28125,
+            "height": 84.765625,
+            "top": 380.390625,
+            "left": 226.359375,
+            "bottom": 465.15625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 6,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-1440-900-sombre-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 683.421875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 1213,
+            "height": 404,
+            "top": 209.234375,
+            "left": 217.359375,
+            "bottom": 613.234375,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "produits-1440-900-sombre-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1107.984375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1211.28125,
+            "height": 49.71875,
+            "top": 299.5,
+            "left": 218.359375,
+            "bottom": 349.21875,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-1440-900-sombre-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 1710,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1089.546875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1191.78125,
+            "height": 58.671875,
+            "top": 1151.171875,
+            "left": 228.859375,
+            "bottom": 1209.84375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 0,
+          "planning": null,
+          "radar": {
+            "width": 792.9375,
+            "height": 564.953125,
+            "top": 249.6875,
+            "left": 624.6875,
+            "bottom": 814.640625,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-1440-900-sombre-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 398.609375,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1180.96875,
+            "height": 39,
+            "top": 256.59375,
+            "left": 236.515625,
+            "bottom": 295.59375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "fournisseurs-1440-900-sombre-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1057.625,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1156.96875,
+            "height": 91.765625,
+            "top": 447.25,
+            "left": 248.515625,
+            "bottom": 539.015625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 4,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-1440-900-sombre-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 699.421875,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 1192,
+            "height": 404,
+            "top": 244.296875,
+            "left": 235.515625,
+            "bottom": 648.296875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "produits-1440-900-sombre-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1171.984375,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1190.96875,
+            "height": 55.296875,
+            "top": 345.0625,
+            "left": 236.515625,
+            "bottom": 400.359375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-1440-900-sombre-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 1818,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1153.546875,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1163.46875,
+            "height": 62.671875,
+            "top": 1187.3125,
+            "left": 251.015625,
+            "bottom": 1249.984375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 0,
+          "planning": null,
+          "radar": {
+            "width": 769.1875,
+            "height": 548.03125,
+            "top": 286.75,
+            "left": 641.296875,
+            "bottom": 834.78125,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-1920-1080-clair-compacte",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1712,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 384.609375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 220.46875,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1675.0625,
+            "height": 37,
+            "top": 221.53125,
+            "left": 221.46875,
+            "bottom": 258.53125,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "fournisseurs-1920-1080-clair-compacte",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1712,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1041.625,
+            "height": 32.1875,
+            "top": 44,
+            "left": 220.46875,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1659.0625,
+            "height": 84.765625,
+            "top": 380.390625,
+            "left": 229.46875,
+            "bottom": 465.15625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 6,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-1920-1080-clair-compacte",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1712,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 683.421875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 220.46875,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 1687,
+            "height": 404,
+            "top": 209.234375,
+            "left": 220.46875,
+            "bottom": 613.234375,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "produits-1920-1080-clair-compacte",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1712,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1107.984375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 220.46875,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1685.0625,
+            "height": 49.71875,
+            "top": 299.5,
+            "left": 221.46875,
+            "bottom": 349.21875,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-1920-1080-clair-compacte",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 1920,
+          "docHeight": 1716,
+          "header": {
+            "width": 1712,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1089.546875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 220.46875,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1665.5625,
+            "height": 47.609375,
+            "top": 1184.71875,
+            "left": 231.96875,
+            "bottom": 1232.328125,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 0,
+          "planning": null,
+          "radar": {
+            "width": 840,
+            "height": 598.5,
+            "top": 249.6875,
+            "left": 918.515625,
+            "bottom": 848.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-1920-1080-clair-normale",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1696,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 398.609375,
+            "height": 36,
+            "top": 50,
+            "left": 239.359375,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1653.28125,
+            "height": 39,
+            "top": 256.59375,
+            "left": 240.359375,
+            "bottom": 295.59375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "fournisseurs-1920-1080-clair-normale",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1696,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1057.625,
+            "height": 36,
+            "top": 50,
+            "left": 239.359375,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1629.28125,
+            "height": 91.765625,
+            "top": 431.859375,
+            "left": 252.359375,
+            "bottom": 523.625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 6,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-1920-1080-clair-normale",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1696,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 699.421875,
+            "height": 36,
+            "top": 50,
+            "left": 239.359375,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 1665,
+            "height": 404,
+            "top": 244.296875,
+            "left": 239.359375,
+            "bottom": 648.296875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "produits-1920-1080-clair-normale",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1696,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1171.984375,
+            "height": 36,
+            "top": 50,
+            "left": 239.359375,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1663.28125,
+            "height": 55.296875,
+            "top": 345.0625,
+            "left": 240.359375,
+            "bottom": 400.359375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-1920-1080-clair-normale",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 1920,
+          "docHeight": 1820,
+          "header": {
+            "width": 1696,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1153.546875,
+            "height": 36,
+            "top": 50,
+            "left": 239.359375,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1635.78125,
+            "height": 51.609375,
+            "top": 1237.78125,
+            "left": 254.859375,
+            "bottom": 1289.390625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 0,
+          "planning": null,
+          "radar": {
+            "width": 840,
+            "height": 598.5,
+            "top": 286.75,
+            "left": 923,
+            "bottom": 885.25,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-1920-1080-sombre-compacte",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1712,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 384.609375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 220.46875,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1675.0625,
+            "height": 37,
+            "top": 221.53125,
+            "left": 221.46875,
+            "bottom": 258.53125,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "fournisseurs-1920-1080-sombre-compacte",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1712,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1041.625,
+            "height": 32.1875,
+            "top": 44,
+            "left": 220.46875,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1659.0625,
+            "height": 84.765625,
+            "top": 380.390625,
+            "left": 229.46875,
+            "bottom": 465.15625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 6,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-1920-1080-sombre-compacte",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1712,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 683.421875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 220.46875,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 1687,
+            "height": 404,
+            "top": 209.234375,
+            "left": 220.46875,
+            "bottom": 613.234375,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "produits-1920-1080-sombre-compacte",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1712,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1107.984375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 220.46875,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1685.0625,
+            "height": 49.71875,
+            "top": 299.5,
+            "left": 221.46875,
+            "bottom": 349.21875,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-1920-1080-sombre-compacte",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 1920,
+          "docHeight": 1716,
+          "header": {
+            "width": 1712,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1089.546875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 220.46875,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1665.5625,
+            "height": 47.609375,
+            "top": 1184.71875,
+            "left": 231.96875,
+            "bottom": 1232.328125,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 0,
+          "planning": null,
+          "radar": {
+            "width": 840,
+            "height": 598.5,
+            "top": 249.6875,
+            "left": 918.515625,
+            "bottom": 848.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-1920-1080-sombre-normale",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1696,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 398.609375,
+            "height": 36,
+            "top": 50,
+            "left": 239.359375,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1653.28125,
+            "height": 39,
+            "top": 256.59375,
+            "left": 240.359375,
+            "bottom": 295.59375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "fournisseurs-1920-1080-sombre-normale",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1696,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1057.625,
+            "height": 36,
+            "top": 50,
+            "left": 239.359375,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1629.28125,
+            "height": 91.765625,
+            "top": 431.859375,
+            "left": 252.359375,
+            "bottom": 523.625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 6,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-1920-1080-sombre-normale",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1696,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 699.421875,
+            "height": 36,
+            "top": 50,
+            "left": 239.359375,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 1665,
+            "height": 404,
+            "top": 244.296875,
+            "left": 239.359375,
+            "bottom": 648.296875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "produits-1920-1080-sombre-normale",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 1920,
+          "docHeight": 1080,
+          "header": {
+            "width": 1696,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1171.984375,
+            "height": 36,
+            "top": 50,
+            "left": 239.359375,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1663.28125,
+            "height": 55.296875,
+            "top": 345.0625,
+            "left": 240.359375,
+            "bottom": 400.359375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-1920-1080-sombre-normale",
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 1920,
+          "docHeight": 1820,
+          "header": {
+            "width": 1696,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 1080,
+            "top": 0,
+            "left": 0,
+            "bottom": 1080,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1153.546875,
+            "height": 36,
+            "top": 50,
+            "left": 239.359375,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1635.78125,
+            "height": 51.609375,
+            "top": 1237.78125,
+            "left": 254.859375,
+            "bottom": 1289.390625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 0,
+          "planning": null,
+          "radar": {
+            "width": 840,
+            "height": 598.5,
+            "top": 286.75,
+            "left": 923,
+            "bottom": 885.25,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        }
+      ]
+    },
+    {
+      "nom": "final-4k",
+      "rendus": 20,
+      "taille": "auto",
+      "erreurs": [],
+      "routesImprevues": [],
+      "mutationsReelles": [],
+      "interactions": [],
+      "decalagesSimules": [],
+      "mesures": [
+        {
+          "case": "risques-3840-2100-clair-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 384.609375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3588,
+            "height": 37,
+            "top": 221.53125,
+            "left": 225,
+            "bottom": 258.53125,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "fournisseurs-3840-2100-clair-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1041.625,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3572,
+            "height": 84.765625,
+            "top": 380.390625,
+            "left": 233,
+            "bottom": 465.15625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 6,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-3840-2100-clair-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 683.421875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 3600,
+            "height": 404,
+            "top": 209.234375,
+            "left": 224,
+            "bottom": 613.234375,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "produits-3840-2100-clair-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1107.984375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3598,
+            "height": 49.71875,
+            "top": 299.5,
+            "left": 225,
+            "bottom": 349.21875,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-3840-2100-clair-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1089.546875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3578.5,
+            "height": 47.609375,
+            "top": 1161.328125,
+            "left": 235.5,
+            "bottom": 1208.9375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 7,
+          "planning": null,
+          "radar": {
+            "width": 840,
+            "height": 598.5,
+            "top": 249.6875,
+            "left": 2190.828125,
+            "bottom": 848.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-3840-2100-clair-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 398.609375,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3564,
+            "height": 39,
+            "top": 256.59375,
+            "left": 245,
+            "bottom": 295.59375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "fournisseurs-3840-2100-clair-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1057.625,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3540,
+            "height": 91.765625,
+            "top": 431.859375,
+            "left": 257,
+            "bottom": 523.625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 6,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-3840-2100-clair-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 699.421875,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 3576,
+            "height": 404,
+            "top": 244.296875,
+            "left": 244,
+            "bottom": 648.296875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "produits-3840-2100-clair-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1171.984375,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3574,
+            "height": 55.296875,
+            "top": 345.0625,
+            "left": 245,
+            "bottom": 400.359375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-3840-2100-clair-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1153.546875,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3546.5,
+            "height": 51.609375,
+            "top": 1214.390625,
+            "left": 259.5,
+            "bottom": 1266,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 7,
+          "planning": null,
+          "radar": {
+            "width": 840,
+            "height": 598.5,
+            "top": 286.75,
+            "left": 2194.953125,
+            "bottom": 885.25,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-3840-2100-sombre-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 384.609375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3588,
+            "height": 37,
+            "top": 221.53125,
+            "left": 225,
+            "bottom": 258.53125,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "fournisseurs-3840-2100-sombre-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1041.625,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3572,
+            "height": 84.765625,
+            "top": 380.390625,
+            "left": 233,
+            "bottom": 465.15625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 6,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-3840-2100-sombre-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 683.421875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 3600,
+            "height": 404,
+            "top": 209.234375,
+            "left": 224,
+            "bottom": 613.234375,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "produits-3840-2100-sombre-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1107.984375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3598,
+            "height": 49.71875,
+            "top": 299.5,
+            "left": 225,
+            "bottom": 349.21875,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-3840-2100-sombre-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1089.546875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3578.5,
+            "height": 47.609375,
+            "top": 1161.328125,
+            "left": 235.5,
+            "bottom": 1208.9375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 7,
+          "planning": null,
+          "radar": {
+            "width": 840,
+            "height": 598.5,
+            "top": 249.6875,
+            "left": 2190.828125,
+            "bottom": 848.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-3840-2100-sombre-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 398.609375,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3564,
+            "height": 39,
+            "top": 256.59375,
+            "left": 245,
+            "bottom": 295.59375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "fournisseurs-3840-2100-sombre-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1057.625,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3540,
+            "height": 91.765625,
+            "top": 431.859375,
+            "left": 257,
+            "bottom": 523.625,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 6,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-3840-2100-sombre-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 699.421875,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 3576,
+            "height": 404,
+            "top": 244.296875,
+            "left": 244,
+            "bottom": 648.296875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "produits-3840-2100-sombre-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1171.984375,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3574,
+            "height": 55.296875,
+            "top": 345.0625,
+            "left": 245,
+            "bottom": 400.359375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-3840-2100-sombre-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1153.546875,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3546.5,
+            "height": 51.609375,
+            "top": 1214.390625,
+            "left": 259.5,
+            "bottom": 1266,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 7,
+          "planning": null,
+          "radar": {
+            "width": 840,
+            "height": 598.5,
+            "top": 286.75,
+            "left": 2194.953125,
+            "bottom": 885.25,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        }
+      ]
+    },
+    {
+      "nom": "final-interactions",
+      "rendus": 24,
+      "taille": "auto",
+      "erreurs": [],
+      "routesImprevues": [],
+      "mutationsReelles": [],
+      "interactions": [
+        {
+          "case": "risques-1440-900-clair-compacte",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.78), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          }
+        },
+        {
+          "case": "planning-1440-900-clair-compacte",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.78), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "rapportSvgViewBox": 1,
+          "clavierEtGlissement": "OK : +1 / -7 / +3 jours, ouverture clavier"
+        },
+        {
+          "case": "vulnerabilites-1440-900-clair-compacte",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.78), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "infobulleAuFocus": "OK"
+        },
+        {
+          "case": "risques-1440-900-clair-normale",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.78), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          }
+        },
+        {
+          "case": "planning-1440-900-clair-normale",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.78), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "rapportSvgViewBox": 1,
+          "clavierEtGlissement": "OK : +1 / -7 / +3 jours, ouverture clavier"
+        },
+        {
+          "case": "vulnerabilites-1440-900-clair-normale",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.78), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "infobulleAuFocus": "OK"
+        },
+        {
+          "case": "risques-1440-900-sombre-compacte",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.12), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          }
+        },
+        {
+          "case": "planning-1440-900-sombre-compacte",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.12), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "rapportSvgViewBox": 1,
+          "clavierEtGlissement": "OK : +1 / -7 / +3 jours, ouverture clavier"
+        },
+        {
+          "case": "vulnerabilites-1440-900-sombre-compacte",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.12), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "infobulleAuFocus": "OK"
+        },
+        {
+          "case": "risques-1440-900-sombre-normale",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.12), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          }
+        },
+        {
+          "case": "planning-1440-900-sombre-normale",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.12), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "rapportSvgViewBox": 1,
+          "clavierEtGlissement": "OK : +1 / -7 / +3 jours, ouverture clavier"
+        },
+        {
+          "case": "vulnerabilites-1440-900-sombre-normale",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.12), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "infobulleAuFocus": "OK"
+        },
+        {
+          "case": "risques-3840-2100-clair-compacte",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.78), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          }
+        },
+        {
+          "case": "planning-3840-2100-clair-compacte",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.78), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "rapportSvgViewBox": 1,
+          "clavierEtGlissement": "OK : +1 / -7 / +3 jours, ouverture clavier"
+        },
+        {
+          "case": "vulnerabilites-3840-2100-clair-compacte",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.78), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "infobulleAuFocus": "OK",
+          "tailles": {
+            "autoPC": 16.0,
+            "manuel150": 24.0,
+            "muralAuto": 30.0
+          }
+        },
+        {
+          "case": "risques-3840-2100-clair-normale",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.78), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          }
+        },
+        {
+          "case": "planning-3840-2100-clair-normale",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.78), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "rapportSvgViewBox": 1,
+          "clavierEtGlissement": "OK : +1 / -7 / +3 jours, ouverture clavier"
+        },
+        {
+          "case": "vulnerabilites-3840-2100-clair-normale",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.78), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "infobulleAuFocus": "OK",
+          "tailles": {
+            "autoPC": 16.0,
+            "manuel150": 24.0,
+            "muralAuto": 30.0
+          }
+        },
+        {
+          "case": "risques-3840-2100-sombre-compacte",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.12), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          }
+        },
+        {
+          "case": "planning-3840-2100-sombre-compacte",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.12), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "rapportSvgViewBox": 1,
+          "clavierEtGlissement": "OK : +1 / -7 / +3 jours, ouverture clavier"
+        },
+        {
+          "case": "vulnerabilites-3840-2100-sombre-compacte",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.12), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "infobulleAuFocus": "OK",
+          "tailles": {
+            "autoPC": 16.0,
+            "manuel150": 24.0,
+            "muralAuto": 30.0
+          }
+        },
+        {
+          "case": "risques-3840-2100-sombre-normale",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.12), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          }
+        },
+        {
+          "case": "planning-3840-2100-sombre-normale",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.12), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "rapportSvgViewBox": 1,
+          "clavierEtGlissement": "OK : +1 / -7 / +3 jours, ouverture clavier"
+        },
+        {
+          "case": "vulnerabilites-3840-2100-sombre-normale",
+          "enteteEtTheme": "OK : signature/état masqués, icône nommée, bascule aller-retour",
+          "verreOnglets": {
+            "fond": "linear-gradient(125deg, color(srgb 1 1 1 / 0.12), rgba(0, 0, 0, 0) 42%), none",
+            "flou": "blur(14px) saturate(1.25)"
+          },
+          "aideClavierAccessible": "OK",
+          "infobulleAuFocus": "OK",
+          "tailles": {
+            "autoPC": 16.0,
+            "manuel150": 24.0,
+            "muralAuto": 30.0
+          }
+        }
+      ],
+      "decalagesSimules": [
+        {
+          "case": "planning-1440-900-clair-compacte",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 1
+          }
+        },
+        {
+          "case": "planning-1440-900-clair-compacte",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": -7
+          }
+        },
+        {
+          "case": "planning-1440-900-clair-compacte",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 3
+          }
+        },
+        {
+          "case": "planning-1440-900-clair-normale",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 1
+          }
+        },
+        {
+          "case": "planning-1440-900-clair-normale",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": -7
+          }
+        },
+        {
+          "case": "planning-1440-900-clair-normale",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 3
+          }
+        },
+        {
+          "case": "planning-1440-900-sombre-compacte",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 1
+          }
+        },
+        {
+          "case": "planning-1440-900-sombre-compacte",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": -7
+          }
+        },
+        {
+          "case": "planning-1440-900-sombre-compacte",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 3
+          }
+        },
+        {
+          "case": "planning-1440-900-sombre-normale",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 1
+          }
+        },
+        {
+          "case": "planning-1440-900-sombre-normale",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": -7
+          }
+        },
+        {
+          "case": "planning-1440-900-sombre-normale",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 3
+          }
+        },
+        {
+          "case": "planning-3840-2100-clair-compacte",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 1
+          }
+        },
+        {
+          "case": "planning-3840-2100-clair-compacte",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": -7
+          }
+        },
+        {
+          "case": "planning-3840-2100-clair-compacte",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 3
+          }
+        },
+        {
+          "case": "planning-3840-2100-clair-normale",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 1
+          }
+        },
+        {
+          "case": "planning-3840-2100-clair-normale",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": -7
+          }
+        },
+        {
+          "case": "planning-3840-2100-clair-normale",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 3
+          }
+        },
+        {
+          "case": "planning-3840-2100-sombre-compacte",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 1
+          }
+        },
+        {
+          "case": "planning-3840-2100-sombre-compacte",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": -7
+          }
+        },
+        {
+          "case": "planning-3840-2100-sombre-compacte",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 3
+          }
+        },
+        {
+          "case": "planning-3840-2100-sombre-normale",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 1
+          }
+        },
+        {
+          "case": "planning-3840-2100-sombre-normale",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": -7
+          }
+        },
+        {
+          "case": "planning-3840-2100-sombre-normale",
+          "path": "/api/plans/PL-FORMATION-01/decalage",
+          "body": {
+            "jours": 3
+          }
+        }
+      ],
+      "mesures": [
+        {
+          "case": "risques-1440-900-clair-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 384.609375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1201.28125,
+            "height": 37,
+            "top": 221.53125,
+            "left": 218.359375,
+            "bottom": 258.53125,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-1440-900-clair-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 683.421875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 1213,
+            "height": 404,
+            "top": 209.234375,
+            "left": 217.359375,
+            "bottom": 613.234375,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-1440-900-clair-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 1710,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1089.546875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1191.78125,
+            "height": 58.671875,
+            "top": 1151.171875,
+            "left": 228.859375,
+            "bottom": 1209.84375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 0,
+          "planning": null,
+          "radar": {
+            "width": 792.9375,
+            "height": 564.953125,
+            "top": 249.6875,
+            "left": 624.6875,
+            "bottom": 814.640625,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-1440-900-clair-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 398.609375,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1180.96875,
+            "height": 39,
+            "top": 256.59375,
+            "left": 236.515625,
+            "bottom": 295.59375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-1440-900-clair-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 699.421875,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 1192,
+            "height": 404,
+            "top": 244.296875,
+            "left": 235.515625,
+            "bottom": 648.296875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-1440-900-clair-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 1818,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1153.546875,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1163.46875,
+            "height": 62.671875,
+            "top": 1187.3125,
+            "left": 251.015625,
+            "bottom": 1249.984375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 0,
+          "planning": null,
+          "radar": {
+            "width": 769.1875,
+            "height": 548.03125,
+            "top": 286.75,
+            "left": 641.296875,
+            "bottom": 834.78125,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-1440-900-sombre-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 384.609375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1201.28125,
+            "height": 37,
+            "top": 221.53125,
+            "left": 218.359375,
+            "bottom": 258.53125,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-1440-900-sombre-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 683.421875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 1213,
+            "height": 404,
+            "top": 209.234375,
+            "left": 217.359375,
+            "bottom": 613.234375,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-1440-900-sombre-compacte",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 1440,
+          "docHeight": 1710,
+          "header": {
+            "width": 1232,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1089.546875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 217.359375,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1191.78125,
+            "height": 58.671875,
+            "top": 1151.171875,
+            "left": 228.859375,
+            "bottom": 1209.84375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 0,
+          "planning": null,
+          "radar": {
+            "width": 792.9375,
+            "height": 564.953125,
+            "top": 249.6875,
+            "left": 624.6875,
+            "bottom": 814.640625,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-1440-900-sombre-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 398.609375,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1180.96875,
+            "height": 39,
+            "top": 256.59375,
+            "left": 236.515625,
+            "bottom": 295.59375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-1440-900-sombre-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 900,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 699.421875,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 1192,
+            "height": 404,
+            "top": 244.296875,
+            "left": 235.515625,
+            "bottom": 648.296875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-1440-900-sombre-normale",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 1440,
+          "docHeight": 1818,
+          "header": {
+            "width": 1216,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 900,
+            "top": 0,
+            "left": 0,
+            "bottom": 900,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1153.546875,
+            "height": 36,
+            "top": 50,
+            "left": 235.515625,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 1163.46875,
+            "height": 62.671875,
+            "top": 1187.3125,
+            "left": 251.015625,
+            "bottom": 1249.984375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 0,
+          "planning": null,
+          "radar": {
+            "width": 769.1875,
+            "height": 548.03125,
+            "top": 286.75,
+            "left": 641.296875,
+            "bottom": 834.78125,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-3840-2100-clair-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 384.609375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3588,
+            "height": 37,
+            "top": 221.53125,
+            "left": 225,
+            "bottom": 258.53125,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-3840-2100-clair-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 683.421875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 3600,
+            "height": 404,
+            "top": 209.234375,
+            "left": 224,
+            "bottom": 613.234375,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-3840-2100-clair-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1089.546875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3578.5,
+            "height": 47.609375,
+            "top": 1161.328125,
+            "left": 235.5,
+            "bottom": 1208.9375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 7,
+          "planning": null,
+          "radar": {
+            "width": 840,
+            "height": 598.5,
+            "top": 249.6875,
+            "left": 2190.828125,
+            "bottom": 848.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-3840-2100-clair-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 398.609375,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3564,
+            "height": 39,
+            "top": 256.59375,
+            "left": 245,
+            "bottom": 295.59375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-3840-2100-clair-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 699.421875,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 3576,
+            "height": 404,
+            "top": 244.296875,
+            "left": 244,
+            "bottom": 648.296875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-3840-2100-clair-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "light",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1153.546875,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3546.5,
+            "height": 51.609375,
+            "top": 1214.390625,
+            "left": 259.5,
+            "bottom": 1266,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 7,
+          "planning": null,
+          "radar": {
+            "width": 840,
+            "height": 598.5,
+            "top": 286.75,
+            "left": 2194.953125,
+            "bottom": 885.25,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-3840-2100-sombre-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 384.609375,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3588,
+            "height": 37,
+            "top": 221.53125,
+            "left": 225,
+            "bottom": 258.53125,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-3840-2100-sombre-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 683.421875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 3600,
+            "height": 404,
+            "top": 209.234375,
+            "left": 224,
+            "bottom": 613.234375,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-3840-2100-sombre-compacte",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "compacte",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3632,
+            "height": 40,
+            "top": 0,
+            "left": 208,
+            "bottom": 40,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 207,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 199,
+            "height": 34,
+            "top": 176.109375,
+            "left": 4,
+            "bottom": 210.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1089.546875,
+            "height": 32.1875,
+            "top": 44,
+            "left": 224,
+            "bottom": 76.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3578.5,
+            "height": 47.609375,
+            "top": 1161.328125,
+            "left": 235.5,
+            "bottom": 1208.9375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 7,
+          "planning": null,
+          "radar": {
+            "width": 840,
+            "height": 598.5,
+            "top": 249.6875,
+            "left": 2190.828125,
+            "bottom": 848.1875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        },
+        {
+          "case": "risques-3840-2100-sombre-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 398.609375,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3564,
+            "height": 39,
+            "top": 256.59375,
+            "left": 245,
+            "bottom": 295.59375,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 8,
+          "planning": null,
+          "radar": null
+        },
+        {
+          "case": "planning-3840-2100-sombre-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": null,
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 699.421875,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": null,
+          "fullyVisibleRows": 0,
+          "planning": {
+            "width": 3576,
+            "height": 404,
+            "top": 244.296875,
+            "left": 244,
+            "bottom": 648.296875,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "radar": null
+        },
+        {
+          "case": "vulnerabilites-3840-2100-sombre-normale",
+          "viewport": {
+            "width": 3840,
+            "height": 2100
+          },
+          "rootFont": "16px",
+          "tableFont": "14px",
+          "theme": "dark",
+          "density": "normale",
+          "docWidth": 3840,
+          "docHeight": 2100,
+          "header": {
+            "width": 3616,
+            "height": 44,
+            "top": 0,
+            "left": 224,
+            "bottom": 44,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "nav": {
+            "width": 223,
+            "height": 2100,
+            "top": 0,
+            "left": 0,
+            "bottom": 2100,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "navLink": {
+            "width": 211,
+            "height": 36,
+            "top": 194.109375,
+            "left": 6,
+            "bottom": 230.109375,
+            "fontSize": "13px",
+            "fontWeight": "400",
+            "lineHeight": "19.5px"
+          },
+          "tabs": {
+            "width": 1153.546875,
+            "height": 36,
+            "top": 50,
+            "left": 244,
+            "bottom": 86,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          },
+          "firstRow": {
+            "width": 3546.5,
+            "height": 51.609375,
+            "top": 1214.390625,
+            "left": 259.5,
+            "bottom": 1266,
+            "fontSize": "14px",
+            "fontWeight": "400",
+            "lineHeight": "21.7px"
+          },
+          "fullyVisibleRows": 7,
+          "planning": null,
+          "radar": {
+            "width": 840,
+            "height": 598.5,
+            "top": 286.75,
+            "left": 2194.953125,
+            "bottom": 885.25,
+            "fontSize": "16px",
+            "fontWeight": "400",
+            "lineHeight": "24.8px"
+          }
+        }
+      ]
+    }
+  ]
+}

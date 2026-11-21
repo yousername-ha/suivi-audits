@@ -35,10 +35,11 @@ import {
   STATUT_RAPPROCHEMENT_LIBELLES,
   type SuggestionCpeDto,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan } from '../session';
@@ -248,7 +249,7 @@ export function ProduitsSurveillesPage() {
     );
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Produits surveillés"
         description="Registre de l’organisation : les produits dont la plateforme suit les vulnérabilités publiées, par éditeur, produit et version. La version déclarée sert au rapprochement avec les failles de la veille : tenez-la à jour. Un même produit (même éditeur, même version) n’est inscrit qu’une fois."
         actions={modifier && <Button onClick={() => setEdition({ produit: null })}>Ajouter un produit</Button>}
