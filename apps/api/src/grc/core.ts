@@ -919,6 +919,18 @@ export class Grc {
         throw new HttpError(422, 'L’origine de l’occurrence est immuable.');
       await this.annuaires.normaliser(smsi, d, c);
       await this.checkOwner(smsi, d.ownerId, c, true);
+      // Tâches (ADR 0111) : le responsable d'une tâche est un simple affichage, il n'ouvre l'action à personne (l'accès ne
+      // lit que `ownerId` et `responsable` de l'action). Seule une désignation nouvelle ou changée est contrôlée (compte
+      // actif, groupe ou fonction existants) : une désignation déjà enregistrée ne bloque pas la mise à jour de l'action.
+      const avant = new Map(
+        ((previous?.data.taches as { id: string; responsable?: unknown }[] | undefined) ?? []).map((t) => [
+          t.id,
+          JSON.stringify(t.responsable ?? null),
+        ]),
+      );
+      for (const t of d.taches ?? [])
+        if (t.responsable && avant.get(t.id) !== JSON.stringify(t.responsable))
+          await this.annuaires.resoudre(smsi, t.responsable, c);
       if (new Set(d.dependencies).size !== d.dependencies.length) throw new HttpError(422, 'Dépendances dupliquées.');
       if (previous && d.dependencies.length) {
         // Parcours des dépendances (jsonb) depuis les dépendances déclarées : retrouver l'action elle-même = cycle.

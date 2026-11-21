@@ -3,6 +3,7 @@ import { PanneauElement, useAccesElement } from '../registres/Contribution';
 import { SelecteurRegistre } from '../registres/SelecteurRegistre';
 import { SelecteurPeriodicite } from './SelecteurPeriodicite';
 import { PlanningSerie } from './PlanningSerie';
+import { TachesAction } from './TachesAction';
 import {
   Alert,
   Button,
@@ -27,6 +28,7 @@ import {
   type Recurrence,
   type RiskData,
   type RiskMethod,
+  type TacheAction,
   RISK_REF_KINDS,
 } from '@suivi/shared';
 import { api, get } from '../api';
@@ -399,6 +401,15 @@ export function ObjectEditor({
                   onChange={(v) => set('dependencies', v)}
                   disabled={readonly}
                 />
+                {/* Tâches de l'action (ADR 0111) : enregistrées avec la fiche ; pas pour une occurrence de série. */}
+                {!data.seriesId && (
+                  <TachesAction
+                    smsi={smsi}
+                    taches={Array.isArray(data.taches) ? (data.taches as TacheAction[]) : []}
+                    onChange={(t) => set('taches', t)}
+                    readonly={readonly}
+                  />
+                )}
               </>
             )}
             {kind === 'task_series' && data.recurrence && (

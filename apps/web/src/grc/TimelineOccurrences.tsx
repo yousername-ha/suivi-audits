@@ -1,25 +1,29 @@
-/* Timeline adaptative des tâches récurrentes (refonte Neon, lot 6, ADR 0093) : une ligne par série, ses occurrences à
-   leur échéance, sur une période qui suit la périodicité (Auto) ou l'échelle choisie : 14 jours, 12 semaines ISO,
-   12 mois civils ou 5 années civiles. Navigation, retour à aujourd'hui et « Tout afficher » ; les repères proches
-   prennent un étage. Le rendu ne crée aucune occurrence : il ne montre que les fiches chargées, et celles qui ne se
-   placent pas (hors période, sans échéance, dates incohérentes, actions hors série) restent listées et ouvrables.
+/* Timeline adaptative des tâches récurrentes (refonte Neon, lot 6, ADR 0093 ; refonte des frises décidée par le RSSI le
+   20/11/2026 sur maquette) : une ligne par série (colonnes Série, Rythme, Resp., Prochaine, Dernier), ses occurrences à
+   leur échéance, sur une période qui suit la périodicité (Auto) ou l'échelle choisie : 14 jours, 12 semaines ISO, 12 mois
+   civils ou 5 années civiles. Navigation, retour à aujourd'hui et « Tout afficher » ; les repères trop proches prennent
+   un étage. Le rendu ne crée aucune occurrence : il ne montre que les fiches chargées, et celles qui ne se placent pas
+   (hors période, sans échéance, dates incohérentes, actions hors série) restent listées et ouvrables.
    - Ligne (intitulé, fond) : fiche complète de la série (planning, iCalendar, réglages).
    - Repère : petite fenêtre de résultat (OK, KO, NA) de l'occurrence. */
-import { ActionIcon, Button, Group, Select, Stack, Text } from '@mantine/core';
+import { ActionIcon, Anchor, Button, Group, Select, Text } from '@mantine/core';
 import { useElementSize } from '@mantine/hooks';
 import type { BusinessPolicy, GrcObject } from '@suivi/shared';
+import { useState } from 'react';
+import { Link } from 'react-router';
 import { useFiltreUrl } from '../components/filtre-url';
 import { ficheCliquable } from '../fiche-cliquable';
 import {
-  classeResultat,
   commandeRepere,
   descriptionRepere,
   enRetard,
   estRecurrente,
+  infobulleRepere,
   tonTache,
   validationDe,
 } from './etat-action';
-import type { JourFond } from './jours-de-fond';
+import type { FamilleFond, JourFond } from './jours-de-fond';
+import { compterParColonne, dateCourte, sansResponsable } from './Timeline';
 import {
   classerDates,
   dateFrise,
@@ -36,45 +40,86 @@ import {
   type Periode,
   type Placement,
 } from './timeline-calendrier';
-import { LegendeTimeline, ListeHors, toucheRepere, type OuvrirResultat } from './TimelineCommun';
+import {
+  Bascule,
+  CarreOccurrence,
+  DefsVerre,
+  ElementLegende,
+  InfobulleRepere,
+  etatCarre,
+  ListeHors,
+  PastilleResponsable,
+  PastilleResultat,
+  PeriodeAffichee,
+  PiedTemps,
+  RegleTemps,
+  Segmente,
+  TexteMasque,
+  useInfobulle,
+  toucheRepere,
+  usePolicesChargees,
+  type ColonneTemps,
+  type OuvrirResultat,
+} from './TimelineCommun';
 
-/** Géométrie du dessin (pixels du SVG) : règle, étage de repères, demi-côté du carré, écart minimal sur un étage. */
-const REGLE = 46;
-const ETAGE = 40;
-const HAUT = 15;
-const DEMI = 7;
-const ECART = 58;
+/** Géométrie du dessin (pixels du SVG) : ligne, étage supplémentaire, règle, pied, écart minimal sur un étage. */
+const LIGNE = 40;
+const ETAGE = 20;
+const ENTETE = 46;
+const PIED = 38;
+const DEMI = 8;
+const ECART = 19;
+const PIED_TITRE: Record<Echelle, string> = {
+  day: 'Occurrences du jour',
+  week: 'Occurrences de la semaine',
+  month: 'Occurrences du mois',
+  year: 'Occurrences de l’année',
+};
+/** Libellés courts du sélecteur d'échelle (maquette) : Auto, puis l'unité de chaque échelle (journalière à annuelle). */
+const SEGMENTS: Record<ChoixEchelle, string> = {
+  auto: 'Auto',
+  day: 'Jours',
+  week: 'Semaines',
+  month: 'Mois',
+  year: 'Années',
+};
+const moisCourt = (n: number) => dateFrise(n, { month: 'short' });
 
-/** Bandes calendaires, jours de fond et ligne d'aujourd'hui, derrière les repères d'une ligne. */
+/** Colonnes de la règle : libellés courts des mois (« nov. 26 ») ; les autres échelles gardent ceux du calendrier. */
+function colonnesTemps(p: Periode): ColonneTemps[] {
+  return p.reperes.map((r) => {
+    const mensuel = p.unite === 'month' && r.fin - r.debut <= 31 * JOUR;
+    return {
+      debut: r.debut,
+      fin: r.fin,
+      libelle: mensuel
+        ? `${moisCourt(r.debut)} ${String(new Date(r.debut).getUTCFullYear() % 100).padStart(2, '0')}`
+        : r.label,
+      court: mensuel ? moisCourt(r.debut) : r.court,
+    };
+  });
+}
+
+/** Traits des colonnes, jours de fond et ligne d'aujourd'hui, derrière les repères d'une ligne. */
 function Grille({
-  p,
+  colonnes,
   x,
-  hauteur,
   largeur,
+  joursPeriode,
   fond,
   aujourdhui,
+  p,
 }: {
-  p: Periode;
+  colonnes: readonly ColonneTemps[];
   x: (n: number) => number;
-  hauteur: number | string;
   largeur: number;
+  joursPeriode: number;
   fond: readonly JourFond[];
   aujourdhui: number;
+  p: Periode;
 }) {
   return (
     <g aria-hidden="true" className="timeline-occurrences__grille">
-      {p.reperes.map((r, i) => (
-        <rect
-          key={r.debut}
-          className={
-            i % 2 ? 'timeline-occurrences__bande timeline-occurrences__bande--alt' : 'timeline-occurrences__bande'
-          }
-          x={x(r.debut)}
-          y="0"
-          width={Math.max(0, x(r.fin) - x(r.debut))}
-          height={hauteur}
-        />
-      ))}
       {fond.map((j) => {
         const n = jour(j.date);
         return n >= p.debut && n < p.fin ? (
@@ -84,15 +129,18 @@ function Grille({
             data-fond={j.famille}
             x={x(n)}
             y="0"
-            width={Math.max(1, largeur / p.jours)}
-            height={hauteur}
+            width={Math.max(2, largeur / joursPeriode)}
+            height="100%"
           >
             <title>{`${dateFrise(n, { dateStyle: 'long' })} — ${j.label}`}</title>
           </rect>
         ) : null;
       })}
+      {colonnes.map((c) => (
+        <line key={c.debut} className="frise-trait" x1={x(c.debut)} x2={x(c.debut)} y1="0" y2="100%" />
+      ))}
       {aujourdhui >= p.debut && aujourdhui < p.fin && (
-        <line className="grc-timeline__aujourdhui" x1={x(aujourdhui)} x2={x(aujourdhui)} y1="0" y2={hauteur} />
+        <line className="grc-timeline__aujourdhui" x1={x(aujourdhui)} x2={x(aujourdhui)} y1="0" y2="100%" />
       )}
     </g>
   );
@@ -106,6 +154,8 @@ export function FriseOccurrences({
   onResultat,
   ownerOf,
   fond,
+  fondActif,
+  onFond,
 }: {
   items: GrcObject[];
   series: GrcObject[];
@@ -114,17 +164,23 @@ export function FriseOccurrences({
   onResultat: OuvrirResultat;
   ownerOf: (o: GrcObject) => string;
   fond: readonly JourFond[];
+  fondActif: Readonly<Record<FamilleFond, boolean>>;
+  onFond: (famille: FamilleFond, actif: boolean) => void;
 }) {
   // Réglages conservés dans l'adresse, comme les autres filtres des tâches.
   const [echelle, setEchelle] = useFiltreUrl('techelle', 'auto'),
     [focus, setFocus] = useFiltreUrl('tserie', ''),
     [depart, setDepart] = useFiltreUrl('tdebut', ''),
     [tout, setTout] = useFiltreUrl('ttout', '0');
+  usePolicesChargees();
+  const bulle = useInfobulle();
+  const [horsOuvert, setHorsOuvert] = useState(false);
   const regle = useElementSize<HTMLDivElement>();
   const largeur = Math.max(160, Math.floor(regle.width || 640));
   const maintenant = Date.now();
   // Aujourd'hui à l'heure courante ; chaque repère au milieu de son jour d'échéance (lisible à l'échelle journalière).
   const aujourdhui = maintenant;
+  const annee = new Date(maintenant).getUTCFullYear();
   const recurrentes = items.filter(estRecurrente);
   const horsSerie = items.filter((o) => !estRecurrente(o));
   const suivies = focus ? recurrentes.filter((o) => o.data.seriesId === focus) : recurrentes;
@@ -137,6 +193,7 @@ export function FriseOccurrences({
     Number.isFinite(origine) ? origine : undefined,
     tout === '1' ? suivies.map((o) => jour(o.data.dueAt)) : undefined,
   );
+  const colonnes = colonnesTemps(p);
   const { visibles, horsPeriode, sansDate, incoherentes } = classerDates(suivies, p, true);
   const x = (n: number) => ((n - p.debut) / (p.fin - p.debut)) * largeur;
   const borne = (n: number) => Math.max(DEMI + 6, Math.min(largeur - DEMI - 6, x(n)));
@@ -156,74 +213,107 @@ export function FriseOccurrences({
     const cle = String(e.objet.data.seriesId || e.objet.id);
     groupes.set(cle, [...(groupes.get(cle) ?? []), e]);
   }
+  // Toutes les occurrences chargées de chaque série (dans ou hors de la période) : prochaine et dernier résultat.
+  const parSerie = new Map<string, GrcObject[]>();
+  for (const o of suivies) {
+    const cle = String(o.data.seriesId || o.id);
+    parSerie.set(cle, [...(parSerie.get(cle) ?? []), o]);
+  }
   const serieSuivie = series.find((s) => s.id === focus);
   if (serieSuivie && !groupes.has(serieSuivie.id)) groupes.set(serieSuivie.id, []);
-  const etroit = largeur / Math.max(1, p.reperes.length) < 72;
   const pausee = (serieSuivie?.data.recurrence as { active?: boolean } | undefined)?.active === false;
+  const comptes = compterParColonne(
+    colonnes,
+    visibles.map((e) => e.fin),
+  );
+  const jours = (p.fin - p.debut) / JOUR;
+  const parEcheance = (a: GrcObject, b: GrcObject) => jour(a.data.dueAt) - jour(b.data.dueAt);
+  const datee = (o: GrcObject) => Number.isFinite(jour(o.data.dueAt));
   return (
-    <Stack gap="sm" className="timeline-studio" data-mode="occurrences">
-      <div className="timeline-studio__entete">
-        <div>
-          <Text className="timeline-studio__surtitre">Tâches récurrentes · Timeline adaptative</Text>
-          <Text size="sm">
-            Période affichée : du {dateFrise(p.debut, { dateStyle: 'short' })} au{' '}
-            {dateFrise(p.fin - JOUR, { dateStyle: 'short' })}.
-          </Text>
-          <Text size="xs" c="dimmed">
-            {choisie === 'auto' ? 'Auto · ' : ''}
-            {ECHELLES[unite]} · {p.jours} jours
-            {choisie === 'auto' ? ' · adaptée à la périodicité affichée' : ''}
-          </Text>
+    <section className="timeline-studio frise" data-mode="occurrences">
+      <DefsVerre />
+      <InfobulleRepere infobulle={bulle.infobulle} />
+      <div className="frise-barre">
+        <span className="frise-barre__titre">Planning des séries</span>
+        <PeriodeAffichee
+          debut={dateFrise(p.debut, { dateStyle: 'short' })}
+          fin={dateFrise(p.fin - JOUR, { dateStyle: 'short' })}
+          suite={choisie === 'auto' ? ' · adapté au rythme affiché' : undefined}
+          souple
+        />
+        <Select
+          className="frise-serie"
+          aria-label="Série à suivre"
+          placeholder="Toutes les séries"
+          size="xs"
+          clearable
+          searchable
+          value={focus || null}
+          onChange={(v) => {
+            setFocus(v ?? '');
+            setEchelle('auto');
+            reinitialiser();
+          }}
+          data={series.map((s) => ({ value: s.id, label: `${s.name} · ${rythmeSerie(s)}` }))}
+          nothingFoundMessage="Aucune série ne correspond."
+        />
+        <Segmente
+          label="Échelle de la Timeline"
+          options={(['auto', ...Object.keys(ECHELLES)] as ChoixEchelle[]).map((k) => ({
+            value: k,
+            label: SEGMENTS[k],
+          }))}
+          valeur={choisie}
+          onChange={(k) => {
+            setEchelle(k);
+            reinitialiser();
+          }}
+        />
+        <Group gap="xs" role="group" aria-label="Navigation dans la période" className="frise-navigation">
+          <ActionIcon variant="default" aria-label="Période précédente" onClick={() => deplacer(-1)}>
+            <span aria-hidden="true">‹</span>
+          </ActionIcon>
+          <Button variant="default" size="compact-sm" onClick={reinitialiser}>
+            Aujourd’hui
+          </Button>
+          <ActionIcon variant="default" aria-label="Période suivante" onClick={() => deplacer(1)}>
+            <span aria-hidden="true">›</span>
+          </ActionIcon>
+        </Group>
+        <Button variant="default" size="compact-sm" aria-pressed={tout === '1'} onClick={() => setTout('1')}>
+          Tout afficher
+        </Button>
+      </div>
+      <div className="frise-legende">
+        <div
+          className="timeline-legende frise-legende__items"
+          role="group"
+          aria-label="Légende : résultat et échéance des occurrences"
+        >
+          <ElementLegende icone="ok">OK</ElementLegende>
+          <ElementLegende icone="ko">KO</ElementLegende>
+          <ElementLegende icone="na">NA</ElementLegende>
+          <ElementLegende icone="attendu">Résultat attendu</ElementLegende>
+          <ElementLegende icone="retard">En retard</ElementLegende>
+          <ElementLegende icone="avenir">À venir</ElementLegende>
         </div>
-        <div className="timeline-studio__outils">
-          <Button.Group className="timeline-echelle" aria-label="Échelle de la Timeline">
-            {(['auto', ...Object.keys(ECHELLES)] as ChoixEchelle[]).map((k) => (
-              <Button
-                key={k}
-                size="compact-sm"
-                variant={choisie === k ? 'filled' : 'default'}
-                aria-pressed={choisie === k}
-                onClick={() => {
-                  setEchelle(k);
-                  reinitialiser();
-                }}
-              >
-                {k === 'auto' ? 'Auto' : ECHELLES[k]}
-              </Button>
-            ))}
-          </Button.Group>
-          <Group gap="xs" role="group" aria-label="Navigation dans la période">
-            <ActionIcon variant="default" aria-label="Période précédente" onClick={() => deplacer(-1)}>
-              <span aria-hidden="true">‹</span>
-            </ActionIcon>
-            <Button variant="default" size="compact-sm" onClick={reinitialiser}>
-              Aujourd’hui
-            </Button>
-            <ActionIcon variant="default" aria-label="Période suivante" onClick={() => deplacer(1)}>
-              <span aria-hidden="true">›</span>
-            </ActionIcon>
-            <Button variant="default" size="compact-sm" aria-pressed={tout === '1'} onClick={() => setTout('1')}>
-              Tout afficher
-            </Button>
-          </Group>
+        <div className="frise-legende__droite">
+          <div className="frise-bascules" role="group" aria-label="Affichage de la frise">
+            <Bascule
+              libelle="Jours fériés"
+              complement="en fond"
+              coche={fondActif.feries}
+              onChange={(v) => onFond('feries', v)}
+            />
+            <Bascule
+              libelle="Autres calendriers"
+              complement="en fond"
+              coche={fondActif.autres}
+              onChange={(v) => onFond('autres', v)}
+            />
+          </div>
         </div>
       </div>
-      <Select
-        className="timeline-serie"
-        label="Série à suivre"
-        placeholder="Toutes les séries"
-        clearable
-        searchable
-        value={focus || null}
-        onChange={(v) => {
-          setFocus(v ?? '');
-          setEchelle('auto');
-          reinitialiser();
-        }}
-        data={series.map((s) => ({ value: s.id, label: `${s.name} · ${rythmeSerie(s)}` }))}
-        nothingFoundMessage="Aucune série ne correspond."
-      />
-      <LegendeTimeline policy={policy} />
       <div
         className="timeline-occurrences"
         role="region"
@@ -231,43 +321,15 @@ export function FriseOccurrences({
         aria-label="Timeline des occurrences, défilement vertical possible"
       >
         <div className="timeline-occurrences__axe">
-          <div className="timeline-occurrences__coin">Série · rythme</div>
+          <div className="timeline-occurrences__coin frise-cols-series">
+            <span>Série</span>
+            <span className="frise-col-rythme">Rythme</span>
+            <span className="frise-col-resp">Resp.</span>
+            <span className="frise-col-prochaine">Prochaine</span>
+            <span className="frise-col-dernier">Dernier</span>
+          </div>
           <div ref={regle.ref} className="timeline-occurrences__regle">
-            <svg width={largeur} height={REGLE} aria-hidden="true">
-              {/* Sur la règle, aujourd'hui est un libellé et un court repère : la ligne pleine est dans les lignes. */}
-              <Grille p={p} x={x} hauteur={REGLE} largeur={largeur} fond={[]} aujourdhui={Number.NaN} />
-              {p.reperes.map((r) => (
-                <text
-                  key={r.debut}
-                  className="timeline-occurrences__graduation"
-                  x={(x(r.debut) + x(r.fin)) / 2}
-                  y={REGLE - 10}
-                  textAnchor="middle"
-                >
-                  {etroit ? r.court : r.label}
-                </text>
-              ))}
-              {aujourdhui >= p.debut && aujourdhui < p.fin && (
-                <>
-                  <text
-                    className="timeline-occurrences__aujourdhui"
-                    x={Math.max(40, Math.min(largeur - 40, x(aujourdhui)))}
-                    y="13"
-                    textAnchor="middle"
-                  >
-                    Aujourd’hui
-                  </text>
-                  <line className="grc-timeline__aujourdhui" x1={x(aujourdhui)} x2={x(aujourdhui)} y1="17" y2="24" />
-                  <line
-                    className="grc-timeline__aujourdhui"
-                    x1={x(aujourdhui)}
-                    x2={x(aujourdhui)}
-                    y1={REGLE - 6}
-                    y2={REGLE}
-                  />
-                </>
-              )}
-            </svg>
+            <RegleTemps colonnes={colonnes} x={x} largeur={largeur} hauteur={ENTETE} aujourdhui={aujourdhui} />
           </div>
         </div>
         {[...groupes.entries()].map(([cle, brutes]) => {
@@ -280,31 +342,52 @@ export function FriseOccurrences({
           const rythme = serie ? rythmeSerie(serie) : 'Tâche récurrente historique';
           const positions = entrees.map((e) => borne(e.fin + JOUR / 2));
           const etages = etagerReperes(positions, ECART);
-          const hauteur = HAUT * 2 + 16 + Math.max(0, ...etages) * ETAGE;
+          const hauteur = LIGNE + Math.max(0, ...etages) * ETAGE;
           const enAttente = entrees.filter((e) => !validationDe(e.objet)).length;
           const retard = entrees.some((e) => enRetard(e.objet, policy, maintenant));
           const ton = !entrees.length ? 'muted' : enAttente ? 'amber' : 'teal';
           const resume = `${entrees.length} occurrence(s) dans la période · ${enAttente} en attente`;
+          const chargees = (parSerie.get(cle) ?? []).filter(datee);
+          const prochaine = chargees.filter((o) => !validationDe(o)).sort(parEcheance)[0];
+          const dernier = chargees
+            .filter((o) => validationDe(o))
+            .sort(parEcheance)
+            .at(-1);
+          const prochaineRetard = !!prochaine && enRetard(prochaine, policy, maintenant);
+          const responsable = ownerOf(cible);
+          const xs = positions.filter((_, i) => etages[i] === 0);
           return (
             <div key={cle} className="timeline-occurrences__rang" data-ton={ton}>
               <div
                 {...ficheCliquable(() => onOpen(cible), `Afficher ${nom}`)}
                 role="button"
-                className="timeline-occurrences__serie"
+                className="timeline-occurrences__serie frise-cols-series"
                 aria-label={nom}
-                aria-description={`${rythme} ; ${resume}${retard ? ', en retard' : ''} ; ouvre la fiche${serie ? ' de la série' : ''}`}
+                aria-description={`${rythme} ; ${resume}${retard ? ', en retard' : ''}${prochaine ? ` ; prochaine échéance le ${date(String(prochaine.data.dueAt))}` : ''}${dernier ? ` ; dernier résultat ${validationDe(dernier)}` : ''}, responsable : ${responsable} ; ouvre la fiche${serie ? ' de la série' : ''}`}
                 title={nom}
               >
                 <span className="timeline-occurrences__nom">{nom}</span>
-                <span className="timeline-occurrences__rythme">
-                  {rythme} · {ownerOf(cible)}
+                <span className="frise-col-rythme timeline-occurrences__rythme" title={rythme}>
+                  {rythme}
                 </span>
-                <span className="timeline-occurrences__compte">
-                  {resume}
-                  {retard && <span className="grc-timeline__retard">! En retard</span>}
+                <span className="frise-col-resp">
+                  <PastilleResponsable libelle={responsable} vide={sansResponsable(cible)} />
                 </span>
+                <span
+                  className={
+                    prochaineRetard
+                      ? 'frise-col-prochaine frise-date frise-date--retard'
+                      : 'frise-col-prochaine frise-date'
+                  }
+                >
+                  {prochaine ? dateCourte(jour(prochaine.data.dueAt), annee) : '—'}
+                </span>
+                <span className="frise-col-dernier">
+                  <PastilleResultat objet={dernier} />
+                </span>
+                {retard && <TexteMasque>! En retard</TexteMasque>}
               </div>
-              {/* Piste : le fond (bandes, jours de fond, aujourd'hui) suit la hauteur de la ligne ; un clic sur le fond
+              {/* Piste : le fond (traits, jours de fond, aujourd'hui) suit la hauteur de la ligne ; un clic sur le fond
                   ouvre la fiche complète, un clic sur un repère sa petite fenêtre de résultat. */}
               <div
                 className="timeline-occurrences__piste"
@@ -313,7 +396,15 @@ export function FriseOccurrences({
                 }}
               >
                 <svg className="timeline-occurrences__fond" width={largeur} height="100%" aria-hidden="true">
-                  <Grille p={p} x={x} hauteur="100%" largeur={largeur} fond={fond} aujourdhui={aujourdhui} />
+                  <Grille
+                    colonnes={colonnes}
+                    x={x}
+                    largeur={largeur}
+                    joursPeriode={jours}
+                    fond={fond}
+                    aujourdhui={aujourdhui}
+                    p={p}
+                  />
                 </svg>
                 <svg
                   className="timeline-occurrences__voie"
@@ -322,22 +413,24 @@ export function FriseOccurrences({
                   role="group"
                   aria-label={`Échéances de ${nom}`}
                 >
-                  {positions.length > 1 && (
+                  {xs.length > 1 && (
                     <line
-                      className="grc-timeline__guide"
-                      x1={positions[0]}
-                      x2={positions[positions.length - 1]}
-                      y1={HAUT}
-                      y2={HAUT}
+                      className="grc-timeline__guide frise-fil"
+                      x1={xs[0]}
+                      x2={xs[xs.length - 1]}
+                      y1={LIGNE / 2}
+                      y2={LIGNE / 2}
                       aria-hidden="true"
                     />
                   )}
                   {entrees.map((e, i) => {
                     const o = e.objet,
                       cx = positions[i]!,
-                      cy = HAUT + etages[i]! * ETAGE,
-                      retardO = enRetard(o, policy, maintenant),
-                      ouvrir = (el: SVGElement) => onResultat(o, el);
+                      cy = LIGNE / 2 + etages[i]! * ETAGE,
+                      ouvrir = (el: SVGElement) => {
+                        bulle.fermer();
+                        onResultat(o, el);
+                      };
                     return (
                       <g
                         key={o.id}
@@ -345,46 +438,18 @@ export function FriseOccurrences({
                         tabIndex={0}
                         className="grc-timeline__repere"
                         data-ton={tonTache(o, policy)}
-                        data-retard={retardO ? '' : undefined}
+                        data-retard={enRetard(o, policy, maintenant) ? '' : undefined}
                         aria-haspopup="dialog"
                         aria-label={`${commandeRepere(o)} : ${descriptionRepere(o, policy, maintenant, date)}`}
                         onClick={(ev) => ouvrir(ev.currentTarget)}
                         onKeyDown={toucheRepere(ouvrir)}
+                        {...bulle.surRepere(() => infobulleRepere(o, policy, maintenant, { carre: true }))}
                       >
-                        <title>{o.name}</title>
-                        <g transform={`rotate(45 ${cx} ${cy})`}>
-                          {retardO && (
-                            <rect
-                              className="grc-timeline__contour-retard"
-                              x={cx - DEMI - 3}
-                              y={cy - DEMI - 3}
-                              width={DEMI * 2 + 6}
-                              height={DEMI * 2 + 6}
-                              rx="3"
-                            />
-                          )}
-                          {!validationDe(o) && (
-                            <rect
-                              className="grc-timeline__pouls grc-timeline__pouls--carre"
-                              x={cx - DEMI}
-                              y={cy - DEMI}
-                              width={DEMI * 2}
-                              height={DEMI * 2}
-                              rx="2"
-                            />
-                          )}
-                          <rect
-                            className={`grc-timeline__occurrence grc-timeline__occurrence--${classeResultat(o)}`}
-                            x={cx - DEMI}
-                            y={cy - DEMI}
-                            width={DEMI * 2}
-                            height={DEMI * 2}
-                            rx="2"
-                          />
-                        </g>
-                        <text className="timeline-occurrences__date" x={cx} y={cy + DEMI + 17} textAnchor="middle">
-                          {dateFrise(e.fin)}
-                        </text>
+                        <CarreOccurrence
+                          cx={cx}
+                          cy={cy}
+                          etat={etatCarre(o, maintenant, enRetard(o, policy, maintenant))}
+                        />
                       </g>
                     );
                   })}
@@ -405,43 +470,78 @@ export function FriseOccurrences({
               : 'Aucune occurrence de cette série dans cette période.'}
           </Text>
         )}
+        <div className="timeline-occurrences__pied">
+          <div className="frise-pied">{PIED_TITRE[unite]}</div>
+          <div className="timeline-occurrences__regle">
+            <PiedTemps
+              titre={PIED_TITRE[unite]}
+              colonnes={colonnes}
+              comptes={comptes}
+              x={x}
+              largeur={largeur}
+              hauteur={PIED}
+            />
+          </div>
+        </div>
       </div>
-      <ListeHors
-        titre={`Hors de la période (${horsPeriode.length})`}
-        message="Ces échéances restent accessibles ; « Tout afficher » élargit la période."
-        objets={horsPeriode}
-        onOpen={onOpen}
-      />
-      <ListeHors
-        titre={`Sans échéance (${sansDate.length})`}
-        message="Aucune date n’est inventée : ouvrez la fiche pour la renseigner."
-        objets={sansDate}
-        onOpen={onOpen}
-      />
-      <ListeHors
-        titre={`Dates à vérifier (${incoherentes.length})`}
-        message="Date illisible ou début postérieur à l’échéance : ouvrez la fiche pour la corriger."
-        objets={incoherentes}
-        onOpen={onOpen}
-      />
-      <ListeHors
-        titre={`Actions hors série (${horsSerie.length})`}
-        message="Elles n’appartiennent à aucune série : elles se suivent dans le plan d’actions et restent ouvrables ici."
-        objets={horsSerie}
-        onOpen={onOpen}
-      />
-      {fond.length > 0 && (
-        <Text size="xs" data-testid="timeline-fond" className="timeline-fond">
-          Jours de fond disponibles ({fond.length}) :{' '}
-          {fond
-            .map(
-              (j) =>
-                `${dateFrise(jour(j.date), { dateStyle: 'short' })} ${j.label} (${j.famille === 'feries' ? 'férié' : 'fermeture'})`,
-            )
-            .join(' ; ')}
+      <div className="frise-notes">
+        <ListeHors
+          titre={`Hors de la période (${horsPeriode.length})`}
+          message="Ces échéances restent accessibles. « Tout afficher » élargit la période."
+          objets={horsPeriode}
+          onOpen={onOpen}
+        />
+        <ListeHors
+          titre={`Sans échéance (${sansDate.length})`}
+          message="Aucune date n’est inventée : ouvrez la fiche pour la renseigner."
+          objets={sansDate}
+          onOpen={onOpen}
+        />
+        <ListeHors
+          titre={`Dates à vérifier (${incoherentes.length})`}
+          message="Date illisible ou début postérieur à l’échéance : ouvrez la fiche pour la corriger."
+          objets={incoherentes}
+          onOpen={onOpen}
+        />
+        {fond.length > 0 && (
+          <Text size="xs" data-testid="timeline-fond" className="timeline-fond">
+            Jours de fond disponibles ({fond.length}) :{' '}
+            {fond
+              .map(
+                (j) =>
+                  `${dateFrise(jour(j.date), { dateStyle: 'short' })} ${j.label} (${j.famille === 'feries' ? 'férié' : 'fermeture'})`,
+              )
+              .join(' · ')}
+            . Le fond est un repère : il ne change aucune occurrence.
+          </Text>
+        )}
+      </div>
+      {horsSerie.length > 0 && (
+        <div className="frise-plus">
+          <button
+            type="button"
+            className="frise-plus__bouton"
+            aria-expanded={horsOuvert}
+            onClick={() => setHorsOuvert((v) => !v)}
+          >
+            <span aria-hidden="true">{horsOuvert ? '▾' : '▸'}</span> Actions hors série ({horsSerie.length})
+          </button>{' '}
+          · elles se suivent dans le{' '}
+          <Anchor component={Link} to="/pilotage/actions?tvue=timeline" inherit>
+            plan d’actions
+          </Anchor>
           .
-        </Text>
+          {horsOuvert && (
+            <Group gap="xs" className="frise-plus__liste">
+              {horsSerie.map((o) => (
+                <Button key={o.id} variant="subtle" size="compact-sm" onClick={() => onOpen(o)}>
+                  {o.name}
+                </Button>
+              ))}
+            </Group>
+          )}
+        </div>
       )}
-    </Stack>
+    </section>
   );
 }
