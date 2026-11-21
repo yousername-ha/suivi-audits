@@ -2,11 +2,13 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
-## [Non publié]
+## [7.5.1] — 2026-11-21
 
 ### Notes de mise à jour
 
-Aucune migration, aucune action : correctif de performance du module Vulnérabilités.
+**En bref.** Correctif de performance du module Vulnérabilités (défaut PERF-13 du banc du 21/11/2026) : aucune migration,
+aucune commande sur le serveur, aucune action dans l'application. Les écrans des failles, des machines, du parc, la vue
+d'ensemble, les correctifs et le rapport mensuel redeviennent rapides une fois la veille remplie.
 
 ### Corrigé
 
