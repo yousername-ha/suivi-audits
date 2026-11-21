@@ -73,6 +73,9 @@ export interface FaitsCve {
   alh: { exploitee: boolean; preuve: boolean; cvss: number | null; epss: number | null } | null;
 }
 
+/** Au-delà de ce nombre de CVE demandées, les avis sont joints à la liste par hachage plutôt que filtrés par l'index. */
+const LISTE_COURTE = 50;
+
 /** Faits de chaque CVE demandée (les CVE inconnues de la veille et d'AlgoLightHouse sont absentes de la table rendue). Les
     mêmes pour tout le monde (lot ALH5, décision A). */
 export async function lireFaitsCve(k: Kdb, cves: readonly string[]): Promise<Map<string, FaitsCve>> {
@@ -127,6 +130,14 @@ export async function lireFaitsCve(k: Kdb, cves: readonly string[]): Promise<Map
     else
       out.set(l.cve, { cve: l.cve, veille: false, nvd: null, kevAjout: null, epss: null, avis: [], fiches: [], alh });
   }
+  /* PERF-13 (banc du 21/11/2026) : avec une longue liste, « a.cves && liste » compare chaque CVE de chaque avis à toute la
+     liste (3 à 4 s pour 14 000 avis et 13 000 CVE) : jointure par hachage sur la liste, lue une fois. Avec une liste
+     courte (fiche d'une CVE, délai d'une décision), l'index des CVE citées reste le plus court chemin. Mêmes lignes dans
+     les deux cas : les couples (avis, CVE citée) dont la CVE est demandée. */
+  const filtreAvis =
+    liste.length > LISTE_COURTE
+      ? sql`JOIN (SELECT DISTINCT x AS cve FROM unnest(${liste}::text[]) AS x) l ON l.cve = c.cve`
+      : sql`WHERE a.cves && ${liste}::text[] AND c.cve = ANY(${liste}::text[])`;
   const { rows: a } = await sql<{
     cve: string;
     source: 'cert-fr' | 'cert-sante';
@@ -145,7 +156,7 @@ export async function lireFaitsCve(k: Kdb, cves: readonly string[]): Promise<Map
             a.fiche_exploitee, a.fiche_exploitee_le, a.fiche_preuve, a.fiche_preuve_le, a.fiche_correctif,
             a.fiche_contournement, a.fiche_cvss31
      FROM vulnerabilites_veille_avis a CROSS JOIN LATERAL unnest(a.cves) AS c(cve)
-     WHERE a.cves && ${liste}::text[] AND c.cve = ANY(${liste}::text[])
+     ${filtreAvis}
      ORDER BY c.cve, a.source, a.identifiant`.execute(k);
   for (const l of a) {
     const f = out.get(l.cve);

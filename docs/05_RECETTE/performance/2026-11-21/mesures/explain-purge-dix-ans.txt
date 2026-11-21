@@ -1,0 +1,97 @@
+Timing is on.
+ collectes_avant 
+-----------------
+          178478
+(1 row)
+
+Time: 17.209 ms
+ executions_avant 
+------------------
+             4160
+(1 row)
+
+Time: 1.849 ms
+BEGIN
+Time: 0.074 ms
+                                                                                                         QUERY PLAN                                                                                                          
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=236659.55..236659.57 rows=1 width=4) (actual time=1363.382..1363.385 rows=1.00 loops=1)
+   Buffers: shared hit=1047309
+   CTE effacees
+     ->  Delete on vulnerabilites_veille_collectes x  (cost=0.00..232756.79 rows=173456 width=6) (actual time=0.126..1310.958 rows=174069.00 loops=1)
+           Buffers: shared hit=1047309
+           ->  Seq Scan on vulnerabilites_veille_collectes x  (cost=0.00..232756.79 rows=173456 width=6) (actual time=0.110..1203.678 rows=174069.00 loops=1)
+                 Filter: ((etat <> ALL ('{en_file,en_cours}'::text[])) AND (demande_le < (now() - '90 days'::interval)) AND (id <> (SubPlan 1)))
+                 Rows Removed by Filter: 4409
+                 Buffers: shared hit=699171
+                 SubPlan 1
+                   ->  Limit  (cost=0.89..1.27 rows=1 width=24) (actual time=0.006..0.006 rows=1.00 loops=174069)
+                         Buffers: shared hit=696285
+                         ->  Incremental Sort  (cost=0.89..13356.51 rows=35696 width=24) (actual time=0.006..0.006 rows=1.00 loops=174069)
+                               Sort Key: y.demande_le DESC, y.id
+                               Presorted Key: y.demande_le
+                               Full-sort Groups: 174069  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
+                               Buffers: shared hit=696285
+                               ->  Index Scan using vulnerabilites_veille_collectes_source on vulnerabilites_veille_collectes y  (cost=0.42..12082.83 rows=35696 width=24) (actual time=0.005..0.006 rows=2.00 loops=174069)
+                                     Index Cond: (source = x.source)
+                                     Index Searches: 174069
+                                     Buffers: shared hit=696276
+   ->  CTE Scan on effacees  (cost=0.00..3469.12 rows=173456 width=0) (actual time=0.129..1349.776 rows=174069.00 loops=1)
+         Storage: Memory  Maximum Storage: 7488kB
+         Buffers: shared hit=1047309
+ Planning:
+   Buffers: shared hit=115
+ Planning Time: 1.143 ms
+ Execution Time: 1364.150 ms
+(28 rows)
+
+Time: 1369.003 ms (00:01.369)
+                                                                                                     QUERY PLAN                                                                                                     
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=3867.10..3867.11 rows=1 width=4) (actual time=25.762..25.765 rows=1.00 loops=1)
+   Buffers: shared hit=33620
+   CTE effacees
+     ->  Delete on integration_executions x  (cost=0.00..3776.27 rows=4037 width=18) (actual time=0.179..24.514 rows=4059.00 loops=1)
+           Buffers: shared hit=33620
+           ->  Nested Loop Anti Join  (cost=0.00..3776.27 rows=4037 width=18) (actual time=0.059..20.762 rows=4059.00 loops=1)
+                 Join Filter: (si.execution_id = x.id)
+                 Buffers: shared hit=21430
+                 ->  Nested Loop Anti Join  (cost=0.00..3725.79 rows=4038 width=28) (actual time=0.056..19.106 rows=4059.00 loops=1)
+                       Join Filter: (vi.execution_id = x.id)
+                       Buffers: shared hit=21430
+                       ->  Seq Scan on integration_executions x  (cost=0.00..3675.31 rows=4039 width=22) (actual time=0.050..17.410 rows=4059.00 loops=1)
+                             Filter: ((etat <> ALL ('{en_file,en_cours}'::text[])) AND (demande_le < (now() - '90 days'::interval)) AND (id <> (SubPlan 1)))
+                             Rows Removed by Filter: 101
+                             Buffers: shared hit=21430
+                             SubPlan 1
+                               ->  Limit  (cost=0.55..0.83 rows=1 width=24) (actual time=0.004..0.004 rows=1.00 loops=4059)
+                                     Buffers: shared hit=21309
+                                     ->  Incremental Sort  (cost=0.55..595.50 rows=2080 width=24) (actual time=0.004..0.004 rows=1.00 loops=4059)
+                                           Sort Key: y.demande_le DESC, y.id
+                                           Presorted Key: y.demande_le
+                                           Full-sort Groups: 4059  Sort Method: quicksort  Average Memory: 25kB  Peak Memory: 25kB
+                                           Buffers: shared hit=21309
+                                           ->  Index Scan using integration_executions_instance on integration_executions y  (cost=0.28..504.98 rows=2080 width=24) (actual time=0.003..0.003 rows=2.00 loops=4059)
+                                                 Index Cond: (integration_id = x.integration_id)
+                                                 Filter: (operation = x.operation)
+                                                 Rows Removed by Filter: 2
+                                                 Index Searches: 4059
+                                                 Buffers: shared hit=21309
+                       ->  Seq Scan on vulnerabilites_imports vi  (cost=0.00..0.00 rows=1 width=22) (actual time=0.000..0.000 rows=0.00 loops=4059)
+                 ->  Seq Scan on vulnerabilites_silene_imports si  (cost=0.00..0.00 rows=1 width=22) (actual time=0.000..0.000 rows=0.00 loops=4059)
+   ->  CTE Scan on effacees  (cost=0.00..80.74 rows=4037 width=0) (actual time=0.181..25.404 rows=4059.00 loops=1)
+         Storage: Memory  Maximum Storage: 159kB
+         Buffers: shared hit=33620
+ Planning:
+   Buffers: shared hit=167 read=5
+ Planning Time: 1.037 ms
+ Trigger for constraint vulnerabilites_synchronisations_execution_id_fkey: time=14.242 calls=4059
+ Trigger for constraint vulnerabilites_alh_synchronisations_execution_id_fkey: time=10.060 calls=4059
+ Trigger for constraint vulnerabilites_imports_execution_id_fkey: time=9.603 calls=4059
+ Trigger for constraint vulnerabilites_silene_imports_execution_id_fkey: time=9.625 calls=4059
+ Execution Time: 70.606 ms
+(42 rows)
+
+Time: 72.855 ms
+ROLLBACK
+Time: 0.162 ms

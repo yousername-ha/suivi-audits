@@ -11,15 +11,23 @@
    totaux sont comparés à une requête de
    référence indépendante (sans les fragments SQL du module) : une optimisation qui changerait les droits fait échouer le
    test. Données entièrement fictives. Si PERF_OUT est défini, les mesures sont écrites en JSON à côté
-   (même nom suffixé « -vulnerabilites », pour ne pas écraser celles de performance.test.ts). */
+   (même nom suffixé « -vulnerabilites », pour ne pas écraser celles de performance.test.ts).
+   PERF-13 (banc du 21/11/2026 sur la version 7.5.0) : le jeu porte désormais une veille chargée (10 000 avis du CERT-FR et
+   du CERT Santé, 1 à 6 CVE citées, la moitié présentes sur le parc). Sans avis, la lecture des faits des avis ne coûtait
+   rien et le défaut était invisible : avant le correctif, ce même jeu donne 2,7 à 3,7 s pour les constats, les machines,
+   la vue d'ensemble et la lecture des faits seule (126 ms après). */
 import fs from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestApp, login, makeUser, type Agent, type TestApp, type TestUser } from './helpers.js';
+import { lireFaitsCve } from '../src/vulnerabilites/sources.js';
 
 const V = '/api/vulnerabilites';
 const MACHINES = 1000;
 const CONSTATS = 5000;
 const REPETITIONS = 15;
+/** Veille chargée (PERF-13, banc du 21/11/2026) : sans avis, la lecture des faits des avis ne coûte rien et le défaut est invisible. */
+const AVIS = 10000;
+const SEUIL_FAITS_MS = 300;
 const SEUIL_LISTE_MS = 800;
 const SEUIL_SYNTHESE_MS = 1500;
 const INSTANCE = '0c0c0c0c-0000-4000-8000-000000000001';
@@ -124,6 +132,17 @@ beforeAll(async () => {
       SELECT 'CVE-2099-' || n, CASE WHEN n % 20 = 0 THEN date '2099-02-01' END, (n % 100)::numeric / 10,
              (ARRAY['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'])[1 + n % 4]
       FROM generate_series(10000, 19999) n;
+    -- Veille chargée (PERF-13) : ${AVIS} avis du CERT-FR et du CERT Santé, 1 à 6 CVE citées chacun, la moitié présentes sur
+    -- le parc (CVE-2099-…), l'autre non (CVE-2098-…).
+    INSERT INTO vulnerabilites_veille_avis (source, identifiant, nature, titre, publie_le, cves, cves_lues)
+      SELECT CASE WHEN i <= ${AVIS} / 2 THEN 'cert-fr' ELSE 'cert-sante' END,
+             CASE WHEN i <= ${AVIS} / 2 THEN 'CERTFR-209' || ((i - 1) / 1000) || '-AVI-' || (1000 + (i - 1) % 1000)
+                  ELSE i::text END,
+             CASE WHEN i % 10 = 0 THEN 'alerte' ELSE 'avis' END, 'Avis fictif ' || i,
+             timestamptz '2099-01-01' + (i || ' minutes')::interval,
+             ARRAY(SELECT (CASE WHEN i % 4 < 2 THEN 'CVE-2099-' ELSE 'CVE-2098-' END) || (10000 + (i * 7 + n * 13) % 10000)
+                   FROM generate_series(1, 1 + i % 6) n), true
+      FROM generate_series(1, ${AVIS}) i;
     INSERT INTO vulnerabilites_constats (id, integration_id, plugin_id, nom, gravite, exploitable, fin_support_le, vu_numero)
       SELECT pg_temp.u('c' || j), '${INSTANCE}', 100000 + j, 'Exemple Linux : contrôle fictif ' || j,
              (ARRAY['critique', 'elevee', 'moyenne', 'faible'])[1 + j % 4], j % 9 = 0,
@@ -211,4 +230,54 @@ describe.each(comptes)(`module Vulnérabilités, %s`, (nom, agent, compte) => {
     expect(vue.p95Ms).toBeLessThan(SEUIL_SYNTHESE_MS);
     expect(recherche.p95Ms).toBeLessThan(SEUIL_SYNTHESE_MS);
   }, 120_000);
+});
+
+/* PERF-13 (banc du 21/11/2026) : la lecture des faits des avis, appelée par chaque calcul de priorité, ne doit pas croître
+   comme (nombre d'avis) × (nombre de CVE demandées). Résultat comparé à une requête de référence indépendante. */
+describe('lecture des faits des CVE, veille chargée (PERF-13)', () => {
+  it(`toutes les CVE des constats : médiane sous ${SEUIL_FAITS_MS} ms, mêmes avis que la référence`, async () => {
+    const { rows: demandees } = await t.svc.db.q<{ cve: string }>(
+      'SELECT DISTINCT cve FROM vulnerabilites_constat_cves ORDER BY cve',
+    );
+    const cves = demandees.map((r) => r.cve);
+    expect(cves.length).toBeGreaterThan(9000);
+    // Référence : couples (avis, CVE citée) parmi les CVE demandées, sans le code du module.
+    const reference = new Map(
+      (
+        await t.svc.db.q<{ cve: string; n: number }>(
+          `SELECT c.cve, count(*)::int AS n FROM vulnerabilites_veille_avis a, unnest(a.cves) AS c(cve)
+           WHERE c.cve IN (SELECT cve FROM vulnerabilites_constat_cves) GROUP BY c.cve`,
+        )
+      ).rows.map((r) => [r.cve, r.n]),
+    );
+    expect(reference.size).toBeGreaterThan(5000);
+    await lireFaitsCve(t.svc.db.k, cves); // échauffement
+    const durees: number[] = [];
+    let faits = new Map<string, { avis: unknown[] }>();
+    for (let i = 0; i < 5; i++) {
+      const debut = performance.now();
+      faits = await lireFaitsCve(t.svc.db.k, cves);
+      durees.push(performance.now() - debut);
+    }
+    const lus = new Map([...faits].filter(([, f]) => f.avis.length > 0).map(([cve, f]) => [cve, f.avis.length]));
+    expect(lus).toEqual(reference);
+    const m = {
+      nom: 'faits des CVE (toutes)',
+      medianeMs: Math.round(percentile(durees, 50)),
+      p95Ms: Math.round(percentile(durees, 95)),
+      maxMs: Math.round(Math.max(...durees)),
+    };
+    mesures.push(m);
+    expect(m.medianeMs).toBeLessThan(SEUIL_FAITS_MS);
+  }, 120_000);
+
+  it('une seule CVE : mêmes avis que la référence (lecture par l’index des CVE citées)', async () => {
+    const une = await t.svc.db.one<{ cve: string; n: number }>(
+      `SELECT c.cve, count(*)::int AS n FROM vulnerabilites_veille_avis a, unnest(a.cves) AS c(cve)
+       WHERE c.cve LIKE 'CVE-2099-%' GROUP BY c.cve ORDER BY count(*) DESC, c.cve LIMIT 1`,
+    );
+    expect(une!.n).toBeGreaterThan(0);
+    const faits = await lireFaitsCve(t.svc.db.k, [une!.cve]);
+    expect(faits.get(une!.cve)?.avis.length).toBe(une!.n);
+  });
 });

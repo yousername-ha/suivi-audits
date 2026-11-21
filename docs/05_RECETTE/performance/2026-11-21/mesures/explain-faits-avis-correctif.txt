@@ -1,0 +1,26 @@
+                                                                      QUERY PLAN                                                                       
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=5102.04..5208.17 rows=42450 width=142) (actual time=91.419..93.124 rows=19624.00 loops=1)
+   Sort Key: c.cve, a.source, a.identifiant
+   Sort Method: quicksort  Memory: 2667kB
+   Buffers: shared hit=572
+   ->  Hash Join  (cost=165.73..1839.02 rows=42450 width=142) (actual time=10.928..54.489 rows=19624.00 loops=1)
+         Hash Cond: (c.cve = x.x)
+         Buffers: shared hit=569
+         ->  Nested Loop  (cost=0.00..1559.50 rows=42450 width=150) (actual time=0.033..30.398 rows=38314.00 loops=1)
+               Buffers: shared hit=569
+               ->  Seq Scan on vulnerabilites_veille_avis a  (cost=0.00..710.50 rows=14150 width=193) (actual time=0.015..1.797 rows=14150.00 loops=1)
+                     Buffers: shared hit=569
+               ->  Function Scan on unnest c  (cost=0.00..0.03 rows=3 width=32) (actual time=0.001..0.001 rows=2.71 loops=14150)
+         ->  Hash  (cost=163.23..163.23 rows=200 width=32) (actual time=10.847..10.850 rows=12898.00 loops=1)
+               Buckets: 16384 (originally 1024)  Batches: 1 (originally 1)  Memory Usage: 720kB
+               ->  HashAggregate  (cost=161.23..163.23 rows=200 width=32) (actual time=6.407..7.955 rows=12898.00 loops=1)
+                     Group Key: x.x
+                     Batches: 1  Memory Usage: 809kB
+                     ->  Function Scan on unnest x  (cost=0.00..128.98 rows=12898 width=32) (actual time=1.301..2.157 rows=12898.00 loops=1)
+ Planning:
+   Buffers: shared hit=354
+ Planning Time: 2.928 ms
+ Execution Time: 96.644 ms
+(22 rows)
+
