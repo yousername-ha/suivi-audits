@@ -2,9 +2,35 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
-## [Non publié]
+## [7.5.0] — 2026-11-21
 
 ### Notes de mise à jour
+
+**En bref.** Migrations automatiques additives `090` et `092` à `099` (fréquences de synchronisation, contacts de crise issus
+des comptes, imports Nessus, Silène et Active Directory, tableaux de bord multiples, règles de priorité des vulnérabilités,
+veille réglementaire), sans reprise de données ; aucune commande sur le serveur pour mettre à jour. Pendant la mise à jour,
+la base redémarre une fois (cache de 256 Mo, JIT coupé) et le frontal du site une fois (fichiers de la page de maintenance) :
+la page de suivi annonce ces coupures de quelques secondes et reprend seule. **Changements visibles dès la mise à jour** :
+
+- **nouvelles alertes critiques possibles** : des failles de machines en fin de support passent de P2 à P1, et une alerte
+  P1 close parce que la faille était sous exception se rouvre, marquée « Risque accepté » (détail sous la migration `097`) ;
+- **veille plus fréquente** : CERT-FR, CERT Santé, catalogue KEV et NVD sont collectés toutes les deux heures au lieu d'une
+  fois par jour, et chaque connecteur prêt demande sa première synchronisation dans la minute (détail sous la migration
+  `090`) ;
+- **accueil** : chacun démarre sur le tableau de bord « Global » ; l'ancien tableau affiché et la bascule « Vue analytique
+  Neon / Tableau personnalisable » ne sont plus lus (détail sous la migration `096`) ;
+- **police Lexend**, fenêtres à coins arrondis, boîte d'outils en clair et frises refaites : interface seulement.
+
+**Après la mise à jour, à faire dans l'application** :
+
+1. Relire qui détient le droit de lecture du module Vulnérabilités : il ouvre aussi les noms des objets de l'annuaire
+   importé (migration `099`).
+2. Désigner les contacts de crise parmi les comptes : aucun ne l'est après la mise à jour (migration `092`).
+3. Pour la veille réglementaire : faire autoriser les quatre nouveaux sites en sortie, ouvrir le flux, activer les sources
+   une à une, et cocher le droit DPO dans un rôle personnalisé pour qui qualifie les données personnelles (migration `098`).
+4. Si la nouvelle cadence de la veille ne convient pas, régler les fréquences (écran « Veille » et carte « Intégrations »).
+
+Le détail de chaque migration suit.
 
 **Migration automatique `098`** (lot VR-1 : veille réglementaire, [ADR 0110](docs/adr/0110-veille-reglementaire.md)) :
 **additive** (trois tables `veille_reglementaire_*`, dont la liste des mots-clés d'EUR-Lex ; contrainte des modules recréée
@@ -52,6 +78,7 @@ du journal des collectes de la veille et des exécutions des connecteurs de plus
 chaque source, de chaque instance et de chaque opération, les files en cours et les imports de fichiers sont gardés) ; le
 journal d'audit n'est pas touché. Une remise à vide du travail garde désormais les fréquences choisies pour la veille.
 (session « Module surveillance vulnérabilités SMSI »)
+
 **Migration automatique `099`** (lot AD-1 : rapport de l'Active Directory, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) :
 additive (trois tables `vulnerabilites_ad_*`), durée négligeable, sans reprise de données. Aucune action sur le serveur, aucune
 règle de pare-feu : l'import ne fait aucun appel réseau. Aucun droit nouveau : toute personne qui lit le module
