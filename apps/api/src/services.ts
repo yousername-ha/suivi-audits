@@ -50,6 +50,7 @@ import { PurgeJournaux } from './vulnerabilites/purge-journaux.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
 import { ImportNessus } from './vulnerabilites/import-nessus.js';
+import { AnnuaireAd } from './vulnerabilites/annuaire-ad.js';
 import { ImportSilene } from './vulnerabilites/import-silene.js';
 import { SurfaceSilene } from './vulnerabilites/surface-silene.js';
 import { DepotsTenable } from './vulnerabilites/depots.js';
@@ -238,6 +239,9 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
           lecture de ce qu'il a importé (note, constats, actifs, liaison au périmètre). */
       importSilene: new ImportSilene(db, integrations),
       silene: sileneSurface,
+      /** Lot AD-1 : rapport de l'Active Directory (ADS de l'ANSSI) importé depuis la page « Active Directory » du module ;
+          noms des objets lus point par point (route à part), consultation tracée. */
+      annuaire: new AnnuaireAd(db),
       /** Lot V4d : dépôts de Tenable reliés à un périmètre (périmètre hérité par leurs machines). */
       depots: new DepotsTenable(db, grc),
       surfaceExterne,

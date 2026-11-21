@@ -110,6 +110,7 @@ describe('menu', () => {
       ['vulnerabilites-machines', '/vulnerabilites/machines'],
       ['vulnerabilites-perimetres', '/vulnerabilites/perimetres'],
       ['vulnerabilites-surface', '/vulnerabilites/surface-externe'],
+      ['vulnerabilites-annuaire', '/vulnerabilites/annuaire'],
       ['vulnerabilites-alertes', '/vulnerabilites/alertes'],
       ['vulnerabilites-delais', '/vulnerabilites/delais'],
       ['vulnerabilites-tendances', '/vulnerabilites/tendances'],

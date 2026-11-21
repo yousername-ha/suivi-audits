@@ -871,6 +871,29 @@ de pare-feu, aucun exécutant : le serveur ne joint jamais Silène.
 - **Supprimer** : « Supprimer ce connecteur et tout ce qu'il a importé » (mêmes conditions que pour Nessus) : hôtes,
   constats, imports et notes disparaissent, après saisie de SUPPRIMER ; le journal d'audit reste.
 
+**Rapport de l'Active Directory, import de fichier** ([ADR 0100](adr/0100-module-vulnerabilites.md), lot AD-1) : le rapport
+d'analyse de l'Active Directory remis par le service ADS de l'ANSSI, importé par fichier dans la page **Risques,
+Vulnérabilités, Active Directory**. Ce n'est pas un connecteur : aucune instance, aucune clé, aucune règle de pare-feu, aucun
+exécutant ; le serveur ne joint jamais l'ANSSI ni l'annuaire.
+
+- **Produire le rapport** : lancer la collecte ORADAD (outil de l'ANSSI) sur un poste du domaine, selon la procédure du
+  service ADS, puis transmettre la collecte au service ; il en retourne le rapport d'analyse. La plateforme ne lit **pas** la
+  collecte ORADAD elle-même : seul le rapport, au format **JSON**, s'importe (50 Mo au plus). La forme de ce rapport a été
+  écrite d'après sa seule structure (note globale, progression par niveau, points non conformes et objets concernés) et n'a
+  jamais été vérifiée sur un rapport réel ; un rapport de forme non reconnue est refusé en entier, avec la partie en cause.
+- **Importer** : en bas de la page, « Importer un rapport » (droit d'administrer le module Vulnérabilités), choisir le
+  fichier. Il est lu dans le navigateur ; seuls partent la note, la progression, les points de contrôle non conformes (type,
+  niveau, référence, titre) et, par point, le nombre d'objets et au plus 200 noms courts avec leur nature. Ne partent jamais :
+  mots de passe, empreintes, attributs des comptes, SID, chemins LDAP complets, nom de domaine, nom du fichier. Même limite
+  que les imports Nessus et Silène : trente fichiers commencés par heure et par personne, tous imports confondus.
+- **Droits** : aucun droit nouveau. Les nombres et les noms des objets se lisent avec `vulnerabilites:lire` (les noms
+  font partie du droit « Analyste », branché sur l'accès au module en attendant le lot 3 de l'ADR 0092) ; les noms ne se
+  chargent que point par point, sur demande, et chaque consultation est inscrite au journal d'audit, sans les noms.
+- **Conservation** : seuls les deux derniers imports gardent leurs noms ; les plus anciens ne gardent que leurs nombres.
+  Les noms de ces deux imports sont en clair dans la base de données, donc dans ses sauvegardes : protéger celles-ci en
+  conséquence. « Supprimer » un import (droit d'administrer le module, saisie de SUPPRIMER) efface ses noms et ses nombres ;
+  les sauvegardes déjà faites les gardent jusqu'à leur rotation.
+
 ### 11.11 Veille du module Vulnérabilités (sources publiques)
 
 Aucune étape d'installation supplémentaire : la veille se suit dans l'application, sous **Risques, Vulnérabilités, Veille**, avec le droit `vulnerabilites:lire` ([ADR 0100](adr/0100-module-vulnerabilites.md), lots V2 et V3). Le conteneur de l'API n'a toujours aucun accès réseau sortant : c'est l'exécutant d'exploitation du serveur, installé à l'étape 11.6, qui lit les sources, par un script isolé (`scripts/veille-vulnerabilites.py`, bibliothèque standard de Python, compte sans privilège, délai borné). Sans exécutant, l'écran le dit et aucune collecte n'est faite.

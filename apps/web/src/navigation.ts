@@ -119,6 +119,8 @@ export const FAMILLES: Famille[] = [
         // Lot PC3 : poste de commandement vu par périmètre (cartes, détail par ligne ou au global).
         page('vulnerabilites-perimetres', 'Périmètres', '/vulnerabilites/perimetres', 'vulnerabilites'),
         page('vulnerabilites-surface', 'Surface externe', '/vulnerabilites/surface-externe', 'vulnerabilites'),
+        // Lot AD-1 : rapport de l'Active Directory (ADS de l'ANSSI) ; noms des objets réservés à un droit à part.
+        page('vulnerabilites-annuaire', 'Active Directory', '/vulnerabilites/annuaire', 'vulnerabilites'),
         // Lot V6 : alertes décidées par la plateforme (critique : P1 ; simple : P2), prise en compte avec `modifier`.
         page('vulnerabilites-alertes', 'Alertes', '/vulnerabilites/alertes', 'vulnerabilites'),
         // Lot S1 : délais de correction et exceptions à échéance (mesure, exceptions des failles lues).
