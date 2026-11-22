@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 import { Button, Card, Select, Stack, Text, Textarea, TextInput } from '@mantine/core';
 import {
   GRC_LABELS,
@@ -79,7 +80,9 @@ export function Relations({ smsi, source, sourceKind }: { smsi: string; source: 
         Sélectionnez les données existantes, y compris une version précise de document. Aucune copie n’est créée.
       </Text>
       <ErrorAlert error={error ?? options.error ?? links.error} />
-      <TextInput label="Rechercher un objet lié" value={search} onChange={(e) => setSearch(e.currentTarget.value)} />
+      <BarreFiltres label="Rechercher un objet lié">
+        <TextInput label="Rechercher un objet lié" value={search} onChange={(e) => setSearch(e.currentTarget.value)} />
+      </BarreFiltres>
       <Select
         allowDeselect={false}
         label="Objet ou version de preuve"

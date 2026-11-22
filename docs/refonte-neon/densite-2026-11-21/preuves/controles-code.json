@@ -1,0 +1,200 @@
+{
+  "dateLocale": "2026-11-21T15:08:59+01:00",
+  "node": "26.13.0",
+  "base": "15dc5a6748f6105b6a1367fa7e3a3c944521efd5",
+  "note": "Contrôles du code après Layout/verre, avant commit. Vitest web ciblé 67 tests + UI 285. Aucune suite Docker/API ni CI complète exécutée.",
+  "resultats": [
+    {
+      "controle": "typecheck-ui",
+      "cwd": "<racine>",
+      "commandes": [
+        [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "packages/ui/tsconfig.json",
+          "--noEmit"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 10.24,
+      "resultat": "OK"
+    },
+    {
+      "controle": "typecheck-e2e",
+      "cwd": "<racine>",
+      "commandes": [
+        [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tests/e2e/tsconfig.json",
+          "--noEmit"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 15.5,
+      "resultat": "OK"
+    },
+    {
+      "controle": "lint",
+      "cwd": "<racine>",
+      "commandes": [
+        [
+          "node",
+          "node_modules/eslint/bin/eslint.js",
+          "apps/web/scripts/mantine-css-vars.ts",
+          "apps/web/src/components/Layout.tsx",
+          "apps/web/src/components/OngletsRubriques.tsx",
+          "apps/web/src/grc/CommandesRisque.tsx",
+          "apps/web/src/grc/RegistreRisques.tsx",
+          "apps/web/src/main.tsx",
+          "apps/web/src/pilotage/Plans.tsx",
+          "apps/web/src/vulnerabilites/Alertes.tsx",
+          "apps/web/src/vulnerabilites/AnnuaireAd.tsx",
+          "apps/web/src/vulnerabilites/DelaisExceptions.tsx",
+          "apps/web/src/vulnerabilites/EnteteVulnerabilites.tsx",
+          "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+          "apps/web/src/vulnerabilites/Machines.tsx",
+          "apps/web/src/vulnerabilites/MotsNonMasques.tsx",
+          "apps/web/src/vulnerabilites/Perimetres.tsx",
+          "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+          "apps/web/src/vulnerabilites/Rapport.tsx",
+          "apps/web/src/vulnerabilites/SeuilsPriorite.tsx",
+          "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+          "apps/web/src/vulnerabilites/Tendances.tsx",
+          "apps/web/src/vulnerabilites/Veille.tsx",
+          "apps/web/src/vulnerabilites/VueEnsemble.tsx",
+          "apps/web/src/vulnerabilites/perimetres.ts",
+          "apps/web/test/navigation-dense.test.tsx",
+          "apps/web/test/vulnerabilites-densite.test.tsx",
+          "packages/ui/src/tokens.ts",
+          "tests/e2e/specs/parcours.spec.ts",
+          "tests/e2e/specs/recette-cartographie.spec.ts",
+          "tests/e2e/specs/zz-grc.spec.ts",
+          "--max-warnings",
+          "0"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 14.2,
+      "resultat": "OK"
+    },
+    {
+      "controle": "format",
+      "cwd": "<racine>",
+      "commandes": [
+        [
+          "node",
+          "node_modules/prettier/bin/prettier.cjs",
+          "--check",
+          "apps/web/scripts/mantine-css-vars.ts",
+          "apps/web/src/components/Layout.tsx",
+          "apps/web/src/components/OngletsRubriques.tsx",
+          "apps/web/src/grc/CommandesRisque.tsx",
+          "apps/web/src/grc/RegistreRisques.tsx",
+          "apps/web/src/main.tsx",
+          "apps/web/src/pilotage/Plans.tsx",
+          "apps/web/src/vulnerabilites/Alertes.tsx",
+          "apps/web/src/vulnerabilites/AnnuaireAd.tsx",
+          "apps/web/src/vulnerabilites/DelaisExceptions.tsx",
+          "apps/web/src/vulnerabilites/EnteteVulnerabilites.tsx",
+          "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+          "apps/web/src/vulnerabilites/Machines.tsx",
+          "apps/web/src/vulnerabilites/MotsNonMasques.tsx",
+          "apps/web/src/vulnerabilites/Perimetres.tsx",
+          "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+          "apps/web/src/vulnerabilites/Rapport.tsx",
+          "apps/web/src/vulnerabilites/SeuilsPriorite.tsx",
+          "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+          "apps/web/src/vulnerabilites/Tendances.tsx",
+          "apps/web/src/vulnerabilites/Veille.tsx",
+          "apps/web/src/vulnerabilites/VueEnsemble.tsx",
+          "apps/web/src/vulnerabilites/perimetres.ts",
+          "apps/web/test/navigation-dense.test.tsx",
+          "apps/web/test/vulnerabilites-densite.test.tsx",
+          "packages/ui/package.json",
+          "packages/ui/src/neon-densite.css",
+          "packages/ui/src/neon-verre.css",
+          "packages/ui/src/styles.css",
+          "packages/ui/src/tokens.ts",
+          "tests/e2e/specs/parcours.spec.ts",
+          "tests/e2e/specs/recette-cartographie.spec.ts",
+          "tests/e2e/specs/zz-grc.spec.ts"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 12.98,
+      "resultat": "OK"
+    },
+    {
+      "controle": "tests-ui",
+      "cwd": "<racine>/packages/ui",
+      "commandes": [
+        [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 10.53,
+      "resultat": "OK"
+    },
+    {
+      "controle": "build-web",
+      "cwd": "<racine>/apps/web",
+      "commandes": [
+        [
+          "node",
+          "scripts/mantine-css-vars.ts"
+        ],
+        [
+          "node",
+          "node_modules/vite/bin/vite.js",
+          "build"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 13.59,
+      "resultat": "OK"
+    },
+    {
+      "controle": "tests-web",
+      "cwd": "<racine>/apps/web",
+      "commandes": [
+        [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "test/navigation-dense.test.tsx",
+          "test/charte.test.ts",
+          "test/navigation.test.ts",
+          "test/animations-continues.test.ts",
+          "test/vulnerabilites-densite.test.tsx",
+          "test/vulnerabilites-perimetres.test.ts",
+          "test/vulnerabilites-tendances.test.ts"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 37.74,
+      "resultat": "OK"
+    },
+    {
+      "controle": "typecheck-web",
+      "cwd": "<racine>",
+      "commandes": [
+        [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "apps/web/tsconfig.json",
+          "--noEmit"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 123.39,
+      "resultat": "OK"
+    }
+  ]
+}

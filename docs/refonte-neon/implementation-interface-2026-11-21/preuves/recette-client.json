@@ -1,0 +1,231 @@
+{
+  "dateExecution": "2026-11-21",
+  "fuseau": "Europe/Paris",
+  "environnement": "Frontend React compilé, Chromium, API interceptée et données fictives. Aucun serveur métier réel validé.",
+  "casPages": 11,
+  "ouverturesFenetres": 27,
+  "variantesFenetres": 7,
+  "campagnes": [
+    {
+      "groupe": "final-1920",
+      "casPages": 6,
+      "ouverturesFenetres": 14,
+      "erreursClient": 0,
+      "routesInattendues": 0,
+      "mutationsMetier": 0,
+      "cas": [
+        {
+          "cas": "risques-1920-1080-clair-normale",
+          "ouvertures": [
+            "creation",
+            "fiche",
+            "liens"
+          ],
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Pictogrammes des 24 commandes centrés à moins de 1 px",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "creation : 2 parties sans débordement vertical",
+            "Code court, noms longs lisibles dans un menu borné et sélection conservée",
+            "Saisies conservées entre parties, focus et clavier du mini-menu, liens dépliés sans débordement vertical",
+            "fiche : 2 parties sans débordement vertical"
+          ]
+        },
+        {
+          "cas": "fournisseurs-1920-1080-clair-normale",
+          "ouvertures": [
+            "creation",
+            "fiche",
+            "evaluation"
+          ],
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "fiche : 2 parties sans débordement vertical"
+          ]
+        },
+        {
+          "cas": "produits-1920-1080-clair-normale",
+          "ouvertures": [
+            "creation"
+          ],
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus"
+          ]
+        },
+        {
+          "cas": "risques-1920-1080-sombre-normale",
+          "ouvertures": [
+            "creation",
+            "fiche",
+            "liens"
+          ],
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Pictogrammes des 24 commandes centrés à moins de 1 px",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "creation : 2 parties sans débordement vertical",
+            "Code court, noms longs lisibles dans un menu borné et sélection conservée",
+            "Saisies conservées entre parties, focus et clavier du mini-menu, liens dépliés sans débordement vertical",
+            "fiche : 2 parties sans débordement vertical"
+          ]
+        },
+        {
+          "cas": "fournisseurs-1920-1080-sombre-normale",
+          "ouvertures": [
+            "creation",
+            "fiche",
+            "evaluation"
+          ],
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "fiche : 2 parties sans débordement vertical"
+          ]
+        },
+        {
+          "cas": "produits-1920-1080-sombre-normale",
+          "ouvertures": [
+            "creation"
+          ],
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus"
+          ]
+        }
+      ]
+    },
+    {
+      "groupe": "final-1280",
+      "casPages": 3,
+      "ouverturesFenetres": 7,
+      "erreursClient": 0,
+      "routesInattendues": 0,
+      "mutationsMetier": 0,
+      "cas": [
+        {
+          "cas": "risques-1280-720-clair-compacte",
+          "ouvertures": [
+            "creation",
+            "fiche",
+            "liens"
+          ],
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Pictogrammes des 24 commandes centrés à moins de 1 px",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "creation : 3 parties sans débordement vertical",
+            "Code court, noms longs lisibles dans un menu borné et sélection conservée",
+            "Saisies conservées entre parties, focus et clavier du mini-menu, liens dépliés sans débordement vertical",
+            "fiche : 3 parties sans débordement vertical"
+          ]
+        },
+        {
+          "cas": "fournisseurs-1280-720-clair-compacte",
+          "ouvertures": [
+            "creation",
+            "fiche",
+            "evaluation"
+          ],
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "fiche : 2 parties sans débordement vertical"
+          ]
+        },
+        {
+          "cas": "produits-1280-720-clair-compacte",
+          "ouvertures": [
+            "creation"
+          ],
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus"
+          ]
+        }
+      ]
+    },
+    {
+      "groupe": "final-1440",
+      "casPages": 1,
+      "ouverturesFenetres": 3,
+      "erreursClient": 0,
+      "routesInattendues": 0,
+      "mutationsMetier": 0,
+      "cas": [
+        {
+          "cas": "risques-1440-900-sombre-normale",
+          "ouvertures": [
+            "creation",
+            "fiche",
+            "liens"
+          ],
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Pictogrammes des 24 commandes centrés à moins de 1 px",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "creation : 2 parties sans débordement vertical",
+            "Code court, noms longs lisibles dans un menu borné et sélection conservée",
+            "Saisies conservées entre parties, focus et clavier du mini-menu, liens dépliés sans débordement vertical",
+            "fiche : 2 parties sans débordement vertical"
+          ]
+        }
+      ]
+    },
+    {
+      "groupe": "final-4k",
+      "casPages": 1,
+      "ouverturesFenetres": 3,
+      "erreursClient": 0,
+      "routesInattendues": 0,
+      "mutationsMetier": 0,
+      "cas": [
+        {
+          "cas": "risques-3840-2100-sombre-normale",
+          "ouvertures": [
+            "creation",
+            "fiche",
+            "liens"
+          ],
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Pictogrammes des 24 commandes centrés à moins de 1 px",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "Code court, noms longs lisibles dans un menu borné et sélection conservée"
+          ]
+        }
+      ]
+    }
+  ],
+  "stress": {
+    "fournisseur20Controles": "Contrôle de présentation réussi avec données fictives. Ajout/retrait interactif à recetter.",
+    "tableau60Lignes": "Tableau synthétique inséré dans une vraie fenêtre Produit pour éprouver la fragmentation, pas une fonction produit existante. Débordement vertical initial (2065/711 px), corrigé dans le CSS puis contrôle rejoué sans erreur.",
+    "limite": "Pas de recette métier exhaustive de chaque ligne ; ne pas publier les images du tableau synthétique comme fonctionnalité existante."
+  },
+  "limites": [
+    "Les mesures de débordement et le parcours des parties ne prouvent pas à eux seuls l’absence de toute coupure visuelle : revoir les groupes et limites de page.",
+    "Des noms de partie génériques/répétés et des parties très peu remplies restent à améliorer.",
+    "127 déclarations inventoriées, non 127 fenêtres testées individuellement.",
+    "Pas de recette Docker/API/base, E2E serveur, validation humaine, mise en production ou approbation automatique des références visuelles."
+  ]
+}

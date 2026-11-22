@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Configuration GRC : échelles, matrices, correspondances, critères et taxonomies versionnés (ADR 0038). Cet écran se
    trouve dans Paramètres → Configuration GRC (la rubrique « Configuration des analyses » du menu Risques est retirée, ADR 0090). Aucune valeur n'est fournie par défaut ; des modèles peuvent être adoptés à la demande. */
 import {
@@ -158,7 +159,7 @@ function Liste({
   return (
     <Stack>
       <Group align="end" justify="space-between">
-        <Group align="end">
+        <BarreFiltres label="Méthodes et modèles">
           <TextInput label="Recherche" value={texte} onChange={(e) => setTexte(e.currentTarget.value)} />
           <Select
             label="État"
@@ -176,7 +177,7 @@ function Liste({
             value={famille}
             onChange={setFamille}
           />
-        </Group>
+        </BarreFiltres>
         {action}
       </Group>
       <ErrorAlert error={q.error} />

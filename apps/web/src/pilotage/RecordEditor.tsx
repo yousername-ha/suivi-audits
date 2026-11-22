@@ -1,3 +1,5 @@
+import { APropos } from '@suivi/ui';
+import { BarreFiltres } from '../components/BarreFiltres';
 import {
   Alert,
   Button,
@@ -256,7 +258,7 @@ export function RecordEditor({
             {object && <Tabs.Tab value="history">Historique</Tabs.Tab>}
           </Tabs.List>
           <Tabs.Panel value="details" pt="md">
-            <Stack>
+            <Stack className="fenetre-formulaire">
               <TextInput
                 label="Intitulé"
                 value={name}
@@ -323,12 +325,16 @@ export function RecordEditor({
           </Tabs.Panel>
           <Tabs.Panel value="links" pt="md">
             <Stack>
-              <Text>Reliez les référentiels, exigences, processus, actifs, risques ou documents déjà présents.</Text>
-              <TextInput
-                label="Rechercher une référence"
-                value={search}
-                onChange={(e) => setSearch(e.currentTarget.value)}
-              />
+              <APropos label="Aide et précisions">
+                <Text>Reliez les référentiels, exigences, processus, actifs, risques ou documents déjà présents.</Text>
+              </APropos>
+              <BarreFiltres label="Rechercher une référence">
+                <TextInput
+                  label="Rechercher une référence"
+                  value={search}
+                  onChange={(e) => setSearch(e.currentTarget.value)}
+                />
+              </BarreFiltres>
               <MultiSelect
                 label="Éléments liés"
                 searchable

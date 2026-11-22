@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Lot A : catalogue et opérations du serveur, composants et tokens Sauge existants. */
 import { Alert, Button, Card, FileInput, Group, Modal, Stack, Table, Text, TextInput, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -199,7 +200,13 @@ export function OperationsPanel() {
             Les 200 archives les plus récentes de la destination configurée. L’empreinte prouve l’intégrité du fichier ;
             une vérification de structure ne remplace pas une restauration de recette isolée.
           </Text>
-          <TextInput label="Rechercher une archive" value={filter} onChange={(e) => setFilter(e.currentTarget.value)} />
+          <BarreFiltres label="Rechercher une archive">
+            <TextInput
+              label="Rechercher une archive"
+              value={filter}
+              onChange={(e) => setFilter(e.currentTarget.value)}
+            />
+          </BarreFiltres>
           {!archives.length && (
             <Text size="sm" c="dimmed">
               Aucune archive disponible pour ce filtre.

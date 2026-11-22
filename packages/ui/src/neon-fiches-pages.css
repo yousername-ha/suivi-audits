@@ -1,0 +1,144 @@
+/* Fiches longues : pages horizontales discrètes, sans défilement vertical de la fenêtre ni déplacement du formulaire. */
+[data-fiche-paginee] {
+  block-size: calc(100dvh - 2 * var(--modal-y-offset, 5dvh));
+}
+[data-fiche-paginee][data-full-screen],
+.mantine-Drawer-content[data-fiche-paginee] {
+  block-size: 100dvh;
+}
+html:has([data-fiche-paginee]) {
+  overflow: hidden;
+}
+[data-fiche-paginee] > :is(.mantine-Modal-body, .mantine-Drawer-body) {
+  overflow: hidden;
+  column-count: 1;
+  column-fill: auto;
+  column-gap: calc(2 * var(--suivi-padding-dialogue));
+  overscroll-behavior: contain;
+}
+[data-fiche-paginee][data-fiche-pied] > :is(.mantine-Modal-body, .mantine-Drawer-body) {
+  padding-block-end: 4rem;
+}
+[data-fiche-paginee][data-fiche-pied='grand'] > :is(.mantine-Modal-body, .mantine-Drawer-body) {
+  padding-block-end: 6rem;
+}
+[data-fiche-paginee] :is(.mantine-InputWrapper-root, tr, .mantine-Group-root:has(> .mantine-InputWrapper-root)) {
+  break-inside: avoid;
+}
+[data-fiche-paginee] [data-fiche-titre] {
+  break-inside: avoid;
+  break-after: avoid;
+}
+[data-fiche-paginee] .mantine-Card-root {
+  break-inside: avoid;
+}
+[data-fiche-paginee] :is(.data-table, .table-wrap) {
+  display: contents;
+  overflow: visible;
+}
+[data-fiche-paginee] table {
+  inline-size: 100%;
+  min-inline-size: 0;
+  table-layout: fixed;
+}
+[data-fiche-paginee] :is(th, td) {
+  overflow-wrap: anywhere;
+}
+[data-fiche-paginee] :is(.mantine-Checkbox-root, .mantine-Radio-root, .mantine-Switch-root) {
+  break-inside: avoid;
+}
+[data-fiche-paginee] textarea {
+  max-block-size: 12rem;
+  overflow: auto;
+}
+[data-fiche-paginee] [data-fiche-actions-fixes] {
+  position: absolute !important;
+  inset-inline: var(--suivi-padding-dialogue);
+  top: auto;
+  bottom: var(--suivi-padding-dialogue);
+  margin: 0;
+  z-index: 6;
+  background: var(--suivi-surface);
+}
+.fiche-mini-menu-hote {
+  flex: none;
+  block-size: 2.5rem;
+  padding-inline: var(--suivi-padding-dialogue);
+  border-block-end: var(--suivi-trait-l) solid var(--suivi-trait);
+}
+.fiche-mini-menu-hote[hidden] {
+  display: none;
+}
+.fiche-mini-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  block-size: 100%;
+  overflow: auto hidden;
+  scrollbar-width: none;
+}
+.fiche-mini-menu button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-2xs) var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid transparent;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  color: var(--mantine-color-dimmed);
+  font: inherit;
+  font-size: var(--mantine-font-size-xs);
+  cursor: pointer;
+}
+.fiche-mini-menu button span {
+  opacity: 0.65;
+}
+.fiche-mini-menu button:is([aria-current='page'], :hover, :focus-visible) {
+  color: var(--neon-titre);
+  border-color: var(--menu-teinte-pilotage);
+  background: color-mix(in srgb, var(--menu-teinte-pilotage) 10%, transparent);
+}
+
+/* Commandes sobres, aux couleurs du menu ; les couleurs métier explicites conservent leur sémantique. */
+html .mantine-Button-root.commande-neon {
+  color: var(--neon-titre);
+  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--menu-teinte-pilotage) 65%, var(--neon-titre));
+  background: transparent;
+  box-shadow: none;
+  font-weight: 500;
+}
+html .mantine-Button-root.commande-neon:hover {
+  border-color: var(--menu-teinte-pilotage);
+  background: color-mix(in srgb, var(--menu-teinte-pilotage) 10%, transparent);
+}
+html .mantine-Button-root.commande-neon:is([aria-pressed='true'], [aria-selected='true'], [data-active='true']) {
+  border-color: var(--menu-teinte-pilotage);
+  background: color-mix(in srgb, var(--menu-teinte-pilotage) 12%, transparent);
+}
+html .mantine-Button-root.commande-neon:is([data-variant='subtle'], [data-variant='transparent']) {
+  color: var(--mantine-color-dimmed);
+  border-color: transparent;
+  background: transparent;
+}
+html .mantine-Button-root.commande-neon:is(:disabled, [data-disabled]) {
+  opacity: 0.5;
+}
+html .auth-panneau .mantine-Button-root.commande-neon {
+  color: var(--suivi-nav-texte);
+  border-color: color-mix(in srgb, var(--menu-teinte-pilotage) 65%, var(--suivi-nav-texte));
+}
+
+/* Le flux bloc fragmente les sections entre les parties ; un Stack flex pouvait peindre une section sous le pied fixe. */
+[data-fiche-paginee] > :is(.mantine-Modal-body, .mantine-Drawer-body) > .mantine-Stack-root {
+  display: block;
+}
+[data-fiche-paginee]
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  > .mantine-Stack-root
+  > :not(:first-child):not([data-fiche-actions-fixes]) {
+  margin-block-start: var(--stack-gap, var(--mantine-spacing-sm));
+}
+[data-fiche-paginee] .a-propos:not([open]) {
+  break-inside: avoid;
+}

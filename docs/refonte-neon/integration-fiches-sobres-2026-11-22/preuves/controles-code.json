@@ -1,0 +1,198 @@
+{
+  "date": "2026-11-22",
+  "fuseau": "Europe/Paris",
+  "environnement": "Node 26.13.0, dépendances existantes ; frontend sans API/base réelle.",
+  "testsDistincts": {
+    "web": 937,
+    "ui": 285,
+    "total": 1222
+  },
+  "premiereCampagne": [
+    {
+      "controle": "lint",
+      "cwd": ".",
+      "commandes": [
+        [
+          "node",
+          "node_modules/eslint/bin/eslint.js",
+          "apps/web/src/main.tsx",
+          "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+          "apps/web/test/proportions-champs.test.ts",
+          "packages/ui/src/DescriptionChamp.tsx",
+          "packages/ui/src/theme.ts",
+          "packages/ui/src/tokens.ts",
+          "--max-warnings",
+          "0"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 3.68
+    },
+    {
+      "controle": "format",
+      "cwd": ".",
+      "commandes": [
+        [
+          "node",
+          "node_modules/prettier/bin/prettier.cjs",
+          "--check",
+          "apps/web/src/main.tsx",
+          "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+          "apps/web/test/proportions-champs.test.ts",
+          "packages/ui/package.json",
+          "packages/ui/src/DescriptionChamp.tsx",
+          "packages/ui/src/neon-fiches-sobres.css",
+          "packages/ui/src/theme.ts",
+          "packages/ui/src/tokens.ts"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 1.49
+    },
+    {
+      "controle": "typecheck-ui",
+      "cwd": ".",
+      "commandes": [
+        [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "packages/ui/tsconfig.json",
+          "--noEmit"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 8.18
+    },
+    {
+      "controle": "tests-ui",
+      "cwd": "./packages/ui",
+      "commandes": [
+        [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--maxWorkers=2"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 3.09
+    },
+    {
+      "controle": "build-web",
+      "cwd": "./apps/web",
+      "commandes": [
+        [
+          "node",
+          "scripts/mantine-css-vars.ts"
+        ],
+        [
+          "node",
+          "node_modules/vite/bin/vite.js",
+          "build"
+        ]
+      ],
+      "codeRetour": 1,
+      "dureeSecondes": 1.03
+    },
+    {
+      "controle": "typecheck-web",
+      "cwd": ".",
+      "commandes": [
+        [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "apps/web/tsconfig.json",
+          "--noEmit"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 49.97
+    },
+    {
+      "controle": "tests-web",
+      "cwd": "./apps/web",
+      "commandes": [
+        [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--maxWorkers=2"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 55.66
+    }
+  ],
+  "repriseFinale": [
+    {
+      "controle": "typecheck-ui-reprise",
+      "commande": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "-p",
+        "packages/ui/tsconfig.json",
+        "--noEmit"
+      ],
+      "codeRetour": 0
+    },
+    {
+      "controle": "typecheck-web-reprise",
+      "commande": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "-p",
+        "apps/web/tsconfig.json",
+        "--noEmit"
+      ],
+      "codeRetour": 0
+    },
+    {
+      "controle": "lint-reprise",
+      "commande": [
+        "node",
+        "node_modules/eslint/bin/eslint.js",
+        "packages/ui/src/DescriptionChamp.ts",
+        "packages/ui/src/theme.ts",
+        "--max-warnings",
+        "0"
+      ],
+      "codeRetour": 0
+    },
+    {
+      "controle": "generation-variables-et-build-apres-remplacement-tsx",
+      "codeRetour": 0
+    },
+    {
+      "controle": "build-apres-finition-couleurs",
+      "codeRetour": 0
+    },
+    {
+      "controle": "build-apres-correction-fragmentation",
+      "codeRetour": 0
+    },
+    {
+      "controle": "format-et-lint-finaux",
+      "codeRetour": 0
+    },
+    {
+      "controle": "contrats-rendu-composant-final",
+      "commande": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "test/proportions-champs.test.ts",
+        "--maxWorkers=2"
+      ],
+      "codeRetour": 0,
+      "testsRejoues": 8
+    }
+  ],
+  "incidentCorrige": "Le thème importait initialement un composant TSX, illisible par le générateur Node natif des variables CSS. Remplacé par DescriptionChamp.ts utilisant createElement ; génération, build, TypeScript et lint rejoués avec succès.",
+  "limites": [
+    "Les suites web/UI ont été exécutées avant la conversion JSX → createElement et les dernières finitions CSS ; les contrats du composant et contrôles ciblés sont rejoués sur les sources finales.",
+    "Pas de test serveur/API/base/Docker, E2E serveur ou validation humaine du rendu sombre.",
+    "Ne pas compter les rejeux de contrats comme des tests distincts supplémentaires."
+  ]
+}

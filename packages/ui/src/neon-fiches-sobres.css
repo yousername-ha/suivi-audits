@@ -1,0 +1,189 @@
+/* Socle de fiches sobre retenu le 22/11/2026. Source de couleur : FICHES dans tokens.ts.
+   Les descriptions restent ordinaires hors fiche ; aucun champ ni formulaire n'est déplacé. */
+.champ-aide-bouton {
+  display: none;
+}
+html :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir)) {
+  --suivi-surface: var(--fiche-fond);
+  --suivi-trait: var(--fiche-separateur);
+  --neon-titre: var(--fiche-encre);
+  --mantine-color-text: var(--fiche-encre);
+  --mantine-color-dimmed: var(--fiche-secondaire);
+  color: var(--fiche-encre);
+  border: var(--suivi-trait-l) solid var(--fiche-bord);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--fiche-fond);
+  box-shadow: 0 1.25rem 3.75rem -1.25rem color-mix(in srgb, var(--fiche-ombre) 24%, transparent);
+}
+html :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--suivi-trait-l);
+  padding: 0;
+  mask: none;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--fiche-focus) 65%, var(--fiche-bord)),
+    var(--fiche-bord) 48%,
+    color-mix(in srgb, var(--neon-violet) 28%, var(--fiche-bord))
+  );
+  pointer-events: none;
+}
+html :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))::after {
+  content: none;
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-header, .mantine-Drawer-header) {
+  padding-block: var(--mantine-spacing-sm);
+  border-block-end: var(--suivi-trait-l) solid var(--fiche-separateur);
+  background: var(--fiche-fond);
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-title, .mantine-Drawer-title) {
+  color: var(--fiche-encre);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-close, .mantine-Drawer-close) {
+  border: 0;
+  border-radius: var(--mantine-radius-xs);
+  background: transparent;
+  color: var(--fiche-secondaire);
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-InputWrapper-label {
+  padding-inline-end: var(--mantine-spacing-lg);
+  color: var(--fiche-encre);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 450;
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input {
+  border-radius: var(--mantine-radius-xs);
+  box-shadow: none;
+  font-size: 0.8125rem;
+}
+/* Un état vert/orange/rouge explicitement porté par le champ ou son groupe garde ses couleurs métier. */
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input:not([data-tone]):not(:where([data-tone]) .mantine-Input-input) {
+  color: var(--fiche-encre);
+  border: var(--suivi-trait-l) solid var(--fiche-trait);
+  background: var(--fiche-fond);
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input:focus-within {
+  border-color: var(--fiche-focus);
+  box-shadow: 0 0 0 var(--suivi-trait-focus) color-mix(in srgb, var(--fiche-focus) 10%, transparent);
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input[data-error] {
+  border-color: var(--mantine-color-error);
+}
+html :is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-InputWrapper-root:has(> .champ-aide-bouton) {
+  position: relative;
+}
+html
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-InputWrapper-root
+  > .champ-aide-texte:not([data-aide-ouverte]) {
+  display: none;
+}
+html :is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-InputWrapper-root > .champ-aide-bouton {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: 0;
+  display: grid;
+  place-items: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--fiche-secondaire);
+  cursor: pointer;
+}
+.champ-aide-bouton svg {
+  width: 0.8125rem;
+  height: 0.8125rem;
+}
+.champ-aide-bouton:focus-visible {
+  outline: var(--suivi-trait-l) solid var(--fiche-focus);
+  outline-offset: var(--suivi-trait-focus);
+}
+html :is(.mantine-Modal-body, .mantine-Drawer-body) .mantine-InputWrapper-root > .champ-aide-texte[data-aide-ouverte] {
+  display: block;
+  margin-block-start: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-inline-start: calc(2 * var(--suivi-trait-l)) solid var(--fiche-focus);
+  background: var(--fiche-doux);
+  color: var(--fiche-secondaire);
+  font-size: var(--mantine-font-size-xs);
+}
+html :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir)) .fiche-mini-menu-hote {
+  background: var(--fiche-fond);
+  border-color: var(--fiche-separateur);
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  .fiche-mini-menu
+  button:is([aria-current='page'], :hover, :focus-visible) {
+  color: var(--fiche-accent);
+  border-color: var(--fiche-trait);
+  background: var(--fiche-doux);
+}
+html :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir)) .commande-neon {
+  color: var(--fiche-accent);
+  border: var(--suivi-trait-l) solid var(--fiche-accent);
+  border-radius: var(--mantine-radius-xs);
+  background: transparent;
+  box-shadow: none;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 500;
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  .commande-neon:is([data-variant='subtle'], [data-variant='transparent']) {
+  border-color: transparent;
+  color: var(--fiche-secondaire);
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  .commande-neon:is(:disabled, [data-disabled]) {
+  border-color: var(--fiche-separateur);
+  color: var(--fiche-secondaire);
+  background: var(--fiche-doux);
+}
+html :is(.mantine-Modal-body, .mantine-Drawer-body) .fenetre-actions {
+  padding-block: var(--mantine-spacing-xs);
+  border-block-start: var(--suivi-trait-l) solid var(--fiche-separateur);
+}
+/* Les tiroirs conservent leur ancrage ; les modes plein écran restent sans coins décoratifs. */
+html .mantine-Drawer-content:not(.nav-tiroir) {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+html .mantine-Modal-content[data-full-screen] {
+  border-radius: 0;
+}
+@media (forced-colors: active) {
+  html :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir)) {
+    border: var(--suivi-trait-l) solid CanvasText;
+  }
+}

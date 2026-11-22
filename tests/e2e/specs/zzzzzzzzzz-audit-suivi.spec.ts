@@ -85,7 +85,7 @@ test('Gestion de l’audit : carte, préparation, cycle, couverture et organisat
     await creneau.getByRole('button', { name: new RegExp(`Personne fictive ${suffixe}`) }).click();
     await creneau.getByRole('button', { name: 'Enregistrer' }).click();
     await expect(creneau.getByText('Créneau enregistré.')).toBeVisible();
-    await creneau.getByRole('button', { name: 'Fermer' }).click();
+    await creneau.getByRole('button', { name: 'Fermer', exact: true }).click();
     await expect(page.getByText(`Entretien fictif ${suffixe}`).first()).toBeVisible();
     await page.goto('/pilotage/audit-planning');
     await expect(

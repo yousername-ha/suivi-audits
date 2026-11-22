@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Évaluations de sécurité des fournisseurs par le clausier (reprise de la page « Évaluations sécurité » de l'outil de
    suivi). Évaluation facultative, en plus des évaluations natives de l'organisation : grille du Clausier Conformité
    Numérique 2026 du Club RSSI Santé (licence CC BY-NC-SA 4.0, usage non commercial). La note A à E est indicative
@@ -271,7 +272,7 @@ function DetailEvaluation({
         </Stack>
       </Card>
       <Group justify="space-between">
-        <Group>
+        <BarreFiltres label="Points du clausier">
           <SegmentedControl
             aria-label="Filtre des points"
             value={filtre}
@@ -285,7 +286,7 @@ function DetailEvaluation({
           <Text size="sm" c="dimmed">
             {points.length} points
           </Text>
-        </Group>
+        </BarreFiltres>
         {modifiable && (
           <Group>
             {can('ecarts', 'modifier') && (

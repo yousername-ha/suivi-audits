@@ -1,0 +1,56 @@
+{
+  "date": "2026-11-22",
+  "fuseau": "Europe/Paris",
+  "frontend": "013ad9b68516b1d8e11b4f24d207c3eeea49dea7",
+  "cas": 1,
+  "ouverturesFenetres": 1,
+  "sourceDonnees": "Frontend compilé, API interceptée, exemples fictifs. Aucun compte ni serveur métier réel.",
+  "mesuresCss": {
+    "largeur": 736,
+    "hauteur": 479,
+    "hauteurPropositionMaintenance": 613.8125,
+    "hauteurReduitePourcent": 22.0
+  },
+  "pointsControles": [
+    "Une seule apparence de boîte d’outils",
+    "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+    "Filtres : ouverture, dimensions, Échap et retour du focus",
+    "Aide contextuelle réelle : ouverture, texte conservé, Échap ferme l’aide et conserve la fenêtre",
+    "Annuler ferme réellement la fenêtre sans écriture métier"
+  ],
+  "erreursJavaScript": 0,
+  "routesInattendues": 0,
+  "mutationsMetier": 0,
+  "sources": [
+    {
+      "fichier": "epure.css",
+      "sha256": "ed0bda68f806f15b84b610fa97e0eee4ca80d39a22f9ae113116974550faf0b3"
+    },
+    {
+      "fichier": "composition-apercu.js",
+      "sha256": "54ca2754ffc1a0b7ef5d3c458cae7d26e030d24c79ba175b94da9d6d5c0ff914"
+    }
+  ],
+  "captures": [
+    {
+      "fichier": "captures/fiche-epuree-claire-hd.png",
+      "largeurPhysique": 1472,
+      "hauteurPhysique": 960,
+      "pixelRatio": 2,
+      "sha256": "cce36791f917ea12b2932ac33b885bc485cd01c126b0b115bb81df0b873c6f63"
+    },
+    {
+      "fichier": "captures/fiche-epuree-dans-application.png",
+      "largeurPhysique": 3200,
+      "hauteurPhysique": 2000,
+      "pixelRatio": 2,
+      "sha256": "66f8796828a66c7e17b3baf18b3c2c00f17f0cf6d940def038096eab1a6166ab"
+    }
+  ],
+  "incidentIntermediaire": "Échap fermait aussi la fenêtre dans la première version du prototype d’aide. L’interception clavier de cet aperçu a été corrigée, puis le contrôle a réussi. Ne pas recopier ce gestionnaire global dans le produit.",
+  "limites": [
+    "Un seul exemple clair demandé pour juger la direction. Pas de recette complète de la plateforme ou du thème sombre.",
+    "Les boutons d’aide et Annuler sont ajoutés par un outil d’aperçu dans le vrai formulaire. Une intégration React native reste nécessaire après validation.",
+    "Pas de tests métier/API/base/Docker ni validation humaine. Le code produit est inchangé."
+  ]
+}

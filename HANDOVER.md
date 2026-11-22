@@ -1,6 +1,53 @@
 # Reprendre Suivi des audits
 
-> **Reprise la plus récente : [20/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-20.md)** (module Vulnérabilités,
+> **22/11/2026 — style sobre retenu et intégré** : [sources et recette](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md).
+> Réponse « Top » sur la proposition claire ; aide React native via Mantine, palette centralisée, CSS commun clair/sombre,
+> Annuler natif dans la fiche Produit. 1 222 tests web/UI réussis. Déclinaison sombre à valider visuellement, recette serveur
+> non exécutée. Les limites du découpage automatique des fiches restent documentées, sans généralisation de leur validation.
+>
+
+> **22/11/2026 — proposition graphique des fenêtres** : [galerie clair/sombre](docs/refonte-neon/propositions/fenetres-maintenance-2026-11-22/README.md)
+> dans le style de la page de maintenance : surfaces bleu nuit/blanc bleuté, contours cyan et accents violets discrets,
+> champs rectangulaires et commandes en contour. Sept variantes, 28 images dont détails HD et exemples compacts.
+> Palette du cube refusée ; nouvelle [fiche sobre inspirée des captures Tenacy](docs/refonte-neon/propositions/fenetres-epurees-2026-11-22/README.md), un exemple clair à valider.
+> CSS isolé, non importé dans le produit ; 12 cas client / 24 ouvertures avec API fictive. Validation graphique attendue.
+> Les limites du prototype de mini-menu restent à corriger séparément ; aucune recette serveur ou livraison de version.
+>
+
+> **22/11/2026 — dossier d’implémentation pour l’IA** : [point d’entrée](docs/refonte-neon/implementation-interface-2026-11-21/README.md),
+> [prompt complet](docs/refonte-neon/implementation-interface-2026-11-21/PROMPT-IA.md) et résumé technique avec neuf captures natives.
+> Sources, règles et limites regroupées pour comparer l’existant avant report. Proportions `2742e16`, commandes bleu/cyan
+> en contour et prototype de mini-menu sans défilement vertical. Ce prototype reste à finaliser : limites de partie,
+> sections trop vides, titres et pieds atypiques. 1 221 tests web/UI réussis, contrôles du code et 11 cas client / 27 ouvertures
+> de 7 variantes ; API simulée. Validation humaine et recette Docker/API réelle non exécutées. Aucune fusion ou publication.
+>
+
+> **21/11/2026 — proportions et alignements des fenêtres** : [complément documenté](docs/refonte-neon/proportions-fenetres-2026-11-21/README.md).
+> Largeurs différenciées pour codes, dates, états et responsables ; aides sous les saisies et alignement à gauche.
+> Fiches lg/xl ramenées à 736/864 px à 100 %, grandes présentations graphiques conservées. Inventaire de 302 sélecteurs,
+> sans prétendre les avoir tous ouverts individuellement. Validation des images et recette Docker réelle à effectuer.
+>
+
+> **21/11/2026 — harmonisation transversale de l’interface** : le [dossier et les images](docs/refonte-neon/harmonisation-plateforme-2026-11-21/README.md)
+> décrivent le complément au lot de densité : 58 points d’intégration dans 50 fichiers consommateurs pour les vues,
+> recherches et filtres ; cadre commun des fenêtres, formulaires courts en colonnes, aides repliées et icônes centrées.
+> **1 214 tests web/UI réussis**, TypeScript web/UI/E2E, lint, format et build verts ; 72 cas de pages et 56 ouvertures de
+> 7 variantes de fenêtres, API simulée et données fictives. Les 127 déclarations de fenêtres sont inventoriées, sans
+> prétendre avoir testé chaque formulaire. Prochaine action : validation des images puis recette Docker/API réelle,
+> non exécutée ici. Aucune fusion de PR, publication de version ou mise en production.
+> Code du complément : `e29d6f6` ; raccordement de la 7.5.1 (`01130ce`), métadonnées seulement. Les changements UI restent non publiés.
+>
+
+> **21/11/2026 — refonte de densité contrôlée localement** : le [dossier de reprise et de recette](docs/refonte-neon/densite-2026-11-21/README.md)
+> décrit le lot parti de `15dc5a6748f6105b6a1367fa7e3a3c944521efd5` (7.5.0), après analyse d’une vidéo privée non publiée.
+> Le nouveau normal est resserré au-delà de l’ancien compact ; le nouveau compact resserre encore le cadre et les commandes.
+> Sont inclus : planning SVG à l’échelle 1:1, aides Vulnérabilités repliées, correction de collision du cache des périmètres,
+> retrait visuel de la signature d’organisation et du badge Live, thème en icônes et onglets/actions d’ajout en verre transparent.
+> Authentification, API, base et sources de cartographie/génération SMSI inchangées. **352 tests ciblés réussis**, TypeScript/lint/format/build verts ; 60 rendus finaux et 24 cas
+> d’interaction client sans erreur (API interceptée, données fictives). Captures et mesures dans le dossier. Prochaine action :
+> validation visuelle et recette Docker/API réelle, non exécutée ici ; aucune fusion ou mise en production effectuée.
+>
+> **Dernière reprise générale : [20/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-20.md)** (module Vulnérabilités,
 > [ADR 0100](docs/adr/0100-module-vulnerabilites.md) : recherche du module, intégrations dans la page Plateforme, fréquences de
 > synchronisation, imports Nessus et Silène, surface externe à deux sources en page entière, migrations `090`, `093`, `094` et
 > `095` ; correctifs de performance PERF-01 à PERF-04 en PR ; décisions du RSSI prises et en attente, ordre de la file).

@@ -1,0 +1,179 @@
+/* Proposition de composition sobre, à valider. Appliquer après la proposition maintenance, hors produit. */
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light'] {
+  --fm-fond: #ffffff;
+  --fm-entete: #ffffff;
+  --fm-champ: #ffffff;
+  --fm-champ-fin: #ffffff;
+  --fm-encre: #203244;
+  --fm-secondaire: #637184;
+  --fm-trait: #b5c2cf;
+  --fm-trait-doux: #e1e7ed;
+  --fm-cyan: #165463;
+  --fm-violet: #82719d;
+  --fm-reflet: rgb(22 84 99 / 4%);
+  --fm-reflet-violet: transparent;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir)) {
+  border-radius: 8px;
+  border: 1px solid #ccd6df;
+  background: #ffffff;
+  box-shadow: 0 20px 60px -20px rgb(15 30 48 / 24%);
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))::before {
+  height: 1px;
+  background: linear-gradient(90deg, #67aab5, #d4dce5 48%, #9c8eb6);
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))::after {
+  content: none;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-header, .mantine-Drawer-content:not(.nav-tiroir) > .mantine-Drawer-header) {
+  background: #ffffff;
+  padding-block: 13px;
+  border-block-end: 1px solid #e1e7ed;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-title, .mantine-Drawer-content:not(.nav-tiroir) .mantine-Drawer-title) {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-title, .mantine-Drawer-content:not(.nav-tiroir) .mantine-Drawer-title)::before {
+  content: none;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-close, .mantine-Drawer-content:not(.nav-tiroir) .mantine-Drawer-close) {
+  border: 0;
+  background: transparent;
+  border-radius: 4px;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body) {
+  padding-block-start: 18px;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-InputWrapper-label {
+  color: #344253;
+  font-size: 12px;
+  font-weight: 450;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input {
+  color: #203244;
+  border: 1px solid #b5c2cf;
+  border-radius: 4px;
+  background: #ffffff;
+  box-shadow: none;
+  font-size: 13px;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input:focus-within {
+  border-color: #2e8999;
+  box-shadow: 0 0 0 2px rgb(46 137 153 / 10%);
+  outline: none;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input[data-error] {
+  border-color: var(--mantine-color-error);
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  .mantine-InputWrapper-root[data-aide-contextuelle] {
+  position: relative;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  .mantine-InputWrapper-root[data-aide-contextuelle]
+  .mantine-InputWrapper-label {
+  padding-inline-end: 19px;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  .mantine-InputWrapper-root[data-aide-contextuelle]:not([data-aide-ouverte])
+  > .mantine-InputWrapper-description {
+  display: none;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light'] .fiche-aide-bouton {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: -1px;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #697f90;
+  cursor: pointer;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light'] .fiche-aide-bouton svg {
+  width: 13px;
+  height: 13px;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light'] .fiche-aide-bouton:hover,
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light'] .fiche-aide-bouton:focus-visible {
+  color: #165463;
+  background: #eaf3f5;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  .mantine-InputWrapper-root[data-aide-ouverte]
+  > .mantine-InputWrapper-description {
+  display: block;
+  margin-top: 5px;
+  padding: 7px 9px;
+  border-inline-start: 2px solid #77aeba;
+  color: #556777;
+  background: #f3f7f9;
+  font-size: 12px;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light'] .fiche-mini-menu-hote {
+  background: #ffffff;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  .commande-neon {
+  color: #165463;
+  border: 1px solid #165463;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  .commande-neon:disabled {
+  color: #71838e;
+  border-color: #c8d2da;
+  background: #f8fafb;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light'] .fiche-annuler-proposition {
+  height: var(--suivi-controle-h);
+  padding-inline: 11px;
+  border: 0;
+  border-radius: 4px;
+  color: #5e6c7e;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light'] .fiche-annuler-proposition:hover {
+  background: #eef3f6;
+}
+
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light'] .fiche-aide-bouton:focus-visible {
+  outline: 1px solid #2e8999;
+  outline-offset: 2px;
+}

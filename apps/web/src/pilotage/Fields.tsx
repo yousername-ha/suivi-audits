@@ -264,7 +264,7 @@ export function Fields({
     );
   };
   return (
-    <Stack>
+    <Stack className="fenetre-champs">
       {fields.map(input)}
       {kind === 'risk_study' && (
         <SocleEditeur value={data.baseline} onChange={(v) => onChange('baseline', v)} readonly={readonly} />

@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lot S1) : onglet « Délais et exceptions ». Délais cibles par priorité (réglés dans
    « Seuils de priorité »), mesure des corrections sur une période (délai moyen et médian par priorité, part des corrections
    faites dans les délais ; les mêmes nombres pour tout le monde, sans nom) et exceptions (risques acceptés) en cours,
@@ -19,10 +20,11 @@ import {
   STATUTS_EXCEPTION,
   type StatutException,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan } from '../session';
@@ -153,7 +155,7 @@ export function DelaisExceptionsPage() {
   const v = vue.data;
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Délais et exceptions"
         description="Délai cible de correction par priorité, mesure des corrections et exceptions (risques acceptés) avec leur échéance. Les délais, les échéances et les mesures sont calculés par la plateforme, les mêmes pour tout le monde ; les exceptions ne portent que sur les failles que vous pouvez lire. Aucun nom de machine ici."
       />
@@ -185,7 +187,7 @@ export function DelaisExceptionsPage() {
             <Title order={2} size="h4">
               Mesure des corrections
             </Title>
-            <Group align="flex-end">
+            <BarreFiltres label="Affichage et filtres">
               <Select
                 label="Période"
                 allowDeselect={false}
@@ -198,7 +200,7 @@ export function DelaisExceptionsPage() {
                 Du <span className="horodatage">{fmtDate(v.du)}</span> au{' '}
                 <span className="horodatage">{fmtDate(v.au)}</span>
               </Text>
-            </Group>
+            </BarreFiltres>
             <Text size="sm" c="dimmed">
               Failles passées à « Corrigée » sur la période : durée entre le départ du délai (première présence, ou fin
               d’une exception) et la correction (la proposition « corrigée » de la source, si la décision la confirme),
@@ -224,15 +226,17 @@ export function DelaisExceptionsPage() {
                 </StatusChip>
               ))}
             </Group>
-            <Select
-              label="Statut de l’exception"
-              placeholder="Tous"
-              clearable
-              value={statut || null}
-              onChange={(x) => setStatut((x ?? '') as StatutException | '')}
-              data={STATUTS_EXCEPTION.map((s) => ({ value: s, label: STATUT_EXCEPTION_LIBELLES[s] }))}
-              comboboxProps={{ withinPortal: false }}
-            />
+            <BarreFiltres label="Affichage et filtres">
+              <Select
+                label="Statut de l’exception"
+                placeholder="Tous"
+                clearable
+                value={statut || null}
+                onChange={(x) => setStatut((x ?? '') as StatutException | '')}
+                data={STATUTS_EXCEPTION.map((s) => ({ value: s, label: STATUT_EXCEPTION_LIBELLES[s] }))}
+                comboboxProps={{ withinPortal: false }}
+              />
+            </BarreFiltres>
             <ExceptionsTable exceptions={v.exceptions.filter((e) => !statut || e.statut === statut)} />
           </>
         )}
