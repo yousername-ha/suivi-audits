@@ -15,6 +15,7 @@ Aucune action, ni sur le serveur ni dans l'application.
   dès la mise à jour.
 - Service de mise à jour préparé pour la recherche CPE du module Vulnérabilités : sans effet tant que cette recherche
   n'est pas livrée.
+- Correctifs de performance du socle (liste des registres, synthèse du mur) : sans migration.
 - Migration automatique additive `101` (cinq tables du dictionnaire CPE de la NVD, vides au départ, aucune extension de
   PostgreSQL), sans reprise de données ni commande sur le serveur. **Rien n'est chargé ni demandé à la NVD tant que la
   source « Dictionnaire des produits (CPE) » n'est pas activée** (écran « Veille », droit d'administrer le module), ni tant
@@ -23,9 +24,9 @@ Aucune action, ni sur le serveur ni dans l'application.
   entrées, une par passage de l'exécutant, sans attente) ; copie complète facultative en plus : environ 270 Mo dans la
   base et 17 Mo de plus par sauvegarde, sur les mêmes pages (aucune page de plus si elle est demandée dès l'activation,
   environ une heure de plus si la liste est déjà chargée) (tailles mesurées par le RSSI sur le vrai dictionnaire,
-  22/11/2026 ; durées calculées, non mesurées). Le déclenchement rapide de la demande des
-  versions (passages courts toutes les 3 secondes pendant une saisie) dépend de la PR de la session Coeur sur le service de
-  mise à jour ; sans elle, les versions arrivent au passage habituel de l'exécutant.
+  22/11/2026 ; durées calculées, non mesurées). La demande des versions s'appuie sur la
+  veille active du service de mise à jour (passages courts toutes les 3 secondes pendant une saisie) ; délais réels à
+  mesurer.
 
 ### Ajouté
 
@@ -67,6 +68,15 @@ Aucune action, ni sur le serveur ni dans l'application.
 
 ### Corrigé
 
+- **Pages plus rapides pour une personne qui n'est pas administrateur** (défauts PERF-06, PERF-11 et PERF-15 du banc de
+  performance du 21/11/2026). La liste des registres, appelée par toutes les pages, vérifiait les droits et décrivait
+  chaque registre l'un après l'autre : environ 2 000 lectures de la base et 2 secondes d'attente par page pour un RSSI ou
+  un pilote. Les droits de toute la liste sont désormais lus ensemble, en une dizaine de lectures quel que soit le nombre
+  de registres ; « Ce que je dois alimenter » fait de même pour ses éléments. Sur le jeu d'essai (50 registres), la liste
+  passe de 1 463 lectures et près d'une seconde à 9 lectures et moins de 10 ms. Les droits ne changent pas : un test
+  compare, pour des comptes de profils différents, la nouvelle liste à l'ancienne. Pour ses prochaines échéances, la synthèse du mur
+  ne relit plus que deux fois les données de chaque action, au lieu de six, ce qui comptait depuis que les actions portent
+  leurs tâches ; les échéances affichées sont les mêmes (session « Projet audit_suivi Coeur »).
 - Vulnérabilités et Veille réglementaire, **accessibilité** : les boutons de pagination (flèches, page active) des écrans
   Machines, Alertes, Surface externe, Silène, Veille et Veille réglementaire n'avaient pas de nom pour les lecteurs d'écran
   (règle « button-name », niveau A) ; ils sont nommés comme ceux de « Failles détectées ». Un test vérifie chaque

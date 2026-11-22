@@ -191,6 +191,9 @@ async function tableauDeBordNatifBase(
       occurrencesEnRetard: l.occurrencesRetard,
     };
     // Prochaines échéances : écarts et actions ouverts, du plus ancien retard au plus proche, jusqu'à l'horizon.
+    // `data` porte les tâches des actions (souvent hors ligne, compressé) : les quatre clés utiles sont lues d'un seul
+    // décodage par ligne (PERF-15), avec le résultat de `o.data->>'clé'` (`null` pour une donnée qui n'est pas un objet).
+    // `o.kind IN (…)`, déjà impliqué par la condition, écarte les autres types avant tout décodage.
     const e = await g.db.q<{
       id: string;
       kind: string;
@@ -200,19 +203,22 @@ async function tableauDeBordNatifBase(
       perimetre: string;
       pilote: string | null;
     }>(
-      `SELECT o.id, o.kind, o.name, left(o.data->>'dueAt',10) due, COALESCE(o.data->>'status','open') st,
+      `SELECT o.id, o.kind, o.name, left(d."dueAt",10) due, COALESCE(d.status,'open') st,
               sm.name perimetre, u.display_name pilote
          FROM grc_objects o
+         CROSS JOIN LATERAL jsonb_to_record(CASE WHEN jsonb_typeof(o.data)='object' THEN o.data END)
+              AS d("dueAt" text, status text, "seriesId" text, "ownerId" text)
          JOIN grc_smsis sm ON sm.id=o.smsi_id
          JOIN business_policy_versions v ON v.version=sm.business_version
-         LEFT JOIN users u ON u.id::text=o.data->>'ownerId'
+         LEFT JOIN users u ON u.id::text=d."ownerId"
         WHERE ${DANS_LA_PORTEE}
-          AND ((o.kind='nonconformity' AND COALESCE(o.data->>'status','open')<>'closed')
-            OR (o.kind='action' AND o.data->>'seriesId' IS NULL
-                AND NOT (COALESCE(o.data->>'status','')=ANY(
+          AND o.kind IN ('nonconformity','action')
+          AND ((o.kind='nonconformity' AND COALESCE(d.status,'open')<>'closed')
+            OR (o.kind='action' AND d."seriesId" IS NULL
+                AND NOT (COALESCE(d.status,'')=ANY(
                   SELECT st->>'id' FROM jsonb_array_elements(v.definition->'statuses') st WHERE st->>'terminal'='true'))))
-          AND left(o.data->>'dueAt',10) ~ '^\\d{4}-\\d{2}-\\d{2}$' AND left(o.data->>'dueAt',10) <= $3
-        ORDER BY left(o.data->>'dueAt',10), o.name LIMIT 12`,
+          AND left(d."dueAt",10) ~ '^\\d{4}-\\d{2}-\\d{2}$' AND left(d."dueAt",10) <= $3
+        ORDER BY left(d."dueAt",10), o.name LIMIT 12`,
       [ids, masques, horizon],
     );
     sortie.echeances = e.rows.map((x) => ({

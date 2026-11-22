@@ -103,6 +103,83 @@ const designe = (ref: Expression<unknown>, userId: string) => sql<boolean>`COALE
 const elementAttribue = (data: Expression<unknown>, userId: string) =>
   sql<boolean>`(COALESCE(${data}->>'ownerId' = ${userId}, false) OR ${designe(sql`${data}->'responsable'`, userId)})`;
 const unique = <T>(l: readonly T[]) => [...new Set(l)];
+const meilleurRole = (a: RoleRessource | null, b: RoleRessource | null): RoleRessource | null =>
+  !a ? b : b && RANG_ROLE[b] > RANG_ROLE[a] ? b : a;
+
+/** Droits d'un compte sur un ensemble de registres (et d'éléments), chargés en quelques requêtes (PERF-06, PERF-11). Les
+    méthodes synchrones de `DroitsGroupes` reprennent une à une les règles de `peut`, `roleDe`, `roleDesigne`,
+    `roleEffectif`, `parModule` et `estGestionnaire`, qui restent la référence pour une lecture unitaire ; le test
+    `registres-droits-groupes.test.ts` vérifie que les deux chemins rendent la même chose. Valable le temps d'une requête. */
+interface ContexteDroits {
+  admin: boolean;
+  /** Meilleur rôle attribué (en personne ou par un groupe), par ressource : `registre:<id>` ou `objet:<id>`. */
+  roles: Map<string, RoleRessource>;
+  /** Registres dont le champ « Attribuer à » désigne le compte. */
+  designes: Set<string>;
+  /** Périmètres portés par chaque registre. */
+  perimetres: Map<string, string[]>;
+  /** Accès aux périmètres (vide pour un administrateur, qui n'en a pas besoin). */
+  acces: Map<string, { lecture: boolean; ecriture: boolean }>;
+  /** Éléments : attribués au compte, créateur et registre (pour le rôle tenu de « Attribuer à »). */
+  objets: Map<string, { attribue: boolean; createur: string | null; registreId: string | null }>;
+}
+class DroitsGroupes {
+  constructor(
+    private readonly user: SessionUser,
+    readonly x: ContexteDroits,
+  ) {}
+  /** Comme `roleDe`. */
+  roleDe(registreId: string, objetId: string | null): RoleRessource | null {
+    const r = this.x.roles.get('registre:' + registreId) ?? null;
+    return objetId ? meilleurRole(r, this.x.roles.get('objet:' + objetId) ?? null) : r;
+  }
+  /** Comme `designeSurRegistre`. */
+  designeSurRegistre(reg: RegistreRow): boolean {
+    return !!reg.responsable && this.x.designes.has(reg.id);
+  }
+  /** Comme `roleDesigne`. */
+  roleDesigne(reg: RegistreRow, objetId: string | null, attribue: RoleRessource | null): RoleRessource | null {
+    const surRegistre = this.designeSurRegistre(reg);
+    if (!objetId) return surRegistre ? 'contributeur' : null;
+    const ligne = this.x.objets.get(objetId);
+    const o = ligne && ligne.registreId === reg.id ? ligne : undefined;
+    const contributeur = surRegistre || !!o?.attribue || roleSuffit(attribue, 'contribuer');
+    if (!contributeur) return null;
+    return o?.createur === this.user.username ? 'gestionnaire' : surRegistre || o?.attribue ? 'contributeur' : null;
+  }
+  /** Comme `roleEffectif`. */
+  roleEffectif(reg: RegistreRow, objetId: string | null): RoleRessource | null {
+    const attribue = this.roleDe(reg.id, objetId);
+    const tenu = this.roleDesigne(reg, objetId, attribue);
+    if (!attribue) return tenu;
+    return tenu && RANG_ROLE[tenu] > RANG_ROLE[attribue] ? tenu : attribue;
+  }
+  /** Comme `parModule` (compte non administrateur). */
+  private parModule(reg: RegistreRow, besoin: Besoin, module: Module, action: Action | undefined): boolean {
+    if (reg.restricted) return false;
+    if (!this.user.rights.can(module, action ?? (besoin === 'lire' ? 'lire' : 'modifier'))) return false;
+    const ids = this.x.perimetres.get(reg.id) ?? [];
+    const ecriture = besoin !== 'lire';
+    let accessibles = 0;
+    for (const id of ids) {
+      const a = this.x.acces.get(id);
+      if (a && (ecriture ? a.ecriture : a.lecture)) accessibles++;
+    }
+    return besoin === 'lire' ? accessibles > 0 : accessibles === ids.length && ids.length > 0;
+  }
+  /** Comme `peut`, le module ayant été vérifié actif par l'appelant. */
+  peut(reg: RegistreRow, objetId: string | null, besoin: Besoin, module: Module = MODULE, action?: Action): boolean {
+    if (this.x.admin) return true;
+    const attribue = this.roleDe(reg.id, objetId);
+    if (roleSuffit(attribue, besoin)) return true;
+    if (action !== 'administrer' && roleSuffit(this.roleDesigne(reg, objetId, attribue), besoin)) return true;
+    return this.parModule(reg, besoin, module, action);
+  }
+  /** Comme `estGestionnaire`. */
+  estGestionnaire(reg: RegistreRow): boolean {
+    return this.x.admin || roleSuffit(this.roleDe(reg.id, null), 'gerer');
+  }
+}
 
 export class GrcRegistres {
   constructor(private readonly g: Grc) {}
@@ -403,13 +480,172 @@ export class GrcRegistres {
     return !reg || (await this.peut(user, reg, null, 'lire'));
   }
 
+  /* --------------------------------------------------------------------------------------------- droits groupés */
+  /** Droits du compte sur ces registres et ces éléments, en quelques requêtes quel que soit leur nombre (PERF-06, PERF-11).
+      Mêmes règles que `peut` et `roleEffectif`, qui restent la référence pour une ressource seule. Le module n'est pas
+      vérifié ici : l'appelant le fait (`modules.assert`) avant d'interroger le résultat. */
+  async droitsGroupes(
+    user: SessionUser,
+    regs: readonly RegistreRow[],
+    objetIds: readonly string[] = [],
+    c?: Client,
+  ): Promise<DroitsGroupes> {
+    const k = this.k(c);
+    const admin = await this.g.isAdmin(user, c);
+    const regIds = unique(regs.map((r) => r.id));
+    const objIds = unique(objetIds);
+    const x: ContexteDroits = {
+      admin,
+      roles: new Map(),
+      designes: new Set(),
+      perimetres: new Map(),
+      acces: new Map(),
+      objets: new Map(),
+    };
+    if (!regIds.length) return new DroitsGroupes(user, x);
+    // Rôles attribués, même filtre que roleDe (en personne ou par un groupe), sur les registres et les éléments demandés.
+    const droits = await k
+      .selectFrom('droits_ressources as d')
+      .select(['d.resource_type as type', 'd.resource_id as id', 'd.role'])
+      .where((eb) =>
+        eb.or([
+          eb.and([eb('d.resource_type', '=', 'registre'), eb('d.resource_id', 'in', regIds)]),
+          ...(objIds.length ? [eb.and([eb('d.resource_type', '=', 'objet'), eb('d.resource_id', 'in', objIds)])] : []),
+        ]),
+      )
+      .where((eb) =>
+        eb.or([
+          eb.and([eb('d.subject_type', '=', 'utilisateur'), eb('d.subject_id', '=', user.id)]),
+          eb.and([
+            eb('d.subject_type', '=', 'groupe'),
+            eb('d.subject_id', 'in', eb.selectFrom('user_groups').select('group_id').where('user_id', '=', user.id)),
+          ]),
+        ]),
+      )
+      .execute();
+    for (const d of droits) {
+      const cle = d.type + ':' + d.id;
+      x.roles.set(cle, meilleurRole(x.roles.get(cle) ?? null, d.role)!);
+    }
+    // « Attribuer à » des registres qui ont un responsable (designeSurRegistre).
+    const avecResponsable = regs.filter((r) => r.responsable).map((r) => r.id);
+    if (avecResponsable.length)
+      for (const r of await k
+        .selectFrom('registres as r')
+        .select(['r.id', designe(sql.ref('r.responsable'), user.id).as('ok')])
+        .where('r.id', 'in', unique(avecResponsable))
+        .execute())
+        if (r.ok) x.designes.add(r.id);
+    for (const p of await k
+      .selectFrom('registre_perimetres')
+      .select(['registre_id as registreId', 'smsi_id as id'])
+      .where('registre_id', 'in', regIds)
+      .orderBy('registre_id')
+      .orderBy('smsi_id')
+      .execute()) {
+      const l = x.perimetres.get(p.registreId);
+      if (l) l.push(p.id);
+      else x.perimetres.set(p.registreId, [p.id]);
+    }
+    if (!admin) {
+      x.acces = await this.g.accesPerimetres([...x.perimetres.values()].flat(), user, false, c);
+      // Éléments : attribués au compte et créateur (roleDesigne), pour les seuls éléments demandés.
+      if (objIds.length)
+        for (const o of await k
+          .selectFrom('grc_objects as o')
+          .select([
+            'o.id',
+            'o.registre_id as registreId',
+            'o.created_by as createur',
+            elementAttribue(sql.ref('o.data'), user.id).as('attribue'),
+          ])
+          .where('o.id', 'in', objIds)
+          .execute())
+          x.objets.set(o.id, { attribue: !!o.attribue, createur: o.createur, registreId: o.registreId });
+    }
+    return new DroitsGroupes(user, x);
+  }
+  /** Descriptions de plusieurs registres déjà lisibles, composées à partir des droits groupés : même résultat que `dto`
+      pour chacun, en un nombre de requêtes indépendant du nombre de registres. */
+  private async dtoGroupe(regs: readonly RegistreRow[], droits: DroitsGroupes, c?: Client): Promise<RegistreDto[]> {
+    if (!regs.length) return [];
+    const k = this.k(c);
+    const { admin, perimetres, acces } = droits.x;
+    const tous = unique([...perimetres.values()].flat());
+    const noms = new Map(
+      (tous.length
+        ? await k.selectFrom('grc_smsis').select(['id', 'name']).where('id', 'in', tous).orderBy('id').execute()
+        : []
+      ).map((p) => [p.id, p]),
+    );
+    const ids = unique(regs.map((r) => r.id));
+    const comptes = new Map(
+      (
+        await k
+          .selectFrom('grc_objects')
+          .select([
+            'registre_id as id',
+            sql<number>`count(*)::int`.as('elements'),
+            sql<number>`count(*) FILTER (WHERE kind = 'action')::int`.as('total'),
+            sql<number>`count(*) FILTER (WHERE kind = 'action' AND data->>'status' = 'done')::int`.as('terminees'),
+          ])
+          .where('registre_id', 'in', ids)
+          .where('archived', '=', false)
+          .groupBy('registre_id')
+          .execute()
+      ).map((r) => [r.id, r]),
+    );
+    return regs.map((reg) => {
+      const pids = perimetres.get(reg.id) ?? [];
+      // Même ordre que dto : par nom (comparaison française), à nom égal par identifiant.
+      const visibles = pids
+        .flatMap((id) => {
+          const p = noms.get(id);
+          return p ? [p] : [];
+        })
+        .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+        .filter((p) => admin || !!acces.get(p.id)?.lecture)
+        .map((p) => ({ id: p.id, name: p.name }));
+      const peut = {
+        lire: droits.peut(reg, null, 'lire'),
+        contribuer: droits.peut(reg, null, 'contribuer'),
+        gerer: droits.peut(reg, null, 'gerer'),
+      };
+      const n = comptes.get(reg.id);
+      return {
+        id: reg.id,
+        kind: reg.kind,
+        name: reg.name,
+        description: reg.description,
+        referenceId: reg.referenceId,
+        restreint: reg.restricted,
+        archived: reg.archived,
+        parDefaut: reg.parDefaut,
+        version: reg.version,
+        dateDebut: reg.dateDebut,
+        dateFin: reg.dateFin,
+        statut: reg.statut,
+        responsable: reg.responsable,
+        avancement: { total: n?.total ?? 0, terminees: n?.terminees ?? 0 },
+        perimetres: visibles,
+        autresPerimetres: pids.length - visibles.length,
+        role: droits.roleEffectif(reg, null),
+        peut,
+        peutAttribuer: droits.peut(reg, null, 'gerer', MODULE, 'administrer'),
+        peutArchiver: droits.estGestionnaire(reg),
+        peutCreer: !reg.archived && (peut.gerer || droits.designeSurRegistre(reg)),
+        elements: n?.elements ?? 0,
+      };
+    });
+  }
+
   /* ----------------------------------------------------------------------------------------------------- registre */
   async dto(user: SessionUser, reg: RegistreRow, c?: Client): Promise<RegistreDto> {
     const admin = await this.g.isAdmin(user, c);
     const ids = await this.perimetresIds(reg.id, c);
     const k = this.k(c);
     const noms = ids.length
-      ? await k.selectFrom('grc_smsis').select(['id', 'name']).where('id', 'in', ids).execute()
+      ? await k.selectFrom('grc_smsis').select(['id', 'name']).where('id', 'in', ids).orderBy('id').execute()
       : [];
     const visibles: { id: string; name: string }[] = [];
     for (const p of noms.sort((a, b) => a.name.localeCompare(b.name, 'fr'))) {
@@ -476,7 +712,72 @@ export class GrcRegistres {
       ou par une fonction) et éléments des registres qui lui sont attribués, par échéance. Chaque ligne repasse par le
       contrôle d'accès ; un module désactivé ou un élément devenu illisible est simplement omis. */
   async mesElements(user: SessionUser, search: string, offset: number) {
-    const rows = await this.k()
+    const rows = await this.lignesMesElements(user, search, offset);
+    const items: ElementAttribue[] = [];
+    const page = rows.slice(0, 50);
+    const nextOffset = rows.length > 50 ? offset + 50 : null;
+    if (!page.length) return { items, nextOffset };
+    // Éléments, registres et droits de la page chargés ensemble (PERF-11) ; mêmes règles que `peut` élément par élément.
+    const k = this.k();
+    const lignes = new Map(
+      (
+        await objets(k)
+          .where(
+            'id',
+            'in',
+            page.map((r) => r.id),
+          )
+          .execute()
+      ).map((l) => [l.id, l]),
+    );
+    const regs = new Map(
+      (
+        await this.registres()
+          .where('r.id', 'in', unique(page.map((r) => r.rId)))
+          .execute()
+      )
+        .map(versRegistre)
+        .map((r) => [r.id, r]),
+    );
+    const droits = await this.droitsGroupes(
+      user,
+      [...regs.values()],
+      page.map((r) => r.id),
+    );
+    const actifs = new Map<Module, boolean>();
+    for (const { id, rId, rName, rKind } of page) {
+      const ligne = lignes.get(id);
+      const reg = regs.get(rId);
+      if (!ligne || !reg) continue;
+      const element = versObjet(ligne);
+      const module = GRC_MODULES[element.kind];
+      let actif = actifs.get(module);
+      if (actif === undefined) {
+        try {
+          await this.g.modules.assert(module);
+          actif = true;
+        } catch {
+          /* module désactivé : l'élément n'est pas proposé */
+          actif = false;
+        }
+        actifs.set(module, actif);
+      }
+      if (!actif || !droits.peut(reg, element.id, 'lire', module)) continue;
+      items.push({
+        element,
+        registre: { id: rId, name: rName, kind: rKind as RegistreKind },
+        peut: {
+          contribuer: droits.peut(reg, element.id, 'contribuer', module),
+          gerer: droits.peut(reg, element.id, 'gerer', module),
+        },
+      });
+    }
+    return { items, nextOffset };
+  }
+  /** Candidats de « Ce que je dois alimenter », avant le contrôle d'accès : 51 lignes au plus (la 51e signale une page
+      suivante), par échéance puis identifiant. */
+  async lignesMesElements(user: SessionUser, search: string, offset: number) {
+    return this.k()
       .selectFrom('grc_objects as o')
       .innerJoin('registres as r', 'r.id', 'o.registre_id')
       .select(['o.id', 'r.id as rId', 'r.name as rName', 'r.kind as rKind'])
@@ -488,30 +789,9 @@ export class GrcRegistres {
       .limit(51)
       .offset(offset)
       .execute();
-    const items: ElementAttribue[] = [];
-    for (const { id, rId, rName, rKind } of rows.slice(0, 50)) {
-      const ligne = await objets(this.k()).where('id', '=', id).executeTakeFirst();
-      const reg = await this.brut(rId);
-      if (!ligne || !reg) continue;
-      const element = versObjet(ligne);
-      const module = GRC_MODULES[element.kind];
-      try {
-        if (!(await this.peut(user, reg, element.id, 'lire', undefined, module))) continue;
-        items.push({
-          element,
-          registre: { id: rId, name: rName, kind: rKind as RegistreKind },
-          peut: {
-            contribuer: await this.peut(user, reg, element.id, 'contribuer', undefined, module),
-            gerer: await this.peut(user, reg, element.id, 'gerer', undefined, module),
-          },
-        });
-      } catch {
-        /* module désactivé : l'élément n'est pas proposé */
-      }
-    }
-    return { items, nextOffset: rows.length > 50 ? offset + 50 : null };
   }
-  async list(user: SessionUser, filtre: { perimetre?: string; kind?: RegistreKind; archives?: boolean } = {}) {
+  /** Registres de la liste, avant tout contrôle de droits (filtres et ordre de `list`). */
+  async lignesListe(filtre: { perimetre?: string; kind?: RegistreKind; archives?: boolean } = {}) {
     const rows = await this.registres()
       .$if(!!filtre.kind, (q) => q.where('r.kind', '=', filtre.kind!))
       .$if(!filtre.archives, (q) => q.where('r.archived', '=', false))
@@ -529,10 +809,19 @@ export class GrcRegistres {
       .orderBy('r.name')
       .orderBy('r.id')
       .execute();
-    const out: RegistreDto[] = [];
-    for (const reg of rows.map(versRegistre))
-      if (await this.peut(user, reg, null, 'lire')) out.push(await this.dto(user, reg));
-    return out;
+    return rows.map(versRegistre);
+  }
+  /** Registres lisibles, décrits comme par `get` : droits et descriptions calculés pour toute la liste en quelques requêtes
+      (PERF-06), avec les règles de `peut` et de `dto`. */
+  async list(user: SessionUser, filtre: { perimetre?: string; kind?: RegistreKind; archives?: boolean } = {}) {
+    const rows = await this.lignesListe(filtre);
+    if (!rows.length) return [];
+    await this.g.modules.assert(MODULE);
+    const droits = await this.droitsGroupes(user, rows);
+    return this.dtoGroupe(
+      rows.filter((reg) => droits.peut(reg, null, 'lire')),
+      droits,
+    );
   }
   async get(id: string, user: SessionUser, c?: Client) {
     const reg = await this.brut(id, c);
