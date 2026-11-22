@@ -1710,7 +1710,7 @@ function OngletPerimetres() {
     queryFn: () => get<PerimetreAlhDto[]>('/api/vulnerabilites/surface/perimetres'),
   });
   const options = useQuery({
-    queryKey: CLE_PERIMETRES_AFFECTABLES,
+    queryKey: [...CLE_PERIMETRES_AFFECTABLES],
     queryFn: () => get<PerimetreAffectableDto[]>('/api/vulnerabilites/perimetres'),
   });
   const lier = async (p: PerimetreAlhDto, perimetreId: string | null) => {

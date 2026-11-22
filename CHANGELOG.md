@@ -56,10 +56,11 @@ Dossiers : [intégration et recette sur pile réelle du 22/11/2026](docs/refonte
 - **Barres d'outils** : une barre qui ne contient qu'une recherche ne porte plus le même nom accessible que son champ
   (dix écrans : guide, fournisseurs, registres, cartographie…). Les lecteurs d'écran n'annoncent plus deux éléments
   du même nom.
-- **Vulnérabilités, Machines → Périmètres** : le bilan par périmètre et les options d’affectation utilisent des clés de
-  cache distinctes. Leur collision pouvait fournir un tableau à la place de l’objet du bilan et provoquer
-  `e.perimetres is not iterable`. Les sélecteurs de Machines et de Surface externe partagent désormais la clé propre aux
-  options, sans changement de contrat serveur. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- Vulnérabilités, **page « Machines » en erreur** en venant de l'onglet « Périmètres » (par exemple depuis la carte
+  « Sans périmètre ») : « Une erreur est survenue » avec le message technique « (perimetres.data ?? []).map is not a
+  function ». Les deux écrans rangeaient deux réponses différentes sous la même clé du cache de l'interface ; la liste des
+  périmètres a désormais sa propre clé. Un test vérifie qu'aucune clé du cache ne sert à deux adresses d'API différentes
+  (session « Module surveillance vulnérabilités SMSI »).
 
 ## [7.5.1] — 2026-11-21
 
