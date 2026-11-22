@@ -464,6 +464,7 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
         '100_vulnerabilites_machines_aes.sql',
         '101_vulnerabilites_dictionnaire_cpe.sql',
         '102_vulnerabilites_correctifs_tenable.sql',
+        '103_vulnerabilites_cve_inconnue.sql',
       ]);
       const st = await t2.svc.legacy.recompose();
       expect(deepEqual(st!.data.maps as Json, fixture.maps as Json)).toBe(true);

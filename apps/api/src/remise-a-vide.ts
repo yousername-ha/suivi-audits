@@ -195,6 +195,15 @@ export const TABLES_TRAVAIL = [
   'vulnerabilites_cpe_versions',
   'vulnerabilites_cpe_demandes',
   'vulnerabilites_cpe_dictionnaire',
+  // Lot CVE-INC (ADR 0100) : consultations de cve.org et NVD, ouverture d'une fiche, contrôles Tenable cités par une CVE,
+  // sources facultatives de la veille (réglages, collectes, annonces) ; données publiques recalculables, effacées avec le
+  // travail (les sources reviennent désactivées).
+  'vulnerabilites_cve_consultations',
+  'vulnerabilites_cve_ouverture',
+  'vulnerabilites_cve_tenable',
+  'vulnerabilites_veille_annonces',
+  'vulnerabilites_veille_annonces_collectes',
+  'vulnerabilites_veille_annonces_sources',
   // Failles et machines lues dans Tenable (ADR 0100, lot V5) : relues à la synchronisation suivante ; rôle et périmètre des
   // machines saisis par les utilisateurs, périmètre rattaché à grc_smsis (effacé avec le travail).
   'vulnerabilites_machines',

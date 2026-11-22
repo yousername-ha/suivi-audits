@@ -4068,3 +4068,146 @@ jouée. Node 26 (essais sous Node 24).
 1. Vue « Correctifs » alimentée par les correctifs regroupés, regroupement par texte gardé pour le reste et pour les imports
    `.nessus`, source dite à l'écran.
 2. Les choix ci-dessus.
+
+## Addendum du 22/11/2026 — lot CVE-INC : CVE inconnue de la veille, préavis de Cloudflare Radar, résumés de tldrcve
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`), par le sous-agent
+développeur. Migration additive `103` (six tables), six routes nouvelles, sept commandes de la CLI de l'exécutant, aucune
+dépendance, aucune extension de PostgreSQL. **Trois hôtes nouveaux en sortie**, sous le flux « veille-vulnerabilites » :
+`cveawg.mitre.org`, `radar.cloudflare.com`, `tldrcve.com`. Lève le point ouvert 1 de l'addendum « lot R1 » et réalise le point
+5 de la file des décisions de la [reprise du 20/11/2026](../01_REPRISE_IA/REPRISE-2026-11-20.md).
+`scripts/exploitation-worker.py` modifié sur le modèle existant (à relire par la session Coeur) ; `scripts/update-worker.py`,
+`docker*` et `apps/*/src/assistant/*` inchangés.
+
+### Décisions du RSSI (19, 20 et 22/11/2026)
+
+A. **CVE inconnue de la veille** (recherche d'une CVE absente des données locales), sur clic, jamais automatiquement :
+   1. **cve.org** : `GET https://cveawg.mitre.org/api/cve/<CVE-ID>` (enregistrement CVE JSON 5) : titre, description
+      (anglais), dates, CNA, références, produits touchés déclarés, et le conteneur ADP de la CISA : évaluation **SSVC**
+      (Exploitation : none, poc, active ; Automatable ; Technical Impact) et mention KEV si présente ; SSVC affiché en
+      français ;
+   2. **NVD** : `GET https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=<CVE-ID>`, même rangement que la veille NVD (la
+      CVE devient connue) ;
+   3. **lien « Voir chez Tenable »** : `https://www.tenable.com/cve/<CVE-ID>`, lien seulement ;
+   4. **Security Center sans clic** (intégration Tenable configurée et son flux ouvert) : contrôles qui citent la CVE, `GET
+      /rest/plugin?filterField=xrefs&op=like&value=<CVE-ID>&fields=…&startOffset=0&endOffset=50` (forme vérifiée chez le RSSI
+      le 20/11/2026 : enveloppe `type, response, error_code, error_msg, warnings, timestamp` ; `family` objet ;
+      `exploitFrameworks` chaîne), lecture seule, liste blanche des champs, revalidation ; « Tenable a N contrôle(s) pour cette
+      CVE » (numéro, nom, famille, exploit disponible), jamais de détail machine ; déclenché à l'ouverture de la fiche d'une CVE
+      inconnue, sans bouton, jamais en tâche de fond.
+B. **Préavis de Cloudflare Radar** : source facultative, désactivée au départ, toutes les 15 minutes par défaut (fréquence
+   réglable, avertissement des fréquences élevées) ; seules les CVE critiques et celles dont le titre ou le résumé cite un
+   produit surveillé (correspondance de mots « à confirmer », jamais une détection) ; marque « Annonce précoce », lien vers
+   Cloudflare, remplacée dès que la CVE est connue par NVD, cve.org ou un CERT ; aucune notification ni alerte ; les
+   « briefings » ne sont pas lus.
+C. **tldrcve** : source facultative, désactivée au départ, une ou deux fois par jour ; éléments du flux présentés dans des
+   cartes de la plateforme en trois blocs (« Est-ce grave ? », « Êtes-vous concerné ? », « Que faire ? ») ; marque sur la
+   fiche d'une CVE couverte ; aucun recopiage au-delà de ce que le flux publie ; aucun effet sur la priorité.
+
+### Réalisation
+
+- **Paquet partagé** : `packages/shared/src/cve-inconnue.ts` (`SOURCE_CVE_ORG`, `CVE_INCONNUE_BORNES`, `FicheCveOrg`,
+  `RapportCveInconnue`, `ControleTenableCve`, `RapportCveTenable`, `SSVC_LIBELLES`, liens `lienTenableCve` et `lienCveOrg`,
+  DTO des compléments d'une fiche) ; `packages/shared/src/annonces-veille.ts` (`SOURCES_ANNONCES_DEFINITIONS`, fréquences en
+  minutes, `AVERTISSEMENT_ANNONCES_FREQUENTES`, `ElementPreavis`, `ElementTldrcve`, `produitCite`, `retenirPreavis`) ; registre
+  des flux : `HOTES_VEILLE_COMPLEMENTAIRES` ajoutés aux destinations et au pare-feu du flux « veille-vulnerabilites », texte
+  « Ce qui sort » complété (l'identifiant de la CVE consultée ; les flux facultatifs sans aucun paramètre) ; catalogue des
+  connecteurs : `GET /rest/plugin` ajouté à la liste fermée de Tenable, texte du flux « tenable » complété.
+- **Script de la veille** (`scripts/veille-vulnerabilites.py`) : source « cve-inconnue » (une CVE reçue, forme contrôlée :
+  cve.org au chemin `/api/cve/{cve}`, puis NVD par `cveId`) ; chaque partie a son état (`trouvee`, `absente` — code 404 de
+  cve.org ou aucun résultat de NVD —, `echec`) ; échec global si les deux échouent ; l'identifiant de l'enregistrement doit
+  être celui demandé. Sources « cloudflare-radar » (JSON Feed, requête fixe `format=json`, clés inconnues ignorées) et
+  « tldrcve » (RSS par l'analyseur existant, `lire_rss`). Textes simples bornés, liens gardés seulement en https sur l'hôte de
+  la source, références de cve.org gardées en https sans caractère interdit, aucune redirection suivie.
+- **Connecteur** (`scripts/integration-http.py`) : opération « controles-cve » (`OPERATIONS_CVE`, hors de la file des
+  connecteurs) ; requête fixe écrite dans le script (`REQUETE_CONTROLES_CVE`, contrôlée par `REQUETE_CONTROLES_CVE_FORME`
+  avant l'appel) ; numéro, nom, nom de la famille, exploit disponible et facteur de risque seulement ; `xrefs` sert à vérifier
+  que la CVE est citée exactement (« like » trouve aussi `CVE-2026-12345` pour `CVE-2026-1234`) et ne sort pas ; jamais par le
+  mandataire.
+- **Exécutant** (`scripts/exploitation-worker.py`) :
+  - troisième file de la veille : `("veille-annonces", VEILLE_FLUX, VEILLE_ANNONCES_SOURCES)` dans `VEILLE_FILES`, même
+    routine que la veille (aucun code nouveau) ;
+  - file des CVE inconnues (`cve-inconnue-claim | -finish`, réponse toujours `{ actif, demande }`) : **même passage court**
+    que la file des versions CPE (le poller ne connaît que le mode `cpe-versions` : `MODES_COURTS` inchangé), une
+    consultation au plus, seulement si aucune demande de versions n'a été traitée dans ce passage (débit de la NVD partagé,
+    `CPE_DEBIT`), script borné à `CVE_DELAI_COURT` (12 s) ; au passage complet, une au plus, jamais d'attente du débit
+    (`CVE_DELAI`, 40 s) ;
+  - témoin `cpe-chaud` commun : posé si l'une des deux files dit `actif`, retiré si les deux ont répondu sans `actif`,
+    inchangé si l'une n'a pas été réclamée (il expire alors seul, sa validité étant de deux minutes) ;
+  - recherches Security Center (`cve-tenable-claim | -finish`) : passage complet seulement, flux « tenable » exigé, trois au
+    plus par passage, script du connecteur sous le compte 65534, sans mandataire ; erreurs avalées comme ailleurs.
+- **API** : `apps/api/src/vulnerabilites/cve-inconnue.ts` (`CveInconnues`) et `apps/api/src/vulnerabilites/annonces.ts`
+  (`AnnoncesVeille`, sur le modèle de la veille réglementaire) ; routes `GET /api/vulnerabilites/cves/:cve/complements`,
+  `POST /api/vulnerabilites/cves/:cve/ouverture`, `POST /api/vulnerabilites/cves/:cve/consultation` (`lire`),
+  `GET /api/vulnerabilites/veille/annonces/sources` et `GET /api/vulnerabilites/veille/annonces?source=&page=` (`lire`),
+  `PATCH /api/vulnerabilites/veille/annonces/sources/:source` (`administrer`, If-Match). Journal :
+  `vulnerabilites.cve_inconnue.consultation` (la CVE seulement), `vulnerabilites.annonces.reglage`,
+  `vulnerabilites.annonces.collecte.*`. La réponse de NVD est rangée par la routine de la veille (`rangerNvdConsultee`), puis
+  rapprochement et évaluation des alertes, comme à la fin d'une collecte NVD. Le préavis est « remplacé » dès que la CVE a
+  une réponse de NVD (`nvd_le`), une fiche de cve.org ou un avis d'un CERT qui la cite. Les secrets de l'instance Tenable sont
+  remis à l'exécutant par la seule CLI (`Integrations.pourExecutant`, même chemin que `integrations-claim`).
+- **Interface** : la fiche d'une CVE de l'écran « Veille » passe par `FicheCve.tsx` : fiche habituelle si elle s'ouvre (même
+  clé et même adresse que `FicheFaille`), précédée des marques des sources facultatives ; sinon (404) la fiche d'une CVE
+  inconnue (bouton « Consulter cve.org et NVD », état, enregistrement de cve.org, SSVC en français, contrôles Tenable, liens
+  « Voir chez Tenable » et « Fiche sur cve.org »), interrogée toutes les 2 s pendant une demande, deux minutes au plus.
+  Barre de recherche : bouton « Ouvrir sa fiche » dans le message d'une CVE inconnue (et Entrée). Écran « Veille » : section
+  « Sources facultatives » (`AnnoncesVeille.tsx` : tableau, préavis, cartes de tldrcve en trois blocs, pagination nommée).
+  Feuilles `neon-veille.css` et `neon-recherche.css` (jetons de la charte, aucun style en ligne).
+
+### Tables (migration `103`)
+
+`vulnerabilites_cve_consultations` (file et résultat par CVE : état, jeton de la demande, fiche de cve.org en jsonb borné,
+états des deux parties), `vulnerabilites_cve_ouverture` (une ligne : dernière ouverture de la fiche d'une CVE inconnue),
+`vulnerabilites_cve_tenable` (file et résultat par instance et par CVE, 50 contrôles au plus),
+`vulnerabilites_veille_annonces_sources` (activation, fréquence en minutes en liste fermée par source, état),
+`vulnerabilites_veille_annonces_collectes` (file des collectes), `vulnerabilites_veille_annonces` (annonces gardées, lien
+contrôlé par source, un seul CVE par préavis, verdict de tldrcve en liste fermée). Toutes rangées « avec le travail » dans la
+remise à vide.
+
+### Ce qui sort
+
+Vers `cveawg.mitre.org` et `services.nvd.nist.gov` : l'identifiant de la CVE consultée, sur le clic d'une personne. Vers
+`radar.cloudflare.com` et `tldrcve.com` : la lecture d'un flux, sans aucun paramètre (le filtre par produit surveillé est fait
+par l'API, en local). Vers Security Center : l'identifiant de la CVE (et les clés d'API, comme toute lecture du connecteur).
+Rien d'identifiant : ni machine, ni adresse IP, ni domaine, ni périmètre, ni personne.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Droit** : consultation de cve.org et NVD, et ouverture qui déclenche la recherche Security Center, avec le droit de
+  **lire** le module (la fiche d'une CVE se lit avec ce droit) ; vingt consultations et soixante recherches Security Center par
+  heure et par personne.
+- **Mécanique rapide** : la file des CVE inconnues **partage le passage court `cpe-versions`** du poller et le témoin
+  `cpe-chaud` (aucun mode nouveau, `scripts/update-worker.py` inchangé) ; l'ouverture de la fiche d'une CVE inconnue arme la
+  veille active pendant deux minutes. **Security Center reste au passage normal** (toutes les 15 s environ) : le poller ne
+  lance de passage court que si le flux de la veille est ouvert, et la recherche suit le flux de l'intégration.
+- **Délais** : une CVE n'est pas redemandée moins de 24 heures après une réponse, 15 minutes après un échec ; résultats
+  purgés après 90 jours ; demande non réclamée close après 10 minutes, en cours sans fin après 3 minutes.
+- **Références de cve.org** affichées en texte, jamais en lien (hôtes hors de la liste fermée) ; seuls les liens vers
+  Tenable, cve.org, Cloudflare et tldrcve sont cliquables, contrôlés côté interface.
+- **Une réponse partielle** (cve.org ou NVD en échec, l'autre lue) est un succès : chaque partie a son état ; un échec de
+  cve.org garde la fiche obtenue avant.
+- **Préavis** : tous les éléments lisibles remontent au serveur, qui ne garde que les critiques et ceux qui citent le nom d'un
+  produit surveillé (mots entiers, sans casse ni accent, nom de trois caractères au moins, dix noms au plus par préavis) ; la
+  correspondance est faite à la réception (un produit ajouté ensuite ne rattrape pas un préavis déjà écarté). Les CVE des
+  annonces n'entrent pas dans la veille (ni EPSS, ni rapprochement, ni alerte).
+- **Fréquences** : Cloudflare 15, 30, 60, 120, 360 minutes ou une fois par jour (15 par défaut, avertissement en dessous d'une
+  heure) ; tldrcve deux fois ou une fois par jour (une fois par défaut).
+- **Affichage** : les listes des annonces ne sont montrées que pour une source activée ; les marques de la fiche d'une CVE
+  ne sont montrées que dans l'écran « Veille » (la fiche des autres écrans est inchangée).
+- **Assistant** : l'outil `evaluer_cve` n'a pas été touché (l'évaluation SSVC ne lui est pas transmise).
+
+### Non vérifié
+
+Aucun appel réel : cve.org, NVD (`cveId`), Cloudflare Radar, tldrcve et `GET /rest/plugin` sont vérifiés sur des réponses
+fictives écrites à la main. Non relevés sur les services réels : la forme exacte du conteneur ADP de la CISA (noms des
+options SSVC, `kev`), la forme de `kev_added` chez Cloudflare (booléen ou date, les deux sont admis), la phrase « Verdict: »
+de tldrcve (reconnue seulement sous les quatre formes décrites), la forme de `response` de `GET /rest/plugin` (une liste est
+attendue) et de `xrefs` (chaîne ou liste admises). Délais de la veille active pour une consultation : à mesurer sur une pile
+avec le poller. Pile Docker, Node 26, CSP du serveur de production : non vérifiés ; parcours e2e de la recherche adapté, non
+exécuté localement.
+
+### Ce qui n'est pas fait
+
+« Collecter maintenant » pour les sources facultatives ; marques des sources facultatives dans la fiche d'une CVE ouverte
+depuis un autre écran que la veille ; évaluation SSVC transmise à l'assistant ; pastilles dessinées pour les trois nouvelles
+sources.

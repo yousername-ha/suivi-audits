@@ -289,7 +289,7 @@ export class VeilleVulnerabilites {
 
   /** Lot PRIO-1 : CVE présentes sur le parc : détectées par Tenable (détection présente) ou déclarées (produit surveillé
       rattachée, d'office ou confirmée), quel que soit leur état de suivi (un fait). Une lecture pour toutes les CVE. */
-  private async cvesPresentes(cves: readonly string[]): Promise<Set<string>> {
+  async cvesPresentes(cves: readonly string[]): Promise<Set<string>> {
     if (!cves.length) return new Set();
     const { rows } = await sql<{ cve: string }>`
       SELECT x.cve FROM unnest(${[...cves]}::text[]) AS x(cve)
@@ -888,6 +888,19 @@ export class VeilleVulnerabilites {
       await this.apresCollecte();
     if (r.etat === 'recu' && this.apresReception) await this.apresReception(r.source);
     return versCollecte(r);
+  }
+
+  /** Lot CVE-INC : une CVE lue chez NVD sur le clic d'une personne (CVE inconnue de la veille) est rangée comme un élément
+      d'une collecte NVD (même schéma, même table, produits touchés compris) : elle devient connue de la veille. */
+  async rangerNvdConsultee(k: Kdb, e: ElementNvd): Promise<void> {
+    await this.rangerNvd(k, [e]);
+  }
+
+  /** Lot CVE-INC : après une CVE rangée par une consultation, mêmes suites qu'à la fin d'une collecte NVD réussie
+      (rapprochement, puis évaluation des alertes), hors de la transaction de clôture. */
+  async apresConsultationNvd(): Promise<void> {
+    if (this.apresCollecte) await this.apresCollecte();
+    if (this.apresReception) await this.apresReception('nvd');
   }
 
   /* ---------------------------------------------------------------- Rangement (sans doublon) */

@@ -65,9 +65,15 @@
    à part, avec `lire` aussi (droit « Analyste » branché sur l'accès au module ; consultation tracée, sans les noms), import (limite horaire partagée) et suppression (If-Match)
    avec `administrer`.
    Lot CPE-1 : saisie assistée par le dictionnaire CPE de la NVD (liste locale, versions d'un produit, saisie en cours) avec
-   `modifier` ; état de la source avec `lire` ; réglage et copie complète avec `administrer`, If-Match, journal. */
+   `modifier` ; état de la source avec `lire` ; réglage et copie complète avec `administrer`, If-Match, journal.
+   Lot CVE-INC : compléments de la fiche d'une CVE, ouverture de la fiche d'une CVE inconnue et consultation de cve.org et
+   NVD avec `lire` (limites horaires par personne) ; sources facultatives lues avec `lire`, réglées avec `administrer`. */
 import {
   ADS_BORNES,
+  CveParams,
+  RechercheAnnonces,
+  ReglageSourceAnnonce,
+  SourceAnnonceParams,
   IdentifiantPointAdsParams,
   ImportAds,
   MESSAGE_LIMITE_IMPORTS,
@@ -390,6 +396,95 @@ export const vulnerabilitesRoutes = [
       setEtag(reply, r.version);
       return r;
     },
+  }),
+  /* Lot CVE-INC : CVE inconnue de la veille et sources facultatives. Lecture et consultation avec `lire` (la fiche d'une CVE
+     se lit avec ce droit ; seule la CVE sort, sur le clic de la personne, dans la limite horaire) ; réglage des sources
+     facultatives avec `administrer`, If-Match, journal. */
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/cves/:cve/complements',
+    summary:
+      'CVE : compléments de sa fiche (consultation de cve.org et NVD, contrôles Tenable qui la citent, annonces des sources facultatives), lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: CveParams,
+    handler: async ({ svc, params }) =>
+      svc.vulnerabilites.cveInconnues.complements(
+        params.cve,
+        !(await svc.modules.state()).disabled.includes('integrations'),
+      ),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/cves/:cve/ouverture',
+    summary:
+      'CVE inconnue de la veille : ouverture de sa fiche (veille active de l’exécutant ; recherche des contrôles Tenable qui la citent si une intégration Security Center est active et son flux ouvert, sans clic, pas avant 24 heures)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: CveParams,
+    handler: async ({ svc, s, params }) => {
+      const sess = s as Session;
+      return svc.vulnerabilites.cveInconnues.ouvrir(
+        params.cve,
+        !(await svc.modules.state()).disabled.includes('integrations'),
+        () => svc.limits.cveTenable(sess.user.id),
+      );
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/cves/:cve/consultation',
+    summary:
+      'CVE inconnue de la veille : consulter cve.org et NVD (sur clic ; demande traitée par l’exécutant ; pas avant 24 heures pour une même CVE, vingt nouvelles consultations par heure et par personne)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: CveParams,
+    handler: async ({ svc, s, params, ip }) => {
+      const sess = s as Session;
+      return svc.vulnerabilites.cveInconnues.demander(params.cve, sess.user, ip, () =>
+        svc.limits.cveConsultation(sess.user.id),
+      );
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/veille/annonces/sources',
+    summary:
+      'Veille : sources facultatives (préavis de Cloudflare Radar, résumés de tldrcve) — activation, fréquence, dernière collecte',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc }) => svc.vulnerabilites.annonces.etat(),
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/vulnerabilites/veille/annonces/sources/:source',
+    summary:
+      'Veille : activer ou désactiver une source facultative, régler sa fréquence (minutes, liste fermée de la source) ; If-Match : version de la source',
+    tags,
+    access: 'vulnerabilites:administrer',
+    params: SourceAnnonceParams,
+    body: ReglageSourceAnnonce,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const r = await svc.vulnerabilites.annonces.regler(
+        params.source,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.version);
+      return r;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/veille/annonces',
+    summary:
+      'Veille : annonces d’une source facultative, paginées (préavis non remplacés, résumés de tldrcve), avec les faits de la plateforme',
+    tags,
+    access: 'vulnerabilites:lire',
+    query: RechercheAnnonces,
+    handler: async ({ svc, query }) => svc.vulnerabilites.annonces.liste(query),
   }),
   /* Lot CPE-1 : saisie assistée par le dictionnaire CPE de la NVD. Liste locale et versions avec `modifier` (droit qui
      protège le formulaire d'un produit surveillé), aucun appel extérieur ici ; état de la source avec `lire` ; réglage,

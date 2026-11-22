@@ -53,9 +53,12 @@ import unicodedata
 
 # Liste fermée des points d'accès de lecture, par type (méthode, chemin exact ou motif dont {uuid} est la seule partie
 # variable). Une seule ligne JSON : le test d'architecture la lit telle quelle.
-POINTS_ACCES = {"tenable": [["POST", "/rest/analysis"], ["GET", "/rest/hosts"], ["GET", "/rest/hosts/{uuid}"], ["GET", "/rest/system"]], "algolighthouse": [["GET", "/api/v1/health"], ["GET", "/api/v1/version"], ["GET", "/api/v1/alerts"], ["GET", "/api/v1/alerts/{uuid}"], ["GET", "/api/v1/perimeters"], ["GET", "/api/v1/targets/hosts"], ["GET", "/api/v1/targets/domains"], ["GET", "/api/v1/technologies"]]}
+POINTS_ACCES = {"tenable": [["POST", "/rest/analysis"], ["GET", "/rest/hosts"], ["GET", "/rest/hosts/{uuid}"], ["GET", "/rest/system"], ["GET", "/rest/plugin"]], "algolighthouse": [["GET", "/api/v1/health"], ["GET", "/api/v1/version"], ["GET", "/api/v1/alerts"], ["GET", "/api/v1/alerts/{uuid}"], ["GET", "/api/v1/perimeters"], ["GET", "/api/v1/targets/hosts"], ["GET", "/api/v1/targets/domains"], ["GET", "/api/v1/technologies"]]}
 PARAMETRES_ACCES = {"tenable": {"GET /rest/hosts": ["limit", "offset"]}, "algolighthouse": {}}
 OPERATIONS = {"tenable": ["tester", "synchroniser"], "algolighthouse": ["tester", "synchroniser"]}
+# Lot CVE-INC (ADR 0100) : opérations hors de la file des connecteurs, demandées par la file dédiée du module Vulnérabilités
+# (contrôles Tenable qui citent une CVE inconnue de la veille). Lecture seule.
+OPERATIONS_CVE = {"tenable": ["controles-cve"]}
 # Types qui sortent vers Internet et peuvent passer par le mandataire de l'établissement (USAGE_MANDATAIRE « utilise » du
 # paquet partagé) ; tout autre type le refuse.
 TYPES_MANDATAIRE = ["algolighthouse"]
@@ -330,10 +333,15 @@ class Client:
         self.delai = delai
         self.en_tetes = en_tetes
 
-    def requete(self, methode, chemin, corps=None, parametres=None, maximum=REPONSE_MAX):
+    def requete(self, methode, chemin, corps=None, parametres=None, maximum=REPONSE_MAX, fixe=None):
         if not point_admis(self.type, methode, chemin):
             raise Refus("Appel refusé : %s %s hors de la liste fermée du connecteur." % (methode, chemin[:80]))
         cible = chemin
+        if fixe is not None:
+            # Lot CVE-INC : requête écrite dans ce script (REQUETE_CONTROLES_CVE), seule l'identifiant de la CVE y varie.
+            if (self.type, methode, chemin) != ("tenable", "GET", "/rest/plugin") or parametres or not REQUETE_CONTROLES_CVE_FORME.fullmatch(fixe):
+                raise Refus("Appel refusé : requête hors de la liste fermée du connecteur.")
+            cible = chemin + "?" + fixe
         if parametres:
             admis = PARAMETRES_ACCES.get(self.type, {}).get("%s %s" % (methode, chemin), [])
             for nom, valeur in parametres.items():
@@ -403,6 +411,58 @@ def tenable_tester(client):
     if not isinstance(version, str) or not VERSION_TENABLE.fullmatch(version):
         raise Refus("Version de Tenable absente ou de forme inattendue.")
     return {"version": version}
+
+
+# ------------------------------------------------------------------ Tenable : contrôles qui citent une CVE (lot CVE-INC)
+# Requête fixe (forme relevée chez le RSSI le 20/11/2026) : filtre sur les références croisées (`xrefs`), liste blanche des
+# champs demandés, 50 contrôles au plus. Seuls le numéro, le nom, la famille (objet : son nom), l'exploit disponible et le
+# facteur de risque sortent du script ; `xrefs` ne sert qu'à vérifier que la CVE est bien citée (« like » trouve aussi
+# CVE-2026-12345 pour CVE-2026-1234). Aucune donnée de machine n'est demandée ni lue.
+CHAMPS_CONTROLES_CVE = ("id", "name", "family", "type", "xrefs", "exploitAvailable", "exploitEase", "exploitFrameworks",
+                        "riskFactor", "vulnPubDate", "patchPubDate", "pluginPubDate")
+CONTROLES_CVE_MAX = 50
+REQUETE_CONTROLES_CVE = "filterField=xrefs&op=like&value=%s&fields=" + ",".join(CHAMPS_CONTROLES_CVE) + "&startOffset=0&endOffset=50"
+REQUETE_CONTROLES_CVE_FORME = re.compile(r"^filterField=xrefs&op=like&value=CVE-[12]\d{3}-\d{4,9}&fields=[A-Za-z,]{1,300}&startOffset=0&endOffset=50$")
+RISQUES_TENABLE = ("None", "Low", "Medium", "High", "Critical")
+NOM_CONTROLE_MAX = 300
+FAMILLE_MAX = 100
+
+
+def cite_cve(xrefs, cve):
+    """`xrefs` (chaîne, ou liste de chaînes) cite-t-il exactement cette CVE (pas une plus longue) ?"""
+    valeurs = [xrefs] if isinstance(xrefs, str) else [x for x in xrefs if isinstance(x, str)][:500] if isinstance(xrefs, list) else []
+    motif = re.compile(r"(?<![0-9A-Za-z-])" + re.escape(cve) + r"(?![0-9])")
+    return any(motif.search(v[:100000]) for v in valeurs)
+
+
+def tenable_controles_cve(client, parametres):
+    """GET /rest/plugin filtré sur la CVE reçue (forme contrôlée) : contrôles qui la citent, réduits à la liste blanche."""
+    cve = parametres.get("cve") if isinstance(parametres, dict) else None
+    if not (isinstance(cve, str) and CVE_ID.fullmatch(cve)):
+        raise Refus("Identifiant CVE illisible : rien n'a été appelé.")
+    liste = reponse_tenable(client.requete("GET", "/rest/plugin", fixe=REQUETE_CONTROLES_CVE % cve), list)
+    controles, vus = [], set()
+    for p in liste[:CONTROLES_CVE_MAX]:
+        if not isinstance(p, dict):
+            continue
+        ident = p.get("id")
+        ident = str(ident) if isinstance(ident, (str, int)) and not isinstance(ident, bool) else ""
+        nom = texte(p.get("name"), NOM_CONTROLE_MAX)
+        if not PLUGIN_ID.fullmatch(ident) or not nom or ident in vus or not cite_cve(p.get("xrefs"), cve):
+            continue
+        vus.add(ident)
+        famille = p.get("family")
+        famille = famille.get("name") if isinstance(famille, dict) else famille
+        risque = p.get("riskFactor")
+        exploit = p.get("exploitAvailable")
+        controles.append({
+            "id": ident,
+            "nom": nom,
+            "famille": texte(famille, FAMILLE_MAX) or None,
+            "exploitDisponible": True if exploit in (True, "true", "Yes", "yes") else False if exploit in (False, "false", "No", "no") else None,
+            "risque": risque if risque in RISQUES_TENABLE else None,
+        })
+    return {"controles": controles, "tronque": len(liste) >= CONTROLES_CVE_MAX}
 
 
 # ------------------------------------------------------------------ Tenable : synchronisation des failles et des machines
@@ -1322,13 +1382,15 @@ def executer(p):
         if not isinstance(p, dict):
             raise Refus("Demande illisible.")
         type_, operation = p.get("type"), p.get("operation")
-        if type_ not in TYPES or operation not in OPERATIONS.get(type_, ()):
+        if type_ not in TYPES or (operation not in OPERATIONS.get(type_, ()) and operation not in OPERATIONS_CVE.get(type_, ())):
             raise Refus("Type ou opération inconnu : rien n'a été appelé.")
         configuration, secrets = p.get("configuration"), p.get("secrets")
         if not isinstance(configuration, dict) or not isinstance(secrets, dict):
             raise Refus("Demande illisible.")
         en_tetes, operations = TYPES[type_]
         client = Client(type_, configuration, en_tetes(secrets), lire_mandataire(p.get("mandataire")))
+        if operation == "controles-cve":
+            return {"ok": True, "resultat": tenable_controles_cve(client, p.get("parametres")), "erreur": None}
         if operation == "synchroniser":
             resultat, elements = operations[operation](client, configuration)
             return {"ok": True, "resultat": resultat, "elements": elements, "erreur": None}

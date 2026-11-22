@@ -43,7 +43,16 @@ Règles :
   produits distincts et, pour la copie complète, versions distinctes ; entrées obsolètes écartées) et « versions » (une
   page pour un éditeur et un produit reçus, versions distinctes non obsolètes, les plus récentes d'abord,
   BORNES_CPE["versions"] au plus). Rien d'autre n'est reçu de l'application que ces paramètres ; l'intitulé anglais est
-  nettoyé, borné et privé de la version.
+  nettoyé, borné et privé de la version ;
+- CVE inconnue de la veille (ADR 0100, lot CVE-INC ; SOURCES_CVE_INCONNUE, recopiée de packages/shared/src/cve-inconnue.ts) :
+  source « cve-inconnue », sur le clic d'une personne, pour une seule CVE reçue (forme contrôlée) : l'enregistrement CVE JSON 5
+  de cve.org (cveawg.mitre.org, chemin /api/cve/{cve}) réduit à une liste blanche (titre, description anglaise, dates, CNA,
+  références https, produits déclarés, évaluation SSVC et mention KEV du conteneur ADP de la CISA), puis la même CVE chez NVD
+  (paramètre cveId, même forme qu'une collecte NVD). Chaque partie a son état (trouvée, absente, échec) ;
+- sources facultatives (SOURCES_ANNONCES, recopiée de packages/shared/src/annonces-veille.ts) : le flux JSON Feed des CVE
+  annoncées de Cloudflare Radar (requête fixe format=json ; jamais les « briefings ») et le flux RSS 2.0 de tldrcve. Champs
+  en liste blanche, clés inconnues ignorées, textes simples bornés, liens gardés seulement en https sur l'hôte de la source.
+  Le filtre par produit surveillé du préavis est fait par l'API : le script ne reçoit aucun nom de produit.
 """
 import base64
 import datetime as dt
@@ -76,7 +85,16 @@ DOMAINES_REGLEMENTAIRES = ("securite", "donnees-personnelles")
 # (packages/shared/src/dictionnaire-cpe.ts) et comparés par apps/api/test/veille-architecture.test.ts ; bornes de CPE_BORNES.
 SOURCES_CPE = {"nvd-cpe": {"hote": "services.nvd.nist.gov", "chemins": ["/rest/json/cpes/2.0"]}}
 BORNES_CPE = {"parPage": 10000, "pagesParPassage": 1, "versions": 2000, "intitule": 300}
-TOUTES_SOURCES = {**SOURCES, **SOURCES_REGLEMENTAIRES, **SOURCES_CPE}
+# CVE inconnue (ADR 0100, lot CVE-INC) : hôte nouveau de cve.org ({cve} : identifiant contrôlé par CVE_ID), recopié de
+# SOURCE_CVE_ORG (packages/shared/src/cve-inconnue.ts) ; NVD est lu par la source « nvd » ci-dessus. Bornes de CVE_INCONNUE_BORNES.
+SOURCES_CVE_INCONNUE = {"cve-org": {"hote": "cveawg.mitre.org", "chemins": ["/api/cve/{cve}"]}}
+BORNES_CVE_INCONNUE = {"titre": 300, "description": 1000, "cna": 60, "references": 20, "reference": 500, "nomReference": 200, "produits": 20, "editeur": 200, "produit": 200, "versionsParProduit": 10}
+# Sources facultatives (lot CVE-INC) : hôte, chemin et requête fixe, recopiés de SOURCES_ANNONCES_DEFINITIONS
+# (packages/shared/src/annonces-veille.ts) ; bornes d'ANNONCES_BORNES.
+SOURCES_ANNONCES = {"cloudflare-radar": {"hote": "radar.cloudflare.com", "chemins": ["/zero-wire/cves/feed"]}, "tldrcve": {"hote": "tldrcve.com", "chemins": ["/feed.xml"]}}
+REQUETES_ANNONCES = {"cloudflare-radar": "format=json", "tldrcve": ""}
+BORNES_ANNONCES = {"identifiant": 300, "titre": 300, "resume": 1000, "lien": 500, "verdict": 200, "cvesParAnnonce": 20, "items": 500}
+TOUTES_SOURCES = {**SOURCES, **SOURCES_REGLEMENTAIRES, **SOURCES_CPE, **SOURCES_CVE_INCONNUE, **SOURCES_ANNONCES}
 # Bornes, recopiées de VEILLE_BORNES (packages/shared) et comparées par le même test.
 BORNES = {"titre": 300, "resume": 1000, "description": 1000, "action": 1000, "nomFaille": 300, "editeur": 200, "produit": 200, "nomsCpe": 20, "produitsTouches": 20, "cvesParAvis": 200, "fichesCertSante": 30, "lot": 500, "lots": 40, "epss": 2000}
 CVE_ID = re.compile(r"^CVE-[12]\d{3}-\d{4,9}$")
@@ -106,6 +124,7 @@ ELEMENTS_MAX = BORNES["lot"] * BORNES["lots"]
 REPONSE_MAX = {"cisa-kev": 16 * 1024 * 1024, "nvd": 32 * 1024 * 1024, "epss": 1024 * 1024, "cert-fr": 2 * 1024 * 1024, "cert-sante": 2 * 1024 * 1024}
 REPONSE_MAX.update({s: 2 * 1024 * 1024 for s in SOURCES_REGLEMENTAIRES})
 REPONSE_MAX["nvd-cpe"] = 32 * 1024 * 1024
+REPONSE_MAX.update({"cve-org": 1024 * 1024, "cloudflare-radar": 4 * 1024 * 1024, "tldrcve": 2 * 1024 * 1024})
 # Dictionnaire CPE : une seule page par tranche, sans aucune attente dans le script ; le débit de la NVD (une demande toutes
 # les 6,5 secondes au plus pour les versions, cinq par trente secondes sans clé) est tenu par l'exécutant.
 ERREUR_MAX = 300
@@ -167,6 +186,10 @@ def trop_imbrique(brut):
 
 class Refus(Exception):
     """Erreur expliquée, sans contenu de réponse."""
+
+
+class Introuvable(Refus):
+    """cve.org ne connaît pas l'identifiant demandé (code 404) : ce n'est pas un échec de la lecture."""
 
 
 # ------------------------------------------------------------------ Texte venu de l'extérieur
@@ -366,7 +389,7 @@ class ConnexionMandataire(http.client.HTTPSConnection):
 
 def chemin_admis(source, chemin):
     for motif in TOUTES_SOURCES.get(source, {}).get("chemins", ()):
-        for variable, forme in (("{reference}", CERTFR_ID), ("{slug}", SLUG_CERTSANTE)):
+        for variable, forme in (("{reference}", CERTFR_ID), ("{slug}", SLUG_CERTSANTE), ("{cve}", CVE_ID)):
             if variable in motif:
                 debut, fin = motif.split(variable)
                 if (len(chemin) > len(debut) + len(fin) and chemin.startswith(debut) and chemin.endswith(fin)
@@ -437,6 +460,8 @@ class Client:
             reponse = connexion.getresponse()
             if 300 <= reponse.status < 400:
                 raise Refus("Redirection refusée (code %d) : la source n'est lue qu'à son adresse de la liste fermée." % reponse.status)
+            if reponse.status == 404 and self.source == "cve-org":
+                raise Introuvable("Identifiant inconnu de cve.org (code 404).")
             if reponse.status == 429:
                 raise Refus("Limite de débit de la source atteinte (code 429) : nouvel essai à la prochaine collecte.")
             if reponse.status != 200:
@@ -1197,9 +1222,265 @@ def cpe(client, parametres, bilan):
     raise Refus("Opération inconnue : rien n'a été lu.")
 
 
+# ------------------------------------------------------------------ CVE inconnue de la veille (ADR 0100, lot CVE-INC)
+INSTANT_RFC3339 = re.compile(r"^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))?(Z|[+-]\d{2}:?\d{2})?$")
+CNA_CVE = re.compile(r"^[A-Za-z0-9_.-]{1,60}$")
+REFERENCE_CVE = re.compile(r"^https:\/\/[A-Za-z0-9.-]{1,253}(?::\d{1,5})?(?:[/?#][\x21-\x7e]*)?$")
+INTERDITS_LIEN = re.compile(r"[\"'<>\\`]")
+SSVC_CHAMPS = {"exploitation": ("Exploitation", ("none", "poc", "active")), "automatisable": ("Automatable", ("yes", "no")),
+               "impact": ("Technical Impact", ("partial", "total"))}
+STATUTS_VERSION_CVE = ("affected", "unaffected", "unknown")
+
+
+def instant_rfc3339(v):
+    """Date et heure RFC 3339 (« 2026-11-20T10:00:00.123Z », décalage admis, sans zone : UTC) -> « …T10:00:00.123Z »."""
+    m = INSTANT_RFC3339.fullmatch(v.strip()) if isinstance(v, str) and len(v) <= 40 else None
+    if not m:
+        return None
+    zone = m.group(4) or "Z"
+    zone = "+00:00" if zone == "Z" else (zone if ":" in zone else zone[:3] + ":" + zone[3:])
+    try:
+        d = dt.datetime.fromisoformat("%sT%s%s" % (m.group(1), m.group(2), zone))
+    except ValueError:
+        return None
+    fraction = (m.group(3) or "0").ljust(3, "0")[:3]
+    return d.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.") + fraction + "Z"
+
+
+def objet(v):
+    return v if isinstance(v, dict) else {}
+
+
+def liste(v, maximum=1000):
+    return v[:maximum] if isinstance(v, list) else []
+
+
+def texte_ou_rien(v, maximum):
+    t = texte(v, maximum)
+    return t or None
+
+
+def version_cve(v):
+    return v if isinstance(v, str) and VERSION_CPE.fullmatch(v) and v not in ("*", "-") else None
+
+
+def reference_cve(v):
+    return v if (isinstance(v, str) and len(v) <= BORNES_CVE_INCONNUE["reference"] and REFERENCE_CVE.fullmatch(v)
+                 and not INTERDITS_LIEN.search(v)) else None
+
+
+def evaluation_ssvc(adp):
+    """Conteneur ADP de la CISA (« CISA-ADP ») : évaluation SSVC (options Exploitation, Automatable, Technical Impact) et
+    mention du catalogue KEV (date d'ajout). Toute autre valeur : null."""
+    ssvc, kev = None, None
+    for a in liste(adp, 50):
+        if objet(objet(a).get("providerMetadata")).get("shortName") != "CISA-ADP":
+            continue
+        for m in liste(objet(a).get("metrics"), 50):
+            autre = objet(objet(m).get("other"))
+            contenu = objet(autre.get("content"))
+            if autre.get("type") == "ssvc" and ssvc is None:
+                options = {}
+                for o in liste(contenu.get("options"), 20):
+                    for cle, valeur in objet(o).items():
+                        if isinstance(cle, str) and isinstance(valeur, str):
+                            options[cle] = valeur.strip().lower()
+                ssvc = {champ: (options.get(nom) if options.get(nom) in admis else None)
+                        for champ, (nom, admis) in SSVC_CHAMPS.items()}
+                ssvc["evalueLe"] = instant_rfc3339(contenu.get("timestamp"))
+            elif autre.get("type") == "kev" and kev is None:
+                ajout = contenu.get("dateAdded")
+                kev = date_iso(ajout[:10]) if isinstance(ajout, str) else None
+    return ssvc, kev
+
+
+def fiche_cve_org(d, cve):
+    """Liste blanche d'un enregistrement CVE JSON 5 ; l'identifiant doit être celui demandé."""
+    meta = objet(objet(d).get("cveMetadata"))
+    if meta.get("cveId") != cve:
+        raise Refus("Enregistrement de cve.org illisible : identifiant inattendu.")
+    conteneurs = objet(objet(d).get("containers"))
+    cna = objet(conteneurs.get("cna"))
+    descriptions = liste(cna.get("descriptions")) or liste(cna.get("rejectedReasons"))
+    anglais = next((x.get("value") for x in descriptions if isinstance(x, dict) and str(x.get("lang", "")).lower().startswith("en")), None)
+    references, vues = [], set()
+    for r in liste(cna.get("references")):
+        url = reference_cve(objet(r).get("url"))
+        if url and url not in vues and len(references) < BORNES_CVE_INCONNUE["references"]:
+            vues.add(url)
+            references.append({"url": url, "nom": texte_ou_rien(objet(r).get("name"), BORNES_CVE_INCONNUE["nomReference"])})
+    produits = []
+    for a in liste(cna.get("affected")):
+        a = objet(a)
+        editeur, produit = texte(a.get("vendor"), BORNES_CVE_INCONNUE["editeur"]), texte(a.get("product"), BORNES_CVE_INCONNUE["produit"])
+        if not (editeur or produit) or len(produits) >= BORNES_CVE_INCONNUE["produits"]:
+            continue
+        versions = []
+        for v in liste(a.get("versions"), BORNES_CVE_INCONNUE["versionsParProduit"]):
+            v = objet(v)
+            statut = v.get("status")
+            versions.append({"version": version_cve(v.get("version")),
+                             "statut": statut if statut in STATUTS_VERSION_CVE else None,
+                             "inferieurA": version_cve(v.get("lessThan")), "auPlus": version_cve(v.get("lessThanOrEqual"))})
+        produits.append({"editeur": editeur, "produit": produit, "versions": versions})
+    ssvc, kev = evaluation_ssvc(conteneurs.get("adp"))
+    cna_nom = meta.get("assignerShortName")
+    etat = {"PUBLISHED": "publiee", "REJECTED": "rejetee"}.get(meta.get("state"))
+    return {"cve": cve, "etat": etat, "titre": texte_ou_rien(cna.get("title"), BORNES_CVE_INCONNUE["titre"]),
+            "description": texte_ou_rien(anglais, BORNES_CVE_INCONNUE["description"]),
+            "publieLe": instant_rfc3339(meta.get("datePublished")), "majLe": instant_rfc3339(meta.get("dateUpdated")),
+            "cna": cna_nom if isinstance(cna_nom, str) and CNA_CVE.fullmatch(cna_nom) else None,
+            "references": references, "produits": produits, "ssvc": ssvc, "kevAjoutLe": kev}
+
+
+def cve_inconnue(parametres, mandataire):
+    """Une CVE inconnue de la veille : cve.org puis NVD, chacun avec son état (trouvee, absente, echec). Échec global si les
+    deux ont échoué. Rien d'autre que l'identifiant n'est envoyé."""
+    cve = parametres.get("cve") if isinstance(parametres, dict) else None
+    if not (isinstance(cve, str) and CVE_ID.fullmatch(cve)):
+        raise Refus("Identifiant CVE illisible : rien n'a été lu.")
+    debut = time.monotonic()
+    erreurs = []
+    fiche, etat_cveorg = None, "echec"
+    try:
+        fiche = fiche_cve_org(Client("cve-org", debut, mandataire).json("/api/cve/" + cve), cve)
+        etat_cveorg = "trouvee"
+    except Introuvable:
+        etat_cveorg = "absente"
+    except Exception as e:  # noqa: BLE001 - échec expliqué, sans contenu de réponse
+        erreurs.append("cve.org : " + explication(e))
+    faille, etat_nvd = None, "echec"
+    try:
+        d = Client("nvd", debut, mandataire).json(SOURCES["nvd"]["chemins"][0], "cveId=" + cve)
+        if not isinstance(d, dict) or not isinstance(d.get("vulnerabilities"), list) or not isinstance(d.get("totalResults"), int):
+            raise Refus("Réponse de NVD illisible.")
+        if not d["vulnerabilities"]:
+            etat_nvd = "absente"
+        else:
+            faille = faille_nvd(d["vulnerabilities"][0])
+            if faille is None or faille["cve"] != cve:
+                raise Refus("Réponse de NVD illisible.")
+            etat_nvd = "trouvee"
+    except Exception as e:  # noqa: BLE001
+        faille = None
+        erreurs.append("NVD : " + explication(e))
+    if etat_cveorg == "echec" and etat_nvd == "echec":
+        return {"ok": False, "erreur": une_ligne(" ; ".join(erreurs)), "cveOrg": None, "cveOrgEtat": None, "nvd": None, "nvdEtat": None}
+    return {"ok": True, "erreur": None, "cveOrg": fiche, "cveOrgEtat": etat_cveorg, "nvd": faille, "nvdEtat": etat_nvd}
+
+
+# ------------------------------------------------------------------ Sources facultatives (ADR 0100, lot CVE-INC)
+GRAVITES_ANNONCE = {g.lower(): g for g in GRAVITES}
+VERSION_CVSS = re.compile(r"^[234]\.[01]$")
+VERDICT_TLDRCVE = re.compile(r"\bVerdict\s*:\s*(Patch now if\b[^.\n]{0,180}|Patch now|Next cycle|Watching)", re.IGNORECASE)
+NATURE_TLDRCVE = re.compile(r"^(New|Update)\s*:\s*", re.IGNORECASE)
+
+
+def lien_annonce(source, v):
+    prefixe = "https://%s/" % SOURCES_ANNONCES[source]["hote"]
+    lien = v.strip() if isinstance(v, str) else ""
+    if (not lien.startswith(prefixe) or len(lien) > BORNES_ANNONCES["lien"] or not CARACTERES_LIEN.fullmatch(lien)
+            or INTERDITS_LIEN.search(lien)):
+        return None
+    return lien
+
+
+def score_annonce(v):
+    try:
+        x = float(v) if isinstance(v, (int, float, str)) and not isinstance(v, bool) else None
+    except ValueError:
+        return None
+    return round(x, 1) if x is not None and 0 <= x <= 10 else None
+
+
+def kev_annonce(*valeurs):
+    """`kev_added` : vrai pour true ou une date, faux pour false ; absent ou autre forme : null."""
+    for v in valeurs:
+        if v is True or (isinstance(v, str) and date_iso(v[:10])):
+            return True
+        if v is False:
+            return False
+    return None
+
+
+def preavis_cloudflare(client, _parametres, bilan):
+    """JSON Feed des CVE annoncées (`items[]`) : identifiant, adresse, titre, résumé, date, et `_cve` (identifiant, gravité,
+    score, version CVSS) ; `kev_added` s'il est présent ; toute autre clé est ignorée. Tous les éléments lisibles sont
+    remontés : l'API ne garde que les CVE critiques et celles qui citent un produit surveillé."""
+    d = client.json(SOURCES_ANNONCES["cloudflare-radar"]["chemins"][0], REQUETES_ANNONCES["cloudflare-radar"])
+    items = d.get("items") if isinstance(d, dict) else None
+    if not isinstance(items, list):
+        raise Refus("Flux de Cloudflare Radar illisible : liste « items » absente.")
+    if len(items) > BORNES_ANNONCES["items"]:
+        bilan.tronque = True
+    elements, vus = [], set()
+    for it in items[: BORNES_ANNONCES["items"]]:
+        it = objet(it)
+        c = objet(it.get("_cve"))
+        cve = c.get("id")
+        titre = texte(it.get("title"), BORNES_ANNONCES["titre"])
+        ident = texte(it.get("id"), BORNES_ANNONCES["identifiant"]) if isinstance(it.get("id"), str) else ""
+        ident = ident or (cve if isinstance(cve, str) else "")
+        if not (isinstance(cve, str) and CVE_ID.fullmatch(cve) and titre and ident) or ident in vus:
+            bilan.ecartes += 1
+            continue
+        vus.add(ident)
+        version = c.get("cvss_version")
+        version = str(version) if isinstance(version, (str, int, float)) and not isinstance(version, bool) else ""
+        gravite = c.get("severity")
+        elements.append({
+            "identifiant": ident, "cve": cve, "titre": titre,
+            "resume": texte(it.get("summary"), BORNES_ANNONCES["resume"]),
+            "lien": lien_annonce("cloudflare-radar", it.get("url")),
+            "publieLe": instant_rfc3339(it.get("date_published")),
+            "gravite": GRAVITES_ANNONCE.get(gravite.strip().lower()) if isinstance(gravite, str) else None,
+            "score": score_annonce(c.get("score")),
+            "versionCvss": version if VERSION_CVSS.fullmatch(version) else None,
+            "kev": kev_annonce(c.get("kev_added"), it.get("kev_added")),
+        })
+    return elements
+
+
+def resumes_tldrcve(client, _parametres, bilan):
+    """Flux RSS 2.0 de tldrcve : titre (« New: … » ou « Update: … »), CVE citées par le titre et le résumé, résumé du flux,
+    verdict (phrase « Verdict: … » du résumé seulement), date et lien (https sur tldrcve.com, sinon l'élément est écarté)."""
+    elements, vus = [], set()
+    items = lire_rss(client.lire(SOURCES_ANNONCES["tldrcve"]["chemins"][0]))
+    if len(items) >= RSS_ITEMS_MAX:
+        bilan.tronque = True
+    for item in items:
+        titre = texte(item.get("title"), BORNES_ANNONCES["titre"])
+        resume = texte(item.get("description"), BORNES_ANNONCES["resume"])
+        lien = lien_annonce("tldrcve", item.get("link"))
+        guid = texte(item.get("guid"), BORNES_ANNONCES["identifiant"])
+        ident = guid or lien
+        cves = list(dict.fromkeys(c for c in CVE_DANS_TEXTE.findall(titre + " " + resume) if CVE_ID.fullmatch(c)))
+        if not (titre and lien and ident and cves) or ident in vus:
+            bilan.ecartes += 1
+            continue
+        vus.add(ident)
+        m = NATURE_TLDRCVE.match(titre)
+        nature = None if not m else ("nouvelle" if m.group(1).lower() == "new" else "mise_a_jour")
+        v = VERDICT_TLDRCVE.search(resume)
+        verdict = verdict_texte = None
+        if v:
+            phrase = v.group(1).strip().rstrip(".")
+            bas = phrase.lower()
+            verdict = ("patch-now-if" if bas.startswith("patch now if") else "patch-now" if bas == "patch now"
+                       else "next-cycle" if bas == "next cycle" else "watching")
+            verdict_texte = texte(phrase, BORNES_ANNONCES["verdict"]) or None
+            if verdict_texte is None:
+                verdict = None
+        elements.append({"identifiant": ident, "titre": titre, "nature": nature,
+                         "cves": cves[: BORNES_ANNONCES["cvesParAnnonce"]], "resume": resume, "verdict": verdict,
+                         "verdictTexte": verdict_texte, "lien": lien, "publieLe": horodatage_rss(item.get("pubDate"))})
+    return elements
+
+
 COLLECTES = {"cisa-kev": kev, "nvd": nvd, "epss": epss, "cert-fr": cert_fr, "cert-sante": cert_sante}
 COLLECTES.update({s: reglementaire(s) for s in SOURCES_REGLEMENTAIRES})
 COLLECTES["nvd-cpe"] = cpe
+COLLECTES.update({"cloudflare-radar": preavis_cloudflare, "tldrcve": resumes_tldrcve})
 
 
 def executer(p):
@@ -1207,6 +1488,15 @@ def executer(p):
         if not isinstance(p, dict):
             raise Refus("Demande illisible.")
         source, parametres = p.get("source"), p.get("parametres")
+        if source == "cve-inconnue":
+            # CVE inconnue (lot CVE-INC) : deux lectures (cve.org, NVD), chacune avec son état ; forme de sortie propre.
+            if not isinstance(parametres, dict):
+                raise Refus("Demande illisible.")
+            try:
+                return cve_inconnue(parametres, lire_mandataire(p.get("mandataire")))
+            except Exception as erreur:  # noqa: BLE001
+                return {"ok": False, "erreur": une_ligne(explication(erreur)), "cveOrg": None, "cveOrgEtat": None,
+                        "nvd": None, "nvdEtat": None}
         if source not in COLLECTES or source not in TOUTES_SOURCES:
             raise Refus("Source inconnue : rien n'a été lu.")
         if not isinstance(parametres, dict):

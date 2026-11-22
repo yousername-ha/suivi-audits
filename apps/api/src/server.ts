@@ -60,6 +60,8 @@ async function main() {
               .tic()
               .catch((e: unknown) => log.warn({ err: String(e) }, 'purge des journaux des vulnérabilités'));
             await svc.vulnerabilites.veille.planifier();
+            // Lot CVE-INC : sources facultatives activées (Cloudflare Radar, tldrcve), à leur fréquence en minutes.
+            await svc.vulnerabilites.annonces.planifier();
           })
           .catch((e: unknown) => log.warn({ err: String(e) }, 'veille des vulnérabilités')),
       )

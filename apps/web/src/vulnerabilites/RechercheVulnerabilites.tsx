@@ -3,7 +3,8 @@
    groupés : CVE (y compris celles de la veille non détectées sur le parc), machines internes, actifs exposés, applications.
    Chaque résultat ouvre la page existante ; « tout voir », la liste existante filtrée. Clavier : flèches haut et bas,
    Entrée (Début et Fin restent au champ) ; Échap ferme la liste (une seconde fois, efface la saisie). Résultats annoncés par une zone de statut. Aucun
-   appel sortant : une CVE inconnue de la veille locale est seulement signalée. */
+   appel sortant : une CVE inconnue de la veille locale est signalée, et sa fiche s'ouvre (bouton, ou Entrée) ; c'est là, sur
+   le clic de la personne, que cve.org et NVD peuvent être consultés (lot CVE-INC). */
 import { useDebouncedValue } from '@mantine/hooks';
 import { RECHERCHE_GLOBALE_BORNES, type RechercheGlobaleDto } from '@suivi/shared';
 import { useQuery } from '@tanstack/react-query';
@@ -14,6 +15,7 @@ import { useCan } from '../session';
 import {
   annonceRecherche,
   DELAI_FRAPPE,
+  lienFicheCve,
   type GroupeOptions,
   type OptionRecherche,
   optionsRecherche,
@@ -128,7 +130,23 @@ export function RechercheVulnerabilitesVue({
           <p className="rv__inconnue">
             <strong>{reponse.cveInconnue.cve}</strong> : CVE inconnue de la veille locale. Aucune source collectée ne la
             cite et elle n’est détectée sur aucune machine ni aucun actif exposé. La plateforme ne consulte aucun
-            service extérieur depuis cette recherche.
+            service extérieur depuis cette recherche.{' '}
+            {/* Lot CVE-INC : sa fiche propose la consultation de cve.org et NVD, sur clic (Entrée l'ouvre aussi). */}
+            <button
+              type="button"
+              className="rv__ouvrir"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() =>
+                onChoisir({
+                  cle: `inconnue-${reponse.cveInconnue!.cve}`,
+                  titre: reponse.cveInconnue!.cve,
+                  detail: 'CVE inconnue de la veille locale',
+                  to: lienFicheCve(reponse.cveInconnue!.cve),
+                })
+              }
+            >
+              Ouvrir sa fiche (consultation de cve.org et NVD sur votre clic)
+            </button>
           </p>
         )}
         {montrer && !erreur && reponse && !groupes.length && !reponse.cveInconnue && (
@@ -226,6 +244,11 @@ export function RechercheVulnerabilites() {
       if (ouvert && o) {
         e.preventDefault();
         choisir(o);
+      } else if (ouvert && actif < 0 && !options.length && reponse?.cveInconnue) {
+        // Lot CVE-INC : une CVE inconnue de la veille, seul résultat : Entrée ouvre sa fiche.
+        e.preventDefault();
+        setOuvert(false);
+        navigate(lienFicheCve(reponse.cveInconnue.cve));
       }
       return;
     }

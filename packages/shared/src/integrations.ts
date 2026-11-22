@@ -236,6 +236,10 @@ export const TYPES_INTEGRATION: readonly TypeIntegrationDefinition[] = [
       { methode: 'GET', chemin: '/rest/hosts', parametres: ['limit', 'offset'] },
       { methode: 'GET', chemin: '/rest/hosts/{uuid}' },
       { methode: 'GET', chemin: '/rest/system' },
+      // Lot CVE-INC (ADR 0100) : contrôles Tenable qui citent une CVE inconnue de la veille, lecture seule ; requête fixe
+      // écrite dans le script (filtre `xrefs`, liste blanche des champs), seul l'identifiant de la CVE y varie. Opération
+      // hors de la file des connecteurs (file dédiée du module Vulnérabilités).
+      { methode: 'GET', chemin: '/rest/plugin' },
     ],
     operations: ['tester', 'synchroniser'],
   },

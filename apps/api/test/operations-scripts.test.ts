@@ -8,7 +8,9 @@ it('exécute le protocole hôte, les sauvegardes de sécurité, les interruption
     timeout: 60000,
   });
   // Lot CPE-1 (ADR 0100) : dix tests de plus (passage court « cpe-versions », témoin, débit, file des versions, tranches).
-  expect(r.stderr).toContain('Ran 83 tests');
+  // Lot CVE-INC : neuf de plus (file des CVE inconnues au passage court et complet, témoin commun, rapport refusé clos en
+  // échec, contrôles Tenable, troisième file de la veille).
+  expect(r.stderr).toContain('Ran 92 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);
 it('exécute le script isolé des connecteurs contre un faux service HTTPS local (module Intégrations, ADR 0076)', async () => {
@@ -26,6 +28,13 @@ it('exécute le dictionnaire CPE du script isolé de la veille contre un faux se
     timeout: 60000,
   });
   expect(r.stderr).toContain('Ran 9 tests');
+  expect(r.stderr).toMatch(/\nOK\n/);
+}, 65000);
+it('exécute la CVE inconnue et les sources facultatives des scripts isolés contre un faux service HTTPS local (ADR 0100, lot CVE-INC)', async () => {
+  const r = await promisify(execFile)('python3', [path.join(REPO, 'scripts/tests/test_cve_inconnue.py')], {
+    timeout: 60000,
+  });
+  expect(r.stderr).toContain('Ran 13 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);
 it('exécute le script isolé de la veille contre un faux service HTTPS local (module Vulnérabilités, ADR 0100)', async () => {

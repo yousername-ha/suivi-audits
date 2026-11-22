@@ -307,6 +307,10 @@ describe('rendu accessible', () => {
     expect(html).toContain('<strong>CVE-2026-99999</strong> : CVE inconnue de la veille locale.');
     expect(html).toContain('La plateforme ne consulte aucun service extérieur depuis cette recherche.');
     expect(html).toContain('aria-expanded="false"');
+    // Lot CVE-INC : sa fiche s'ouvre (bouton du panneau, ou Entrée) ; la consultation de cve.org et NVD y part sur clic.
+    expect(html).toMatch(
+      /<button type="button" class="rv__ouvrir">Ouvrir sa fiche \(consultation de cve\.org et NVD sur votre clic\)<\/button>/,
+    );
   });
   it('erreur et recherche en cours dites en texte', () => {
     expect(rendre({ reponse: undefined, erreur: 'Erreur 500' })).toContain('Recherche impossible : Erreur 500');
