@@ -214,7 +214,7 @@ describe('écran de la veille : source « Dictionnaire des produits (CPE) »', (
   it('explications de place, réglages et copie complète pour qui administre ; lecture seule sinon', () => {
     const admin = section(etat(), true);
     expect(admin).toContain('Dictionnaire des produits (CPE)');
-    expect(admin).toContain(EXPLICATION_COPIE_COMPLETE.replace(/’/g, '’'));
+    expect(admin).toContain(EXPLICATION_COPIE_COMPLETE);
     expect(admin).toContain('environ 40 Mo dans la base');
     expect(admin).toContain('Désactiver la source');
     expect(admin).toContain('Lecture des nouveautés');
