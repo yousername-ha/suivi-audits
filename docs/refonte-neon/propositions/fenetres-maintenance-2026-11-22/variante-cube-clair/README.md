@@ -2,7 +2,7 @@
 
 22/11/2026, Europe/Paris. Session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`).
 
-**Essai graphique à valider.** La demande est interprétée dans la continuité des fenêtres : utiliser leurs surfaces
+**Variante refusée par le RSSI le 22/11/2026 — ne pas intégrer cette palette.** La demande est interprétée dans la continuité des fenêtres : utiliser leurs surfaces
 intérieures pour reprendre en clair les teintes cyan, bleu et violet du cube situé dans le cercle de la maintenance.
 La capture de maintenance elle-même n’est pas modifiée. La proposition précédente reste disponible.
 
@@ -35,3 +35,5 @@ Pour reproduire, ajouter `cube-clair.css` au CSS de proposition lu par l’[outi
 `fenetres-maintenance.css`, conserver l’attribut de proposition et demander le thème `clair`.
 
 [Retour aux fenêtres clair/sombre](../README.md).
+
+Nouvelle piste : [fiche sobre inspirée des captures Tenacy](../../fenetres-epurees-2026-11-22/README.md), encore à valider.

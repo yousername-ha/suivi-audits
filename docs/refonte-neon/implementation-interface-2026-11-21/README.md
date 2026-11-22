@@ -70,8 +70,9 @@ Le RSSI a demandé le style de la page de maintenance pour les fenêtres. Une [p
 est disponible avec des détails HD, les écrans complets et le CSS isolé. **À valider visuellement avant généralisation** ;
 elle ne remplace pas les règles fonctionnelles et ne corrige pas à elle seule les limites du découpage des fiches.
 
-Dernier essai demandé : [palette du cube central, en clair](../propositions/fenetres-maintenance-2026-11-22/variante-cube-clair/README.md),
-avec un intérieur cyan/bleu/lavande plus présent. Cet essai reste à valider avant report dans le thème commun.
+La palette du cube cyan/bleu/lavande a été **refusée** par le RSSI. Dernière piste :
+[fiche sobre inspirée des captures Tenacy](../propositions/fenetres-epurees-2026-11-22/README.md), avec aides contextuelles et
+une surface blanche. Un seul exemple clair est proposé pour validation avant déclinaison ; ne pas généraliser automatiquement.
 
 ## Images et preuves de cette remise
 
