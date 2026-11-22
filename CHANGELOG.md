@@ -6,7 +6,18 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune migration, aucune action : correctif de l'interface du module Vulnérabilités.
+Aucune migration, aucune action : correctif de l'interface du module Vulnérabilités, et préparation du service de mise à
+jour pour la recherche CPE (sans effet tant que cette recherche n'est pas livrée).
+
+### Ajouté
+
+- **Service de mise à jour : veille active pour la recherche CPE** (décision du RSSI du 22/11/2026,
+  [ADR 0097, addendum](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md)). Quand une saisie de produit est en cours
+  dans le module Vulnérabilités, le service intercale entre ses passages habituels (toutes les 15 secondes) des passages
+  courts toutes les 3 secondes, limités à la demande de versions CPE et bornés à 30 secondes. Aucun appel de plus hors de
+  ces moments, rien pendant une maintenance, une intervention ou une mise à jour, rien si le flux « veille-vulnerabilites »
+  est fermé. L'application ne lance toujours pas l'exécutant et n'écrit rien sur le serveur. Sans effet avant la livraison
+  de la recherche CPE par le module Vulnérabilités.
 
 ### Corrigé
 

@@ -689,7 +689,7 @@ Le script vérifie l'empreinte et la structure, puis demande de taper `RESTAURER
 
 **11.5 Activer les demandes manuelles depuis Configuration système > Sauvegardes et restauration (A1a).**
 
-**Installation normale depuis 3.0.2 : déjà activé automatiquement.** Le service `updater` exécute également le poller commun, sans cron supplémentaire. Passer à la section 11.6 pour la clé et le catalogue. Les commandes A1a ci-dessous restent utiles uniquement pour les installations antérieures ou un exécutant hôte choisi explicitement.
+**Installation normale depuis 3.0.2 : déjà activé automatiquement.** Le service `updater` exécute également le poller commun, sans cron supplémentaire. Il repasse toutes les 15 secondes environ ; pendant la saisie d'un produit surveillé (module Vulnérabilités, flux « veille-vulnerabilites » ouvert), il intercale des passages courts toutes les 3 secondes pour la seule recherche des versions CPE, sans autre effet ([ADR 0097, addendum du 22/11/2026](adr/0097-flux-sortants-pilotes-par-les-modules.md)). Passer à la section 11.6 pour la clé et le catalogue. Les commandes A1a ci-dessous restent utiles uniquement pour les installations antérieures ou un exécutant hôte choisi explicitement.
 
 La migration additive `006_sauvegardes.sql` est appliquée au démarrage. L’application enregistre une demande ; elle n’exécute aucun shell et ne reçoit ni clé ni chemin. Un exécutant sur le serveur interroge la file. Il réutilise `backup.sh`, avec chiffrement obligatoire. La restauration reste la procédure 11.4 ; l’empreinte SHA-256 vérifie la cohérence du fichier, pas son authenticité ni sa restaurabilité.
 
