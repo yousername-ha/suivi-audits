@@ -195,7 +195,7 @@ test('Fiches en parties : risque élargi, découpé, nommé, navigable ; aide d�
     await expect(fin).toHaveAccessibleDescription(/Recopiez-les depuis le coffre-fort/);
     await fin.fill('ABCD-EFGH');
     const aide = securite
-      .locator('.mantine-InputWrapper-root', { has: fin })
+      .locator('.mantine-InputWrapper-root', { has: page.getByLabel('Les 8 derniers caractères du poivre') })
       .getByRole('button', { name: 'Aide sur ce champ' });
     await expect(aide).toHaveAttribute('aria-expanded', 'false');
     await aide.focus();

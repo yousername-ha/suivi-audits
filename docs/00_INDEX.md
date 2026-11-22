@@ -2,6 +2,10 @@
 
 ## Jeu court à lire d'abord (18/10/2026)
 
+0. [Fiches sobres et harmonisation — intégration du 22/11/2026](refonte-neon/integration-fiches-sobres-2026-11-22/README.md) :
+   comparaison avec la livraison Codex `0ac9992d`, habillage sobre et aides contextuelles, fiches élargies puis
+   découpées, recette sur pile réelle (134 fenêtres balayées), captures natives et points à valider par le RSSI.
+
 0. [Refonte Neon compacte — intégration et recette du 22/11/2026](refonte-neon/integration-2026-11-22/README.md) :
    comparaison avec la 7.5.1, moteur des fiches en parties, défauts corrigés, recette de bout en bout sur pile réelle,
    captures natives et liste de ce que le RSSI doit valider avant fusion.

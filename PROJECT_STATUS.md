@@ -1,5 +1,15 @@
 # État synthétique du projet
 
+> **22/11/2026 — fiches sobres et harmonisation de l'interface Neon (session Coeur)** : branche `claude/fiches-sobres`
+> (elle contient `claude/refonte-neon-compacte`), PR de travail vers `claude-suivi-smsi`, **sans fusion, publication ni
+> mise en production**. [Résumé technique](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md),
+> [recette](docs/refonte-neon/integration-fiches-sobres-2026-11-22/RECETTE.md) et
+> [captures](docs/refonte-neon/integration-fiches-sobres-2026-11-22/captures/README.md). Habillage sobre validé par le
+> RSSI et aides contextuelles repris de la livraison Codex `0ac9992d` ; moteur des fiches terminé (élargissement sur
+> écran de bureau, parties nommées par leur premier champ, « Sécurité » découpée, journaux et longs tableaux en
+> défilement). **Attendu du RSSI** : validation graphique sur les captures (clair, sombre, normal, compact), des six
+> captures de référence modifiées et du test de bout en bout étendu. La suite graphique revient à la session Neon.
+>
 > **22/11/2026 — refonte Neon compacte intégrée et recettée sur pile réelle (session Coeur)** : branche
 > `claude/refonte-neon-compacte`, PR de travail vers `claude-suivi-smsi`, **sans fusion ni déploiement**.
 > [Résumé technique](docs/refonte-neon/integration-2026-11-22/README.md) et [recette](docs/refonte-neon/integration-2026-11-22/RECETTE.md).

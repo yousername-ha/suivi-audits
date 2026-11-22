@@ -62,7 +62,8 @@ Sections déclarées dans cette livraison : fiche de risque (« Informations »,
 autres fiches utilisent les intitulés tirés de leurs titres ; déclarer une section se fait en posant
 `data-fiche-section="Nom"` sur le titre ou le bloc qui l'ouvre.
 
-**Limite assumée.** Le principe « aucune fiche ne défile verticalement » n'est pas tenu quand le contenu ne peut pas
+**Limite levée depuis** par la [livraison des fiches sobres](../integration-fiches-sobres-2026-11-22/README.md) : la
+fenêtre « Sécurité » se découpe dans toutes les tailles vérifiées. État à la date de cette intégration : **limite assumée.** Le principe « aucune fiche ne défile verticalement » n'est pas tenu quand le contenu ne peut pas
 être découpé sans risque (carte ou grille plus haute qu'une partie, document intégré) : la fenêtre défile alors comme
 dans la 7.5.1. C'est le cas de « Sécurité » en 1280 × 720 (trois parties entières en 1920 × 1080).
 
