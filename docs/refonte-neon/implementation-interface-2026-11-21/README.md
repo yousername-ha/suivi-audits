@@ -70,6 +70,9 @@ Le RSSI a demandé le style de la page de maintenance pour les fenêtres. Une [p
 est disponible avec des détails HD, les écrans complets et le CSS isolé. **À valider visuellement avant généralisation** ;
 elle ne remplace pas les règles fonctionnelles et ne corrige pas à elle seule les limites du découpage des fiches.
 
+Dernier essai demandé : [palette du cube central, en clair](../propositions/fenetres-maintenance-2026-11-22/variante-cube-clair/README.md),
+avec un intérieur cyan/bleu/lavande plus présent. Cet essai reste à valider avant report dans le thème commun.
+
 ## Images et preuves de cette remise
 
 [Galerie des neuf captures natives](captures/README.md), en clair et sombre, avec exemples en normal et compact.

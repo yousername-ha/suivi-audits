@@ -6,6 +6,12 @@ Le RSSI demande d’habiller les fenêtres récemment retravaillées dans le sty
 Cette proposition porte sur **7 variantes de fenêtres, chacune en clair et sombre**. Elle n’est pas présentée comme la
 recette de toutes les fenêtres de la plateforme. Le menu principal et les pages de fond conservent leur habillage.
 
+## Dernier essai clair — palette du cube central
+
+Le RSSI demande ensuite de reprendre les couleurs du cube central à l’intérieur des fenêtres en clair.
+La [variante cyan/bleu/lavande et son détail HD](variante-cube-clair/README.md) est disponible pour comparaison et validation.
+Les images ci-dessous restent celles de la première proposition.
+
 ## Aperçu en détail
 
 Captures d’un vrai formulaire, rendues par le navigateur à un rapport de pixels de 2, sans agrandissement d’image.

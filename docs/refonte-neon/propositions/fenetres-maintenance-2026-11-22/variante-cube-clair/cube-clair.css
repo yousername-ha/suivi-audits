@@ -1,0 +1,35 @@
+/* Essai demandé le 22/11/2026 : teintes du cube cyan/bleu/violet, transposées en clair.
+   Complément de fenetres-maintenance.css, réservé à la proposition visuelle. */
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light'] {
+  --fm-fond: #e1edf6;
+  --fm-entete: #d3e8ef;
+  --fm-champ: #f8fcff;
+  --fm-champ-fin: #e8eef9;
+  --fm-encre: #17364e;
+  --fm-secondaire: #4a6381;
+  --fm-trait: #879fbc;
+  --fm-trait-doux: #b1c5d9;
+  --fm-cyan: #087b8c;
+  --fm-violet: #745caf;
+  --fm-reflet: rgb(35 156 179 / 13%);
+  --fm-reflet-violet: rgb(115 85 185 / 10%);
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir)) {
+  background: linear-gradient(125deg, #d7edf1 0%, #e1edf7 46%, #e7e4f5 100%);
+  border-inline-start-color: #71a6b5;
+  border-inline-end-color: #a397c3;
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-header, .mantine-Drawer-content:not(.nav-tiroir) > .mantine-Drawer-header) {
+  background: linear-gradient(110deg, #cce7ed, #e0e8f5 62%, #e7e2f2);
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light'] .fiche-mini-menu-hote {
+  background: linear-gradient(100deg, #d3e9ef, #e2e8f5);
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='light']
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  :is(.fenetre-actions, [data-fiche-actions-fixes]) {
+  background: linear-gradient(110deg, #deedf4, #e6e6f5);
+  box-shadow: 0 1rem 0 var(--fm-fond);
+}

@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-22",
+  "fuseau": "Europe/Paris",
+  "frontend": "013ad9b68516b1d8e11b4f24d207c3eeea49dea7",
+  "CSSBaseSha256": "df2fbec7844418d3c24650d78eefc9e67b2b222137fcea822b2afa7f9215f4e5",
+  "CSSVarianteSha256": "e8ec46956eece26d5fcca7cc390e6f404b9200be3c25806214a1c60537934134",
+  "contexte": "Frontend réel compilé avec API interceptée et données fictives ; CSS de proposition ajouté au flux de recette seulement.",
+  "portee": "Palette du thème clair uniquement ; pas de changement des composants, textes, dimensions ou comportements.",
+  "campagnes": [
+    {
+      "groupe": "hd",
+      "casPages": 1,
+      "ouverturesFenetres": 1,
+      "erreursJavaScript": 0,
+      "routesInattendues": 0,
+      "mutationsMetier": 0
+    },
+    {
+      "groupe": "normal",
+      "casPages": 1,
+      "ouverturesFenetres": 3,
+      "erreursJavaScript": 0,
+      "routesInattendues": 0,
+      "mutationsMetier": 0
+    }
+  ],
+  "captures": [
+    {
+      "fichier": "captures/fenetre-produit-cube-clair-hd.png",
+      "largeur": 1472,
+      "hauteur": 1228,
+      "pixelRatioNavigateur": 2,
+      "sha256": "9a5199196a277ab7302532e5ecf705028f3a2a30b2bfabae235cac1242cae36c"
+    },
+    {
+      "fichier": "captures/produit-cube-clair-complet-1600.png",
+      "largeur": 3200,
+      "hauteur": 2000,
+      "pixelRatioNavigateur": 2,
+      "sha256": "8c27127b448b72d116952ec23b7f0c38c874bd1a2b62b1d8afe58fa180981dac"
+    },
+    {
+      "fichier": "captures/risque-cube-clair-informations-1920.png",
+      "largeur": 1920,
+      "hauteur": 1080,
+      "pixelRatioNavigateur": 1,
+      "sha256": "9b68ae5d1147e50d55108b440f74032f406512b8c6d22afdbe5e3f8223a034a7"
+    },
+    {
+      "fichier": "captures/risque-cube-clair-analyse-1920.png",
+      "largeur": 1920,
+      "hauteur": 1080,
+      "pixelRatioNavigateur": 1,
+      "sha256": "62688acb1dc77cd3a15264db3a477b0b99ffec82e2b82c36487779b16a556c22"
+    }
+  ],
+  "validationHumaine": false,
+  "limites": [
+    "Aucun test métier, serveur/API/base/Docker exécuté pour ce changement graphique.",
+    "Les limites connues du découpage automatique du prototype restent à corriger ; la palette ne les résout pas.",
+    "Aucune intégration dans le produit ni généralisation avant validation graphique."
+  ]
+}

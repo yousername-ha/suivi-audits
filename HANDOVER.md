@@ -3,6 +3,7 @@
 > **22/11/2026 — proposition graphique des fenêtres** : [galerie clair/sombre](docs/refonte-neon/propositions/fenetres-maintenance-2026-11-22/README.md)
 > dans le style de la page de maintenance : surfaces bleu nuit/blanc bleuté, contours cyan et accents violets discrets,
 > champs rectangulaires et commandes en contour. Sept variantes, 28 images dont détails HD et exemples compacts.
+> Variante suivante : [intérieur clair cyan/bleu/lavande du cube central](docs/refonte-neon/propositions/fenetres-maintenance-2026-11-22/variante-cube-clair/README.md), à valider.
 > CSS isolé, non importé dans le produit ; 12 cas client / 24 ouvertures avec API fictive. Validation graphique attendue.
 > Les limites du prototype de mini-menu restent à corriger séparément ; aucune recette serveur ou livraison de version.
 >
