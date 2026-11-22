@@ -2,6 +2,26 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+Aucune action. Changement d'affichage de la carte de la surface externe (module Vulnérabilités) : ni migration, ni
+commande sur le serveur.
+
+### Modifié
+
+- Vulnérabilités, **carte de la surface externe** (vue EASM, demande du RSSI du 22/11/2026 : lisible avec beaucoup
+  d'adresses et de noms de domaine, sans changer le style).
+  - La carte n'a plus de cadre : elle se pose dans la page, qui défile, sans paraître dans une fenêtre.
+  - Internet rejoint les branches par un seul tronc : chaque branche s'y raccorde par un court trait, au lieu d'une
+    courbe chacune, qui formait une colonne illisible au-delà de quelques dizaines de branches. Le tronc est rouge
+    jusqu'à la dernière branche qui porte un chemin d'entrée critique.
+  - Noms rangés dans l'ordre naturel des nombres (« exemple-2 » avant « exemple-10 »).
+  - Deux regroupements de plus, une ligne par adresse avec les noms qui y résolvent : **Bloc d'adresses** (/24 en IPv4,
+    /64 en IPv6) et **Hébergeur** (fournisseur, numéro de système autonome, pays, CDN). Une adresse sans hébergeur connu
+    va dans « Hébergeur inconnu » (session « Ergonomie et refonte Neon »).
+
 ## [7.6.0] — 2026-11-22
 
 ### Notes de mise à jour

@@ -85,6 +85,9 @@ export interface ActifCarteDto {
   sources: SourceSurface[];
   /** Actif d'AlgoLightHouse (fiche, machines internes) ; null : vu par Silène seul (aucune liaison possible). */
   alhId: string | null;
+  /** 7.6.1 : réseau de l'hôte selon AlgoLightHouse (fournisseur, numéro de système autonome, pays, CDN), pour le
+      regroupement « Hébergeur » de la carte. Absent ou null : inconnu (domaine, hôte vu par Silène seul). */
+  reseau?: { asn: string | null; fai: string | null; pays: string | null; cdn: boolean | null } | null;
   /** Ce que Silène en dit ; null : Silène ne le voit pas (pour la personne). */
   silene: SileneCarteDto | null;
 }

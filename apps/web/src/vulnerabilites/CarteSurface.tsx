@@ -901,6 +901,20 @@ export function CarteSurface({
             <path d={`M${X.rempart + 4} ${HAUT_BALAYAGE} L${X.rempart + 4} ${scene.hauteur - 16}`} />
           </g>
           <g aria-hidden="true">
+            {scene.tronc && (
+              <>
+                <path
+                  d={`M${scene.origine.x + 12} ${scene.tronc.y0} L${scene.tronc.x} ${scene.tronc.y0} L${scene.tronc.x} ${scene.tronc.y1}`}
+                  className="sc-lien"
+                />
+                {scene.tronc.yCritique !== null && (
+                  <path
+                    d={`M${scene.origine.x + 12} ${scene.tronc.y0} L${scene.tronc.x} ${scene.tronc.y0} L${scene.tronc.x} ${scene.tronc.yCritique}`}
+                    className="sc-lien sc-lien--critique"
+                  />
+                )}
+              </>
+            )}
             {scene.liens.map((l) => (
               <path
                 key={l.cle}

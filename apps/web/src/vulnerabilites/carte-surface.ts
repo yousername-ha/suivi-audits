@@ -39,10 +39,13 @@ import {
 import { libelleCriticite, libellePerimetre } from './surface';
 import { libellePortActif, produitPortSilene } from './surface-silene';
 
-export type Regroupement = 'parent' | 'adresse' | 'perimetre';
+export type Regroupement = 'parent' | 'adresse' | 'bloc' | 'hebergeur' | 'perimetre';
 export const OPTIONS_REGROUPEMENT: { value: Regroupement; label: string }[] = [
   { value: 'parent', label: 'Nom de domaine' },
   { value: 'adresse', label: 'Adresse IP publique' },
+  // 7.6.1 (choix du RSSI du 22/11/2026) : lecture d'une grande surface par réseau, une ligne par adresse.
+  { value: 'bloc', label: 'Bloc d’adresses' },
+  { value: 'hebergeur', label: 'Hébergeur' },
   { value: 'perimetre', label: 'Périmètre' },
 ];
 /** Regroupement par défaut : par domaine parent (confirmé par le RSSI le 17/11/2026, lot ALH5). */
@@ -60,8 +63,31 @@ export const SEUIL_DEPLIE = { lignes: 30, branches: 12 } as const;
 
 const GROUPE_HOTES = '§hotes';
 const GROUPE_SANS_ADRESSE = '§sans-adresse';
+const GROUPE_HEBERGEUR_INCONNU = '§hebergeur-inconnu';
+/** Branches de reste, rangées après les autres à égalité d'alertes. */
+const GROUPES_RESTE = new Set([GROUPE_HOTES, GROUPE_SANS_ADRESSE, GROUPE_HEBERGEUR_INCONNU]);
+
+/** Bloc d'une adresse normalisée (7.6.1) : /24 en IPv4 (« 192.0.2.0/24 »), /64 en IPv6 (« 2001:db8:0:1::/64 »). */
+export function blocAdresse(ip: string): string {
+  if (!ip.includes(':')) return `${ip.split('.').slice(0, 3).join('.')}.0/24`;
+  return `${ip
+    .split(':')
+    .slice(0, 4)
+    .map((g) => g.replace(/^0+(?=.)/, ''))
+    .join(':')}::/64`;
+}
+
+/** Hébergeur d'un hôte (7.6.1) : clé et libellé de sa branche, d'après le réseau qu'en donne AlgoLightHouse (fournisseur,
+    numéro de système autonome, pays, CDN). Sans réseau connu (Silène seul, nom sans hôte) : « Hébergeur inconnu ». */
+export function hebergeurDe(h: Pick<ActifCarteDto, 'reseau'> | null | undefined): { cle: string; libelle: string } {
+  const r = h?.reseau;
+  if (!r || (!r.asn && !r.fai)) return { cle: GROUPE_HEBERGEUR_INCONNU, libelle: 'Hébergeur inconnu' };
+  const morceaux = [r.fai ?? 'Fournisseur non communiqué', r.asn ? `AS${r.asn}` : null, r.pays, r.cdn ? 'CDN' : null];
+  return { cle: `n:${r.asn ?? ''}|${r.fai ?? ''}`, libelle: morceaux.filter(Boolean).join(' · ') };
+}
 const rangCriticite = (c: CriticiteAlh | null) => (c ? CRITICITES_ALH.indexOf(c) : CRITICITES_ALH.length);
-const parNom = (a: string, b: string) => a.localeCompare(b, 'fr');
+/** Ordre des noms : alphabétique, nombres dans l'ordre naturel (« exemple-2 » avant « exemple-10 »), 7.6.1. */
+const parNom = (a: string, b: string) => a.localeCompare(b, 'fr', { numeric: true });
 
 /* ------------------------------------------------------------------ Modèle */
 /** Constat Silène d'une ligne et les ports de l'hôte que ses lignes de détail citent. */
@@ -253,7 +279,14 @@ export function construireModele(dto: CarteSurfaceDto, regroupement: Regroupemen
     return { cle: `r:${r}`, libelle: r, racine: r };
   };
 
-  if (regroupement === 'adresse') {
+  if (regroupement === 'adresse' || regroupement === 'bloc' || regroupement === 'hebergeur') {
+    // Une ligne par adresse, avec les noms qui y résolvent ; la branche est l'adresse elle-même, son bloc ou son hébergeur.
+    const brancheIp = (ip: string): { cle: string; libelle: string } =>
+      regroupement === 'adresse'
+        ? { cle: `a:${ip}`, libelle: ip }
+        : regroupement === 'bloc'
+          ? { cle: `b:${blocAdresse(ip)}`, libelle: blocAdresse(ip) }
+          : hebergeurDe(hoteParIp.get(ip));
     const parIp = new Map<string, ActifCarteDto[]>();
     const sansAdresse: ActifCarteDto[] = [];
     for (const d of domaines) {
@@ -263,7 +296,8 @@ export function construireModele(dto: CarteSurfaceDto, regroupement: Regroupemen
     }
     for (const ip of hoteParIp.keys()) if (!parIp.has(ip)) parIp.set(ip, []);
     for (const [ip, noms] of parIp) {
-      const g = groupe(`a:${ip}`, ip);
+      const b = brancheIp(ip);
+      const g = groupe(b.cle, b.libelle);
       g.lignes.push(ligne(`a:${ip}`, noms, hoteParIp.get(ip) ?? null, ip, noms[0]?.valeur ?? ip));
     }
     for (const d of sansAdresse)
@@ -455,8 +489,7 @@ export function filtrerModele(m: ModeleCarte, f: FiltresCarte): ModeleFiltre {
       (a, b) =>
         Number(b.critique) - Number(a.critique) ||
         b.alertes - a.alertes ||
-        Number(a.cle === GROUPE_HOTES || a.cle === GROUPE_SANS_ADRESSE) -
-          Number(b.cle === GROUPE_HOTES || b.cle === GROUPE_SANS_ADRESSE) ||
+        Number(GROUPES_RESTE.has(a.cle)) - Number(GROUPES_RESTE.has(b.cle)) ||
         parNom(a.libelle, b.libelle),
     );
   ordre();
@@ -557,6 +590,8 @@ export const X = {
 export const HAUT = 44;
 /** Hauteur d'une ligne : libellés au-dessus (deux lignes pour une alerte), pastilles et produit en dessous. */
 export const LIGNE_H = 56;
+/** Rayon du raccord d'une branche au tronc (unités de la viewBox). */
+const RACCORD = 16;
 export const MACHINE_H = 24;
 /** Écart vertical entre deux noms empilés d'une même adresse (libellé au-dessus, pastilles en dessous). */
 export const DOMAINE_H = 46;
@@ -569,7 +604,13 @@ export const DOMAINES_PAR_LIGNE = 8;
 export const SERVICES_PAR_LIGNE = 3;
 
 export const libelleColonneGroupe = (r: Regroupement) =>
-  r === 'adresse' ? 'Adresse IP publique' : r === 'perimetre' ? 'Périmètre' : 'Domaine parent';
+  ({
+    parent: 'Domaine parent',
+    adresse: 'Adresse IP publique',
+    bloc: 'Bloc d’adresses',
+    hebergeur: 'Hébergeur',
+    perimetre: 'Périmètre',
+  })[r];
 export const COLONNES = [
   { cle: 'internet', libelle: 'Internet', x: X.internet },
   { cle: 'groupe', libelle: 'Domaine parent', x: (X.groupe + X.groupeFin) / 2 },
@@ -669,6 +710,10 @@ export interface Scene {
   internet: { alerte: AlerteCarteDto; y: number }[];
   /** Alertes côté Internet non dessinées (au-delà de INTERNET_MAX). */
   internetAutres: number;
+  /** Tronc unique d'Internet vers les branches (7.6.1) : il descend le long de `x` jusqu'à la dernière branche ; il est
+      rouge jusqu'à la dernière branche qui porte un chemin d'entrée critique (`yCritique`), gris au-delà. Chaque branche
+      s'y raccorde par un court trait (lien `o:<branche>`), au lieu d'une courbe tirée depuis Internet. */
+  tronc: { x: number; y0: number; y1: number; yCritique: number | null } | null;
   /** Branches repliées à cause de la borne LIGNES_MAX. */
   replieesParBorne: number;
   lignesAffichees: number;
@@ -842,14 +887,28 @@ export function disposer(m: ModeleFiltre, etat: EtatReplis, o: { peutModifier: b
   const origine = { x: X.internet, y: HAUT };
   // Internet → chaque branche (rouge si la branche porte un chemin d'entrée critique) : à droite jusqu'au tronc, puis vers
   // la branche ; la colonne « Internet » (typosquatting, fuites) reste libre de tout trait.
+  // 7.6.1 : un seul tronc (dessiné à part, voir `tronc`) et un court raccord par branche, pour que des dizaines de
+  // branches ne superposent plus leurs courbes le long du tronc.
   for (const g of groupes)
     liens.unshift({
       cle: `o:${g.cle}`,
-      d: `M${origine.x + 12} ${origine.y} L${X.tronc - 20} ${origine.y} C${X.tronc} ${origine.y} ${X.tronc} ${g.y} ${X.groupe} ${g.y}`,
+      d:
+        g.y <= origine.y + RACCORD
+          ? `M${X.tronc} ${g.y} L${X.groupe} ${g.y}`
+          : `M${X.tronc} ${g.y - RACCORD} Q${X.tronc} ${g.y} ${X.tronc + RACCORD} ${g.y} L${X.groupe} ${g.y}`,
       critique: g.resume.critique,
       faisceau: false,
       epaisseur: null,
     });
+  const critiques = groupes.filter((g) => g.resume.critique);
+  const tronc = groupes.length
+    ? {
+        x: X.tronc,
+        y0: origine.y,
+        y1: Math.max(origine.y, groupes[groupes.length - 1]!.y - RACCORD),
+        yCritique: critiques.length ? Math.max(origine.y, critiques[critiques.length - 1]!.y - RACCORD) : null,
+      }
+    : null;
   return {
     largeur: X.fin,
     hauteur,
@@ -859,6 +918,7 @@ export function disposer(m: ModeleFiltre, etat: EtatReplis, o: { peutModifier: b
     liens,
     internet: internetDessinees.map((alerte, i) => ({ alerte, y: yInternet(i) })),
     internetAutres: m.internet.length - internetDessinees.length,
+    tronc,
     replieesParBorne: parBorne,
     lignesAffichees: affichees,
   };

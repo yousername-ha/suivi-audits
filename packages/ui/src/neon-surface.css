@@ -21,11 +21,9 @@
   min-inline-size: 0;
 }
 /* Lot SI2, décision du RSSI du 19/11/2026 : la carte est la page elle-même. Pas de cadre ni de défilement propre : la scène
-   est dessinée à la largeur utile, sa hauteur suit (rapport de la viewBox), et la page défile. */
+   est dessinée à la largeur utile, sa hauteur suit (rapport de la viewBox), et la page défile. 7.6.1 : plus de bordure, de
+   coins arrondis ni de fond propre, pour qu'elle ne paraisse plus posée dans une fenêtre. */
 .sc-dessin {
-  border: var(--suivi-trait-l) solid var(--suivi-trait);
-  border-radius: var(--mantine-radius-md);
-  background: var(--sc-fond);
   overflow: hidden;
 }
 .sc-svg {
