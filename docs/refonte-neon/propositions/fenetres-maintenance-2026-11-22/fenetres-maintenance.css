@@ -1,0 +1,246 @@
+/* Proposition visuelle du 22/11/2026, à valider : aucune importation dans le produit.
+   Appliquée uniquement au frontend compilé intercepté par l'outil de capture.
+   Reprend les surfaces et contours de la maintenance, sans décor sous les données. */
+html[data-proposition-fenetres='maintenance'] {
+  --fm-fond: #f6f9fd;
+  --fm-entete: #edf3fa;
+  --fm-champ: #ffffff;
+  --fm-champ-fin: #f1f6fb;
+  --fm-encre: #18324e;
+  --fm-secondaire: #526b85;
+  --fm-trait: #a2b7cd;
+  --fm-trait-doux: #c7d6e5;
+  --fm-cyan: #087e90;
+  --fm-violet: #7760b9;
+  --fm-reflet: rgb(8 126 144 / 6%);
+  --fm-reflet-violet: rgb(119 96 185 / 5%);
+  --fm-ombre: rgb(15 35 63 / 20%);
+}
+html[data-proposition-fenetres='maintenance'][data-mantine-color-scheme='dark'] {
+  --fm-fond: #111a30;
+  --fm-entete: #142139;
+  --fm-champ: #0e192b;
+  --fm-champ-fin: #142139;
+  --fm-encre: #edf3fb;
+  --fm-secondaire: #a4b4cc;
+  --fm-trait: #435775;
+  --fm-trait-doux: #2b405d;
+  --fm-cyan: #77d4df;
+  --fm-violet: #b097df;
+  --fm-reflet: rgb(119 212 223 / 5%);
+  --fm-reflet-violet: rgb(176 151 223 / 5%);
+  --fm-ombre: rgb(0 6 20 / 48%);
+}
+html[data-proposition-fenetres='maintenance'] :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir)) {
+  --suivi-surface: var(--fm-fond);
+  --suivi-surface-douce: var(--fm-entete);
+  --suivi-trait: var(--fm-trait-doux);
+  --neon-titre: var(--fm-encre);
+  --mantine-color-text: var(--fm-encre);
+  --mantine-color-dimmed: var(--fm-secondaire);
+  border: 1px solid var(--fm-trait);
+  border-start-start-radius: 17px;
+  border-end-end-radius: 17px;
+  border-start-end-radius: 6px;
+  border-end-start-radius: 6px;
+  color: var(--fm-encre);
+  background:
+    radial-gradient(ellipse at 0 0, var(--fm-reflet), transparent 50%),
+    radial-gradient(ellipse at 100% 100%, var(--fm-reflet-violet), transparent 45%), var(--fm-fond);
+  box-shadow:
+    0 24px 75px -24px var(--fm-ombre),
+    inset 0 0 0 1px rgb(255 255 255 / 3%);
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  padding: 0;
+  mask: none;
+  background: linear-gradient(90deg, var(--fm-cyan), var(--fm-trait) 38%, var(--fm-violet) 88%);
+  pointer-events: none;
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 auto;
+  width: 7rem;
+  height: 1px;
+  z-index: 10;
+  background: linear-gradient(90deg, transparent, var(--fm-violet));
+  pointer-events: none;
+}
+html[data-proposition-fenetres='maintenance'] :is(.mantine-Modal-overlay, .mantine-Drawer-overlay) {
+  background: rgb(6 16 36 / 35%);
+  backdrop-filter: blur(2px);
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-header, .mantine-Drawer-content:not(.nav-tiroir) > .mantine-Drawer-header) {
+  background:
+    radial-gradient(ellipse at 0 20%, var(--fm-reflet), transparent 65%),
+    linear-gradient(100deg, var(--fm-entete), var(--fm-fond));
+  border-block-end: 1px solid var(--fm-trait-doux);
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-title, .mantine-Drawer-content:not(.nav-tiroir) .mantine-Drawer-title) {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--fm-encre);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-title, .mantine-Drawer-content:not(.nav-tiroir) .mantine-Drawer-title)::before {
+  content: '';
+  flex: none;
+  width: 0.4rem;
+  height: 0.4rem;
+  border: 1px solid var(--fm-cyan);
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--fm-cyan) 20%, transparent);
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-close, .mantine-Drawer-content:not(.nav-tiroir) .mantine-Drawer-close) {
+  border: 1px solid var(--fm-trait);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--fm-secondaire);
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  :is(.mantine-InputWrapper-label, .mantine-Checkbox-label, .mantine-Radio-label, .mantine-Switch-label) {
+  color: var(--fm-encre);
+  font-weight: 450;
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  :is(.mantine-InputWrapper-description, .mantine-Input-section) {
+  color: var(--fm-secondaire);
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input {
+  border: 1px solid var(--fm-trait);
+  border-radius: 6px;
+  color: var(--fm-encre);
+  background: linear-gradient(115deg, var(--fm-champ), var(--fm-champ-fin));
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 2%);
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input:focus {
+  border-color: var(--fm-cyan);
+  outline: 2px solid color-mix(in srgb, var(--fm-cyan) 15%, transparent);
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input[data-error] {
+  border-color: var(--mantine-color-red-6);
+}
+html[data-proposition-fenetres='maintenance'] .fiche-mini-menu-hote {
+  background: linear-gradient(90deg, var(--fm-entete), var(--fm-fond));
+  border-block-end: 1px solid var(--fm-trait-doux);
+}
+html[data-proposition-fenetres='maintenance'] .fiche-mini-menu {
+  gap: 0.75rem;
+}
+html[data-proposition-fenetres='maintenance'] .fiche-mini-menu button {
+  position: relative;
+  color: var(--fm-secondaire);
+  border-radius: 4px;
+  padding-inline: 0.65rem;
+  border: 1px solid transparent;
+}
+html[data-proposition-fenetres='maintenance']
+  .fiche-mini-menu
+  button:is([aria-current='page'], :hover, :focus-visible) {
+  border-color: color-mix(in srgb, var(--fm-cyan) 70%, var(--fm-trait-doux));
+  background: color-mix(in srgb, var(--fm-cyan) 8%, transparent);
+  color: var(--fm-cyan);
+}
+html[data-proposition-fenetres='maintenance'] .fiche-mini-menu button[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 25%;
+  right: 25%;
+  height: 1px;
+  background: var(--fm-cyan);
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  :is(h2, h3, h4, [data-fiche-titre]) {
+  color: var(--fm-encre);
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .a-propos {
+  border: 1px solid var(--fm-trait-doux);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--fm-cyan) 3%, var(--fm-fond));
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  summary {
+  color: var(--fm-cyan);
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  :is(.fenetre-actions, [data-fiche-actions-fixes]) {
+  border-block-start: 1px solid var(--fm-trait-doux);
+  padding-block-start: 0.5rem;
+  background: var(--fm-fond);
+  box-shadow: 0 1rem 0 var(--fm-fond);
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .commande-neon {
+  border-color: color-mix(in srgb, var(--fm-cyan) 70%, var(--fm-trait));
+  color: var(--fm-cyan);
+  border-radius: 5px;
+  background: transparent;
+  font-weight: 500;
+  box-shadow: none;
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .commande-neon:is([data-variant='subtle'], [data-variant='transparent']) {
+  border-color: transparent;
+  color: var(--fm-secondaire);
+}
+html[data-proposition-fenetres='maintenance'] :is(.mantine-Select-dropdown, .mantine-MultiSelect-dropdown) {
+  background: var(--fm-fond);
+  border-color: var(--fm-trait);
+  color: var(--fm-encre);
+}
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Select-option, .mantine-MultiSelect-option)[data-combobox-selected] {
+  background: var(--fm-reflet);
+  color: var(--fm-cyan);
+}
+@media (prefers-reduced-transparency: reduce) {
+  html[data-proposition-fenetres='maintenance'] :is(.mantine-Modal-overlay, .mantine-Drawer-overlay) {
+    backdrop-filter: none;
+  }
+}
+
+html[data-proposition-fenetres='maintenance']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  .mantine-Input-input::placeholder {
+  color: var(--fm-secondaire);
+}

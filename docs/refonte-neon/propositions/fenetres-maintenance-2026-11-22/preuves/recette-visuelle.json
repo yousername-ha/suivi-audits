@@ -1,0 +1,365 @@
+{
+  "date": "2026-11-22",
+  "fuseau": "Europe/Paris",
+  "sourceFrontend": "013ad9b68516b1d8e11b4f24d207c3eeea49dea7",
+  "cssPropositionSha256": "df2fbec7844418d3c24650d78eefc9e67b2b222137fcea822b2afa7f9215f4e5",
+  "contexte": "Frontend réel compilé sur Chromium ; ajout du CSS de proposition au flux CSS servi pour cette recette seulement ; API entièrement interceptée et données fictives. Le CSS n’est pas importé dans le produit.",
+  "casPages": 12,
+  "ouverturesFenetres": 24,
+  "variantes": 7,
+  "campagnes": [
+    {
+      "groupe": "final-1920",
+      "casPages": 6,
+      "ouverturesFenetres": 14,
+      "erreursJavascript": 0,
+      "routesInattendues": 0,
+      "mutationsMetier": 0,
+      "cas": [
+        {
+          "nom": "risques-1920-1080-clair-normale",
+          "fenetres": [
+            "creation",
+            "fiche",
+            "liens"
+          ]
+        },
+        {
+          "nom": "fournisseurs-1920-1080-clair-normale",
+          "fenetres": [
+            "creation",
+            "fiche",
+            "evaluation"
+          ]
+        },
+        {
+          "nom": "produits-1920-1080-clair-normale",
+          "fenetres": [
+            "creation"
+          ]
+        },
+        {
+          "nom": "risques-1920-1080-sombre-normale",
+          "fenetres": [
+            "creation",
+            "fiche",
+            "liens"
+          ]
+        },
+        {
+          "nom": "fournisseurs-1920-1080-sombre-normale",
+          "fenetres": [
+            "creation",
+            "fiche",
+            "evaluation"
+          ]
+        },
+        {
+          "nom": "produits-1920-1080-sombre-normale",
+          "fenetres": [
+            "creation"
+          ]
+        }
+      ]
+    },
+    {
+      "groupe": "final-1280",
+      "casPages": 4,
+      "ouverturesFenetres": 8,
+      "erreursJavascript": 0,
+      "routesInattendues": 0,
+      "mutationsMetier": 0,
+      "cas": [
+        {
+          "nom": "risques-1280-720-clair-compacte",
+          "fenetres": [
+            "creation",
+            "fiche",
+            "liens"
+          ]
+        },
+        {
+          "nom": "produits-1280-720-clair-compacte",
+          "fenetres": [
+            "creation"
+          ]
+        },
+        {
+          "nom": "risques-1280-720-sombre-compacte",
+          "fenetres": [
+            "creation",
+            "fiche",
+            "liens"
+          ]
+        },
+        {
+          "nom": "produits-1280-720-sombre-compacte",
+          "fenetres": [
+            "creation"
+          ]
+        }
+      ]
+    },
+    {
+      "groupe": "hd",
+      "casPages": 2,
+      "ouverturesFenetres": 2,
+      "erreursJavascript": 0,
+      "routesInattendues": 0,
+      "mutationsMetier": 0,
+      "cas": [
+        {
+          "nom": "produits-1600-1000-clair-normale",
+          "fenetres": [
+            "creation"
+          ]
+        },
+        {
+          "nom": "produits-1600-1000-sombre-normale",
+          "fenetres": [
+            "creation"
+          ]
+        }
+      ]
+    }
+  ],
+  "captures": [
+    {
+      "fichier": "captures/risques-creation-clair-1920.png",
+      "description": "Ajouter un risque, clair, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "0d15ee44a01e5ca198445bb42c96a876ea1e5150f792752f8a3dff897e7bb96e"
+    },
+    {
+      "fichier": "captures/risques-creation-sombre-1920.png",
+      "description": "Ajouter un risque, sombre, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "247c3d0224a8bfc58327b65ff98c3a651da6a96a96d83a49a09960c051dc8833"
+    },
+    {
+      "fichier": "captures/risques-fiche-clair-1920.png",
+      "description": "Fiche de risque, clair, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "7615298d1ffdc2ddcacb4b0a11a6324ca58d4de32829757c7b1ed2b5e9bb33b0"
+    },
+    {
+      "fichier": "captures/risques-fiche-sombre-1920.png",
+      "description": "Fiche de risque, sombre, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "89dcf538469c913e4ff56c3f3d64d65e752be86e4ab2950895df09545d104e28"
+    },
+    {
+      "fichier": "captures/risques-liens-clair-1920.png",
+      "description": "Liens et preuves du risque, clair, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "96170821ebd62bb57519c1efde865d50a777c4f65096dc600438bcc505a39d7c"
+    },
+    {
+      "fichier": "captures/risques-liens-sombre-1920.png",
+      "description": "Liens et preuves du risque, sombre, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "bf41b4f30dee25e3beff4a4598be8d943b00a35cd00ee90e84acbc218a6f1711"
+    },
+    {
+      "fichier": "captures/fournisseurs-creation-clair-1920.png",
+      "description": "Ajouter un fournisseur, clair, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "4402de0da950fb1c79595e5cda91f984ac2d04a903343418def82b6ddc8424f6"
+    },
+    {
+      "fichier": "captures/fournisseurs-creation-sombre-1920.png",
+      "description": "Ajouter un fournisseur, sombre, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "d040d356243b37c265c503b5ccf2cfdcefff7cd1a89a515ca1f2e07f80624f95"
+    },
+    {
+      "fichier": "captures/fournisseurs-fiche-clair-1920.png",
+      "description": "Fiche fournisseur, clair, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "c241a82056d15a5a13f0c58318f6691fc069ad840d8e3270bd4a7b90cf142191"
+    },
+    {
+      "fichier": "captures/fournisseurs-fiche-sombre-1920.png",
+      "description": "Fiche fournisseur, sombre, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "b76527655e250520ea2927c1148a3cd5dc33553223171cb6ad291967f3b48404"
+    },
+    {
+      "fichier": "captures/fournisseurs-evaluation-clair-1920.png",
+      "description": "Évaluer un fournisseur, clair, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "d1e719d1ada189d27efc93c1b9706f93f6d352fd3585debbad9d7f710daa65b7"
+    },
+    {
+      "fichier": "captures/fournisseurs-evaluation-sombre-1920.png",
+      "description": "Évaluer un fournisseur, sombre, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "32022dd4469f366056e1a80748487a21d20bf213dd8cfef017a983e6c20a7c58"
+    },
+    {
+      "fichier": "captures/produits-creation-clair-1920.png",
+      "description": "Ajouter un produit, clair, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "2684826bbfadc861fe0ffad5303d3d111be400701332d4fed85d2e37142a95c0"
+    },
+    {
+      "fichier": "captures/produits-creation-sombre-1920.png",
+      "description": "Ajouter un produit, sombre, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "9b0323e2c1c1cc8597213d70d38d302da80890760343ccbb68b558fa6fa2f81f"
+    },
+    {
+      "fichier": "captures/produit-clair-detail-hd.png",
+      "description": "Détail de la vraie fenêtre Produit, clair, rendu navigateur à 2 pixels physiques par pixel CSS",
+      "largeurPhysique": 1472,
+      "hauteurPhysique": 1228,
+      "rapportPixelsNavigateur": 2,
+      "sha256": "03ca085d803fc7af5559d30ed265317ce35906a467f155fcaabb5d083c88327e"
+    },
+    {
+      "fichier": "captures/risque-compact-clair-partie-1-1280.png",
+      "description": "Fiche risque, compact clair, partie 1, 1280×720",
+      "largeurPhysique": 1280,
+      "hauteurPhysique": 720,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "587a33ee63191e61172344da861c836bb973e32c66369e750007dfd8e17a839f"
+    },
+    {
+      "fichier": "captures/risque-compact-clair-partie-2-1280.png",
+      "description": "Fiche risque, compact clair, partie 2, 1280×720",
+      "largeurPhysique": 1280,
+      "hauteurPhysique": 720,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "383100d23ada15a32030476f95dc1ac363af07dce7b34524f9ddc9ee36b7c09f"
+    },
+    {
+      "fichier": "captures/risque-compact-clair-partie-3-1280.png",
+      "description": "Fiche risque, compact clair, partie 3, 1280×720",
+      "largeurPhysique": 1280,
+      "hauteurPhysique": 720,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "aa690d6ff8ba92c52d4ac96c57123287c3414e39c1f755641104564b83f45b34"
+    },
+    {
+      "fichier": "captures/produit-compact-clair-1280.png",
+      "description": "Création Produit, compact clair, 1280×720",
+      "largeurPhysique": 1280,
+      "hauteurPhysique": 720,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "d3b484be03a7feca5840e878a15f0b867ed213291177455a3cabbe0ada7890a0"
+    },
+    {
+      "fichier": "captures/risques-fiche-clair-suite-1920.png",
+      "description": "Suite de la fiche risques, clair, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "f18ce6660f8b121449e536000643aa90097b070fda197fdd21a1dfbf15c8813e"
+    },
+    {
+      "fichier": "captures/fournisseurs-fiche-clair-suite-1920.png",
+      "description": "Suite de la fiche fournisseurs, clair, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "9d4809c5cd6358af09591203956463e94056a7fc06bfda1b0e09bda8aa401719"
+    },
+    {
+      "fichier": "captures/produit-sombre-detail-hd.png",
+      "description": "Détail de la vraie fenêtre Produit, sombre, rendu navigateur à 2 pixels physiques par pixel CSS",
+      "largeurPhysique": 1472,
+      "hauteurPhysique": 1228,
+      "rapportPixelsNavigateur": 2,
+      "sha256": "70debbac482e95761ac2a7ebaf526619ae1182ff954a66f67a71a23a845b5dec"
+    },
+    {
+      "fichier": "captures/risque-compact-sombre-partie-1-1280.png",
+      "description": "Fiche risque, compact sombre, partie 1, 1280×720",
+      "largeurPhysique": 1280,
+      "hauteurPhysique": 720,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "1bf4b0f19eb0ff7ba1191177dffa73d3a1dbb456d8f21c1e5d74aaa259b503ee"
+    },
+    {
+      "fichier": "captures/risque-compact-sombre-partie-2-1280.png",
+      "description": "Fiche risque, compact sombre, partie 2, 1280×720",
+      "largeurPhysique": 1280,
+      "hauteurPhysique": 720,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "771defec9e2385f73af4fa408c76a993b30809c75f48b53d560448e206c33a5c"
+    },
+    {
+      "fichier": "captures/risque-compact-sombre-partie-3-1280.png",
+      "description": "Fiche risque, compact sombre, partie 3, 1280×720",
+      "largeurPhysique": 1280,
+      "hauteurPhysique": 720,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "f46a643f064cc4881471144981eb6cd9531ec57df9ad602f27d6cd457478180b"
+    },
+    {
+      "fichier": "captures/produit-compact-sombre-1280.png",
+      "description": "Création Produit, compact sombre, 1280×720",
+      "largeurPhysique": 1280,
+      "hauteurPhysique": 720,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "10ebcf0970d928c0bc0f028142e6604f6a60140f451a442e5f97d5593aadada6"
+    },
+    {
+      "fichier": "captures/risques-fiche-sombre-suite-1920.png",
+      "description": "Suite de la fiche risques, sombre, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "2c7dd32fc5984020aaccb30207ea9ce399341bbb394b3a2dc5ffde1ba92bba63"
+    },
+    {
+      "fichier": "captures/fournisseurs-fiche-sombre-suite-1920.png",
+      "description": "Suite de la fiche fournisseurs, sombre, normal, 1920×1080",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixelsNavigateur": 1,
+      "sha256": "90832dab83254e2a1e38585ff0b3020e859113b5237b51e7c4a51c047f44ccfc"
+    }
+  ],
+  "controles": [
+    "Centrage, respect du viewport et mesures de débordement du document et du corps",
+    "Position des icônes, ouverture et fermeture des filtres, raccourci de recherche",
+    "Largeur du code, menu Responsable long et choix conservé",
+    "Navigation du mini-menu et conservation des valeurs de la fiche Risque",
+    "Éléments réels du formulaire et couleurs métier conservés"
+  ],
+  "limites": [
+    "Proposition graphique à valider ; aucun accord humain simulé.",
+    "Les limites connues du découpage automatique des fiches restent présentes : coupures possibles, parties très peu remplies et noms de parties génériques. Les mesures géométriques ne valident pas chaque coupure visuelle.",
+    "Pas de recette serveur/API/base/Docker, de tests métier supplémentaires, d’intégration globale ni de nouvelle version déployée.",
+    "Le CSS a été reformaté après les captures sans changement de ses déclarations."
+  ]
+}

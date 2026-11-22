@@ -2,6 +2,9 @@
 
 ## Jeu court à lire d'abord (18/10/2026)
 
+0. [Fenêtres dans le style de la maintenance — proposition du 22/11/2026](refonte-neon/propositions/fenetres-maintenance-2026-11-22/README.md) :
+   sept variantes en clair/sombre, détails HD, écrans complets et exemples compacts ; CSS isolé, validation graphique attendue.
+
 0. [Dossier d’implémentation pour l’IA — remis le 22/11/2026](refonte-neon/implementation-interface-2026-11-21/README.md) :
    point d’entrée, prompt prêt à copier, sources, captures natives et règles récentes. Mini-menus sans défilement et
    boutons en contour : prototype à finaliser dans la version actuelle, limites et recette clairement distinguées.

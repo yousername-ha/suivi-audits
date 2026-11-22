@@ -12,6 +12,9 @@ Les préférences explicites de taille et le mode mural sont conservés. Contrô
 
 ### Changé
 
+- **Proposition graphique, sans changement du produit** : [fenêtres en clair et sombre](docs/refonte-neon/propositions/fenetres-maintenance-2026-11-22/README.md)
+  inspirées de la maintenance, sept variantes et détails HD. CSS isolé et preuves de présentation fournis pour validation
+  du RSSI avant généralisation. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
 - **Fiches longues et commandes — préparation d’intégration** : prototype de mini-menu conservant les champs montés et
   leur formulaire, avec actions en bas ; commandes transparentes en contour bleu/cyan. Le découpage, les sections peu
   remplies et les pieds atypiques restent à recetter avant intégration finale. [Dossier pour l’IA, prompt, neuf captures

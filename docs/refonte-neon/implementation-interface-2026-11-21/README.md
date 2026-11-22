@@ -64,6 +64,12 @@ fiches sans défilement, commandes en contour, tailles différenciées et noms a
 - [Timeline](../LOT-6-TIMELINE.md), [assistant RSSI et harmonisation](../LOT-7-8-ASSISTANT-HARMONISATION.md).
 - [Maintenance](../MAINTENANCE-LOT-1.md), [typographie](../TYPOGRAPHIE-LEXEND.md), [matrice de compatibilité historique](../MATRICE-COMPATIBILITE.csv).
 
+## Proposition graphique suivante — 22 novembre
+
+Le RSSI a demandé le style de la page de maintenance pour les fenêtres. Une [proposition clair/sombre des sept variantes](../propositions/fenetres-maintenance-2026-11-22/README.md)
+est disponible avec des détails HD, les écrans complets et le CSS isolé. **À valider visuellement avant généralisation** ;
+elle ne remplace pas les règles fonctionnelles et ne corrige pas à elle seule les limites du découpage des fiches.
+
 ## Images et preuves de cette remise
 
 [Galerie des neuf captures natives](captures/README.md), en clair et sombre, avec exemples en normal et compact.
