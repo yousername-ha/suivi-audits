@@ -10,7 +10,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 contrat de l'API, aucune commande sur le serveur. À la mise à jour, l'interface est reconstruite avec l'image.
 Les préférences explicites de taille et le mode mural sont conservés. L'essai « boîte d'outils claire ou bleu nuit » de
 « Mon compte » disparaît : la boîte est bleu nuit dans les deux thèmes.
-Dossiers : [intégration et recette sur pile réelle du 22/11/2026](docs/refonte-neon/integration-2026-11-22/README.md),
+Dossiers : [fiches sobres et harmonisation du 22/11/2026](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md),
+[intégration et recette sur pile réelle du 22/11/2026](docs/refonte-neon/integration-2026-11-22/README.md),
 [dossier préparé par la session « Codex »](docs/refonte-neon/implementation-interface-2026-11-21/README.md).
 
 Autres changements de cette version :
@@ -22,6 +23,7 @@ Autres changements de cette version :
   dès la mise à jour.
 - Service de mise à jour préparé pour la recherche CPE du module Vulnérabilités : sans effet tant que cette recherche
   n'est pas livrée.
+- Correctifs de performance du socle (liste des registres, synthèse du mur) : sans migration.
 
 ### Ajouté
 
@@ -47,6 +49,18 @@ Autres changements de cette version :
 
 ### Changé
 
+- **Fiches sobres** (direction validée par le RSSI le 22/11/2026, habillage de la session « Codex », intégration et
+  recette sur pile réelle par la session Coeur — [détails](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md)) :
+  fenêtres à fond blanc opaque, champs rectangulaires compacts, séparateurs discrets, validation en contour bleu pétrole,
+  « Annuler » et « Fermer » neutres dans toutes les fenêtres, suppressions en rouge ; même composition en sombre.
+  L'explication d'un champ se replie derrière un bouton « Aide sur ce champ » (Échap la referme, le lecteur d'écran la
+  lit toujours) ; un avertissement, un effet irréversible ou un format de saisie restent affichés, comme les erreurs.
+- **Fiches longues sur écran de bureau** : une fenêtre de formulaire trop haute s'élargit d'abord et range ses champs
+  sur plusieurs colonnes (un code, une date ou un état n'occupent que leur place) ; elle n'est découpée en parties que
+  si cela ne suffit pas. En 1920 × 1080, la création d'un risque tient en une seule vue (quatre parties en 1280 × 720
+  avant, deux maintenant). Une partie sans titre porte le libellé de son premier champ (« Échéance… ») au lieu de
+  « Informations (suite 2) ». La fenêtre « Sécurité » se découpe au lieu de défiler. Un journal ou un long tableau garde
+  son défilement dans sa fenêtre, pour conserver ses en-têtes de colonnes.
 - **Fiches longues en parties** : une fiche trop haute pour l'écran se lit en parties nommées, sans défilement
   vertical de la fenêtre, avec ses boutons toujours visibles en bas ; les champs restent montés dans leur formulaire
   (valeurs, contraintes et enregistrement inchangés). La fenêtre prend la hauteur de son contenu et les parties sont
@@ -88,6 +102,15 @@ Autres changements de cette version :
 - **Barres d'outils** : une barre qui ne contient qu'une recherche ne porte plus le même nom accessible que son champ
   (dix écrans : guide, fournisseurs, registres, cartographie…). Les lecteurs d'écran n'annoncent plus deux éléments
   du même nom.
+- **Pages plus rapides pour une personne qui n'est pas administrateur** (défauts PERF-06, PERF-11 et PERF-15 du banc de
+  performance du 21/11/2026). La liste des registres, appelée par toutes les pages, vérifiait les droits et décrivait
+  chaque registre l'un après l'autre : environ 2 000 lectures de la base et 2 secondes d'attente par page pour un RSSI ou
+  un pilote. Les droits de toute la liste sont désormais lus ensemble, en une dizaine de lectures quel que soit le nombre
+  de registres ; « Ce que je dois alimenter » fait de même pour ses éléments. Sur le jeu d'essai (50 registres), la liste
+  passe de 1 463 lectures et près d'une seconde à 9 lectures et moins de 10 ms. Les droits ne changent pas : un test
+  compare, pour des comptes de profils différents, la nouvelle liste à l'ancienne. Pour ses prochaines échéances, la synthèse du mur
+  ne relit plus que deux fois les données de chaque action, au lieu de six, ce qui comptait depuis que les actions portent
+  leurs tâches ; les échéances affichées sont les mêmes (session « Projet audit_suivi Coeur »).
 - Vulnérabilités et Veille réglementaire, **accessibilité** : les boutons de pagination (flèches, page active) des écrans
   Machines, Alertes, Surface externe, Silène, Veille et Veille réglementaire n'avaient pas de nom pour les lecteurs d'écran
   (règle « button-name », niveau A) ; ils sont nommés comme ceux de « Failles détectées ». Un test vérifie chaque
