@@ -16,6 +16,8 @@ Dossiers : [fiches sobres et harmonisation du 22/11/2026](docs/refonte-neon/inte
 
 Autres changements de cette version :
 
+- Aspect graphique du module Vulnérabilités et de la veille réglementaire (style de la page de maintenance) : sans
+  migration.
 - Correctif de l'interface du module Vulnérabilités (page « Machines ») : sans migration.
 - Migration automatique additive `100` (colonne `aes` des machines du module Vulnérabilités, vide au départ), sans reprise
   de données : aucune commande sur le serveur, aucune action dans l'application. L'exposition des machines selon Tenable
@@ -107,6 +109,28 @@ Autres changements de cette version :
   jour) ; la copie complète l'évite (session « Module surveillance vulnérabilités SMSI »).
 
 ### Changé
+
+- Vulnérabilités, **aspect graphique** (demande du RSSI du 22/11/2026 : un module « moins fin, moins lien hypertexte »,
+  dans le style de la page de maintenance).
+  - Le poste de commandement et les tableaux prennent la grande dalle de la page de maintenance (biseau, bord teinté de
+    violet, traits lumineux), les en-têtes de tableau passent en capitales espacées, et le bleu nuit du menu remplace le
+    cyan, plus foncé en mode sombre.
+  - Plus aucun lien souligné : les noms de failles et de machines deviennent des titres en gras avec une flèche, les liens
+    d'action (« Configurer l'intégration », « Voir les alertes », « Tendances »…) deviennent des boutons, et les
+    pastilles sont pleines.
+  - Vue d'ensemble : le **niveau d'alerte** s'affiche dans un réacteur animé (anneaux, graduations, orbites, crans du
+    niveau allumés) et la règle des niveaux se replie sous « Règle des niveaux ». Les **chiffres clés** deviennent six
+    cases sur deux colonnes, avec une icône, un numéro, et un trait lumineux quand une action est attendue.
+  - **Failles détectées** : chaque ligne tient en trois lignes (nom ; numéro, famille et source ; faits sans doublon :
+    exploitation avérée, rançongiciels, exploitable, fin de support, non maintenu). La priorité donne sa raison courte et
+    le délai tient sur une ligne. Le détail des sources et la règle du délai restent dans la fiche de la faille.
+  - Animations décoratives coupées par la préférence « réduire les animations » et à l'impression. Libellés, liens et
+    noms accessibles inchangés (session « Ergonomie et refonte Neon »).
+- Veille réglementaire, **aspect plus sobre et plus juridique** (même demande, style de la page de maintenance) : le
+  sommaire passe en quatre cases (à qualifier, à suivre, impactant, sans objet), et chaque publication devient une
+  carte d'acte. La carte donne la source et son autorité, le statut marqué d'un point de couleur, le titre, le résumé en
+  citation, la date de publication, le domaine, la qualification, puis les boutons de qualification et le lien vers la
+  source. Libellés et noms accessibles inchangés.
 
 - **Fiches sobres** (direction validée par le RSSI le 22/11/2026, habillage de la session « Codex », intégration et
   recette sur pile réelle par la session Coeur — [détails](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md)) :

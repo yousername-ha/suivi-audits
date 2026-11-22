@@ -29,6 +29,7 @@ import {
   Text,
   TextInput,
   Title,
+  VisuallyHidden,
 } from '@mantine/core';
 import {
   type DelaiFailleDto,
@@ -46,9 +47,11 @@ import {
   type GraviteTenable,
   NIVEAUX_PRIORITE,
   type NiveauPriorite,
+  type OrigineConnecteurDto,
   type PageFailles,
   type PageMachines,
   type Priorite,
+  SOURCE_MACHINE_LIBELLES,
   STATUT_RAPPROCHEMENT_LIBELLES,
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
@@ -74,9 +77,11 @@ import {
   groupesParRole,
   libelleEpssTenable,
   libelleGravite,
+  faitsListe,
   libelleMachine,
   lienVoirAussi,
   marquesConstat,
+  raisonPriorite,
   resumeCves,
   urlConstats,
   urlDeclarees,
@@ -89,7 +94,7 @@ import { FicheFaille } from './FicheFaille';
 import { MachinesTable } from './Machines';
 import { MarquesSources, SourcesFaille } from './SourcesFaille';
 import { MarquesSuivi, SuiviFaille } from './SuiviFaille';
-import { SourceConnecteur } from './SourceConnecteur';
+import { PictoSource } from './PictoSource';
 import { OPTIONS_FILTRE_SUIVI } from './suivi';
 
 const CLE = ['vulnerabilites', 'failles'] as const;
@@ -141,6 +146,53 @@ export function DelaiFaille({ d, maintenant = new Date() }: { d: DelaiFailleDto;
   );
 }
 
+/** Ligne allégée (choix du RSSI du 22/11/2026) : priorité et raison courte ; les autres faits sont dans la fiche. */
+export function PrioriteCourte({ p }: { p: Priorite }) {
+  const raison = raisonPriorite(p);
+  return (
+    <Stack gap="2xs">
+      <StatusChip etat={ETAT_PRIORITE[p.niveau]}>{p.niveau}</StatusChip>
+      {raison && <Text className="vu-raison">{raison}</Text>}
+    </Stack>
+  );
+}
+
+/** Ligne allégée : état du délai, puis l'échéance et l'âge sur une ligne (la règle du délai est dans la fiche). */
+export function DelaiCourt({ d, maintenant = new Date() }: { d: DelaiFailleDto; maintenant?: Date }) {
+  const l = lignesDelai(d, maintenant);
+  const age = l.age.replace(/^Âge : /, '');
+  return (
+    <Stack gap="2xs">
+      <StatusChip etat={ETAT_DELAI_PUCE[d.etat]}>{libelleEtatDelai(d.etat)}</StatusChip>
+      <Text size="xs" c="dimmed" className="vu-une-ligne">
+        {l.echeance ? (
+          <>
+            <VisuallyHidden>Échéance : </VisuallyHidden>
+            <span className="horodatage">{l.echeance}</span> · <VisuallyHidden>âge : </VisuallyHidden>
+            {age}
+          </>
+        ) : (
+          l.age
+        )}
+      </Text>
+    </Stack>
+  );
+}
+
+/** Ligne allégée : pastille de la source et nom de l'instance ; le type de source reste lu par les lecteurs d'écran. */
+export function SourceCourte({ origine }: { origine: OrigineConnecteurDto }) {
+  return (
+    <span className="ps-source-connecteur vu-source" data-source-connecteur={origine.type}>
+      <PictoSource source="tenable" decoratif infobulle={false} />
+      <Text size="xs" c="dimmed" span>
+        <VisuallyHidden>Source : </VisuallyHidden>
+        {origine.nom}
+        <VisuallyHidden> ({SOURCE_MACHINE_LIBELLES[origine.type]})</VisuallyHidden>
+      </Text>
+    </span>
+  );
+}
+
 /** Liste des constats (sans état) : rendu testable hors navigateur. */
 export function ConstatsTable({
   constats,
@@ -168,7 +220,7 @@ export function ConstatsTable({
           {constats.map((c) => (
             <Table.Tr key={c.id}>
               <Table.Td>
-                <PrioriteFaits p={c.priorite} />
+                <PrioriteCourte p={c.priorite} />
               </Table.Td>
               <Table.Td>
                 <Anchor
@@ -180,26 +232,28 @@ export function ConstatsTable({
                 >
                   {c.nom}
                 </Anchor>
-                <Text size="xs" c="dimmed">
-                  Contrôle n° {c.plugin}
-                  {c.famille ? ` · ${c.famille}` : ''}
+                <Text size="xs" c="dimmed" className="vu-meta">
+                  <span>
+                    Contrôle n° {c.plugin}
+                    {c.famille ? ` · ${c.famille}` : ''}
+                  </span>
+                  <SourceCourte origine={c.integration} />
                 </Text>
-                <Group gap="2xs">
-                  <StatusChip etat="info">Détecté par Tenable</StatusChip>
-                  {marquesConstat(c).map((m) => (
-                    <StatusChip key={m.libelle} etat={m.etat}>
-                      {m.libelle}
-                    </StatusChip>
-                  ))}
-                </Group>
-                <MarquesSources s={c.sources} />
-                <SourceConnecteur origine={c.integration} />
+                {faitsListe(c).length > 0 && (
+                  <Group gap="2xs">
+                    {faitsListe(c).map((m) => (
+                      <StatusChip key={m.libelle} etat={m.etat}>
+                        {m.libelle}
+                      </StatusChip>
+                    ))}
+                  </Group>
+                )}
               </Table.Td>
               <Table.Td>
                 <MarquesSuivi s={c.suivi} present={c.present} source="Tenable" />
               </Table.Td>
               <Table.Td>
-                <DelaiFaille d={c.delai} />
+                <DelaiCourt d={c.delai} />
               </Table.Td>
               <Table.Td>
                 <StatusChip etat={GRAVITE_TENABLE_ETAT[c.gravite]}>{libelleGravite(c.gravite)}</StatusChip>

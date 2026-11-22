@@ -263,6 +263,37 @@ export function marquesConstat(
   return out;
 }
 
+/** Ligne allégée de « Failles détectées » (choix du RSSI du 22/11/2026) : faits d'une faille, sans doublon ni détail de
+    source (la fiche les donne, section « Ce que disent les sources ») : exploitation avérée (quelle qu'en soit la source),
+    rançongiciels, exploitable (kits compris), fin de support, non maintenu. */
+export function faitsListe(
+  c: Pick<
+    ConstatResumeDto,
+    | 'exploite'
+    | 'exploiteMalware'
+    | 'exploitable'
+    | 'kitsExploitation'
+    | 'finDeSupport'
+    | 'surMachineFinSupport'
+    | 'nonMaintenu'
+    | 'sources'
+  >,
+): { libelle: string; etat: Etat }[] {
+  const out: { libelle: string; etat: Etat }[] = [];
+  if (c.exploite || c.exploiteMalware || c.sources.exploitation.length)
+    out.push({ libelle: 'Exploitation avérée', etat: 'erreur' });
+  if (c.sources.rancongiciel) out.push({ libelle: MARQUE_RANCONGICIEL, etat: 'erreur' });
+  if (c.exploitable || c.kitsExploitation.length || c.sources.exploitable.length)
+    out.push({ libelle: 'Exploitable', etat: 'attention' });
+  if (c.finDeSupport) out.push({ libelle: FIN_SUPPORT_LIBELLE, etat: 'attention' });
+  else if (c.surMachineFinSupport) out.push({ libelle: MARQUE_MACHINE_FIN_SUPPORT, etat: 'attention' });
+  if (c.nonMaintenu) out.push({ libelle: 'Non maintenu', etat: 'neutre' });
+  return out;
+}
+
+/** Raison courte d'une priorité dans la liste : premier fait, sans sa précision entre parenthèses (la fiche la donne). */
+export const raisonPriorite = (p: Priorite) => (faitsPriorite(p)[0] ?? '').replace(/\s*\(.*$/, '');
+
 /** Lot PRIO-1 : marques courtes des listes. */
 export const MARQUE_RANCONGICIEL = 'Rançongiciels (KEV)';
 export const MARQUE_MACHINE_FIN_SUPPORT = 'Sur une machine en fin de support';
