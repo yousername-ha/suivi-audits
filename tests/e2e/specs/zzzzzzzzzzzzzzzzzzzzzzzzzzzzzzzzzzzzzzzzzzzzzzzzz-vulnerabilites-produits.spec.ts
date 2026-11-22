@@ -41,7 +41,8 @@ test('Vulnérabilités : produits surveillés ajoutés, filtrés, modifiés puis
     await choisir('Criticité', 'Élevée', ajout);
     await ajout.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await expect(ajout.getByRole('alert')).toContainText('version');
-    await ajout.getByRole('textbox', { name: 'Version', exact: true }).fill('1.0');
+    // Lot CPE-1 : le champ de la version est un champ libre qui propose les versions connues (rôle « combobox »).
+    await ajout.getByRole('combobox', { name: 'Version', exact: true }).fill('1.0');
     await ajout.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await expect(ajout).toBeHidden();
     const ligne = page.getByRole('row', { name: new RegExp(nom) });

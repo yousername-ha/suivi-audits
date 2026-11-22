@@ -63,7 +63,9 @@
    connecteur se règle par la modification de l'instance (module Intégrations, `integrations:administrer`).
    Lot AD-1 : rapport de l'Active Directory (ADS de l'ANSSI) ; lecture en nombres avec `lire`, noms d'un point par une route
    à part, avec `lire` aussi (droit « Analyste » branché sur l'accès au module ; consultation tracée, sans les noms), import (limite horaire partagée) et suppression (If-Match)
-   avec `administrer`. */
+   avec `administrer`.
+   Lot CPE-1 : saisie assistée par le dictionnaire CPE de la NVD (liste locale, versions d'un produit, saisie en cours) avec
+   `modifier` ; état de la source avec `lire` ; réglage et copie complète avec `administrer`, If-Match, journal. */
 import {
   ADS_BORNES,
   IdentifiantPointAdsParams,
@@ -107,6 +109,9 @@ import {
   ReglageMasque,
   SaisieReglagePriorite,
   SuggestionsCpeQuery,
+  IdentiteProduitCpe,
+  RechercheProduitsCpe,
+  ReglageDictionnaireCpe,
   type ProduitSurveilleDto,
   RechercheAvis,
   RechercheFailles,
@@ -384,6 +389,106 @@ export const vulnerabilitesRoutes = [
       );
       setEtag(reply, r.version);
       return r;
+    },
+  }),
+  /* Lot CPE-1 : saisie assistée par le dictionnaire CPE de la NVD. Liste locale et versions avec `modifier` (droit qui
+     protège le formulaire d'un produit surveillé), aucun appel extérieur ici ; état de la source avec `lire` ; réglage,
+     copie complète demandée ou supprimée avec `administrer`, If-Match, journal. */
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/cpe/saisie',
+    summary:
+      'Dictionnaire CPE : ouverture du formulaire d’un produit surveillé (note la saisie en cours, deux minutes) et ce qu’il peut proposer',
+    tags,
+    access: 'vulnerabilites:modifier',
+    handler: async ({ svc }) => svc.vulnerabilites.dictionnaireCpe.ouvrirSaisie(),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/cpe/produits',
+    summary:
+      'Dictionnaire CPE : produits de la liste locale qui contiennent le terme (2 à 100 caractères, sans casse ni accent), 20 au plus',
+    tags,
+    access: 'vulnerabilites:modifier',
+    query: RechercheProduitsCpe,
+    handler: async ({ svc, query }) => svc.vulnerabilites.dictionnaireCpe.rechercher(query.q),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/cpe/versions',
+    summary:
+      'Dictionnaire CPE : versions connues d’un produit de la liste locale (copie complète, cache de la NVD, veille), sans nouvelle demande',
+    tags,
+    access: 'vulnerabilites:modifier',
+    query: IdentiteProduitCpe,
+    handler: async ({ svc, s, query }) =>
+      svc.vulnerabilites.dictionnaireCpe.versions(query, (s as Session).user, false),
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/cpe/versions',
+    summary:
+      'Dictionnaire CPE : versions d’un produit ; sans réponse fraîche, inscrit une demande à la NVD traitée par l’exécutant (une par produit, trente par heure et par personne)',
+    tags,
+    access: 'vulnerabilites:modifier',
+    body: IdentiteProduitCpe,
+    handler: async ({ svc, s, body }) => {
+      const sess = s as Session;
+      return svc.vulnerabilites.dictionnaireCpe.versions(body, sess.user, true, () =>
+        svc.limits.cpeVersions(sess.user.id),
+      );
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/cpe/dictionnaire',
+    summary:
+      'Dictionnaire CPE : état de la source (activation, fréquence, chargement par lots, dernière mise à jour, copie complète)',
+    tags,
+    access: 'vulnerabilites:lire',
+    handler: async ({ svc, reply }) => {
+      const e = await svc.vulnerabilites.dictionnaireCpe.etat();
+      setEtag(reply, e.version);
+      return e;
+    },
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/vulnerabilites/cpe/dictionnaire',
+    summary:
+      'Dictionnaire CPE : activer ou désactiver la source, régler la fréquence des nouveautés (24 ou 168 heures) ; If-Match',
+    tags,
+    access: 'vulnerabilites:administrer',
+    body: ReglageDictionnaireCpe,
+    handler: async ({ svc, s, body, req, ip, reply }) => {
+      const e = await svc.vulnerabilites.dictionnaireCpe.regler(body, requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, e.version);
+      return e;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/cpe/dictionnaire/copie',
+    summary:
+      'Dictionnaire CPE : copier le dictionnaire complet (produits et versions, par lots) sur le serveur ; If-Match',
+    tags,
+    access: 'vulnerabilites:administrer',
+    handler: async ({ svc, s, req, ip, reply }) => {
+      const e = await svc.vulnerabilites.dictionnaireCpe.demanderCopie(requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, e.version);
+      return e;
+    },
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/vulnerabilites/cpe/dictionnaire/copie',
+    summary: 'Dictionnaire CPE : supprimer la copie complète (place libérée) ; If-Match',
+    tags,
+    access: 'vulnerabilites:administrer',
+    handler: async ({ svc, s, req, ip, reply }) => {
+      const e = await svc.vulnerabilites.dictionnaireCpe.supprimerCopie(requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, e.version);
+      return e;
     },
   }),
   route({
