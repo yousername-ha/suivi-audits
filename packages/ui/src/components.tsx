@@ -35,10 +35,10 @@ export function PageHeader({
 }
 
 /** Explication d'une page, repliée par défaut pour laisser les données en haut de l'écran (en-tête compact, 7.3.0). */
-export function APropos({ children }: { children: ReactNode }) {
+export function APropos({ children, label = 'À propos de cette page' }: { children: ReactNode; label?: ReactNode }) {
   return (
     <details className="a-propos">
-      <summary>À propos de cette page</summary>
+      <summary>{label}</summary>
       <div className="a-propos__texte">{children}</div>
     </details>
   );

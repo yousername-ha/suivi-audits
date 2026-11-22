@@ -17,7 +17,7 @@
 import path from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 const FIXTURES = path.resolve(import.meta.dirname, '../../fixtures/nessus');
 const SCAN1 = path.join(FIXTURES, 'scan-fictif-1.nessus');
@@ -166,10 +166,12 @@ for (const [mode, scheme, largeur] of [
       await expect(web).toContainText(MALWARE);
       await expect(web).toContainText('P1');
       await expect(lignes.filter({ hasText: 'Fictional SSH Daemon Weak Setting' })).not.toContainText(MALWARE);
+      await ouvrirFiltres(page, 'Exploitation avérée');
       await page.getByRole('checkbox', { name: 'Exploitation avérée', exact: true }).check();
       await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(1);
       await expect(page.getByRole('row').filter({ hasText: source })).toContainText(MALWARE);
       await axe(page);
+      await ouvrirFiltres(page, 'Exploitation avérée');
       await page.getByRole('checkbox', { name: 'Exploitation avérée', exact: true }).uncheck();
       await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(3);
       await page.goto('/vulnerabilites/machines');
@@ -190,6 +192,8 @@ for (const [mode, scheme, largeur] of [
       const filtresScores = page.getByRole('combobox', { name: scores });
       if (tenable) {
         await expect(colonnesScores).toHaveCount(2);
+        // Les filtres sont repliés dans le panneau de la boîte d'outils (refonte du 22/11/2026).
+        await ouvrirFiltres(page, 'Criticité (ACR, Tenable)');
         await expect(filtresScores).toHaveCount(2);
         for (const ligne of await machines.all()) await expect(ligne).toContainText('Non fournie par Tenable');
         // Filtre actif : aucune machine sans valeur n'y répond.

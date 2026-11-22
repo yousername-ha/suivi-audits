@@ -27,7 +27,7 @@ import {
   type TableauResume,
   type TableauxOut,
 } from '@suivi/shared';
-import { ErrorAlert } from '@suivi/ui';
+import { ErrorAlert, APropos } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { api, get } from '../api';
@@ -512,9 +512,11 @@ export function FenetreCreer({
               value={sourceRetenue}
               onChange={(e) => setSource(e.currentTarget.value)}
             />
-            <Text size="xs" c="dimmed">
-              Une copie est à vous et suit vos droits : les dalles des modules que vous ne lisez pas y restent vides.
-            </Text>
+            <APropos label="Aide et précisions">
+              <Text size="xs" c="dimmed">
+                Une copie est à vous et suit vos droits : les dalles des modules que vous ne lisez pas y restent vides.
+              </Text>
+            </APropos>
           </>
         )}
         <ErrorAlert error={erreur} />

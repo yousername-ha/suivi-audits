@@ -255,7 +255,7 @@ test('Pilotage : EBIOS RM publié, appréciation conservée, cartographie et exp
     await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: smsi.name, exact: true }).click();
     await page.goto('/pilotage/risques');
-    await page.getByRole('button', { name: 'Apprécier / réévaluer', exact: true }).click();
+    await page.getByRole('button', { name: `Apprécier / réévaluer ${risk.name}`, exact: true }).click();
     const dialog = page.getByRole('dialog');
     await dialog
       .getByLabel('Justification de l’appréciation', { exact: true })

@@ -75,6 +75,9 @@ interface Carte {
       titre répète celui de la fenêtre ne l'affiche pas (`titreVisible={false}`, décision du RSSI du 18/11/2026). */
   detail?: (modifie: (m: boolean) => void, can: Peut) => ReactNode;
   lien?: string;
+  /** Fenêtre de consultation (journal, long tableau) : elle garde son défilement vertical au lieu d'être découpée en
+      parties comme une fiche (voir FichesSansDefilement). */
+  consultation?: boolean;
 }
 
 const DEFINITIONS: Omit<Carte, 'peut'>[] = [
@@ -370,6 +373,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     icone: 'journal',
     teinte: 'orange',
     detail: () => <Audit />,
+    consultation: true,
   },
   {
     id: 'journaux-techniques',
@@ -379,6 +383,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     icone: 'logs',
     teinte: 'rouge',
     detail: () => <JournauxTechniquesPanel />,
+    consultation: true,
   },
   {
     id: 'modules',
@@ -397,6 +402,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     icone: 'terminal',
     teinte: 'gris',
     detail: () => <DetailsTechniques titreVisible={false} />,
+    consultation: true,
   },
 ];
 
@@ -558,7 +564,7 @@ export function PageCartes({ cote }: { cote: Cote }) {
         title={ouverte?.titre}
         size="xl"
         centered
-        classNames={{ content: 'fenetre-admin' }}
+        classNames={{ content: ouverte?.consultation ? 'fenetre-admin fiche-defilement' : 'fenetre-admin' }}
         keepMounted={false}
       >
         {ouverte?.detail?.(signaler, can)}

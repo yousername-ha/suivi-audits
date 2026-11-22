@@ -1,0 +1,177 @@
+{
+  "dateSuites": "2026-11-21",
+  "dateRecontroleTypeScriptRemise": "2026-11-22",
+  "fuseau": "Europe/Paris",
+  "environnement": "Node 26.13.0, dépendances existantes du dépôt ; pas de Docker/API réelle",
+  "testsDistincts": {
+    "web": 936,
+    "ui": 285,
+    "total": 1221
+  },
+  "controles": [
+    {
+      "controle": "lint",
+      "repertoire": ".",
+      "commandes": [
+        [
+          "node",
+          "node_modules/eslint/bin/eslint.js",
+          "apps/web/src/components/FichesSansDefilement.tsx",
+          "apps/web/src/main.tsx",
+          "apps/web/test/proportions-champs.test.ts",
+          "packages/ui/src/theme.ts",
+          "--max-warnings",
+          "0"
+        ]
+      ],
+      "codeRetour": 0
+    },
+    {
+      "controle": "format",
+      "repertoire": ".",
+      "commandes": [
+        [
+          "node",
+          "node_modules/prettier/bin/prettier.cjs",
+          "--check",
+          "apps/web/src/components/FichesSansDefilement.tsx",
+          "apps/web/src/main.tsx",
+          "apps/web/test/proportions-champs.test.ts",
+          "packages/ui/package.json",
+          "packages/ui/src/neon-fenetres.css",
+          "packages/ui/src/neon-fiches-pages.css",
+          "packages/ui/src/theme.ts"
+        ]
+      ],
+      "codeRetour": 0
+    },
+    {
+      "controle": "typecheck-ui",
+      "repertoire": ".",
+      "commandes": [
+        [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "packages/ui/tsconfig.json",
+          "--noEmit"
+        ]
+      ],
+      "codeRetour": 0
+    },
+    {
+      "controle": "tests-ui",
+      "repertoire": "packages/ui",
+      "commandes": [
+        [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--maxWorkers=2"
+        ]
+      ],
+      "codeRetour": 0
+    },
+    {
+      "controle": "build-web",
+      "repertoire": "apps/web",
+      "commandes": [
+        [
+          "node",
+          "scripts/mantine-css-vars.ts"
+        ],
+        [
+          "node",
+          "node_modules/vite/bin/vite.js",
+          "build"
+        ]
+      ],
+      "codeRetour": 0
+    },
+    {
+      "controle": "tests-web",
+      "repertoire": "apps/web",
+      "commandes": [
+        [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--maxWorkers=2"
+        ]
+      ],
+      "codeRetour": 0
+    },
+    {
+      "controle": "typecheck-web-remise",
+      "commande": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "-p",
+        "apps/web/tsconfig.json",
+        "--noEmit"
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 22.5
+    },
+    {
+      "controle": "format-final",
+      "repertoire": ".",
+      "commandes": [
+        [
+          "node",
+          "node_modules/prettier/bin/prettier.cjs",
+          "--check",
+          "apps/web/src/components/FichesSansDefilement.tsx",
+          "apps/web/src/main.tsx",
+          "apps/web/test/proportions-champs.test.ts",
+          "packages/ui/src/theme.ts",
+          "packages/ui/src/neon-fenetres.css",
+          "packages/ui/src/neon-fiches-pages.css",
+          "packages/ui/package.json"
+        ]
+      ],
+      "codeRetour": 0
+    },
+    {
+      "controle": "lint-final",
+      "repertoire": ".",
+      "commandes": [
+        [
+          "node",
+          "node_modules/eslint/bin/eslint.js",
+          "apps/web/src/components/FichesSansDefilement.tsx",
+          "apps/web/src/main.tsx",
+          "apps/web/test/proportions-champs.test.ts",
+          "packages/ui/src/theme.ts",
+          "--max-warnings",
+          "0"
+        ]
+      ],
+      "codeRetour": 0
+    },
+    {
+      "controle": "build-final",
+      "repertoire": "apps/web",
+      "commandes": [
+        [
+          "node",
+          "node_modules/vite/bin/vite.js",
+          "build"
+        ]
+      ],
+      "codeRetour": 0
+    }
+  ],
+  "echecIntermediaireCorrige": {
+    "controle": "typecheck-web",
+    "codeRetourInitial": 2,
+    "cause": "Type générique de createElement(Button) dans les nouveaux tests SSR",
+    "correction": "Paramétrage Button<'button'> dans les tests, puis TypeScript web rejoué avec code 0. Aucun contrat ou assertion supprimé."
+  },
+  "ordreEtLimites": [
+    "Suites web/UI avant les dernières finitions CSS de fragmentation et de contraste du panneau de connexion ; format, lint, build et TypeScript web revérifiés après.",
+    "Le correctif de type des tests SSR ne change pas le code exécuté ; la dernière campagne navigateur porte sur le frontend compilé.",
+    "Avertissements Vite existants : script de mise à jour non module et gros chunk. Build code 0.",
+    "Pas de suite API, base, Docker, E2E serveur, CI complète du commit publié ou validation humaine."
+  ]
+}

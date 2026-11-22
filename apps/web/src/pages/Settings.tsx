@@ -933,6 +933,7 @@ function Cycle({ p }: { p: P }) {
       <TagsInput
         label="Années du cycle de certification"
         description="Saisissez une année puis Entrée (par exemple 2026)."
+        descriptionProps={{ 'data-aide-permanente': true }}
         value={years.map(String)}
         onChange={(v) =>
           p.set(

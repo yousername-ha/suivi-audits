@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100), lot V1 : écran « Produits surveillés », registre de l'organisation (sans périmètre).
    Liste filtrée par famille, création, modification (If-Match) et suppression. Écran sobre avec les composants de la charte
    (packages/ui) ; le style du poste de commandement viendra au lot V8. Les boutons suivent les droits de la session pour
@@ -39,10 +40,11 @@ import {
   STATUT_RAPPROCHEMENT_LIBELLES,
   type SuggestionCpeDto,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan } from '../session';
@@ -254,13 +256,13 @@ export function ProduitsSurveillesPage() {
     );
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Produits surveillés"
         description="Registre de l’organisation : les produits dont la plateforme suit les vulnérabilités publiées, par éditeur, produit et version. La version déclarée sert au rapprochement avec les failles de la veille : tenez-la à jour. Un même produit (même éditeur, même version) n’est inscrit qu’une fois."
         actions={modifier && <Button onClick={() => setEdition({ produit: null })}>Ajouter un produit</Button>}
       />
       <Stack>
-        <Group justify="space-between" align="flex-end">
+        <BarreFiltres label="Produits surveillés">
           <Select
             label="Famille"
             data={OPTIONS_FILTRE_FAMILLE}
@@ -273,7 +275,7 @@ export function ProduitsSurveillesPage() {
               {produits.data.length} produit{produits.data.length > 1 ? 's' : ''}
             </Text>
           )}
-        </Group>
+        </BarreFiltres>
         <ErrorAlert error={produits.error} />
         {produits.data && (
           <ProduitsTable
@@ -300,6 +302,7 @@ export function ProduitsSurveillesPage() {
           <EditeurProduit
             produit={edition.produit}
             fournisseurs={can('fournisseurs', 'lire') ? (fournisseurs.data ?? []) : null}
+            onAnnuler={() => setEdition(null)}
             onFait={async () => {
               setEdition(null);
               await rafraichir();
@@ -379,11 +382,13 @@ function ConfirmerSuppression({ produit, onFait }: { produit: ProduitSurveilleDt
 function EditeurProduit({
   produit,
   fournisseurs,
+  onAnnuler,
   onFait,
 }: {
   produit: ProduitSurveilleDto | null;
   /** Fournisseurs lisibles ; null : pas de droit de lecture des fournisseurs (champ non proposé). */
   fournisseurs: FournisseurCourt[] | null;
+  onAnnuler: () => void;
   onFait: () => Promise<void>;
 }) {
   const [f, setF] = useState<FormulaireProduit>(() => formulaireDepuis(produit));
@@ -516,7 +521,10 @@ function EditeurProduit({
         nothingFoundMessage="Aucun responsable"
       />
       <ErrorAlert error={annuaire.error} />
-      <Group justify="flex-end">
+      <Group justify="flex-end" className="fenetre-actions">
+        <Button variant="subtle" onClick={onAnnuler} disabled={enCours}>
+          Annuler
+        </Button>
         <Button onClick={() => void enregistrer()} loading={enCours}>
           {produit ? 'Enregistrer' : 'Ajouter'}
         </Button>
@@ -794,16 +802,18 @@ function FicheProduit({ id, modifier, onChange }: { id: string; modifier: boolea
           />
           {modifier && (
             <Group align="flex-end">
-              <TextInput
-                label="Rechercher une machine"
-                description="Nom de la machine, parmi celles que vous pouvez lire."
-                maxLength={100}
-                value={saisie}
-                onChange={(e) => setSaisie(e.currentTarget.value)}
-              />
-              <Button variant="default" onClick={() => setRecherche(saisie.trim())}>
-                Rechercher
-              </Button>
+              <BarreFiltres label="Rechercher une machine">
+                <TextInput
+                  label="Rechercher une machine"
+                  description="Nom de la machine, parmi celles que vous pouvez lire."
+                  maxLength={100}
+                  value={saisie}
+                  onChange={(e) => setSaisie(e.currentTarget.value)}
+                />
+                <Button variant="default" onClick={() => setRecherche(saisie.trim())}>
+                  Rechercher
+                </Button>
+              </BarreFiltres>
               <Select
                 label="Machine à relier"
                 placeholder="Choisir une machine"

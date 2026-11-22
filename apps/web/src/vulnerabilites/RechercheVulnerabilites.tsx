@@ -107,7 +107,7 @@ export function RechercheVulnerabilitesVue({
           autoComplete="off"
           spellCheck={false}
           maxLength={RECHERCHE_GLOBALE_BORNES.max + 20}
-          placeholder="CVE-2026-…, nom de machine, adresse IP, nom de domaine, application…"
+          placeholder="CVE, machine, IP, application…"
           value={saisie}
           onChange={(e) => onSaisie(e.currentTarget.value)}
           onKeyDown={onTouche}

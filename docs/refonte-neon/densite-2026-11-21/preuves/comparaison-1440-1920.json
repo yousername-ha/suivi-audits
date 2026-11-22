@@ -1,0 +1,6128 @@
+{
+  "comparison": "Ancien compact / nouveau normal / nouveau compact, mêmes données, viewport, thème et préférence de taille",
+  "sourceAvant": "Base 15dc5a6, même harnais et mêmes données fictives",
+  "sourceApres": "Lot codex/refonte-densite-2026-11-21, après correction Layout/verre",
+  "cas": [
+    {
+      "page": "risques",
+      "width": 1440,
+      "height": 900,
+      "theme": "clair",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        5,
+        8,
+        8
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 34.05,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 7.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 97,
+          "nouveauNormal": 39,
+          "nouveauCompact": 37,
+          "gainNormalPct": 59.8,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 33.34,
+          "nouveauNormal": 29.3,
+          "nouveauCompact": 25.3,
+          "gainNormalPct": 12.1,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Rechercher",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            256,
+            201.59,
+            201.59
+          ]
+        },
+        {
+          "nom": "Filtres avancés",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Ajouter un risque",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            153.39,
+            138.23,
+            134.23
+          ]
+        },
+        {
+          "nom": "Plan d’action de Compromission d’un compte de recette",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Indisponibilité de l’hébergement fictif",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Consultation abusive de dossiers de démonstration",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Perte de données de la plateforme fictive",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Exfiltration par une interface de démonstration",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Rançongiciel chez un prestataire fictif",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Interruption du site de secours de recette",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Défaillance d’une sauvegarde de démonstration",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        }
+      ]
+    },
+    {
+      "page": "fournisseurs",
+      "width": 1440,
+      "height": 900,
+      "theme": "clair",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        2,
+        4,
+        6
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 34.05,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 7.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 127.95,
+          "nouveauNormal": 91.77,
+          "nouveauCompact": 84.77,
+          "gainNormalPct": 28.3,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 79.14,
+          "nouveauNormal": 62.17,
+          "nouveauCompact": 42.78,
+          "gainNormalPct": 21.4,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Vue compacte",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Vue détaillée",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Rechercher un fournisseur",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            256,
+            201.59,
+            201.59
+          ]
+        },
+        {
+          "nom": "Filtres avancés",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Ajouter un fournisseur",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            187.88,
+            172.39,
+            168.39
+          ]
+        },
+        {
+          "nom": "SSO de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "MFA de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Critique de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "MFA de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Critique de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "MFA de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Critique de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "MFA de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Critique de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "MFA de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Critique de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "MFA de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Critique de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        }
+      ]
+    },
+    {
+      "page": "planning",
+      "width": 1440,
+      "height": 900,
+      "theme": "clair",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        null,
+        null,
+        null
+      ],
+      "lignesEntierementVisibles": [
+        0,
+        0,
+        0
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 34.05,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 7.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "planning": {
+          "ancienCompact": 447.77,
+          "nouveauNormal": 404,
+          "nouveauCompact": 404,
+          "gainNormalPct": 9.8,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Année précédente",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            42,
+            25.91,
+            21.91
+          ]
+        },
+        {
+          "nom": "Année suivante",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            42.02,
+            25.91,
+            21.91
+          ]
+        },
+        {
+          "nom": "Ajouter : formation",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            167.53,
+            150.27,
+            146.27
+          ]
+        },
+        {
+          "nom": "Ajouter : sensibilisation",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            196.22,
+            178.61,
+            174.61
+          ]
+        },
+        {
+          "nom": "Ajouter : audit interne",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            187.42,
+            169.92,
+            165.92
+          ]
+        },
+        {
+          "nom": "Ajouter : exercice",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            155.67,
+            138.67,
+            134.67
+          ]
+        }
+      ]
+    },
+    {
+      "page": "produits",
+      "width": 1440,
+      "height": 900,
+      "theme": "clair",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        5,
+        8,
+        8
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 119.23,
+          "nouveauNormal": 34,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 71.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 71.59,
+          "nouveauNormal": 55.3,
+          "nouveauCompact": 49.72,
+          "gainNormalPct": 22.8,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 50.19,
+          "nouveauNormal": 29.3,
+          "nouveauCompact": 25.3,
+          "gainNormalPct": 41.6,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Ajouter un produit",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            163.44,
+            146.19,
+            142.19
+          ]
+        },
+        {
+          "nom": "Modifier Serveur de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Serveur de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Pare-feu de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Pare-feu de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Messagerie fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Messagerie fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Application métier fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Application métier fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Poste de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Poste de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Portail de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Portail de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Collecteur fictif",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Collecteur fictif",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Console de sauvegarde fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Console de sauvegarde fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        }
+      ]
+    },
+    {
+      "page": "vulnerabilites",
+      "width": 1440,
+      "height": 900,
+      "theme": "clair",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        0,
+        0,
+        0
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 119.23,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 73.6,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 71.14,
+          "nouveauNormal": 62.67,
+          "nouveauCompact": 58.67,
+          "gainNormalPct": 11.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 33.34,
+          "nouveauNormal": 29.3,
+          "nouveauCompact": 25.3,
+          "gainNormalPct": 12.1,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "radar": {
+          "ancienCompact": 525.19,
+          "nouveauNormal": 548.03,
+          "nouveauCompact": 564.95,
+          "gainNormalPct": -4.3,
+          "normalPlusPetit": false,
+          "compactPlusPetitOuEgal": false
+        }
+      },
+      "boutonsCommuns": []
+    },
+    {
+      "page": "risques",
+      "width": 1440,
+      "height": 900,
+      "theme": "sombre",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        5,
+        8,
+        8
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 34.05,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 7.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 97,
+          "nouveauNormal": 39,
+          "nouveauCompact": 37,
+          "gainNormalPct": 59.8,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 33.34,
+          "nouveauNormal": 29.3,
+          "nouveauCompact": 25.3,
+          "gainNormalPct": 12.1,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Rechercher",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            256,
+            201.59,
+            201.59
+          ]
+        },
+        {
+          "nom": "Filtres avancés",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Ajouter un risque",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            153.39,
+            138.23,
+            134.23
+          ]
+        },
+        {
+          "nom": "Plan d’action de Compromission d’un compte de recette",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Indisponibilité de l’hébergement fictif",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Consultation abusive de dossiers de démonstration",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Perte de données de la plateforme fictive",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Exfiltration par une interface de démonstration",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Rançongiciel chez un prestataire fictif",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Interruption du site de secours de recette",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Défaillance d’une sauvegarde de démonstration",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        }
+      ]
+    },
+    {
+      "page": "fournisseurs",
+      "width": 1440,
+      "height": 900,
+      "theme": "sombre",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        2,
+        4,
+        6
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 34.05,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 7.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 127.95,
+          "nouveauNormal": 91.77,
+          "nouveauCompact": 84.77,
+          "gainNormalPct": 28.3,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 79.14,
+          "nouveauNormal": 62.17,
+          "nouveauCompact": 42.78,
+          "gainNormalPct": 21.4,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Vue compacte",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Vue détaillée",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Rechercher un fournisseur",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            256,
+            201.59,
+            201.59
+          ]
+        },
+        {
+          "nom": "Filtres avancés",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Ajouter un fournisseur",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            187.88,
+            172.39,
+            168.39
+          ]
+        },
+        {
+          "nom": "SSO de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "MFA de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Critique de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "MFA de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Critique de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "MFA de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Critique de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "MFA de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Critique de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "MFA de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Critique de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "MFA de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Critique de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            74.53,
+            96.61,
+            105.16
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        }
+      ]
+    },
+    {
+      "page": "planning",
+      "width": 1440,
+      "height": 900,
+      "theme": "sombre",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        null,
+        null,
+        null
+      ],
+      "lignesEntierementVisibles": [
+        0,
+        0,
+        0
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 34.05,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 7.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "planning": {
+          "ancienCompact": 447.77,
+          "nouveauNormal": 404,
+          "nouveauCompact": 404,
+          "gainNormalPct": 9.8,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Année précédente",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            42,
+            25.91,
+            21.91
+          ]
+        },
+        {
+          "nom": "Année suivante",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            42.02,
+            25.91,
+            21.91
+          ]
+        },
+        {
+          "nom": "Ajouter : formation",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            167.53,
+            150.27,
+            146.27
+          ]
+        },
+        {
+          "nom": "Ajouter : sensibilisation",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            196.22,
+            178.61,
+            174.61
+          ]
+        },
+        {
+          "nom": "Ajouter : audit interne",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            187.42,
+            169.92,
+            165.92
+          ]
+        },
+        {
+          "nom": "Ajouter : exercice",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            155.67,
+            138.67,
+            134.67
+          ]
+        }
+      ]
+    },
+    {
+      "page": "produits",
+      "width": 1440,
+      "height": 900,
+      "theme": "sombre",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        5,
+        8,
+        8
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 119.23,
+          "nouveauNormal": 34,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 71.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 71.59,
+          "nouveauNormal": 55.3,
+          "nouveauCompact": 49.72,
+          "gainNormalPct": 22.8,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 50.19,
+          "nouveauNormal": 29.3,
+          "nouveauCompact": 25.3,
+          "gainNormalPct": 41.6,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Ajouter un produit",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            163.44,
+            146.19,
+            142.19
+          ]
+        },
+        {
+          "nom": "Modifier Serveur de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Serveur de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Pare-feu de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Pare-feu de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Messagerie fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Messagerie fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Application métier fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Application métier fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Poste de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Poste de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Portail de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Portail de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Collecteur fictif",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Collecteur fictif",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Console de sauvegarde fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Console de sauvegarde fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        }
+      ]
+    },
+    {
+      "page": "vulnerabilites",
+      "width": 1440,
+      "height": 900,
+      "theme": "sombre",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        0,
+        0,
+        0
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 119.23,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 73.6,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 71.14,
+          "nouveauNormal": 62.67,
+          "nouveauCompact": 58.67,
+          "gainNormalPct": 11.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 33.34,
+          "nouveauNormal": 29.3,
+          "nouveauCompact": 25.3,
+          "gainNormalPct": 12.1,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "radar": {
+          "ancienCompact": 525.19,
+          "nouveauNormal": 548.03,
+          "nouveauCompact": 564.95,
+          "gainNormalPct": -4.3,
+          "normalPlusPetit": false,
+          "compactPlusPetitOuEgal": false
+        }
+      },
+      "boutonsCommuns": []
+    },
+    {
+      "page": "risques",
+      "width": 1920,
+      "height": 1080,
+      "theme": "clair",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        8,
+        8,
+        8
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 34.05,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 7.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 55,
+          "nouveauNormal": 39,
+          "nouveauCompact": 37,
+          "gainNormalPct": 29.1,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 50.19,
+          "nouveauNormal": 29.3,
+          "nouveauCompact": 25.3,
+          "gainNormalPct": 41.6,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Rechercher",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            256,
+            240,
+            240
+          ]
+        },
+        {
+          "nom": "Filtres avancés",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Ajouter un risque",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            153.39,
+            138.23,
+            134.23
+          ]
+        },
+        {
+          "nom": "Plan d’action de Compromission d’un compte de recette",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Indisponibilité de l’hébergement fictif",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Consultation abusive de dossiers de démonstration",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Perte de données de la plateforme fictive",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Exfiltration par une interface de démonstration",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Rançongiciel chez un prestataire fictif",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Interruption du site de secours de recette",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Défaillance d’une sauvegarde de démonstration",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        }
+      ]
+    },
+    {
+      "page": "fournisseurs",
+      "width": 1920,
+      "height": 1080,
+      "theme": "clair",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        4,
+        6,
+        6
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 34.05,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 7.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 112.56,
+          "nouveauNormal": 91.77,
+          "nouveauCompact": 84.77,
+          "gainNormalPct": 18.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 62.09,
+          "nouveauNormal": 46.78,
+          "nouveauCompact": 42.78,
+          "gainNormalPct": 24.7,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Vue compacte",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Vue détaillée",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Rechercher un fournisseur",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            256,
+            240,
+            240
+          ]
+        },
+        {
+          "nom": "Filtres avancés",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Ajouter un fournisseur",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            187.88,
+            172.39,
+            168.39
+          ]
+        },
+        {
+          "nom": "SSO de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "MFA de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Critique de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "MFA de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Critique de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "MFA de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Critique de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "MFA de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Critique de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "MFA de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Critique de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "MFA de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Critique de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        }
+      ]
+    },
+    {
+      "page": "planning",
+      "width": 1920,
+      "height": 1080,
+      "theme": "clair",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        null,
+        null,
+        null
+      ],
+      "lignesEntierementVisibles": [
+        0,
+        0,
+        0
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 34.05,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 7.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "planning": {
+          "ancienCompact": 632.56,
+          "nouveauNormal": 404,
+          "nouveauCompact": 404,
+          "gainNormalPct": 36.1,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Année précédente",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            42,
+            25.91,
+            21.91
+          ]
+        },
+        {
+          "nom": "Année suivante",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            42.02,
+            25.91,
+            21.91
+          ]
+        },
+        {
+          "nom": "Ajouter : formation",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            167.53,
+            150.27,
+            146.27
+          ]
+        },
+        {
+          "nom": "Ajouter : sensibilisation",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            196.22,
+            178.61,
+            174.61
+          ]
+        },
+        {
+          "nom": "Ajouter : audit interne",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            187.42,
+            169.92,
+            165.92
+          ]
+        },
+        {
+          "nom": "Ajouter : exercice",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            155.67,
+            138.67,
+            134.67
+          ]
+        }
+      ]
+    },
+    {
+      "page": "produits",
+      "width": 1920,
+      "height": 1080,
+      "theme": "clair",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        8,
+        8,
+        8
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 119.23,
+          "nouveauNormal": 34,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 71.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 60.02,
+          "nouveauNormal": 55.3,
+          "nouveauCompact": 49.72,
+          "gainNormalPct": 7.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 33.34,
+          "nouveauNormal": 29.3,
+          "nouveauCompact": 25.3,
+          "gainNormalPct": 12.1,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Ajouter un produit",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            163.44,
+            146.19,
+            142.19
+          ]
+        },
+        {
+          "nom": "Modifier Serveur de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Serveur de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Pare-feu de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Pare-feu de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Messagerie fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Messagerie fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Application métier fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Application métier fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Poste de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Poste de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Portail de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Portail de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Collecteur fictif",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Collecteur fictif",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Console de sauvegarde fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Console de sauvegarde fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        }
+      ]
+    },
+    {
+      "page": "vulnerabilites",
+      "width": 1920,
+      "height": 1080,
+      "theme": "clair",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        0,
+        0,
+        0
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 119.23,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 73.6,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 55.61,
+          "nouveauNormal": 51.61,
+          "nouveauCompact": 47.61,
+          "gainNormalPct": 7.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 33.34,
+          "nouveauNormal": 29.3,
+          "nouveauCompact": 25.3,
+          "gainNormalPct": 12.1,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "radar": {
+          "ancienCompact": 753.92,
+          "nouveauNormal": 598.5,
+          "nouveauCompact": 598.5,
+          "gainNormalPct": 20.6,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": []
+    },
+    {
+      "page": "risques",
+      "width": 1920,
+      "height": 1080,
+      "theme": "sombre",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        8,
+        8,
+        8
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 34.05,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 7.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 55,
+          "nouveauNormal": 39,
+          "nouveauCompact": 37,
+          "gainNormalPct": 29.1,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 50.19,
+          "nouveauNormal": 29.3,
+          "nouveauCompact": 25.3,
+          "gainNormalPct": 41.6,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Rechercher",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            256,
+            240,
+            240
+          ]
+        },
+        {
+          "nom": "Filtres avancés",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Ajouter un risque",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            153.39,
+            138.23,
+            134.23
+          ]
+        },
+        {
+          "nom": "Plan d’action de Compromission d’un compte de recette",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Indisponibilité de l’hébergement fictif",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Consultation abusive de dossiers de démonstration",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Perte de données de la plateforme fictive",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Exfiltration par une interface de démonstration",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Rançongiciel chez un prestataire fictif",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Interruption du site de secours de recette",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        },
+        {
+          "nom": "Plan d’action de Défaillance d’une sauvegarde de démonstration",
+          "hauteurs": [
+            30,
+            26,
+            24
+          ],
+          "largeurs": [
+            119.19,
+            26,
+            24
+          ]
+        }
+      ]
+    },
+    {
+      "page": "fournisseurs",
+      "width": 1920,
+      "height": 1080,
+      "theme": "sombre",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        4,
+        6,
+        6
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 34.05,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 7.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 112.56,
+          "nouveauNormal": 91.77,
+          "nouveauCompact": 84.77,
+          "gainNormalPct": 18.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 62.09,
+          "nouveauNormal": 46.78,
+          "nouveauCompact": 42.78,
+          "gainNormalPct": 24.7,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Vue compacte",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Vue détaillée",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Rechercher un fournisseur",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            256,
+            240,
+            240
+          ]
+        },
+        {
+          "nom": "Filtres avancés",
+          "hauteurs": [
+            34,
+            30,
+            26
+          ],
+          "largeurs": [
+            34,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Ajouter un fournisseur",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            187.88,
+            172.39,
+            168.39
+          ]
+        },
+        {
+          "nom": "SSO de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "MFA de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Critique de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Hébergeur de données fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "MFA de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Critique de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Logiciel de dossiers fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "MFA de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Critique de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Messagerie collaborative fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "MFA de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Critique de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Outil de visioconférence fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "MFA de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Critique de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Prestataire de maintenance fictif",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "SSO de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "MFA de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Critique de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Hébergeur HDS de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            28,
+            28
+          ],
+          "largeurs": [
+            106,
+            108,
+            109
+          ]
+        },
+        {
+          "nom": "Fiche du fournisseur Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Évaluer le fournisseur Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Historique des évaluations de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        },
+        {
+          "nom": "Périmètres de rattachement de Plateforme de collaboration fictive",
+          "hauteurs": [
+            28,
+            30,
+            26
+          ],
+          "largeurs": [
+            28,
+            30,
+            26
+          ]
+        }
+      ]
+    },
+    {
+      "page": "planning",
+      "width": 1920,
+      "height": 1080,
+      "theme": "sombre",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        null,
+        null,
+        null
+      ],
+      "lignesEntierementVisibles": [
+        0,
+        0,
+        0
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 34.05,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 7.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "planning": {
+          "ancienCompact": 632.56,
+          "nouveauNormal": 404,
+          "nouveauCompact": 404,
+          "gainNormalPct": 36.1,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Année précédente",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            42,
+            25.91,
+            21.91
+          ]
+        },
+        {
+          "nom": "Année suivante",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            42.02,
+            25.91,
+            21.91
+          ]
+        },
+        {
+          "nom": "Ajouter : formation",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            167.53,
+            150.27,
+            146.27
+          ]
+        },
+        {
+          "nom": "Ajouter : sensibilisation",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            196.22,
+            178.61,
+            174.61
+          ]
+        },
+        {
+          "nom": "Ajouter : audit interne",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            187.42,
+            169.92,
+            165.92
+          ]
+        },
+        {
+          "nom": "Ajouter : exercice",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            155.67,
+            138.67,
+            134.67
+          ]
+        }
+      ]
+    },
+    {
+      "page": "produits",
+      "width": 1920,
+      "height": 1080,
+      "theme": "sombre",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        8,
+        8,
+        8
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 119.23,
+          "nouveauNormal": 34,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 71.5,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 60.02,
+          "nouveauNormal": 55.3,
+          "nouveauCompact": 49.72,
+          "gainNormalPct": 7.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 33.34,
+          "nouveauNormal": 29.3,
+          "nouveauCompact": 25.3,
+          "gainNormalPct": 12.1,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": [
+        {
+          "nom": "Ajouter un produit",
+          "hauteurs": [
+            36,
+            30,
+            26
+          ],
+          "largeurs": [
+            163.44,
+            146.19,
+            142.19
+          ]
+        },
+        {
+          "nom": "Modifier Serveur de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Serveur de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Pare-feu de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Pare-feu de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Messagerie fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Messagerie fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Application métier fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Application métier fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Poste de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Poste de recette",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Portail de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Portail de démonstration",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Collecteur fictif",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Collecteur fictif",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        },
+        {
+          "nom": "Modifier Console de sauvegarde fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            75.31,
+            74.89,
+            74.89
+          ]
+        },
+        {
+          "nom": "Supprimer Console de sauvegarde fictive",
+          "hauteurs": [
+            26,
+            26,
+            26
+          ],
+          "largeurs": [
+            90.38,
+            89.72,
+            89.72
+          ]
+        }
+      ]
+    },
+    {
+      "page": "vulnerabilites",
+      "width": 1920,
+      "height": 1080,
+      "theme": "sombre",
+      "fontAvant": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "fontApres": "Lexend, -apple-system, BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, \"Helvetica Neue\", \"Noto Sans\", \"Liberation Sans\", Arial, sans-serif",
+      "racinePx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "corpsPx": [
+        "16px",
+        "16px",
+        "16px"
+      ],
+      "tablePx": [
+        "13.12px",
+        "14px",
+        "14px"
+      ],
+      "lignesEntierementVisibles": [
+        0,
+        0,
+        0
+      ],
+      "hauteurs": {
+        "header": {
+          "ancienCompact": 72,
+          "nouveauNormal": 44,
+          "nouveauCompact": 40,
+          "gainNormalPct": 38.9,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "navLink": {
+          "ancienCompact": 44,
+          "nouveauNormal": 36,
+          "nouveauCompact": 34,
+          "gainNormalPct": 18.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tabs": {
+          "ancienCompact": 46.78,
+          "nouveauNormal": 36,
+          "nouveauCompact": 32.19,
+          "gainNormalPct": 23.0,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "pageHeader": {
+          "ancienCompact": 119.23,
+          "nouveauNormal": 31.5,
+          "nouveauCompact": 30.25,
+          "gainNormalPct": 73.6,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "firstRow": {
+          "ancienCompact": 55.61,
+          "nouveauNormal": 51.61,
+          "nouveauCompact": 47.61,
+          "gainNormalPct": 7.2,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "tableHeader": {
+          "ancienCompact": 33.34,
+          "nouveauNormal": 29.3,
+          "nouveauCompact": 25.3,
+          "gainNormalPct": 12.1,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        },
+        "radar": {
+          "ancienCompact": 753.92,
+          "nouveauNormal": 598.5,
+          "nouveauCompact": 598.5,
+          "gainNormalPct": 20.6,
+          "normalPlusPetit": true,
+          "compactPlusPetitOuEgal": true
+        }
+      },
+      "boutonsCommuns": []
+    }
+  ],
+  "preuvesServeur": false
+}

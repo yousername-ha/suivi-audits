@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Journaux techniques du serveur (012-13) : niveau de journalisation réglable à chaud (warn, info ; debug toujours
    temporaire), état réellement appliqué, dernières entrées filtrables et téléchargement. Le niveau est un seuil technique :
    les erreurs sont toujours collectées et le journal d'audit reste indépendant. */
@@ -181,7 +182,7 @@ export function JournauxTechniquesPanel() {
           setFiltres(saisie);
         }}
       >
-        <Group align="flex-end">
+        <BarreFiltres label="Journaux techniques">
           <Select
             label="Niveau minimal"
             allowDeselect={false}
@@ -215,7 +216,7 @@ export function JournauxTechniquesPanel() {
               Télécharger (NDJSON)
             </Button>
           )}
-        </Group>
+        </BarreFiltres>
       </form>
       <Text size="sm">
         {lignes.length} entrée(s) affichée(s){r.hasNextPage ? ' ; d’autres, plus anciennes, restent à charger' : ''}. Le

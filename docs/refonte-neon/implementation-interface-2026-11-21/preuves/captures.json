@@ -1,0 +1,74 @@
+[
+  {
+    "fichier": "captures/risque-clair-informations-1920.png",
+    "description": "Fiche risque, informations, normal clair, 1920×1080",
+    "largeur": 1920,
+    "hauteur": 1080,
+    "sha256": "cfe5daf1479920126a7268f425fb8e1c4006e15a635fefdf8d208436a57631db",
+    "redimensionnee": false
+  },
+  {
+    "fichier": "captures/risque-clair-analyse-1920.png",
+    "description": "Fiche risque, suite de l’analyse, normal clair, 1920×1080",
+    "largeur": 1920,
+    "hauteur": 1080,
+    "sha256": "a958bac5d8de2cb4ac552105404ce0d1df3c8f7e41e58bf1ee4adc08b09ac242",
+    "redimensionnee": false
+  },
+  {
+    "fichier": "captures/risque-sombre-informations-1920.png",
+    "description": "Fiche risque, informations, normal sombre, 1920×1080",
+    "largeur": 1920,
+    "hauteur": 1080,
+    "sha256": "8ba70d5df25d25e39d2f140f3a0dae4401be2d4c3756d97f5fb0d015fac19dea",
+    "redimensionnee": false
+  },
+  {
+    "fichier": "captures/risque-sombre-analyse-1920.png",
+    "description": "Fiche risque, suite de l’analyse, normal sombre, 1920×1080",
+    "largeur": 1920,
+    "hauteur": 1080,
+    "sha256": "2a1e5fc82041aec65fa2977a5a85beec89ccbf842c01d7015b245080265d8334",
+    "redimensionnee": false
+  },
+  {
+    "fichier": "captures/fournisseur-sombre-1920.png",
+    "description": "Fournisseur, première partie, normal sombre, 1920×1080",
+    "largeur": 1920,
+    "hauteur": 1080,
+    "sha256": "749f07de38dea28f2360ec96ac56c51ef54ff5ebcef9e818196faa9afeb3a8fc",
+    "redimensionnee": false
+  },
+  {
+    "fichier": "captures/produit-clair-1920.png",
+    "description": "Création d’un produit, normal clair, 1920×1080",
+    "largeur": 1920,
+    "hauteur": 1080,
+    "sha256": "b4778e512b85438d40e1233de53fe64521ec25caa7362d8c0837c939ed3d46cf",
+    "redimensionnee": false
+  },
+  {
+    "fichier": "captures/risque-compact-informations-1280.png",
+    "description": "Risque, première partie, compact clair, 1280×720",
+    "largeur": 1280,
+    "hauteur": 720,
+    "sha256": "71beeff27446aa14da21a56efa094de91ef9bb133e088834d924654f59c70d94",
+    "redimensionnee": false
+  },
+  {
+    "fichier": "captures/risque-compact-analyse-1280.png",
+    "description": "Risque, deuxième partie, compact clair, 1280×720",
+    "largeur": 1280,
+    "hauteur": 720,
+    "sha256": "79ca09546cef633dc9e3df3e7fea10a049c7cb5ce476a7004b00b3c8bab38038",
+    "redimensionnee": false
+  },
+  {
+    "fichier": "captures/responsable-choix-long-1920.png",
+    "description": "Menu de responsable avec un intitulé long fictif, 1920×1080",
+    "largeur": 1920,
+    "hauteur": 1080,
+    "sha256": "eec63b8caefc85a8012919f475c1fc889524474e8e4fd90db7d099f318cf30aa",
+    "redimensionnee": false
+  }
+]

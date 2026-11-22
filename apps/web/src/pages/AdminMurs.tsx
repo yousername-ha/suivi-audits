@@ -73,6 +73,7 @@ export function MursPanel() {
                 <NumberInput
                   label="Durée de validité (jours)"
                   description="Entre 1 et 365 jours ; l’écran se coupe ensuite."
+                  descriptionProps={{ 'data-aide-permanente': true }}
                   min={1}
                   max={365}
                   required

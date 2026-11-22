@@ -829,6 +829,7 @@ function ReponseQuestion({
       <Textarea
         label="Votre réponse à l’assistant"
         description="Elle sera lue par l’assistant et par le RSSI, et envoyée au fournisseur du modèle : n’y écrivez aucune donnée personnelle."
+        descriptionProps={{ 'data-aide-permanente': true }}
         value={texte}
         onChange={(e) => setTexte(e.currentTarget.value)}
         maxLength={REPONSE_QUESTION_MAX}

@@ -71,6 +71,7 @@ export function AdresseSitePanel() {
             <TextInput
               label="Nouvelle adresse"
               description="Nom DNS ou adresse IP, sans https:// ni port. Pour un certificat ACME ou de votre PKI, le choisir ensuite dans Certificats et opérations."
+              descriptionProps={{ 'data-aide-permanente': true }}
               autoComplete="off"
               spellCheck={false}
               maxLength={253}
