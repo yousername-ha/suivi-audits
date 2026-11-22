@@ -184,7 +184,9 @@ for (const [mode, scheme, largeur] of [
       const tenable =
         ((await (await page.request.get('/api/vulnerabilites/synchronisation')).json()) as unknown[]).length > 0;
       const scores = /^(Criticité \(ACR, Tenable\)|Exposition \(AES, Tenable\))$/;
-      const colonnesScores = page.getByRole('columnheader', { name: scores });
+      // En-têtes lus par leur texte : la version de Playwright de la CI (1.56) range ces <th> parmi les cellules (« cell »),
+      // pas parmi les en-têtes de colonne ; un sélecteur par rôle n'en trouverait aucun.
+      const colonnesScores = page.locator('thead th').filter({ hasText: scores });
       const filtresScores = page.getByRole('combobox', { name: scores });
       if (tenable) {
         await expect(colonnesScores).toHaveCount(2);
