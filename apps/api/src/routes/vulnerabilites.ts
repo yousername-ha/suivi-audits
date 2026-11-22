@@ -458,7 +458,7 @@ export const vulnerabilitesRoutes = [
     method: 'GET',
     url: '/api/vulnerabilites/machines',
     summary:
-      'Machines lisibles (périmètre, ou administration du module pour celles sans périmètre) ; recherche par nom, filtres rôle et périmètre ; constats présents par gravité',
+      'Machines lisibles (périmètre, ou administration du module pour celles sans périmètre) ; recherche par nom, filtres rôle et périmètre, catégorie minimale de criticité (ACR) et d’exposition (AES) selon Tenable (une machine sans valeur ne répond à aucun de ces filtres) ; constats présents par gravité',
     tags,
     access: 'vulnerabilites:lire',
     query: RechercheMachines,

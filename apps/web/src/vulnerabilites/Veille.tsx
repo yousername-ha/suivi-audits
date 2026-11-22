@@ -74,6 +74,7 @@ import {
   urlAvis,
   urlFailles,
 } from './veille';
+import { NOMS_PAGINATION } from './pagination';
 
 const CLE = ['vulnerabilites', 'veille'] as const;
 const FLUX = 'veille-vulnerabilites' as const;
@@ -516,7 +517,9 @@ function Pages({
       <Text size="sm" c="dimmed" role="status">
         {donnees.total} résultat{donnees.total > 1 ? 's' : ''}
       </Text>
-      {pages > 1 && <Pagination total={pages} value={page} onChange={onPage} aria-label={libelle} />}
+      {pages > 1 && (
+        <Pagination {...NOMS_PAGINATION} total={pages} value={page} onChange={onPage} aria-label={libelle} />
+      )}
     </Group>
   );
 }

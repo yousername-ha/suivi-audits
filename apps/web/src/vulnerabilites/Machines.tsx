@@ -15,6 +15,9 @@
    plus haute et les marques zero-day et exploitable de chaque machine) et « Parc » (ParcMachines.tsx : une tuile par
    machine, zones front, back applicatif, base de données et rôle non indiqué, mode réduit ou grand écran). Mêmes filtres,
    même fiche.
+   Lot TEN-SCORES : criticité (ACR) et exposition (AES) selon Tenable, en colonnes de la liste, dans la fiche et en filtres
+   (catégorie minimale), seulement si une intégration Tenable Security Center existe (état des synchronisations, lu avec la
+   seule lecture du module) ; informations affichées, sans effet sur la priorité ni sur le rang.
    Composants de la charte, CSP stricte (ADR 0006). */
 import {
   Alert,
@@ -32,12 +35,16 @@ import {
   Text,
   TextInput,
   Title,
+  VisuallyHidden,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
   type DepotTenableDto,
   type EchelleParc,
+  type EtatSynchronisationDto,
   type ExpositionMachineDto,
+  type FiltreAcr,
+  type FiltreAes,
   type MachineDto,
   type MarquesMachineDto,
   type ParcMachinesDto,
@@ -59,13 +66,23 @@ import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan, usePreferences } from '../session';
 import {
+  CLE_ETAT_TENABLE,
   corpsAffectation,
   faitsDuRang,
+  filtresAvecScores,
   FILTRES_MACHINES_VIDES,
   type FiltresMachines,
+  libelleAcr,
+  libelleAes,
   libelleMachine,
   libelleRole,
+  OPTIONS_FILTRE_ACR,
+  OPTIONS_FILTRE_AES,
   originePerimetre,
+  SCORE_ABSENT,
+  SCORE_ABSENT_EXPLICATION,
+  tenableConfigure,
+  URL_ETAT_TENABLE,
   urlMachines,
 } from './failles';
 import { libellePrioriteMachine, urlParc } from './parc';
@@ -75,6 +92,7 @@ import { libelleExposition, urlExpositionMachine } from './surface';
 import { ouvertureMachines } from './recherche';
 import { nombrePages } from './veille';
 import { SourceConnecteur } from './SourceConnecteur';
+import { NOMS_PAGINATION } from './pagination';
 
 const CLE = ['vulnerabilites', 'machines'] as const;
 const OPTIONS_ROLE = [
@@ -82,23 +100,96 @@ const OPTIONS_ROLE = [
   { value: 'aucun', label: 'Rôle non renseigné' },
 ];
 
+/** Lot TEN-SCORES : une valeur de Tenable (ACR ou AES) en clair, avec sa catégorie ; absente : « — », dit « non fournie
+    par Tenable » aux lecteurs d'écran (jamais 0). */
+export function ScoreTenable({ texte }: { texte: string }) {
+  if (texte !== SCORE_ABSENT) return <>{texte}</>;
+  return (
+    <>
+      <span aria-hidden="true">{SCORE_ABSENT}</span>
+      <VisuallyHidden>{SCORE_ABSENT_EXPLICATION}</VisuallyHidden>
+    </>
+  );
+}
+
+/** Lot TEN-SCORES : criticité (ACR) et exposition (AES) d'une machine selon Tenable, pour sa fiche (sans état). */
+export function ScoresTenableFiche({ machine }: { machine: Pick<MachineDto, 'acr' | 'aes'> }) {
+  return (
+    <Stack gap="2xs">
+      <Title order={3} size="h6">
+        Selon Tenable
+      </Title>
+      <Text size="sm">
+        Criticité de l’actif (ACR) : <ScoreTenable texte={libelleAcr(machine.acr)} />
+      </Text>
+      <Text size="sm">
+        Exposition de l’actif (AES) : <ScoreTenable texte={libelleAes(machine.aes)} />
+      </Text>
+      <Text size="xs" c="dimmed">
+        Valeurs calculées par Tenable Security Center, affichées telles quelles : elles n’entrent ni dans la priorité ni
+        dans le rang.
+      </Text>
+    </Stack>
+  );
+}
+
+/** Lot TEN-SCORES : filtres par catégorie minimale de criticité (ACR) et d'exposition (AES) selon Tenable (sans état) ; à
+    n'afficher que si une intégration Tenable existe. Une machine sans valeur ne répond à aucun filtre actif. */
+export function FiltresScoresTenable({
+  acr,
+  aes,
+  onChange,
+}: {
+  acr: FiltreAcr | '';
+  aes: FiltreAes | '';
+  onChange: (f: { acr?: FiltreAcr | ''; aes?: FiltreAes | '' }) => void;
+}) {
+  return (
+    <>
+      <Select
+        label="Criticité (ACR, Tenable)"
+        placeholder="Toutes"
+        clearable
+        value={acr || null}
+        onChange={(v) => onChange({ acr: (v ?? '') as FiltreAcr | '' })}
+        data={OPTIONS_FILTRE_ACR}
+        comboboxProps={{ withinPortal: false }}
+      />
+      <Select
+        label="Exposition (AES, Tenable)"
+        placeholder="Toutes"
+        clearable
+        value={aes || null}
+        onChange={(v) => onChange({ aes: (v ?? '') as FiltreAes | '' })}
+        data={OPTIONS_FILTRE_AES}
+        comboboxProps={{ withinPortal: false }}
+      />
+    </>
+  );
+}
+
 /** Machines (sans état), dans l'ordre du rang ; avec `selection`, une case par machine pour l'affectation en masse ; avec
     `onOuvrir`, le nom ouvre la fiche de la machine. Lot PC2 : priorité la plus haute et marques (zero-day, exploitable)
-    quand la route les rend. Lot PC3 : avec `onPerimetre`, le nom du périmètre ouvre son détail (onglet « Périmètres »). */
+    quand la route les rend. Lot PC3 : avec `onPerimetre`, le nom du périmètre ouvre son détail (onglet « Périmètres »).
+    Lot TEN-SCORES : avec `scoresTenable` (une intégration Tenable existe), colonnes de la criticité (ACR) et de
+    l'exposition (AES). */
 export function MachinesTable({
   machines,
   selection,
   onSelection,
   onOuvrir,
   onPerimetre,
+  scoresTenable = false,
 }: {
   machines: (MachineDto & { marques?: MarquesMachineDto })[];
   selection?: ReadonlySet<string>;
   onSelection?: (id: string, choisie: boolean) => void;
   onOuvrir?: (m: MachineDto) => void;
   onPerimetre?: (perimetreId: string) => void;
+  scoresTenable?: boolean;
 }) {
   const choix = !!selection && !!onSelection;
+  const colonnes = 7 + (choix ? 1 : 0) + (scoresTenable ? 2 : 0);
   return (
     <DataTable label="Machines">
       <Table>
@@ -112,6 +203,8 @@ export function MachinesTable({
             <Table.Th>Périmètre</Table.Th>
             <Table.Th>Failles présentes (critiques, élevées, moyennes, faibles)</Table.Th>
             <Table.Th>Exploitées, exploitables, déclarées</Table.Th>
+            {scoresTenable && <Table.Th>Criticité (ACR, Tenable)</Table.Th>}
+            {scoresTenable && <Table.Th>Exposition (AES, Tenable)</Table.Th>}
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
@@ -206,11 +299,21 @@ export function MachinesTable({
               <Table.Td>
                 {m.compteurs.exploites} · {m.compteurs.exploitables} · {m.compteurs.declarees}
               </Table.Td>
+              {scoresTenable && (
+                <Table.Td>
+                  <ScoreTenable texte={libelleAcr(m.acr)} />
+                </Table.Td>
+              )}
+              {scoresTenable && (
+                <Table.Td>
+                  <ScoreTenable texte={libelleAes(m.aes)} />
+                </Table.Td>
+              )}
             </Table.Tr>
           ))}
           {machines.length === 0 && (
             <Table.Tr>
-              <Table.Td colSpan={choix ? 8 : 7}>
+              <Table.Td colSpan={colonnes}>
                 <Text size="sm" c="dimmed">
                   Aucune machine ne correspond, parmi celles que vous pouvez lire.
                 </Text>
@@ -429,12 +532,17 @@ export function ExpositionMachine({ exposition }: { exposition: ExpositionMachin
   );
 }
 
-/** Fiche d'une machine : rang et faits, exposition sur Internet, produits surveillés reliés, relier un produit (droit de
-    modifier le module). */
+/** Fiche d'une machine : rang et faits, criticité et exposition selon Tenable (lot TEN-SCORES, seulement si une
+    intégration Tenable existe), exposition sur Internet, produits surveillés reliés, relier un produit (droit de modifier
+    le module). */
 export function FicheMachine({ machine, modifier }: { machine: MachineDto; modifier: boolean }) {
   const qc = useQueryClient();
   const [choix, setChoix] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
+  const etatTenable = useQuery({
+    queryKey: [...CLE_ETAT_TENABLE],
+    queryFn: () => get<EtatSynchronisationDto[]>(URL_ETAT_TENABLE),
+  });
   const relies = useQuery({
     queryKey: [...CLE, 'produits', machine.id],
     queryFn: () => get<ProduitRelieDto[]>(`/api/vulnerabilites/machines/${machine.id}/produits`),
@@ -482,6 +590,7 @@ export function FicheMachine({ machine, modifier }: { machine: MachineDto; modif
         </Title>
         <Text size="sm">{faitsDuRang(machine.rang).join(' · ')}</Text>
       </Stack>
+      {tenableConfigure(etatTenable.data) && <ScoresTenableFiche machine={machine} />}
       {machine.finDeSupport && (
         <Stack gap="2xs">
           <Title order={3} size="h6">
@@ -608,15 +717,23 @@ function OngletMachines() {
     void save({ vulnerabilitesMachines: { ...affichage, ...patch } }).catch((e: unknown) =>
       notifications.show({ color: 'red', message: errorMessage(e) }),
     );
+  // Lot TEN-SCORES : ACR et AES (colonnes, filtres) seulement si une intégration Tenable Security Center existe ; l'état
+  // des synchronisations se lit avec la seule lecture du module (même route et même clé que « Failles détectées »).
+  const etatTenable = useQuery({
+    queryKey: [...CLE_ETAT_TENABLE],
+    queryFn: () => get<EtatSynchronisationDto[]>(URL_ETAT_TENABLE),
+  });
+  const tenable = tenableConfigure(etatTenable.data);
+  const envoyes = filtresAvecScores(filtres, tenable);
   const machines = useQuery({
-    queryKey: [...CLE, filtres, page],
-    queryFn: () => get<PageMachines>(urlMachines(filtres, page)),
+    queryKey: [...CLE, envoyes, page],
+    queryFn: () => get<PageMachines>(urlMachines(envoyes, page)),
     enabled: vue === 'liste',
   });
   // Parc : une seule requête pour tout le parc lisible (bornée par zone), aucune par machine.
   const parc = useQuery({
-    queryKey: [...CLE, 'parc', filtres],
-    queryFn: () => get<ParcMachinesDto>(urlParc(filtres)),
+    queryKey: [...CLE, 'parc', envoyes],
+    queryFn: () => get<ParcMachinesDto>(urlParc(envoyes)),
     enabled: vue === 'parc',
   });
   /** « Et n autres : voir la liste » d'une zone tronquée : la liste, filtrée sur la zone. */
@@ -746,6 +863,9 @@ function OngletMachines() {
               checked={!!filtres.finSupport}
               onChange={(e) => changer({ finSupport: e.currentTarget.checked })}
             />
+            {tenable && (
+              <FiltresScoresTenable acr={filtres.acr ?? ''} aes={filtres.aes ?? ''} onChange={(f) => changer(f)} />
+            )}
           </Group>
         </form>
         {vue === 'liste' && modifier && (
@@ -810,6 +930,7 @@ function OngletMachines() {
             }
             onOuvrir={setOuverte}
             onPerimetre={(id) => void navigate(adressePerimetre(id))}
+            scoresTenable={tenable}
           />
         )}
         {vue === 'liste' && machines.data && (
@@ -817,7 +938,15 @@ function OngletMachines() {
             <Text size="sm" c="dimmed" role="status">
               {machines.data.total} machine{machines.data.total > 1 ? 's' : ''}
             </Text>
-            {pages > 1 && <Pagination total={pages} value={page} onChange={setPage} aria-label="Pages des machines" />}
+            {pages > 1 && (
+              <Pagination
+                {...NOMS_PAGINATION}
+                total={pages}
+                value={page}
+                onChange={setPage}
+                aria-label="Pages des machines"
+              />
+            )}
           </Group>
         )}
       </Stack>

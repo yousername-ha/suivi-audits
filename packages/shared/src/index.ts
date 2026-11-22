@@ -67,6 +67,7 @@ export * from './veille-vulnerabilites.js';
 export * from './veille-reglementaire.js';
 export * from './frequences-synchronisation.js';
 export * from './failles-tenable.js';
+export * from './scores-tenable.js';
 export * from './import-nessus.js';
 export * from './import-silene.js';
 export * from './import-ads.js';

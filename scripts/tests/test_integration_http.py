@@ -356,6 +356,8 @@ class IntegrationHttp(unittest.TestCase):
                                 "adresse": "192.0.2.11", "systeme": "Linux Kernel 5.14 on Exemple Linux 9",
                                 "premiere": "2026-07-18T01:05:01.000Z", "derniere": "2026-11-16T06:04:48.000Z",
                                 "exposition": "internal", "acr": 4.0,
+                                # Lot TEN-SCORES : AES (`assetExposureScore`) lu comme entier.
+                                "aes": 207,
                                 # Lot V4d : dépôt de Tenable, identifiant et nom seulement.
                                 "depot": {"id": "1", "nom": "Depot"}})
         d = [e for e in el if e["type"] == "detection"]
@@ -407,6 +409,51 @@ class IntegrationHttp(unittest.TestCase):
         self.assertEqual([(r["methode"], r["chemin"].split("?")[0]) for r in Faux.recues],
                          [("POST", "/rest/analysis"), ("GET", "/rest/hosts")])
         self.assertEqual(h.depot({"id": "7", "name": "<b>Dépôt</b> fictif B"}), {"id": "7", "nom": "Dépôt fictif B"})
+
+    def test_synchronisation_reads_the_asset_exposure_score_as_a_bounded_integer(self):
+        """Lot TEN-SCORES : l'AES (`assetExposureScore`) est lu dans le résultat déjà reçu (aucun appel nouveau), comme un
+        entier de 0 à 1000 ; vide, absent, hors bornes, décimal ou non numérique : None, sans écarter le résultat. Vue
+        plusieurs fois, la machine garde l'ACR et l'AES de son premier résultat. Tout autre champ reste écarté."""
+        Faux.mode = "synchro"
+        sans_aes = resultat_fictif(3, hote=3)
+        del sans_aes["assetExposureScore"]
+        Faux.analyse = [
+            resultat_fictif(1, assetExposureScore="650", acrScore="9"),
+            # Même machine, autre résultat : ses valeurs ne remplacent pas celles du premier.
+            resultat_fictif(2, hote=1, port="443", assetExposureScore="120", acrScore="2"),
+            resultat_fictif(4, hote=2, assetExposureScore=""),
+            sans_aes,
+            resultat_fictif(5, hote=4, assetExposureScore="1001"),
+            resultat_fictif(6, hote=5, assetExposureScore="-1"),
+            resultat_fictif(7, hote=6, assetExposureScore="12.5"),
+            resultat_fictif(8, hote=7, assetExposureScore="élevé"),
+            resultat_fictif(9, hote=8, assetExposureScore=1000),
+            resultat_fictif(10, hote=9, assetExposureScore=" 0 "),
+            resultat_fictif(11, hote=10, assetExposureScore=True),
+            resultat_fictif(12, hote=11, assetExposureScore=[349]),
+            resultat_fictif(13, hote=12, acrScore="", assetExposureScore="349"),
+        ]
+        Faux.hotes = []
+        sortie = self.synchro()
+        self.assertTrue(sortie["ok"], sortie.get("erreur"))
+        self.assertEqual(sortie["resultat"]["ecartes"], 0)
+        texte = json.dumps(sortie)
+        for interdit in ("assetExposureScore", "acrScore", CHAMP_INCONNU, TEXTE_SENSIBLE, "vulnUUID"):
+            self.assertNotIn(interdit, texte)
+        scores = {e["cle"][-2:]: (e["acr"], e["aes"]) for e in sortie["elements"] if e["type"] == "machine"}
+        self.assertEqual(scores, {
+            "a1": (9.0, 650), "a2": (4.0, None), "a3": (4.0, None), "a4": (4.0, None), "a5": (4.0, None),
+            "a6": (4.0, None), "a7": (4.0, None), "a8": (4.0, 1000), "a9": (4.0, 0), "aa": (4.0, None),
+            "ab": (4.0, None), "ac": (None, 349)})
+        # Machine sans valeur : la clé est là, à None (jamais 0).
+        self.assertTrue(all("aes" in e for e in sortie["elements"] if e["type"] == "machine"))
+        self.assertEqual([(r["methode"], r["chemin"].split("?")[0]) for r in Faux.recues],
+                         [("POST", "/rest/analysis"), ("GET", "/rest/hosts")])
+        self.assertIn("assetExposureScore", h.CHAMPS_ANALYSE)
+        for v, attendu in (("207", 207), (207, 207), ("0", 0), ("1000", 1000), ("", None), (None, None), ("1001", None),
+                           (1001, None), (-1, None), ("12.5", None), (12.5, None), ("1e3", None), (False, None)):
+            with self.subTest(v=v):
+                self.assertEqual(h.score_exposition(v), attendu)
 
     def test_synchronisation_paginates_and_stops_at_its_bounds(self):
         Faux.mode = "synchro"

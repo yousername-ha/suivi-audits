@@ -241,6 +241,7 @@ describe('fin de support et précision du zero-day sur les machines', () => {
     depot: null,
     exposition: null,
     acr: null,
+    aes: null,
     premiere: null,
     derniere: null,
     source: 'tenable',

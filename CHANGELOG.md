@@ -6,7 +6,29 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune migration, aucune action : correctif de l'interface du module Vulnérabilités et correctifs de performance du socle.
+Aucune action, ni sur le serveur ni dans l'application.
+
+- Correctif de l'interface du module Vulnérabilités (page « Machines ») : sans migration.
+- Migration automatique additive `100` (colonne `aes` des machines du module Vulnérabilités, vide au départ), sans reprise
+  de données : aucune commande sur le serveur, aucune action dans l'application. L'exposition des machines selon Tenable
+  (AES) apparaît après la prochaine synchronisation de Tenable Security Center ; la criticité (ACR), déjà lue, s'affiche
+  dès la mise à jour.
+- Correctifs de performance du socle (liste des registres, synthèse du mur) : sans migration.
+
+### Ajouté
+
+- Vulnérabilités, **criticité (ACR) et exposition (AES) des machines selon Tenable** (lot TEN-SCORES, décision du RSSI du
+  22/11/2026, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : quand une intégration Tenable Security Center est
+  configurée, la liste de l'écran « Machines » a deux colonnes, « Criticité (ACR, Tenable) » et « Exposition (AES,
+  Tenable) », et la fiche d'une machine une rubrique « Selon Tenable », avec les catégories officielles de Tenable
+  (« Tenable Exposure Management Metrics ») : ACR Critique 9–10, Élevée 7–8, Moyenne 4–6, Faible 1–3 ; AES Élevée
+  650–1000, Moyenne 350–649, Faible 0–349 ; « — » quand Tenable ne fournit pas la valeur. Deux filtres, par catégorie
+  minimale (ACR : Critique, Élevée ou plus, Moyenne ou plus ; AES : Élevée, Moyenne ou plus), s'appliquent à la liste et
+  au parc ; une machine sans valeur n'y répond pas. L'AES est lu dans le champ `assetExposureScore` de l'analyse, seul
+  champ de Tenable ajouté à la liste blanche du connecteur (migration `100`). Sans intégration Tenable, colonnes, rubrique
+  et filtres n'apparaissent pas ; un import Nessus ne porte ni l'une ni l'autre valeur. Ces valeurs sont affichées
+  seulement : ni la priorité, ni le rang, ni les alertes ne changent
+  (session « Module surveillance vulnérabilités SMSI »).
 
 ### Corrigé
 
@@ -19,7 +41,10 @@ Aucune migration, aucune action : correctif de l'interface du module Vulnérabil
   compare, pour des comptes de profils différents, la nouvelle liste à l'ancienne. Pour ses prochaines échéances, la synthèse du mur
   ne relit plus que deux fois les données de chaque action, au lieu de six, ce qui comptait depuis que les actions portent
   leurs tâches ; les échéances affichées sont les mêmes (session « Projet audit_suivi Coeur »).
-
+- Vulnérabilités et Veille réglementaire, **accessibilité** : les boutons de pagination (flèches, page active) des écrans
+  Machines, Alertes, Surface externe, Silène, Veille et Veille réglementaire n'avaient pas de nom pour les lecteurs d'écran
+  (règle « button-name », niveau A) ; ils sont nommés comme ceux de « Failles détectées ». Un test vérifie chaque
+  pagination de ces deux modules (session « Module surveillance vulnérabilités SMSI »).
 - Vulnérabilités, **page « Machines » en erreur** en venant de l'onglet « Périmètres » (par exemple depuis la carte
   « Sans périmètre ») : « Une erreur est survenue » avec le message technique « (perimetres.data ?? []).map is not a
   function ». Les deux écrans rangeaient deux réponses différentes sous la même clé du cache de l'interface ; la liste des
