@@ -215,6 +215,38 @@ ne passe par SSH**. Les mêmes questions sont posées dès l'installation, avec 
   `scripts/tests/test_flux_executant.py`, `scripts/tests/test_exploitation.py`, `scripts/tests/test_updates.py`,
   `apps/web/test/flux-repli-hsts.test.ts`, `apps/web/test/mises-a-jour-verification.test.ts`.
 
+## Addendum du 22/11/2026 — veille active du poller (recherche CPE)
+
+Décision du RSSI du 22/11/2026 : dans la saisie d'un produit surveillé, les versions connues du produit choisi doivent
+arriver en quelques secondes, sans copie complète du dictionnaire CPE et sans nouveau composant à sortie permanente.
+
+- **Ce qui ne change pas.** L'application ne lance jamais l'exécutant et n'écrit rien sur l'hôte (conteneur en lecture
+  seule, montages en lecture seule). Aucune destination nouvelle : la demande part sous le flux « veille-vulnerabilites »
+  déjà validé ; fermé, rien ne part.
+- **Mécanisme.** À chaque passage, l'exécutant d'exploitation demande à l'application si une saisie de produit est en
+  cours et pose ou retire un témoin dans son dossier privé (`reprise-exploitation/cpe-chaud`). Tant que ce témoin a moins
+  de deux minutes, le poller (`scripts/update-worker.py`) intercale, entre deux passages complets (toutes les 15 secondes),
+  des passages courts toutes les 3 secondes : `exploitation-worker.py` lancé avec `EXPLOITATION_SEULEMENT=cpe-versions`,
+  délai borné à 30 secondes, limité à la file des versions CPE. Sans témoin : aucun appel de plus.
+- **Conditions d'un passage court** : témoin ordinaire, du compte du poller et récent ; flux « veille-vulnerabilites »
+  voulu ouvert au dernier passage complet (l'exécutant le revérifie avant toute sortie) ; ni maintenance, ni
+  intervention, ni mise à jour en cours ; exécutant automatique actif. Une sauvegarde, une restauration ou une mise à
+  jour demandée dans l'application s'exécute dans le fil du poller : aucun passage court ne tourne en même temps. Un
+  passage court ne prend aucun verrou de données et ne lit que sa file ; lancé pendant une opération faite à la main sur
+  l'hôte, il échoue sans effet si l'application est arrêtée.
+- **Garde de l'exécutant.** `exploitation-worker.py` refuse, avant toute action, un mode court qu'il ne connaît pas
+  (`MODES_COURTS`, liste fermée, vide dans le socle) : un passage court, borné à 30 secondes, ne peut pas devenir un
+  passage complet tronqué. Le module qui livre une file courte y inscrit son mode avec son traitement.
+- **Effet attendu.** L'ouverture de la saisie réchauffe le poller en 15 secondes au plus ; une demande de versions part
+  ensuite en 3 à 6 secondes. Pire cas (demande dans les premières secondes) : 15 à 20 secondes, le champ de version
+  restant libre. Ces délais restent à mesurer sur une pile réelle avec la file du module Vulnérabilités.
+- **Écarté** : attente active dans l'exécutant (il doit rester court et borné) ; fichier écrit par l'application (elle
+  n'a aucun montage en écriture) ; relais permanent vers la NVD (composant et sortie de plus, gardé en réserve).
+
+Tests : `scripts/tests/test_updates.py` (cadence inchangée sans témoin, passages courts, conditions de refus, échec sans
+effet, effacement devant le passage complet) et `scripts/tests/test_exploitation.py` (mode court inconnu refusé). La file, le témoin et le mode court de l'exécutant sont livrés par le lot
+« recherche CPE » du module Vulnérabilités (ADR 0100).
+
 ## Conséquences
 
 - Plus aucune commande à taper pour l'assistant, l'antivirus, le courriel, le certificat public ou les mises à jour.
