@@ -6,6 +6,7 @@ import {
   SegmentedControl,
   Text,
   TextInput,
+  VisuallyHidden,
   type TextInputProps,
   type SegmentedControlProps,
 } from '@mantine/core';
@@ -147,8 +148,17 @@ export function BarreFiltres({
           !commandes.includes(n as Controle) &&
           !/effacer|initialiser/i.test(texte((n as Controle).props.children)))),
   );
+  // Un sélecteur à segments qui n'est pas le choix de vue est le filtre principal d'un registre (« Ouverts »,
+  // « Tous »…) : il reste visible à côté de la barre, à un clic, au lieu d'être replié dans le panneau de filtres où
+  // ses choix ne tiennent pas.
+  const segments = controles.filter((n) => isValidElement(n) && n.type === SegmentedControl && n !== choixVue);
   const filtres = controles.filter(
-    (n) => n !== champ && n !== choixVue && !commandes.includes(n as Controle) && !annexes.includes(n),
+    (n) =>
+      n !== champ &&
+      n !== choixVue &&
+      !commandes.includes(n as Controle) &&
+      !annexes.includes(n) &&
+      !segments.includes(n),
   );
   const presentations = choixVue?.props.data?.map((o) => {
     const item = typeof o === 'string' ? { value: o, label: o } : o;
@@ -178,8 +188,9 @@ export function BarreFiltres({
           : undefined
       }
       ajout={
-        annexes.length || actions ? (
+        segments.length || annexes.length || actions ? (
           <>
+            {segments}
             {annexes}
             {actions}
           </>
@@ -190,9 +201,15 @@ export function BarreFiltres({
         cloneElement(commande, {
           key: commande.key ?? i,
           className: [commande.props.className, 'barre-boite__soumettre'].filter(Boolean).join(' '),
-          'aria-label': commande.props['aria-label'] ?? String(commande.props.children).trim(),
           title: commande.props.title ?? String(commande.props.children).trim(),
-          children: <IconeLoupe />,
+          // Le nom du bouton reste son texte (masqué à l'écran), pas un attribut aria-label : un bouton « Rechercher »
+          // à côté d'un champ « Rechercher » ne répond ainsi pas à la recherche d'un champ par son libellé.
+          children: (
+            <>
+              <IconeLoupe />
+              <VisuallyHidden>{commande.props.children}</VisuallyHidden>
+            </>
+          ),
         }),
       )}
     </BoiteOutils>

@@ -41,6 +41,37 @@ describe('contrats des outils de registre', () => {
     });
     expect(nomsDistincts.props.label).toBe('Journal d’audit');
   });
+  it('laisse visible le filtre à segments d’un registre et ne replie que les autres critères', () => {
+    const changer = vi.fn();
+    const segments = (
+      <SegmentedControl
+        aria-label="Filtre du registre"
+        value="open"
+        onChange={changer}
+        data={[
+          { value: 'open', label: 'Ouverts' },
+          { value: 'all', label: 'Tous' },
+        ]}
+      />
+    );
+    const boite = BarreFiltres({
+      label: 'Incidents',
+      children: (
+        <>
+          {segments}
+          <Select label="RETEX" value="tous" data={[{ value: 'tous', label: 'Tous les RETEX' }]} />
+        </>
+      ),
+    });
+    // Pas de choix de vue en pictogrammes : ce sélecteur filtre, il ne change pas de présentation.
+    expect(boite.props.vues).toBeUndefined();
+    const visibles = enfants((boite.props.ajout as Element).props.children);
+    expect(visibles[0]?.type).toBe(SegmentedControl);
+    expect(visibles[0]?.props).toMatchObject({ value: 'open', onChange: changer });
+    const replies = enfants(boite.props.filtres!.contenu.props.children);
+    expect(replies.map((e) => e.type)).toEqual([Select]);
+    expect(changer).not.toHaveBeenCalled();
+  });
   it('garde les contraintes et le callback du champ existant, sans soumettre au rendu', () => {
     const modifier = vi.fn();
     const champ = (
@@ -82,9 +113,14 @@ describe('contrats des outils de registre', () => {
       type: 'submit',
       form: 'journal',
       disabled: true,
-      'aria-label': 'Filtrer',
+      title: 'Filtrer',
       onClick: action,
     });
+    // Le nom du bouton est son texte, masqué à l'écran : pas d'aria-label, pour qu'un bouton « Rechercher » ne
+    // réponde pas à la recherche du champ « Rechercher » par son libellé.
+    expect(commande.props['aria-label']).toBeUndefined();
+    const contenu = enfants((commande.props.children as Element).props.children);
+    expect(contenu.at(-1)?.props.children).toBe('Filtrer');
     expect(action).not.toHaveBeenCalled();
   });
 
@@ -162,8 +198,10 @@ describe('contrats des outils de registre', () => {
       label: 'Incidents',
       children: <SegmentedControl aria-label="Filtre du registre" value="open" data={['open', 'all']} />,
     });
+    // Un filtre à segments n'est ni une vue en pictogrammes ni un critère replié : il reste visible à côté de la barre.
     expect(filtre.props.vues).toBeUndefined();
-    expect(filtre.props.filtres).toBeDefined();
+    expect(filtre.props.filtres).toBeUndefined();
+    expect(enfants((filtre.props.ajout as Element).props.children)[0]?.type).toBe(SegmentedControl);
   });
 
   it('compte les critères renseignés, y compris dans un groupe, sans compter Tous ni les cases décochées', () => {

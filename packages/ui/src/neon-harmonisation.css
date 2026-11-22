@@ -70,6 +70,11 @@
   flex-wrap: wrap;
   align-items: center;
 }
+/* Panneau refermé (conservé dans la barre pour garder ses champs dans le formulaire) : il ne doit jamais recevoir un
+   clic destiné aux boutons de la barre. */
+.barre-boite__outil:not([aria-expanded='true']) + .filtres-avances {
+  pointer-events: none;
+}
 .filtres-avances.filtres-avances {
   z-index: 310;
   inline-size: min(34rem, calc(100vw - 2rem));

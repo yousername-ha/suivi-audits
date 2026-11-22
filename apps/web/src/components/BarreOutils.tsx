@@ -165,6 +165,10 @@ export function FiltresAvances({
       withinPortal={false}
       keepMounted
       keepMountedMode="display-none"
+      // Fermeture immédiate : pendant un fondu de sortie, le panneau conservé dans la barre perd sa position et
+      // recouvre un instant les boutons voisins ; le relâchement du clic sur « Filtrer » tombait alors sur lui et le
+      // premier clic était perdu (recette du 22/11/2026, journal d'audit).
+      transitionProps={{ duration: 0 }}
     >
       <Popover.Target>
         <ActionIcon size="lg" variant="subtle" aria-label={nom} title={nom} className="barre-boite__outil">
