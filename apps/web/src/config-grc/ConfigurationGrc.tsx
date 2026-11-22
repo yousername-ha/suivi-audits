@@ -361,6 +361,7 @@ function Nouveau({
         <TextInput
           label="Identifiant"
           description="Technique et stable : minuscules, chiffres et tirets bas, commence par une lettre."
+          descriptionProps={{ 'data-aide-permanente': true }}
           value={cle}
           error={cle && !CLE_FORMAT.test(cle) ? 'Format invalide.' : undefined}
           onChange={(e) => {
@@ -401,6 +402,7 @@ function Nouveau({
             <TagsInput
               label="Libellés des niveaux, du plus faible au plus fort"
               description="Au moins deux. Validez chaque libellé avec Entrée ; vous pourrez ensuite les décrire, les réordonner et ajouter des valeurs."
+              descriptionProps={{ 'data-aide-permanente': true }}
               value={niveaux}
               onChange={setNiveaux}
             />
