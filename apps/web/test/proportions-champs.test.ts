@@ -43,6 +43,27 @@ describe('proportions des champs et ordre de lecture', () => {
     expect(html).toContain('required=""');
   });
 
+  it('associe l’aide au champ sans supprimer le texte ni créer une soumission supplémentaire', () => {
+    const html = rendu(
+      createElement(TextInput, {
+        id: 'aide-recette',
+        label: 'Code',
+        name: 'code',
+        value: 'R01',
+        description: 'Précision de recette conservée',
+      }),
+    );
+    expect(html).toContain('class="champ-aide-bouton"');
+    expect(html).toContain('type="button"');
+    expect(html).toContain('aria-controls="aide-recette-description"');
+    expect(html).toContain('aria-describedby="aide-recette-label"');
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).toContain('id="aide-recette-description"');
+    expect(html).toContain('Précision de recette conservée');
+    expect(html).toContain('value="R01"');
+    expect(html).not.toContain('hidden=""');
+  });
+
   it('respecte un ordre explicite quand un écran place une précision avant son champ', () => {
     const html = rendu(
       createElement(TextInput, {
