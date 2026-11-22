@@ -16,9 +16,22 @@ Aucune action, ni sur le serveur ni dans l'application.
 - Service de mise à jour préparé pour la recherche CPE du module Vulnérabilités : sans effet tant que cette recherche
   n'est pas livrée.
 - Correctifs de performance du socle (liste des registres, synthèse du mur) : sans migration.
+- Jeu de démonstration enrichi pour le module Vulnérabilités : sans migration ; sans effet sur une instance déjà en
+  service (le jeu ne se charge que sur une instance vide).
 
 ### Ajouté
 
+- **Démonstration du module Vulnérabilités** (demande du RSSI du 22/11/2026) : le jeu de démonstration, chargé à
+  l'installation sur demande ou par `suivi jeu-de-test`, remplit désormais les écrans « Vue d'ensemble », « Failles »,
+  « Machines » et « Périmètres » du module. Il ajoute une intégration « Tenable Security Center (démonstration) »,
+  inactive et sans clé, et le résultat de deux synchronisations fictives : une quarantaine de machines de
+  l'établissement fictif (serveurs du dossier patient, annuaire, messagerie, sauvegarde, postes d'accueil et de soins,
+  équipements biomédicaux, pare-feu, imprimantes) avec leur criticité (ACR) et leur exposition (AES), une trentaine de
+  failles de gravité critique à faible, environ cent cinquante détections étalées sur six mois, dont quelques-unes
+  corrigées entre les deux synchronisations (« corrigé selon Tenable, à confirmer »). Les machines sont rattachées à
+  l'organisation et à ses deux sites fictifs. Aucun appel ne part vers Tenable : l'intégration reste inactive, le flux
+  reste fermé, rien n'est planifié. Si le module Vulnérabilités ou Intégrations est désactivé, cette partie est
+  simplement sautée (session « Projet audit_suivi Coeur »).
 - Vulnérabilités, **criticité (ACR) et exposition (AES) des machines selon Tenable** (lot TEN-SCORES, décision du RSSI du
   22/11/2026, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : quand une intégration Tenable Security Center est
   configurée, la liste de l'écran « Machines » a deux colonnes, « Criticité (ACR, Tenable) » et « Exposition (AES,
