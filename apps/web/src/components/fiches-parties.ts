@@ -25,8 +25,12 @@ export function titreCourt(texte: string): string {
 /** Un intitulé par partie, jamais générique ni répété.
     - Une section déclarée par le formulaire nomme la partie qu'elle ouvre.
     - À défaut, un titre placé en tête de partie la nomme.
-    - Sinon la partie prolonge la section en cours : « Analyse (suite) », puis « Analyse (suite 2) ». */
-export function nommerParties(total: number, reperes: RepereDePartie[]): string[] {
+    - Sinon la partie prolonge la section en cours : son nom si aucune partie ne le porte encore (section ouverte au
+      milieu de la partie précédente), puis « Analyse (suite) ».
+    - Un formulaire sans section (« Informations ») ou une section qui s'étend sur plus de deux parties : la partie
+      porte le libellé de son premier champ, suivi de points de suspension (« Échéance… »), quand le composant le
+      fournit dans `champs` ; à défaut « … (suite 2) ». */
+export function nommerParties(total: number, reperes: RepereDePartie[], champs: (string | undefined)[] = []): string[] {
   const parties: { base: string; suite: boolean }[] = [];
   let enCours = PREMIERE_PARTIE;
   for (let p = 0; p < total; p++) {
@@ -37,10 +41,20 @@ export function nommerParties(total: number, reperes: RepereDePartie[]): string[
     enCours = surPage.at(-1)?.titre ?? parties[p]!.base;
   }
   const rencontres = new Map<string, number>();
-  return parties.map(({ base, suite }) => {
-    const rang = Math.max((rencontres.get(base) ?? 0) + 1, suite ? 2 : 1);
+  const pris = new Set<string>();
+  return parties.map(({ base, suite }, p) => {
+    // Une section ouverte au milieu de la partie précédente et qui se poursuit ici donne son nom à cette partie, sans
+    // « (suite) » : aucune partie ne porte encore ce nom.
+    const rang = Math.max((rencontres.get(base) ?? 0) + 1, suite && base === PREMIERE_PARTIE ? 2 : 1);
     rencontres.set(base, rang);
-    return rang === 1 ? base : rang === 2 ? `${base} (suite)` : `${base} (suite ${rang - 1})`;
+    let nom = rang === 1 ? base : rang === 2 ? `${base} (suite)` : `${base} (suite ${rang - 1})`;
+    const champ = titreCourt(champs[p] ?? '');
+    if (champ && rang >= (base === PREMIERE_PARTIE ? 2 : 3)) {
+      const parChamp = champ.endsWith('…') ? champ : `${champ}…`;
+      if (!pris.has(parChamp)) nom = parChamp;
+    }
+    pris.add(nom);
+    return nom;
   });
 }
 

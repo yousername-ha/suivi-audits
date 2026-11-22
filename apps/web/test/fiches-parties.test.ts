@@ -54,6 +54,35 @@ describe('intitulés des parties d’une fiche', () => {
     expect(nommerParties(3, [])).toEqual([PREMIERE_PARTIE, 'Informations (suite)', 'Informations (suite 2)']);
   });
 
+  it('une section ouverte au milieu d’une partie nomme la partie suivante, sans « (suite) »', () => {
+    const reperes = [repere(0, 'Prochaines échéances'), repere(2, 'Fenêtre de réalisation', { enTete: true })];
+    expect(nommerParties(3, reperes)).toEqual([PREMIERE_PARTIE, 'Prochaines échéances', 'Fenêtre de réalisation']);
+  });
+
+  it('un formulaire sans section nomme ses parties par leur premier champ', () => {
+    expect(nommerParties(3, [], ['Intitulé', 'Date de la revue', 'Décisions'])).toEqual([
+      PREMIERE_PARTIE,
+      'Date de la revue…',
+      'Décisions…',
+    ]);
+    // Un libellé déjà pris, absent ou trop long : jamais deux parties du même nom.
+    const noms = nommerParties(4, [], ['A', 'Échéance', 'Échéance', undefined]);
+    expect(noms).toEqual([PREMIERE_PARTIE, 'Échéance…', 'Informations (suite 2)', 'Informations (suite 3)']);
+    expect(nommerParties(2, [], ['A', 'Un libellé de champ fictif beaucoup trop long pour un onglet'])[1]).toHaveLength(
+      30,
+    );
+  });
+
+  it('une section déclarée garde « (suite) » pour sa deuxième partie, puis le premier champ', () => {
+    const reperes = [repere(1, 'Analyse', { explicite: true, enTete: true })];
+    expect(nommerParties(4, reperes, ['Nom', 'Menace', 'Vraisemblance', 'Décision'])).toEqual([
+      PREMIERE_PARTIE,
+      'Analyse',
+      'Analyse (suite)',
+      'Décision…',
+    ]);
+  });
+
   it('deux sections de même nom restent distinctes', () => {
     const reperes = [repere(1, 'Contrôles', { enTete: true }), repere(2, 'Contrôles', { enTete: true })];
     const noms = nommerParties(3, reperes);
@@ -80,6 +109,18 @@ describe('feuille de style des fiches en parties', () => {
 
   it('la hauteur vient de la mesure du contenu, la hauteur disponible n’étant que la valeur par défaut', () => {
     expect(css).toMatch(/\[data-fiche-paginee\] \{\s*block-size: var\(--fiche-hauteur, calc\(100dvh/);
+  });
+
+  it('une fenêtre de formulaire élargie passe sur une grille de douze colonnes, les champs courts sur leur place', () => {
+    expect(css).toMatch(/\.fenetre-large\[data-fiche-etendue\] \{\s*--modal-size: 76rem;/);
+    expect(css).toContain('grid-template-columns: repeat(12, minmax(0, 1fr));');
+    expect(css).toMatch(/:is\(\.champ-format-code, \.champ-format-nombre\) \{\s*grid-column: span 2;/);
+  });
+
+  it('une pile imbriquée passe en flux bloc dans une fiche découpée, sauf alignement demandé', () => {
+    expect(css).toMatch(
+      /\.mantine-Stack-root\[style\*='--stack-align: stretch'\]:not\(\.fenetre-formulaire, \.fenetre-champs\) \{\s*display: block;/,
+    );
   });
 
   it('une section déclarée ouvre une partie et les groupes de champs restent entiers', () => {

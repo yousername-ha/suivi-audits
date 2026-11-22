@@ -198,3 +198,80 @@ html .auth-panneau .mantine-Button-root.commande-neon {
   color: var(--suivi-nav-texte);
   border-color: color-mix(in srgb, var(--menu-teinte-pilotage) 65%, var(--suivi-nav-texte));
 }
+
+/* Élargissement sur écran de bureau (data-fiche-etendue, posé par FichesSansDefilement) : une fenêtre de formulaire dont
+   le contenu dépasse la hauteur disponible prend plus de largeur avant d'être découpée. Le formulaire passe sur une
+   grille de douze colonnes : un code, un nombre, une date ou un état n'occupent que leur place, deux zones de texte
+   tiennent côte à côte. L'ordre du document et du clavier est conservé ; titres, messages, listes et rangées de boutons
+   restent sur toute la ligne. */
+html .mantine-Modal-content.fenetre-large[data-fiche-etendue] {
+  --modal-size: 76rem;
+}
+html .fenetre-large[data-fiche-etendue] :is(.fenetre-formulaire, .fenetre-champs),
+html
+  .fenetre-large[data-fiche-etendue]
+  > .mantine-Modal-body
+  > .mantine-Stack-root:where(
+    :has(> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root ~ .mantine-InputWrapper-root)
+  ) {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+html .fenetre-large[data-fiche-etendue] :is(.fenetre-formulaire, .fenetre-champs) > .mantine-InputWrapper-root,
+html
+  .fenetre-large[data-fiche-etendue]
+  > .mantine-Modal-body
+  > .mantine-Stack-root:where(
+    :has(> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root ~ .mantine-InputWrapper-root)
+  )
+  > .mantine-InputWrapper-root {
+  grid-column: span 6;
+}
+html
+  .fenetre-large[data-fiche-etendue]
+  :is(.mantine-Modal-body)
+  .mantine-Stack-root
+  > .mantine-InputWrapper-root.champ-format-personne {
+  grid-column: span 4;
+}
+html
+  .fenetre-large[data-fiche-etendue]
+  :is(.mantine-Modal-body)
+  .mantine-Stack-root
+  > .mantine-InputWrapper-root:is(
+    .champ-format-date,
+    .champ-format-court,
+    .champ-format-moyen,
+    :is(.mantine-Select-root, .mantine-NativeSelect-root).champ-format-libre
+  ) {
+  grid-column: span 3;
+}
+html
+  .fenetre-large[data-fiche-etendue]
+  :is(.mantine-Modal-body)
+  .mantine-Stack-root
+  > .mantine-InputWrapper-root:is(.champ-format-code, .champ-format-nombre) {
+  grid-column: span 2;
+}
+html
+  .fenetre-large[data-fiche-etendue]
+  :is(.mantine-Modal-body)
+  .mantine-Stack-root
+  > .mantine-InputWrapper-root:first-child {
+  grid-column: 1 / -1;
+}
+
+/* Piles imbriquées : le navigateur découpe mal une pile flexible placée dans une autre (deux champs voisins peuvent se
+   recouvrir au changement de partie). Dans une fiche découpée, une pile imbriquée passe en flux bloc, avec le même
+   espacement ; une pile qui demande un alignement particulier (propriété align, lue dans la variable --stack-align que
+   Mantine pose sur l'élément) et les grilles de formulaire gardent leur disposition. */
+[data-fiche-paginee]
+  .mantine-Stack-root
+  .mantine-Stack-root[style*='--stack-align: stretch']:not(.fenetre-formulaire, .fenetre-champs) {
+  display: block;
+}
+[data-fiche-paginee]
+  .mantine-Stack-root
+  .mantine-Stack-root[style*='--stack-align: stretch']:not(.fenetre-formulaire, .fenetre-champs)
+  > :not(:first-child) {
+  margin-block-start: var(--stack-gap, var(--mantine-spacing-md));
+}

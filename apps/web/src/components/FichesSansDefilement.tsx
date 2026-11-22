@@ -31,6 +31,13 @@ const PART_ENTIERE = 0.5;
 const CONTROLES =
   '.mantine-InputWrapper-root, .mantine-Button-root, .mantine-Checkbox-root, .mantine-Radio-root, .mantine-Switch-root, summary, tr, [data-fiche-titre]';
 const TOLERANCE = 3;
+/** Fenêtres de formulaire (tailles lg et xl) qui s'élargissent sur un écran de bureau quand leur contenu dépasse la
+    hauteur disponible : le formulaire passe sur davantage de colonnes et compte moins de parties. */
+const ETENDABLES = '.mantine-Modal-content.fenetre-large:not([data-full-screen])';
+const LARGEUR_BUREAU = 1200;
+const CHAMPS_MIN = 4;
+/** L'élargissement n'est gardé que si le contenu y perd au moins cette part de sa hauteur. */
+const GAIN_MIN = 0.88;
 const ERREURS = '[role="alert"], .mantine-InputWrapper-error';
 
 function FichePaginee({ cadre }: { cadre: HTMLElement }) {
@@ -62,6 +69,9 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
     // Hauteur retenue au dernier calcul : conservée tant qu'elle donne le même découpage, pour que la fenêtre ne
     // change pas de taille à chaque frappe.
     let retenue = { hauteur: 0, parties: 0, disponible: 0 };
+    // Élargissement d'une fenêtre de formulaire trop haute (écran de bureau) : essayé une fois par ouverture et par
+    // taille d'écran, gardé s'il réduit nettement la hauteur du contenu. null : pas encore essayé.
+    let etendue: boolean | null = null;
     const modifiees = new Set<HTMLElement>();
     const publier = (titres: string[], page: number) => {
       setPagination((ancienne) =>
@@ -103,9 +113,9 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
       modifiees.clear();
     };
     /** Repli sur le défilement habituel ; la raison est posée sur le cadre (data-fiche-repli) pour la recette. */
-    const defilementClassique = (raison?: 'indivisible' | 'tronque' | 'chevauchement') => {
+    const defilementClassique = (raison?: 'indivisible' | 'tronque' | 'chevauchement', detail?: string) => {
       retablir();
-      if (raison) cadre.setAttribute('data-fiche-repli', raison);
+      if (raison) cadre.setAttribute('data-fiche-repli', detail ? `${raison} (${detail})` : raison);
       total = 0;
       courant = 0;
       titres = [];
@@ -121,6 +131,24 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
       if (corps.scrollHeight <= corps.clientHeight + 2) {
         defilementClassique();
         return;
+      }
+      if (etendue === null) {
+        etendue = false;
+        if (
+          cadre.matches(ETENDABLES) &&
+          window.innerWidth >= LARGEUR_BUREAU &&
+          corps.querySelectorAll('.mantine-InputWrapper-root').length >= CHAMPS_MIN
+        ) {
+          const avant = corps.scrollHeight;
+          const largeur = cadre.offsetWidth;
+          cadre.setAttribute('data-fiche-etendue', '');
+          if (cadre.offsetWidth > largeur && corps.scrollHeight <= avant * GAIN_MIN) etendue = true;
+          else cadre.removeAttribute('data-fiche-etendue');
+        }
+        if (etendue && corps.scrollHeight <= corps.clientHeight + 2) {
+          defilementClassique();
+          return;
+        }
       }
       if (corps.querySelector(INDIVISIBLES)) {
         defilementClassique('indivisible');
@@ -177,8 +205,10 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
       // Contrôle du découpage : certains blocs ne se découpent pas (grille à requête de conteneur, bloc à défilement
       // interne) et le navigateur les laisse alors déborder ou se chevaucher. Chaque champ doit tenir en entier dans
       // une seule partie, sans en recouvrir un autre.
-      const sain = () => {
-        if (tronque()) return false;
+      const nomDe = (e: HTMLElement) => (e.textContent ?? '').trim().slice(0, 40) || e.tagName.toLowerCase();
+      /** Défaut du découpage courant (texte court pour la recette), ou chaîne vide s'il est sain. */
+      const defaut = (): string => {
+        if (tronque()) return 'contenu plus haut qu’une partie';
         const cadreCorps = corps.getBoundingClientRect();
         const haut = cadreCorps.top + parseFloat(style.paddingTop) - TOLERANCE;
         const bas = cadreCorps.bottom - parseFloat(getComputedStyle(corps).paddingBottom) + TOLERANCE;
@@ -188,10 +218,11 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
           if (e.closest('[data-fiche-actions-fixes]')) continue;
           const r = e.getBoundingClientRect();
           if (!r.width || !r.height) continue;
-          if (r.top < haut || r.bottom > bas) return false;
+          if (r.top < haut || r.bottom > bas) return `tronqué : ${nomDe(e)}`;
           const g = r.left - cadreCorps.left - parseFloat(style.paddingLeft) + corps.scrollLeft;
           const dansPartie = ((g % pas) + pas) % pas;
-          if (dansPartie + r.width > largeur + TOLERANCE && dansPartie < pas - TOLERANCE) return false;
+          if (dansPartie + r.width > largeur + TOLERANCE && dansPartie < pas - TOLERANCE)
+            return `à cheval : ${nomDe(e)}`;
           places.push({ e, g, d: g + r.width, h: r.top, b: r.bottom });
         }
         places.sort((x, y) => x.g - y.g);
@@ -200,11 +231,12 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
           for (let j = i + 1; j < places.length && places[j]!.g < x.d - TOLERANCE; j++) {
             const y = places[j]!;
             if (y.h < x.b - TOLERANCE && x.h < y.b - TOLERANCE && !x.e.contains(y.e) && !y.e.contains(x.e))
-              return false;
+              return `recouvert : ${nomDe(x.e)} / ${nomDe(y.e)}`;
           }
         }
-        return true;
+        return '';
       };
+      const sain = () => !defaut();
       // Hauteur : la plus petite qui garde ce nombre de parties (fenêtres centrées seulement ; un panneau latéral ou
       // une fenêtre plein écran occupe toute la hauteur).
       if (cadre.matches('.mantine-Modal-content:not([data-full-screen])')) {
@@ -239,8 +271,9 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
           retenue = { hauteur: Math.round(haut), parties, disponible };
         }
       }
-      if (!sain()) {
-        defilementClassique('chevauchement');
+      const constat = defaut();
+      if (constat) {
+        defilementClassique('chevauchement', constat);
         return;
       }
       total = parties;
@@ -266,7 +299,20 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
           enTete: e.getBoundingClientRect().top - haute <= seuil,
         });
       }
-      titres = nommerParties(total, reperes);
+      // Libellé du premier champ de chaque partie : il nomme une partie sans titre (voir nommerParties).
+      const champs: (string | undefined)[] = [];
+      for (const e of corps.querySelectorAll<HTMLElement>('.mantine-InputWrapper-root')) {
+        if (!visible(e) || e.closest('[data-fiche-actions-fixes]')) continue;
+        const page = pageDe(e);
+        if (champs[page] !== undefined) continue;
+        const libelle = e.querySelector<HTMLElement>(':scope > .mantine-InputWrapper-label');
+        champs[page] = [...(libelle?.childNodes ?? [])]
+          .filter((n) => n.nodeType === Node.TEXT_NODE)
+          .map((n) => n.textContent ?? '')
+          .join(' ')
+          .trim();
+      }
+      titres = nommerParties(total, reperes, champs);
       if (
         focus instanceof HTMLElement &&
         focus !== corps &&
@@ -329,6 +375,12 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
       // data-aide-ouverte : aide contextuelle d'un champ dépliée ou repliée (DescriptionChamp), qui change la hauteur.
       attributeFilter: ['style', 'hidden', 'open', 'data-active', 'data-aide-ouverte'],
     });
+    const ecran = () => {
+      etendue = null;
+      cadre.removeAttribute('data-fiche-etendue');
+      planifier();
+    };
+    window.addEventListener('resize', ecran);
     const dimensions = new ResizeObserver(planifier);
     dimensions.observe(cadre);
     dimensions.observe(corps);
@@ -356,6 +408,8 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
       observer.disconnect();
       dimensions.disconnect();
       preferences.disconnect();
+      window.removeEventListener('resize', ecran);
+      cadre.removeAttribute('data-fiche-etendue');
       corps.removeEventListener('focusin', suivreFocus);
       corps.removeEventListener('invalid', suivreFocus, true);
       corps.removeEventListener('scroll', suivreDefilement);
