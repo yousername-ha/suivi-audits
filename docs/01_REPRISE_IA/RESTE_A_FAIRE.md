@@ -20,9 +20,9 @@ D/J/I/F restent exclus, OIDC et exports bureautiques serveur de la feuille de
 route ne sont pas déclarés livrés. L’étude L n’est pas réalisée. Aucun abandon
 de fonctionnalité historique n’est présumé.
 
-## Module Vulnérabilités (mise à jour du 20/11/2026, Europe/Paris)
+## Module Vulnérabilités (mise à jour du 22/11/2026, Europe/Paris)
 
-Session « Module surveillance vulnérabilités SMSI ». Détail, décisions et limites : [reprise du 20/11/2026](REPRISE-2026-11-20.md)
+Session « Module surveillance vulnérabilités SMSI ». Détail, décisions et limites : [reprise du 22/11/2026](REPRISE-2026-11-22.md), [reprise du 20/11/2026](REPRISE-2026-11-20.md)
 et addenda de l'[ADR 0100](../adr/0100-module-vulnerabilites.md). Ordre de la file décidé par le RSSI :
 
 Livrés en 7.5.0 et 7.5.1 : correctifs PERF-01 à PERF-04 et PERF-13, outils de l'assistant (ASSISTANT-V1), règles de

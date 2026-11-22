@@ -419,6 +419,8 @@ describe('lot PC4 : fiche illustrée d’une faille', () => {
     expect(sans.composant).toBe('Produit fictif : contrôle fictif 940004');
     expect(sans.recommandations).toEqual({
       tenable: { correctif: CORRECTIF, publieLe: '2026-11-02T00:00:00.000Z' },
+      // Lot QF-TEN : aucun correctif regroupé de Tenable rangé.
+      tenableRegroupes: [],
       kev: [],
       kevTronque: false,
       versionsNvd: [],

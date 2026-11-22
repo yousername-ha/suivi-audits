@@ -31,6 +31,8 @@ import '@suivi/ui/neon-verre.css';
 import '@suivi/ui/neon-harmonisation.css';
 import '@suivi/ui/neon-fiches-pages.css';
 import '@suivi/ui/neon-fiches-sobres.css';
+// Vulnérabilités et veille réglementaire : feuille limitée à ces modules (zone principale), chargée en dernier.
+import '@suivi/ui/neon-vulnerabilites.css';
 import { FichesSansDefilement } from './components/FichesSansDefilement';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';

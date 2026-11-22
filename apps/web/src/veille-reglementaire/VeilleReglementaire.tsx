@@ -12,7 +12,6 @@ import {
   Alert,
   Badge,
   Button,
-  Card,
   Group,
   Pagination,
   Select,
@@ -23,6 +22,7 @@ import {
   Textarea,
   TextInput,
   Title,
+  VisuallyHidden,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
@@ -53,9 +53,11 @@ import { fmtDate } from '../components/common';
 import { CLE_FLUX_EXTERNES } from '../components/FluxExternes';
 import { Destinations, useValidationFlux } from '../components/ValidationFlux';
 import { useCan, usePermission } from '../session';
+import { TeteCase } from '../vulnerabilites/Instruments';
 import { TRACES_FORMES } from '../vulnerabilites/pictos-sources';
+import { deuxChiffres } from '../vulnerabilites/vue-ensemble';
 import {
-  ETAT_STATUT,
+  AUTORITES_REGLEMENTAIRES,
   etatSourceReglementaire,
   FILTRES_VIDES,
   type FiltresPublications,
@@ -92,30 +94,37 @@ export function PictoReglementaire({ source }: { source: PublicationReglementair
 
 /** Synthèse (sans état React) : nombre de publications par statut, dernière collecte, sources en erreur. */
 export function SyntheseReglementaire({ s }: { s: SyntheseVeilleReglementaireDto }) {
+  // Cases d'instrument (choix du RSSI du 22/11/2026) : le chiffre et l'icône sont décoratifs, le texte lu reste
+  // « À qualifier : 3 ».
   return (
-    <Group gap="md">
-      <Group gap="xs" role="list" aria-label="Synthèse de la veille réglementaire">
+    <Stack gap="xs">
+      <div className="pc-tuiles vr-sommaire" role="list" aria-label="Synthèse de la veille réglementaire">
         {(
           [
-            ['À qualifier', s.aQualifier, 'info'],
-            ['À suivre', s.aSuivre, 'attention'],
-            ['Impactant', s.impactant, 'erreur'],
-            ['Sans objet', s.sansObjet, 'neutre'],
+            ['À qualifier', s.aQualifier, 'a-qualifier', 'aQualifierVeille'],
+            ['À suivre', s.aSuivre, 'a-suivre', 'aSuivreVeille'],
+            ['Impactant', s.impactant, 'impactant', 'impactantVeille'],
+            ['Sans objet', s.sansObjet, 'sans-objet', 'sansObjetVeille'],
           ] as const
-        ).map(([libelle, n, etat]) => (
-          <span role="listitem" key={libelle}>
-            <StatusChip etat={etat}>
+        ).map(([libelle, n, statut, icone], i) => (
+          <div role="listitem" key={libelle} className={`pc-tuile vr--${statut}`}>
+            <TeteCase icone={icone} rang={i + 1} />
+            <span className="pc-etiquette" aria-hidden="true">
+              {libelle}
+            </span>
+            <b aria-hidden="true">{deuxChiffres(n)}</b>
+            <VisuallyHidden>
               {libelle} : {n}
-            </StatusChip>
-          </span>
+            </VisuallyHidden>
+          </div>
         ))}
-      </Group>
+      </div>
       <Text size="sm" c="dimmed">
         Dernière collecte :{' '}
         {s.derniereCollecteLe ? <span className="horodatage">{fmtDate(s.derniereCollecteLe)}</span> : 'jamais'}
         {s.sourcesEnErreur > 0 && ` · ${s.sourcesEnErreur} source${s.sourcesEnErreur > 1 ? 's' : ''} en erreur`}
       </Text>
-    </Group>
+    </Stack>
   );
 }
 
@@ -169,49 +178,43 @@ export function ListePublications({
     <Stack gap="sm" role="list" aria-label="Publications">
       {publications.map((p) => {
         const lien = lienPublication(p);
+        const autorite = AUTORITES_REGLEMENTAIRES[p.source];
+        // Carte d'acte (choix du RSSI du 22/11/2026, style de la page de maintenance, sobre) : source et autorité,
+        // statut, titre, résumé en citation, champs datés, puis qualification et lien.
         return (
-          <Card key={p.id} withBorder role="listitem">
-            <Stack gap="xs">
-              <Group justify="space-between" align="flex-start">
-                <Group gap="xs" wrap="nowrap" align="center">
-                  <PictoReglementaire source={p.source} />
-                  <Text size="sm" c="dimmed">
-                    {libelleSource(p.source)} · {LIBELLES_DOMAINES[p.domaine]} ·{' '}
-                    <span className="horodatage">{fmtDate(p.publieLe)}</span>
-                  </Text>
-                </Group>
-                <StatusChip etat={ETAT_STATUT[p.statut]}>{libelleStatut(p.statut)}</StatusChip>
-              </Group>
-              <Text fw={600} className="veille-texte">
-                {p.titre}
-              </Text>
-              {p.resume && (
-                <Text size="sm" className="veille-texte">
-                  {p.resume}
-                </Text>
-              )}
-              <Group justify="space-between" align="center">
-                {lien ? (
-                  <a
-                    className="va-lien"
-                    href={lien}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    referrerPolicy="no-referrer"
-                  >
-                    Lire sur le site de la source
-                  </a>
-                ) : (
-                  <Text size="xs" c="dimmed">
-                    Lien indisponible
-                  </Text>
-                )}
-                {p.qualifiePar && p.qualifieLe && (
-                  <Text size="xs" c="dimmed">
-                    Qualifiée par {p.qualifiePar.nom} le <span className="horodatage">{fmtDate(p.qualifieLe)}</span>
-                  </Text>
-                )}
-              </Group>
+          <article key={p.id} role="listitem" className={`pc-niveau vr-acte vr--${p.statut}`}>
+            <header className="vr-tete">
+              <span className="vr-source">
+                <PictoReglementaire source={p.source} />
+                {autorite.court} · {autorite.autorite}
+              </span>
+              <span className="vr-statut">{libelleStatut(p.statut)}</span>
+            </header>
+            <h3 className="vr-titre veille-texte">{p.titre}</h3>
+            {p.resume && <blockquote className="vr-resume veille-texte">{p.resume}</blockquote>}
+            <dl className="vr-champs">
+              <div>
+                <dt>Publié le</dt>
+                <dd className="horodatage">{fmtDate(p.publieLe)}</dd>
+              </div>
+              <div>
+                <dt>Domaine</dt>
+                <dd>{LIBELLES_DOMAINES[p.domaine]}</dd>
+              </div>
+              <div>
+                <dt>Qualification</dt>
+                <dd>
+                  {p.qualifiePar && p.qualifieLe ? (
+                    <>
+                      Qualifiée par {p.qualifiePar.nom} le <span className="horodatage">{fmtDate(p.qualifieLe)}</span>
+                    </>
+                  ) : (
+                    'Non qualifiée'
+                  )}
+                </dd>
+              </div>
+            </dl>
+            <div className="vr-pied">
               {onQualifier && peutQualifier(droits, p) ? (
                 <BoutonsQualification p={p} enCours={enCours === p.id} onQualifier={onQualifier} />
               ) : (
@@ -221,8 +224,23 @@ export function ListePublications({
                   </Text>
                 )
               )}
-            </Stack>
-          </Card>
+              {lien ? (
+                <a
+                  className="va-lien"
+                  href={lien}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  referrerPolicy="no-referrer"
+                >
+                  Lire sur le site de la source
+                </a>
+              ) : (
+                <Text size="xs" c="dimmed">
+                  Lien indisponible
+                </Text>
+              )}
+            </div>
+          </article>
         );
       })}
     </Stack>
@@ -644,6 +662,9 @@ export function VeilleReglementairePage() {
   const pages = publications.data ? Math.max(1, Math.ceil(publications.data.total / publications.data.parPage)) : 1;
   return (
     <Page>
+      <p className="vu-surtitre" aria-hidden="true">
+        Veille réglementaire · Sécurité et données personnelles
+      </p>
       <PageHeader
         title="Veille réglementaire"
         description="Publications de la CNIL, du CEPD, d’EUR-Lex (actes filtrés par mots-clés) et de l’ANSSI, lues par l’exécutant d’exploitation du serveur à la fréquence choisie pour chaque source. Chaque publication arrive « à qualifier » : le rôle RSSI qualifie la sécurité, le droit DPO les données personnelles. Les textes des sources sont repris tels quels ; pour l’ANSSI, seuls le titre, la date et le lien sont gardés."

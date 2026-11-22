@@ -2,12 +2,21 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
-## [Non publié]
+## [7.6.0] — 2026-11-22
 
 ### Notes de mise à jour
 
-**En bref.** Refonte d'apparence (« Neon compacte ») : aucune migration, aucune dépendance nouvelle, aucun changement du
-contrat de l'API, aucune commande sur le serveur. À la mise à jour, l'interface est reconstruite avec l'image.
+**En bref.** Trois migrations automatiques additives (`100`, `101`, `102`), sans reprise de données : aucune commande
+sur le serveur, aucune action dans l'application ; sauvegarde habituelle avant la mise à jour. Aucun flux nouveau vers
+l'extérieur n'est ouvert par la mise à jour : la recherche dans le dictionnaire CPE reste désactivée tant que vous ne
+l'activez pas, et les correctifs regroupés de Tenable sont lus par le même appel que les failles. Ce que vous verrez :
+des fenêtres à l'habillage sobre, plus larges sur un écran de bureau et sans défilement vertical ; l'aide d'un champ
+derrière un bouton ; dans le module Vulnérabilités, la criticité et l'exposition des machines selon Tenable, la saisie
+assistée d'un produit surveillé, les correctifs regroupés de Tenable et un nouvel aspect graphique ; un jeu de
+démonstration qui remplit ce module ; des pages plus rapides pour qui n'est pas administrateur.
+
+**Apparence.** Refonte « Neon compacte » et fiches sobres (validées par le RSSI le 22/11/2026) : aucune dépendance
+nouvelle, aucun changement du contrat de l'API. À la mise à jour, l'interface est reconstruite avec l'image. À la mise à jour, l'interface est reconstruite avec l'image.
 Les préférences explicites de taille et le mode mural sont conservés. L'essai « boîte d'outils claire ou bleu nuit » de
 « Mon compte » disparaît : la boîte est bleu nuit dans les deux thèmes.
 Dossiers : [fiches sobres et harmonisation du 22/11/2026](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md),
@@ -16,6 +25,8 @@ Dossiers : [fiches sobres et harmonisation du 22/11/2026](docs/refonte-neon/inte
 
 Autres changements de cette version :
 
+- Aspect graphique du module Vulnérabilités et de la veille réglementaire (style de la page de maintenance) : sans
+  migration.
 - Correctif de l'interface du module Vulnérabilités (page « Machines ») : sans migration.
 - Migration automatique additive `100` (colonne `aes` des machines du module Vulnérabilités, vide au départ), sans reprise
   de données : aucune commande sur le serveur, aucune action dans l'application. L'exposition des machines selon Tenable
@@ -35,8 +46,37 @@ Autres changements de cette version :
   22/11/2026 ; durées calculées, non mesurées). La demande des versions s'appuie sur la
   veille active du service de mise à jour (passages courts toutes les 3 secondes pendant une saisie) ; délais réels à
   mesurer.
+- Jeu de démonstration enrichi pour le module Vulnérabilités : sans migration ; sans effet sur une instance déjà en
+  service (le jeu ne se charge que sur une instance vide).
+- Migration automatique additive `102` (deux tables des correctifs regroupés de Tenable et une colonne de l'état de la
+  synchronisation, vides au départ), sans reprise de données : aucune commande sur le serveur, aucune action dans
+  l'application. Les correctifs regroupés sont lus à la prochaine synchronisation de Tenable Security Center (une ou
+  quelques pages de plus de la même analyse, en lecture seule) ; rien ne change pour l'import d'un fichier `.nessus`.
 
 ### Ajouté
+
+- **Démonstration du module Vulnérabilités** (demande du RSSI du 22/11/2026) : le jeu de démonstration, chargé à
+  l'installation sur demande ou par `suivi jeu-de-test`, remplit désormais les écrans « Vue d'ensemble », « Failles »,
+  « Machines » et « Périmètres » du module. Il ajoute une intégration « Tenable Security Center (démonstration) »,
+  inactive et sans clé, et le résultat de deux synchronisations fictives : une quarantaine de machines de
+  l'établissement fictif (serveurs du dossier patient, annuaire, messagerie, sauvegarde, postes d'accueil et de soins,
+  équipements biomédicaux, pare-feu, imprimantes) avec leur criticité (ACR) et leur exposition (AES), une trentaine de
+  failles de gravité critique à faible, environ cent cinquante détections étalées sur six mois, dont quelques-unes
+  corrigées entre les deux synchronisations (« corrigé selon Tenable, à confirmer »). Les machines sont rattachées à
+  l'organisation et à ses deux sites fictifs. Aucun appel ne part vers Tenable : l'intégration reste inactive, le flux
+  reste fermé, rien n'est planifié. Si le module Vulnérabilités ou Intégrations est désactivé, cette partie est
+  simplement sautée (session « Projet audit_suivi Coeur »).
+- Vulnérabilités, **correctifs regroupés de Tenable dans « Quoi faire »** (lot QF-TEN, demande du RSSI du 22/11/2026,
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : la synchronisation de Tenable Security Center lit aussi la vue
+  `sumremediation` de l'analyse (même appel `POST /rest/analysis`, mêmes filtres que les failles), en liste blanche stricte
+  (identifiant `SC-…`, texte de la solution, contrôles corrigés, nombres de CVE, de machines et de détections, scores ; jamais
+  `remediationList`), bornée (5 000 correctifs, 25 pages, 1 000 contrôles par correctif, 2 000 caractères de texte) et
+  revalidée par l'API ; une lecture incomplète ou refusée ne rapporte rien et ne fait pas échouer la synchronisation des
+  failles. La fiche d'une faille détectée ou d'une CVE a une rubrique « Correctif recommandé par Tenable » (texte, identifiant,
+  machines que vous lisez, CVE et contrôles corrigés, source nommée), absente sans correctif ; l'outil `evaluer_cve` de
+  l'assistant les reprend dans `quoiFaire.tenable` (identifiant, texte, contrôles lisibles, CVE corrigées, source), sans nom de
+  machine, adresse, périmètre ni nombre de machines. Ni priorité ni alerte ne changent. La vue « Correctifs » garde son
+  regroupement par texte : elle n'utilise pas encore ces correctifs (session « Module surveillance vulnérabilités SMSI »)
 
 - Vulnérabilités, **criticité (ACR) et exposition (AES) des machines selon Tenable** (lot TEN-SCORES, décision du RSSI du
   22/11/2026, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : quand une intégration Tenable Security Center est
@@ -75,6 +115,28 @@ Autres changements de cette version :
   jour) ; la copie complète l'évite (session « Module surveillance vulnérabilités SMSI »).
 
 ### Changé
+
+- Vulnérabilités, **aspect graphique** (demande du RSSI du 22/11/2026 : un module « moins fin, moins lien hypertexte »,
+  dans le style de la page de maintenance).
+  - Le poste de commandement et les tableaux prennent la grande dalle de la page de maintenance (biseau, bord teinté de
+    violet, traits lumineux), les en-têtes de tableau passent en capitales espacées, et le bleu nuit du menu remplace le
+    cyan, plus foncé en mode sombre.
+  - Plus aucun lien souligné : les noms de failles et de machines deviennent des titres en gras avec une flèche, les liens
+    d'action (« Configurer l'intégration », « Voir les alertes », « Tendances »…) deviennent des boutons, et les
+    pastilles sont pleines.
+  - Vue d'ensemble : le **niveau d'alerte** s'affiche dans un réacteur animé (anneaux, graduations, orbites, crans du
+    niveau allumés) et la règle des niveaux se replie sous « Règle des niveaux ». Les **chiffres clés** deviennent six
+    cases sur deux colonnes, avec une icône, un numéro, et un trait lumineux quand une action est attendue.
+  - **Failles détectées** : chaque ligne tient en trois lignes (nom ; numéro, famille et source ; faits sans doublon :
+    exploitation avérée, rançongiciels, exploitable, fin de support, non maintenu). La priorité donne sa raison courte et
+    le délai tient sur une ligne. Le détail des sources et la règle du délai restent dans la fiche de la faille.
+  - Animations décoratives coupées par la préférence « réduire les animations » et à l'impression. Libellés, liens et
+    noms accessibles inchangés (session « Ergonomie et refonte Neon »).
+- Veille réglementaire, **aspect plus sobre et plus juridique** (même demande, style de la page de maintenance) : le
+  sommaire passe en quatre cases (à qualifier, à suivre, impactant, sans objet), et chaque publication devient une
+  carte d'acte. La carte donne la source et son autorité, le statut marqué d'un point de couleur, le titre, le résumé en
+  citation, la date de publication, le domaine, la qualification, puis les boutons de qualification et le lien vers la
+  source. Libellés et noms accessibles inchangés.
 
 - **Fiches sobres** (direction validée par le RSSI le 22/11/2026, habillage de la session « Codex », intégration et
   recette sur pile réelle par la session Coeur — [détails](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md)) :

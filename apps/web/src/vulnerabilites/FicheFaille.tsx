@@ -22,6 +22,7 @@ import {
   SITUATION_EXPLOITATION_LIBELLES,
   estZeroDay,
   libelleMarqueExploitation,
+  SOURCE_CORRECTIFS_REGROUPES,
   SOURCE_FIN_SUPPORT_LIBELLES,
   conditionsTraduites,
   decoderVecteurCvss,
@@ -60,6 +61,7 @@ import { ETAT_CORRECTIF_PUCE } from './correctifs';
 import { ETAT_PRIORITE, faitsPrioriteComplets } from './failles';
 import {
   DETAIL,
+  faitsCorrectifRegroupe,
   fmtJour,
   LIGNE,
   PICTO,
@@ -563,7 +565,14 @@ function Reco({
 function Recommandations({ f }: { f: FicheFailleDto }) {
   const r = f.recommandations;
   const id = useId();
-  const rien = !r.tenable && !r.kev.length && !r.versionsNvd.length && !r.certSante && !r.avis.length && !r.alh.length;
+  const rien =
+    !r.tenable &&
+    !r.tenableRegroupes.length &&
+    !r.kev.length &&
+    !r.versionsNvd.length &&
+    !r.certSante &&
+    !r.avis.length &&
+    !r.alh.length;
   return (
     <section className="ff-recos" aria-labelledby={`${id}-titre`}>
       <div className="ff-recos__tete">
@@ -606,6 +615,25 @@ function Recommandations({ f }: { f: FicheFailleDto }) {
               <Text size="xs" c="dimmed">
                 Texte de Tenable en anglais, tel quel
                 {r.tenable.publieLe ? ` ; correctif publié le ${fmtJour(r.tenable.publieLe)}` : ''}.
+              </Text>
+            </Reco>
+          )}
+          {r.tenableRegroupes.length > 0 && (
+            <Reco etiquette="Tenable · Correctif recommandé par Tenable" source="tenable">
+              <ul className="ff-reco__lignes">
+                {r.tenableRegroupes.map((c) => (
+                  <li key={c.identifiant}>
+                    <Text size="sm" fw={600} lang="en" className="veille-texte">
+                      {c.solution}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      <span className="pc-mono">{c.identifiant}</span> · {faitsCorrectifRegroupe(c)}
+                    </Text>
+                  </li>
+                ))}
+              </ul>
+              <Text size="xs" c="dimmed">
+                {`Source : ${SOURCE_CORRECTIFS_REGROUPES}. Un correctif regroupé est un texte de solution qui corrige plusieurs contrôles ; texte de Tenable en anglais, tel quel.`}
               </Text>
             </Reco>
           )}

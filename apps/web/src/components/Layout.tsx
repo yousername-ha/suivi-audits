@@ -325,6 +325,9 @@ export function Layout({ children }: { children: ReactNode }) {
     </nav>
   );
 
+  const destination = familleDeLaPage ? localiser(loc.pathname)?.destination.id : undefined;
+  const moduleMaintenance =
+    destination === 'vulnerabilites' || destination === 'veille-reglementaire' ? destination : undefined;
   return (
     <div className="shell" data-assistant-pinned={assistantPinned || undefined}>
       <div className="shell-top">
@@ -393,7 +396,9 @@ export function Layout({ children }: { children: ReactNode }) {
       </div>
       <div className="shell-body">
         <aside className="shell-nav">{navigation}</aside>
-        <main className="shell-main app-main">
+        {/* Vulnérabilités et veille réglementaire : style de la page de maintenance, limité à ces deux modules
+            (neon-vulnerabilites.css). */}
+        <main className="shell-main app-main" data-module={moduleMaintenance}>
           <ErrorAlert error={logoutError} />
           <BandeauCrise />
           <OngletsRubriques />

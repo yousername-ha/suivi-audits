@@ -24,8 +24,10 @@ const SCAN1 = path.join(FIXTURES, 'scan-fictif-1.nessus');
 const SCAN2 = path.join(FIXTURES, 'scan-fictif-2.nessus');
 
 const LIBELLE_SUPPRESSION = 'Supprimer ce connecteur et tout ce qu’il a importé';
-// Lot PRIO-1 : libellé court des listes (le terme officiel de Tenable, « Exploited by malware », est dans la fiche).
-const MALWARE = 'Logiciel malveillant (Tenable)';
+// Ligne allégée de « Failles détectées » (choix du RSSI du 22/11/2026) : un seul fait « Exploitation avérée » dans la liste,
+// la source (terme officiel de Tenable, « Exploited by malware ») dans la fiche.
+const AVEREE = 'Exploitation avérée';
+const MALWARE_FICHE = 'Exploitée par un logiciel malveillant selon Tenable';
 const LIMITE = 'Trop d’imports de fichiers commencés (30 par heure). Réessayez dans une heure.';
 
 /** Fenêtre d'alerte critique (lot N2 : ouverte par le contrôle exploité par un logiciel malveillant) : écartée pour la
@@ -162,14 +164,20 @@ for (const [mode, scheme, largeur] of [
       await expect(lignes).toHaveCount(3);
       const web = lignes.filter({ hasText: 'Fictional Web Server < 9.9 Remote Flaw' });
       await expect(web).toContainText('2');
-      // Lot N2 : exploitation avérée selon Tenable, marque et priorité ; seule cette faille sort du filtre.
-      await expect(web).toContainText(MALWARE);
+      // Lot N2 : exploitation avérée selon Tenable, marque et priorité ; seule cette faille sort du filtre. Ligne allégée
+      // (choix du RSSI du 22/11/2026) : la liste dit « Exploitation avérée », la fiche en donne la source (Tenable).
+      await expect(web).toContainText(AVEREE);
       await expect(web).toContainText('P1');
-      await expect(lignes.filter({ hasText: 'Fictional SSH Daemon Weak Setting' })).not.toContainText(MALWARE);
+      await expect(lignes.filter({ hasText: 'Fictional SSH Daemon Weak Setting' })).not.toContainText(AVEREE);
+      await web.getByRole('button', { name: 'Fictional Web Server < 9.9 Remote Flaw', exact: true }).click();
+      const ficheWeb = page.getByRole('dialog', { name: 'Fictional Web Server < 9.9 Remote Flaw', exact: true });
+      await expect(ficheWeb).toContainText(MALWARE_FICHE);
+      await ficheWeb.getByRole('button', { name: 'Fermer la fenêtre', exact: true }).click();
+      await expect(ficheWeb).toBeHidden();
       await ouvrirFiltres(page, 'Exploitation avérée');
       await page.getByRole('checkbox', { name: 'Exploitation avérée', exact: true }).check();
       await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(1);
-      await expect(page.getByRole('row').filter({ hasText: source })).toContainText(MALWARE);
+      await expect(page.getByRole('row').filter({ hasText: source })).toContainText(AVEREE);
       await axe(page);
       await ouvrirFiltres(page, 'Exploitation avérée');
       await page.getByRole('checkbox', { name: 'Exploitation avérée', exact: true }).uncheck();

@@ -1,11 +1,13 @@
 /* Jeu de données de test, entièrement fictif et cohérent : une petite organisation avec ses processus, objectifs,
    indicateurs (atteints, non atteints, non mesurés, calculés, satisfaction), parties intéressées, fournisseurs évalués,
    écarts, plans d'audit, une revue de direction, un référentiel de démonstration, une méthode de risque, des risques
-   appréciés, des actions, une série récurrente reliés entre eux. Aucun texte normatif, aucun nom réel.
+   appréciés, des actions, une série récurrente reliés entre eux, et le résultat fictif d'une synchronisation de Tenable
+   Security Center pour le module Vulnérabilités. Aucun texte normatif, aucun nom réel.
    Chargé uniquement à la demande (`suivi jeu-de-test`), jamais automatiquement, et refusé sur une instance qui contient
-   déjà des données de pilotage : les données de départ restent vides. Toutes les écritures passent par l'API publique
-   (mêmes validations que l'interface). Les dates sont relatives au jour du chargement : retards et échéances à venir
-   existent toujours. */
+   déjà des données de pilotage : les données de départ restent vides. Les écritures passent par l'API publique
+   (mêmes validations que l'interface), sauf exceptions dites sur place (état de l'outil de suivi, état clos d'un écart,
+   synchronisations fictives de Tenable rangées par le chemin d'écriture de l'exécutant : demo-vulnerabilites.ts). Les
+   dates sont relatives au jour du chargement : retards et échéances à venir existent toujours. */
 import crypto from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { methodTemplate } from '@suivi/shared';
@@ -15,6 +17,7 @@ import type { Services } from './services.js';
 import { couvertureEtDda, etudeEbios, rattacherStandards, type BilanNormes } from './demo-normes.js';
 import { modulesAnnexes, type BilanAnnexes } from './demo-annexes.js';
 import { modulesComplements, type BilanComplements } from './demo-complements.js';
+import { modulesVulnerabilites, type BilanVulnerabilites } from './demo-vulnerabilites.js';
 
 export const ORGANISATION_TEST = 'Établissement de santé fictif (démonstration)';
 type Json = Record<string, unknown>;
@@ -456,6 +459,8 @@ export interface BilanChargement {
   normes: BilanNormes | null;
   annexes: BilanAnnexes | null;
   complements: BilanComplements | null;
+  /** Module Vulnérabilités : instance Tenable fictive inactive et deux synchronisations fictives (aucun appel sortant). */
+  vulnerabilites: BilanVulnerabilites | null;
 }
 
 /** Charge le jeu de test par l'API publique, au nom d'un compte administrateur existant (session temporaire). */
@@ -533,6 +538,7 @@ export async function chargerJeuDeTest(
       normes: null,
       annexes: null,
       complements: null,
+      vulnerabilites: null,
     };
     const commun = '00000000-0000-4000-8000-000000000001';
     // 1) État de l'outil de suivi : refusé s'il contient déjà des données de pilotage.
@@ -856,6 +862,9 @@ export async function chargerJeuDeTest(
     bilan.annexes = await modulesAnnexes({ appel, exiger });
     // 9) Compléments : plans, organisation de l'audit, clausier, périmètres enfants, cartographie, RETEX, continuité…
     bilan.complements = await modulesComplements({ appel, exiger, commun, decaler });
+    // 10) Vulnérabilités : instance Tenable fictive, inactive et sans clé, et deux synchronisations fictives rangées par le
+    // chemin d'écriture de l'exécutant ; sautée si le module Vulnérabilités ou Intégrations est désactivé.
+    bilan.vulnerabilites = await modulesVulnerabilites({ appel, exiger, commun }, svc, compte);
     await svc.db.audit({ username: 'jeu-de-test' } as never, '127.0.0.1', 'jeu-de-test.loaded', commun, {
       compte,
       ...bilan,

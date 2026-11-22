@@ -700,9 +700,28 @@ export interface AvisFicheDto {
   le: string;
 }
 
+/** Lot QF-TEN : correctif regroupé de Tenable (vue `sumremediation`) qui couvre la faille : un texte de solution qui corrige
+    un ensemble de contrôles. `machinesLues` : machines que la personne lit et qui portent un de ces contrôles, présent
+    (calcul de la plateforme ; le nombre de Tenable, sur tout le parc, n'est pas rendu) ; `machinesHorsLecture` : d'autres
+    machines en portent. `cves` : CVE corrigées selon Tenable (`cveTotal`). */
+export interface CorrectifRegroupeFicheDto {
+  identifiant: string;
+  solution: string;
+  controles: number;
+  cves: number | null;
+  machinesLues: number;
+  machinesHorsLecture: boolean;
+}
+
+/** Source nommée des correctifs regroupés de Tenable. */
+export const SOURCE_CORRECTIFS_REGROUPES = 'Tenable Security Center (correctifs regroupés, vue « sumremediation »)';
+
 export interface RecommandationsFicheDto {
   /** Correctif indiqué par le contrôle de Tenable (anglais, tel quel) ; null hors d'un constat. */
   tenable: { correctif: string | null; publieLe: string | null } | null;
+  /** Lot QF-TEN : correctifs regroupés de Tenable qui couvrent la faille (constat ou CVE), du plus large au plus étroit ;
+      vide s'il n'y en a pas (la rubrique n'est pas affichée). */
+  tenableRegroupes: CorrectifRegroupeFicheDto[];
   /** Action exigée par le catalogue KEV de la CISA, par CVE (anglais, telle quelle). */
   kev: { cve: string; action: string; echeance: string | null }[];
   kevTronque: boolean;
@@ -728,6 +747,8 @@ export const FICHE_FAILLE_BORNES = {
   avis: 6,
   alertesAlh: 3,
   cvesAffichees: 5,
+  /** Lot QF-TEN : correctifs regroupés de Tenable rendus au plus. */
+  correctifsRegroupes: 5,
 } as const;
 
 /** La fiche commune d'une faille (route `GET /api/vulnerabilites/fiches/{nature}/{id}`). */
