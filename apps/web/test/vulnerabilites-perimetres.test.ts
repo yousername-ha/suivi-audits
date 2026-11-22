@@ -82,6 +82,7 @@ const machine = (
     depot: null,
     exposition: null,
     acr: null,
+    aes: null,
     premiere: null,
     derniere: null,
     source: 'tenable',

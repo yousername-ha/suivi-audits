@@ -179,6 +179,30 @@ for (const [mode, scheme, largeur] of [
       await expect(machines.filter({ hasText: 'srv-fictif-01.example.org' })).toBeVisible();
       await expect(machines.filter({ hasText: '203.0.113.23' })).toBeVisible();
       await axe(page);
+      // Lot TEN-SCORES : criticité (ACR) et exposition (AES), colonnes et filtres, seulement si une intégration Tenable
+      // Security Center existe (état des synchronisations) ; une machine importée n'en porte pas (« — », non fournie).
+      const tenable =
+        ((await (await page.request.get('/api/vulnerabilites/synchronisation')).json()) as unknown[]).length > 0;
+      const scores = /^(Criticité \(ACR, Tenable\)|Exposition \(AES, Tenable\))$/;
+      // En-têtes lus par leur texte : la version de Playwright de la CI (1.56) range ces <th> parmi les cellules (« cell »),
+      // pas parmi les en-têtes de colonne ; un sélecteur par rôle n'en trouverait aucun.
+      const colonnesScores = page.locator('thead th').filter({ hasText: scores });
+      const filtresScores = page.getByRole('combobox', { name: scores });
+      if (tenable) {
+        await expect(colonnesScores).toHaveCount(2);
+        await expect(filtresScores).toHaveCount(2);
+        for (const ligne of await machines.all()) await expect(ligne).toContainText('Non fournie par Tenable');
+        // Filtre actif : aucune machine sans valeur n'y répond.
+        await page.getByRole('combobox', { name: 'Criticité (ACR, Tenable)', exact: true }).click();
+        await page.getByRole('option', { name: 'Moyenne ou plus', exact: true }).click();
+        await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(0);
+        await axe(page);
+        await page.goto('/vulnerabilites/machines');
+        await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(3);
+      } else {
+        await expect(colonnesScores).toHaveCount(0);
+        await expect(filtresScores).toHaveCount(0);
+      }
 
       // Second scan : 919102 a disparu de srv-fictif-01, 203.0.113.23 est absente du fichier (inchangée).
       await page.goto('/plateforme/integrations');

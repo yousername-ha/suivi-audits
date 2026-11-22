@@ -2022,6 +2022,7 @@ export interface VulnerabilitesMachines {
   maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
   maj_par: string | null;
   depot_id: string | null;
+  aes: number | null;
 }
 
 export interface VulnerabilitesProduits {

@@ -69,6 +69,7 @@ import {
   qualifieurDuDomaine,
   urlPublications,
 } from './veille-reglementaire';
+import { NOMS_PAGINATION } from '../vulnerabilites/pagination';
 
 const CLE = ['veille-reglementaire'] as const;
 const FLUX = 'veille-reglementaire' as const;
@@ -712,7 +713,13 @@ export function VeilleReglementairePage() {
         )}
         {pages > 1 && (
           <Group justify="center">
-            <Pagination total={pages} value={page} onChange={setPage} aria-label="Pages des publications" />
+            <Pagination
+              {...NOMS_PAGINATION}
+              total={pages}
+              value={page}
+              onChange={setPage}
+              aria-label="Pages des publications"
+            />
           </Group>
         )}
         <ErrorAlert error={etat.error} />
