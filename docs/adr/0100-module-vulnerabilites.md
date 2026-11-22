@@ -3838,3 +3838,164 @@ calculées par Tenable, affichées telles quelles.
 Le champ `assetExposureScore` n'a été vu que dans des exemples anonymisés transmis par le RSSI ; sa forme (texte de chiffres,
 vide quand Tenable ne le calcule pas) n'a pas été relevée sur une instance dans cette session, et aucune synchronisation
 réelle n'a été faite. Les parcours Playwright adaptés n'ont pas été exécutés (CI seulement).
+
+
+## Addendum du 22/11/2026 — lot CPE-1 : saisie assistée d'un produit surveillé par le dictionnaire CPE de la NVD
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`101`, huit routes nouvelles, cinq commandes de la CLI de l'exécutant, aucune dépendance, aucune extension de PostgreSQL,
+aucune destination nouvelle (même hôte que la veille NVD, sous le flux « veille-vulnerabilites »), rien chez l'assistant.
+`scripts/exploitation-worker.py` modifié avec l'accord de la session Coeur (mode court et file dédiée, sur le modèle de
+`VEILLE_FILES`, ADR 0110) ; `scripts/update-worker.py`, `docker-compose.yml` et `docker/*` inchangés par ce lot (la partie
+du poller est dans la PR #360 de la session Coeur, [ADR 0097, addendum du 22/11/2026](0097-flux-sortants-pilotes-par-les-modules.md)).
+
+### Décisions du RSSI (22/11/2026)
+
+1. **Liste des produits en local** : seulement les produits distincts du dictionnaire CPE 2.3 de la NVD (partie a/o/h,
+   éditeur, produit, intitulé anglais sans la version si possible), entrées obsolètes exclues. Mesure du RSSI sur le vrai
+   dictionnaire : 1 880 953 entrées, 151 497 produits distincts, 39 Mo en base avec un index trigramme, environ 2,7 Mo par
+   sauvegarde compressée, recherche « glpi » en 4 ms. Source : `GET /rest/json/cpes/2.0?resultsPerPage=10000&startIndex=N`
+   (champs `cpe.cpeName`, `cpe.deprecated`, `cpe.titles[lang=en]`, `totalResults`) ; nouveautés par `lastModStartDate` et
+   `lastModEndDate` (120 jours au plus). Chargement **par lots** sur plusieurs passages de l'exécutant (condition de la session
+   Coeur), curseur rangé côté API, une page toutes les 6,5 s au plus (débit sans clé : 5 demandes par 30 s) ; seul le
+   dédoublonné est rangé. Source activable comme les autres (désactivée au départ), fréquence quotidienne par défaut, état
+   (chargement n / N, dernière mise à jour, erreur), réglage par le droit d'administrer le module.
+2. **Autocomplétion** dans le formulaire d'un produit surveillé : deux caractères au moins, temporisation d'environ 250 ms,
+   produits de la liste locale (éditeur, produit, intitulé), sans casse ni accent, 20 résultats, correspondance exacte du
+   produit d'abord puis longueur ; aucun appel extérieur pendant la frappe ; sans liste chargée, le formulaire est inchangé
+   (« Chercher un identifiant dans la veille » reste).
+3. **Versions du produit choisi** : demande rangée dans une file dédiée, interrogée par l'interface ; champ de la version
+   libre pendant l'attente, versions connues proposées à l'arrivée (menu), avec « toutes versions » (*). Réponse :
+   `cpeMatchString=cpe:2.3:<partie>:<éditeur>:<produit>`, 2 000 versions au plus, obsolètes exclues, de la plus récente à la
+   plus ancienne. Cache durable par produit (actualisé au plus une fois par jour, à la demande) ; une même demande en cours
+   n'est pas dupliquée ; limite par personne (30 par heure) ; demandes purgées après 7 jours. Versions déjà vues dans les CVE
+   de la veille proposées aussitôt, marquées.
+4. **CPE 2.3 construit** à partir de la partie, de l'éditeur, du produit et de la version (échappements corrects, `*` pour
+   une version non précisée) et **lu dans l'autre sens** (un CPE collé remplit éditeur, produit et version, sans appel).
+5. **Copie complète facultative** (« Copier le dictionnaire complet », droit d'administrer le module), avec le texte du
+   RSSI (environ 1,9 million d'entrées, 270 Mo dans la base, 17 Mo de plus par sauvegarde, une à deux heures la première
+   fois ; durée recalculée ensuite, voir « Choix de réalisation ») ; « Supprimer la copie complète » libère la place ; avec la copie, les versions viennent de la base locale.
+
+**Exception assumée au point 3 de la décision initiale** (« jamais par produit : les requêtes ne révèlent pas le parc ») :
+la demande des versions d'un produit choisi, décidée par le RSSI, fait connaître à la NVD l'éditeur et le produit que la
+personne saisit. Le texte « Ce qui sort » du flux « veille-vulnerabilites » le dit désormais ; la copie complète l'évite.
+Rien d'autre ne part : ni machine, ni version déclarée, ni personne.
+
+### Réalisation
+
+- **Fonctions pures** (`packages/shared/src/dictionnaire-cpe.ts`) : `construireCpe23`, `analyserCpe23`,
+  `echapperComposanteCpe` (chaîne formatée du CPE 2.3, NISTIR 7695 § 6.2 : lettres, chiffres, `_`, `-` et `.` tels quels,
+  tout autre caractère précédé de `\`, dont `\:`, `\\`, `\*`), `comparerVersionsCpe` et `trierVersionsCpe`,
+  `normaliserRechercheCpe`, `intituleSansVersion` ; schémas des routes et de la CLI (`IdentiteProduitCpe`,
+  `RechercheProduitsCpe`, `ReglageDictionnaireCpe`, `LotDictionnaireCpe`, `RapportDictionnaireCpe`, `RapportVersionsCpe`) ;
+  `SOURCE_DICTIONNAIRE_CPE` et `CPE_BORNES`, recopiés dans le script et l'exécutant et comparés par
+  `apps/api/test/veille-architecture.test.ts`.
+- **Tri des versions** (« tri raisonnable, documenté ») : la version est découpée en suites de chiffres et suites de
+  lettres, les autres caractères séparent ; comparaison morceau par morceau, nombres comme des nombres (« 10 » après « 9 »),
+  lettres dans l'ordre alphabétique, un nombre l'emporte sur des lettres ; un morceau de plus en chiffres rend la version
+  plus récente (« 1.0.1 » après « 1.0 »), en lettres plus ancienne (« 1.0 » après « 1.0-rc1 ») ; à égalité, ordre des
+  textes. Même règle dans le script (`comparer_versions`).
+- **Script isolé** (`scripts/veille-vulnerabilites.py`, source `nvd-cpe`, liste fermée `SOURCES_CPE`) : opération
+  « dictionnaire » (une page à partir de l'indice reçu, sans attente, ou les entrées modifiées pendant la fenêtre
+  reçue ; produits distincts avec le premier intitulé, versions distinctes si la copie complète est demandée,
+  obsolètes écartées et comptées ; page vide avant la fin annoncée : erreur) et opération « versions » (une page de
+  10 000 entrées pour l'éditeur et le produit reçus, entrées de ce seul produit, obsolètes écartées, triées, 2 000 au plus,
+  « tronqué » signalé). Le script ne reçoit que ces paramètres ; l'intitulé est nettoyé (`texte()`), borné à 300
+  caractères et privé de la version en mot entier. Encodage d'URL écrit à la main (le script n'importe toujours aucun
+  module de requêtes de haut niveau).
+- **API** (`apps/api/src/vulnerabilites/dictionnaire-cpe.ts`) :
+  - `POST /api/vulnerabilites/cpe/saisie` (`modifier`) : note la saisie en cours, rend `{ listeChargee, versionsDistantes,
+    copieComplete }` ;
+  - `GET /api/vulnerabilites/cpe/produits?q=` (`modifier`, 2 à 100 caractères) : `cle LIKE '%terme%'` sur la forme
+    normalisée, tri `cle_produit = terme`, puis `cle_produit LIKE 'terme%'`, puis longueur du produit, 20 au plus ;
+  - `POST /api/vulnerabilites/cpe/versions` (`modifier`) : copie complète faite, sinon cache frais (moins d'un jour), sinon
+    demande en file (une par produit, index unique partiel ; 30 nouvelles demandes par heure et par personne, 429 au-delà) ;
+    `GET` du même chemin : état seulement (interrogation de l'interface). Produit absent de la liste locale : 404. Source
+    désactivée ou flux fermé : « indisponible », rien n'est inscrit ;
+  - `GET /api/vulnerabilites/cpe/dictionnaire` (`lire`, ETag), `PATCH` du même chemin (`administrer`, If-Match ; `activee`,
+    `frequenceHeures` 24 ou 168 ; journal `vulnerabilites.cpe.reglage`), `POST` et `DELETE
+    /api/vulnerabilites/cpe/dictionnaire/copie` (`administrer`, If-Match ; journal `vulnerabilites.cpe.copie.demandee` et
+    `.supprimee`) ; fin et échec d'un chargement : `vulnerabilites.cpe.chargement.termine` et `.echec`.
+- **Chargement par tranches** : une tranche (identifiant, indice, nombre de pages, versions ou non, fenêtre) est remise à
+  la fois ; reprise après dix minutes si elle n'est pas close, nouvel essai quinze minutes après un échec. Ordre : copie
+  complète demandée et pas chargée (rechargement complet avec les versions), chargement en cours, premier chargement, puis
+  nouveautés à la fréquence réglée (référence consommée comme au lot F1 ; plus de 120 jours depuis la dernière mise à jour :
+  rechargement complet). Fin d'un chargement complet : `complet_le`, liste à jour à la date du début du chargement ; fin des
+  nouveautés : à jour à la fin de la fenêtre.
+- **Exécutant** (`scripts/exploitation-worker.py`) : `MODES_COURTS = ("cpe-versions",)` ; passage court
+  (`EXPLOITATION_SEULEMENT=cpe-versions`, branché dans `main()` après les contrôles et le verrou `backup-worker.lock`) : flux
+  voulu ouvert **et** appliqué (dernier rapport de `flux.json`), sinon rien n'est réclamé et le témoin est retiré ; débit
+  de la NVD attendu avant la réclamation ; au plus une demande (`cpe-versions-claim`, script isolé sous le compte 65534,
+  10 s au plus, `cpe-versions-finish`) ; budget de 27 s (chaque commande de la CLI et le script en restent dans ce budget, et
+  rien n'est réclamé s'il ne reste pas le temps du script et de la clôture) ; toute erreur avalée. Passage complet, **sans
+  aucune attente** : une demande de versions au plus, et seulement si le débit est écoulé (sinon elle attend le passage
+  suivant), témoin mis à jour, puis une tranche d'**une page** du chargement (script borné à 60 s ; un échec ne bloque
+  rien, la tranche reprend au curseur au passage suivant ; lots de 5 000 produits et 5 000 versions). Le débit de 6,5 s
+  ne s'applique qu'aux demandes de versions, compté depuis la dernière demande à la NVD (page du dictionnaire comprise) ;
+  le passage complet ne dort jamais à cause du dictionnaire (ajustement demandé par la session Coeur le 22/11/2026).
+
+### Contrat avec le poller (session Coeur)
+
+- **Saisie en cours** : notée en base par l'API (`vulnerabilites_cpe_dictionnaire.saisie_le`, une seule ligne, aucune
+  personne désignée) à l'ouverture du formulaire, pendant la frappe (au plus une fois par minute) et à chaque demande de
+  versions (POST et GET) ; valable deux minutes.
+- **`suivi cpe-versions-claim`** rend toujours un objet JSON `{ "actif": true|false, "demande": null | { "id", "partie",
+  "editeur", "produit", "mandataire"? } }` ; `actif` vaut vrai si la saisie a moins de deux minutes ou si une demande reste
+  en file ; faux si le module est désactivé, le flux fermé, la source désactivée ou le mandataire illisible (les demandes en
+  file sont alors closes). **`suivi cpe-versions-finish <id>`** reçoit `{ ok, erreur, versions, tronque }`.
+- **Chargement** : `suivi cpe-dictionnaire-claim` (rien, ou `{ id, parametres: { operation: "dictionnaire", debut, pages,
+  versions, depuis?, jusqua? }, mandataire? }`), `suivi cpe-dictionnaire-lot <id>` (`{ produits, versions }`), `suivi
+  cpe-dictionnaire-finish <id>` (`{ ok, erreur, bilan: { total, suivant, entrees, obsoletes, ecartes } }`).
+- **Témoin** `DATA_DIR/reprise-exploitation/cpe-chaud` : fichier vide, 0600, posé par remplacement atomique (un lien posé à
+  sa place est remplacé, jamais suivi) quand `actif` est vrai, retiré sinon, par le passage court et par le passage complet
+  (retiré aussi quand le flux est fermé). Mémoire du débit : `reprise-exploitation/cpe-debit.json` (`{ "le": horodatage }`).
+- **Délais de la veille active : à mesurer** par la session Coeur sur une pile, après la fusion (ouverture du formulaire
+  jusqu'au témoin vu par le poller ; choix d'un produit jusqu'aux versions affichées).
+
+### Tables (migration `101`)
+
+`vulnerabilites_cpe_produits` (clé partie, éditeur, produit ; intitulé ; `cle` et `cle_produit` normalisées par l'API ;
+index `text_pattern_ops` sur `cle_produit`), `vulnerabilites_cpe_dictionnaire` (une ligne : activation, fréquence, curseur,
+tranche, mode, fenêtre, dates, erreur, copie, saisie, version), `vulnerabilites_cpe_demandes` (file, index unique partiel
+par produit en file ou en cours), `vulnerabilites_cpe_versions` (cache, 2 000 versions au plus), `vulnerabilites_cpe_copie`
+(une ligne par version distincte). Toutes rangées « avec le travail » dans la remise à vide (décision de la session Coeur :
+effacées, à recharger ; la source revient désactivée).
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Pas d'index trigramme** : l'extension `pg_trgm` n'a pas été ajoutée (la restauration d'une sauvegarde se fait sous le
+  rôle applicatif avec `--exit-on-error`, chemin qui n'a pas pu être vérifié avec une extension). La recherche lit la forme
+  normalisée (`LIKE '%terme%'`, sans index) : 24 ms environ sur 151 497 produits fictifs (PostgreSQL 16 du poste de
+  développement), au lieu de 4 ms mesurées par le RSSI avec l'index ; 62 Mo pour ces lignes fictives aux textes plus longs
+  que les vrais. À remesurer sur le vrai dictionnaire.
+- **Produit tenu à la liste locale** : une demande de versions n'est acceptée que pour un produit de la liste (404 sinon) ;
+  un CPE collé ne déclenche aucune demande.
+- **Versions demandées seulement si la source est activée** (et le flux ouvert) : activer la source vaut accord pour ces
+  demandes ; sinon le formulaire propose les seules versions de la veille.
+- **Éditeur et nom remplis avec les valeurs du CPE** (« glpi-project », « glpi »), modifiables ensuite ; la version saisie
+  est reprise dans le CPE construit.
+- **Fréquences** 24 h (par défaut) ou 168 h ; **une page par passage complet** (1 880 953 entrées, soit environ
+  190 pages de 10 000 : environ une heure au rythme d'un passage toutes les 15 à 20 s, davantage si les passages sont plus
+  espacés). La liste des produits et la copie complète lisent **les mêmes pages** : la copie ne coûte aucune page de plus
+  si elle est demandée dès l'activation ; demandée après, elle relance un chargement complet (environ une heure de plus).
+  Le texte du RSSI sur la copie (« une à deux heures ») est remplacé par ce calcul ; versions bornées à une page de 10 000 entrées par produit (au-delà : « tronqué ») ; demande
+  non réclamée expirée après dix minutes, demande en cours sans fin close après deux minutes.
+- **Mise à jour sans suppression** : un produit n'est jamais retiré de la liste par les nouveautés ; une version devenue
+  obsolète après la copie complète reste proposée jusqu'au rechargement complet suivant.
+- **Interface** : interrogation toutes les 2 s, une minute au plus, puis message « saisissez la version vous-même » ;
+  menu des versions par groupes (toutes versions, NVD ou copie, veille) dans le champ de la version (Autocomplete), qui
+  reste libre.
+
+### Non vérifié
+
+Aucun appel réel à la NVD : le script est vérifié sur des réponses fictives écrites à la main ; la forme réelle de
+`cpeMatchString` (correspondance du début du nom, filtrée de nouveau par le script) et la stabilité de la pagination par
+`startIndex` pendant un chargement d'une heure ne sont pas vérifiées. Tailles et durées : celles du RSSI, non remesurées
+ici. Pile Docker, Node 26, CSP du serveur de production et parcours de bout en bout : non vérifiés (aucune spec Playwright
+écrite). Délais du déclenchement rapide : dépendent de la PR #360, à mesurer.
+
+### Ce qui n'est pas fait
+
+Spec Playwright du formulaire et de la source ; suppression des produits disparus du dictionnaire ; obsolescence des
+versions de la copie complète au fil des nouveautés ; clé d'API de la NVD (débit plus élevé) ; proposition d'un produit du
+dictionnaire à partir d'une technologie de la surface externe ou d'un produit vu par Tenable.

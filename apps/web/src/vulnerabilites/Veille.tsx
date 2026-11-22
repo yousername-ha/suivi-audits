@@ -12,7 +12,9 @@
    se détache d'un avis, la fiche d'une alerte ou d'un avis s'ouvre depuis la liste, ses CVE ouvrent leur fiche illustrée ;
    failles connues en liste, un fait par ligne (gravité, exploitation, EPSS, produit touché).
    Lot F1 : fréquence de chaque source (liste déroulante pour qui administre le module, texte sinon ; EPSS fixe), avertissement
-   de NVD et d'EPSS, prochaine collecte prévue. */
+   de NVD et d'EPSS, prochaine collecte prévue.
+   Lot CPE-1 : source « Dictionnaire des produits (CPE) » sous le tableau des sources (DictionnaireCpe.tsx) : explication de
+   la place, état du chargement par lots, fréquence des nouveautés, activation, copie complète facultative. */
 import {
   Alert,
   Anchor,
@@ -36,8 +38,10 @@ import {
   libelleFrequence,
   PRECISION_MANDATAIRE,
   type AvisVeilleDto,
+  type EtatDictionnaireCpeDto,
   type EtatSourceVeilleDto,
   type EtatVeilleDto,
+  type ReglageDictionnaireCpe,
   type FailleVeilleDto,
   type PageVeille,
   type SourceVeille,
@@ -48,6 +52,8 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router';
 import { api, errorMessage, get } from '../api';
 import { FicheAvis, ListeAvis } from './AvisVeille';
+import { DictionnaireCpeSection } from './DictionnaireCpe';
+import { URL_COPIE_CPE, URL_DICTIONNAIRE_CPE } from './dictionnaire-cpe';
 import { fmtDate } from '../components/common';
 import { ChampFrequence } from '../components/ChampFrequence';
 import { CLE_FLUX_EXTERNES } from '../components/FluxExternes';
@@ -569,6 +575,27 @@ export function VeillePage() {
     enabled: lire,
     refetchInterval: 30_000,
   });
+  const dictionnaire = useQuery({
+    queryKey: [...CLE, 'dictionnaire-cpe'],
+    queryFn: () => get<EtatDictionnaireCpeDto>(URL_DICTIONNAIRE_CPE),
+    enabled: lire,
+    refetchInterval: 30_000,
+  });
+  const [envoiCpe, setEnvoiCpe] = useState(false);
+  // Lot CPE-1 : réglage, copie complète et sa suppression, If-Match sur la version de la source.
+  const actionCpe = async (methode: 'PATCH' | 'POST' | 'DELETE', url: string, body?: ReglageDictionnaireCpe) => {
+    if (!dictionnaire.data) return;
+    setEnvoiCpe(true);
+    try {
+      await api(methode, url, { body, ifMatch: dictionnaire.data.version });
+      notifications.show({ color: 'teal', message: 'Dictionnaire des produits (CPE) : réglage enregistré.' });
+    } catch (e) {
+      notifications.show({ color: 'red', message: errorMessage(e) });
+    } finally {
+      await qc.invalidateQueries({ queryKey: [...CLE, 'dictionnaire-cpe'] });
+      setEnvoiCpe(false);
+    }
+  };
   const kev = useQuery({
     queryKey: [...CLE, 'kev', recherche, pageKev],
     queryFn: () => get<PageVeille<FailleVeilleDto>>(urlFailles(recherche, true, pageKev)),
@@ -686,6 +713,17 @@ export function VeillePage() {
             />
             <FichesCertSante f={etat.data.fichesCertSante} />
           </>
+        )}
+        <ErrorAlert error={dictionnaire.error} />
+        {dictionnaire.data && (
+          <DictionnaireCpeSection
+            etat={dictionnaire.data}
+            peutRegler={administrer}
+            envoi={envoiCpe}
+            onReglage={(r) => void actionCpe('PATCH', URL_DICTIONNAIRE_CPE, r)}
+            onCopier={() => void actionCpe('POST', URL_COPIE_CPE)}
+            onSupprimerCopie={() => void actionCpe('DELETE', URL_COPIE_CPE)}
+          />
         )}
         <form onSubmit={chercher} role="search">
           <Group align="flex-end">

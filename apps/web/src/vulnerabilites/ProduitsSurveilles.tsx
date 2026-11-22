@@ -4,7 +4,10 @@
    l'affichage seulement : le serveur reste seul juge (droits, module actif, doublon, version).
    Lot V4a : version obligatoire ; identifiant CPE proposé à partir des couples éditeur et produit déjà connus de la veille
    (aucun appel réseau) ; fiche du produit : machines reliées (recherche de machines, relier, délier), CVE rattachées,
-   écartées et propositions à décider (confirmer, rejeter, note), chacune avec sa priorité et ses faits. */
+   écartées et propositions à décider (confirmer, rejeter, note), chacune avec sa priorité et ses faits.
+   Lot CPE-1 : recherche du produit dans la liste locale du dictionnaire CPE de la NVD (si elle est chargée), versions connues
+   du produit choisi proposées dans le champ de la version (toujours libre), CPE 2.3 construit à partir du choix, et CPE collé
+   qui remplit l'éditeur, le produit et la version sans aucun appel (SaisieCpe.tsx, dictionnaire-cpe.ts). */
 import {
   Alert,
   Anchor,
@@ -27,6 +30,7 @@ import {
   FAMILLE_PRODUIT_LIBELLES,
   FAMILLES_PRODUIT,
   type FicheProduitDto,
+  type IdentiteProduitCpe,
   type MachineRelieeDto,
   type PageMachines,
   type ProduitSurveilleDto,
@@ -47,6 +51,8 @@ import { PrioriteFaits } from './FaillesDetectees';
 import { ouvertureProduit } from './recherche';
 import { MarquesSources } from './SourcesFaille';
 import { libelleTechnologieRapprochee } from './surface';
+import { appliquerChoixCpe, appliquerCpeColle, appliquerVersionCpe, messageVersionsCpe } from './dictionnaire-cpe';
+import { ChampVersionCpe, RechercheProduitCpe, useSaisieCpe, useVersionsCpe } from './SaisieCpe';
 import {
   champsManquants,
   explicationProposition,
@@ -382,6 +388,10 @@ function EditeurProduit({
 }) {
   const [f, setF] = useState<FormulaireProduit>(() => formulaireDepuis(produit));
   const [erreur, setErreur] = useState<string | null>(null);
+  // Lot CPE-1 : produit choisi dans la liste (ses versions sont demandées) ou CPE collé (aucun appel).
+  const [identite, setIdentite] = useState<{ i: IdentiteProduitCpe; choisi: boolean } | null>(null);
+  const saisie = useSaisieCpe();
+  const versions = useVersionsCpe(identite?.choisi ? identite.i : null);
   const [enCours, setEnCours] = useState(false);
   const annuaire = useQuery({
     queryKey: ['vulnerabilites', 'responsables'],
@@ -436,6 +446,15 @@ function EditeurProduit({
           </Text>
         )
       )}
+      {saisie.etat?.listeChargee && (
+        <RechercheProduitCpe
+          onFrappe={() => saisie.rechauffer()}
+          onChoisir={(i) => {
+            setIdentite({ i, choisi: true });
+            setF(appliquerChoixCpe(f, i));
+          }}
+        />
+      )}
       <TextInput
         label="Éditeur"
         required
@@ -450,20 +469,22 @@ function EditeurProduit({
         value={f.nom}
         onChange={(e) => setF({ ...f, nom: e.currentTarget.value })}
       />
-      <TextInput
-        label="Version"
-        required
-        description="Obligatoire : c’est elle qui sert au rapprochement avec les failles publiées (par exemple 10.1.2). Même éditeur, même produit et même version : une seule fiche."
-        maxLength={100}
-        value={f.versionProduit}
-        onChange={(e) => setF({ ...f, versionProduit: e.currentTarget.value })}
+      <ChampVersionCpe
+        valeur={f.versionProduit}
+        onChange={(v) => setF(appliquerVersionCpe(f, identite?.i ?? null, v))}
+        versions={versions.reponse}
+        message={messageVersionsCpe(versions.reponse, versions.attenteMs)}
       />
       <TextInput
         label="Identifiant CPE 2.3"
-        description="Facultatif. Son éditeur et son produit permettent le rapprochement exact (sinon : par nom, toujours à confirmer) ; sa version n’est pas lue, seule compte la version déclarée."
+        description="Facultatif. Son éditeur et son produit permettent le rapprochement exact (sinon : par nom, toujours à confirmer) ; sa version n’est pas lue, seule compte la version déclarée. Rempli quand vous choisissez un produit du dictionnaire ; un CPE 2.3 collé ici remplit l’éditeur, le produit et la version."
         maxLength={500}
         value={f.cpe}
-        onChange={(e) => setF({ ...f, cpe: e.currentTarget.value })}
+        onChange={(e) => {
+          const r = appliquerCpeColle(f, e.currentTarget.value);
+          setF(r.formulaire);
+          if (r.identite) setIdentite({ i: r.identite, choisi: false });
+        }}
       />
       <SuggestionCpe formulaire={f} onChoisir={(cpe) => setF({ ...f, cpe })} />
       <Group grow align="flex-start">

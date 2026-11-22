@@ -15,6 +15,17 @@ Aucune action, ni sur le serveur ni dans l'application.
   dès la mise à jour.
 - Service de mise à jour préparé pour la recherche CPE du module Vulnérabilités : sans effet tant que cette recherche
   n'est pas livrée.
+- Migration automatique additive `101` (cinq tables du dictionnaire CPE de la NVD, vides au départ, aucune extension de
+  PostgreSQL), sans reprise de données ni commande sur le serveur. **Rien n'est chargé ni demandé à la NVD tant que la
+  source « Dictionnaire des produits (CPE) » n'est pas activée** (écran « Veille », droit d'administrer le module), ni tant
+  que la veille (flux « veille-vulnerabilites ») est fermée. Place une fois activée : liste des produits seule, environ 40 Mo
+  dans la base et 3 Mo par sauvegarde compressée ; premier chargement : environ une heure (environ 190 pages de 10 000
+  entrées, une par passage de l'exécutant, sans attente) ; copie complète facultative en plus : environ 270 Mo dans la
+  base et 17 Mo de plus par sauvegarde, sur les mêmes pages (aucune page de plus si elle est demandée dès l'activation,
+  environ une heure de plus si la liste est déjà chargée) (tailles mesurées par le RSSI sur le vrai dictionnaire,
+  22/11/2026 ; durées calculées, non mesurées). Le déclenchement rapide de la demande des
+  versions (passages courts toutes les 3 secondes pendant une saisie) dépend de la PR de la session Coeur sur le service de
+  mise à jour ; sans elle, les versions arrivent au passage habituel de l'exécutant.
 
 ### Ajouté
 
@@ -37,6 +48,22 @@ Aucune action, ni sur le serveur ni dans l'application.
   ces moments, rien pendant une maintenance, une intervention ou une mise à jour, rien si le flux « veille-vulnerabilites »
   est fermé. L'application ne lance toujours pas l'exécutant et n'écrit rien sur le serveur. Sans effet avant la livraison
   de la recherche CPE par le module Vulnérabilités.
+- Vulnérabilités, **saisie assistée d'un produit surveillé par le dictionnaire CPE de la NVD** (lot CPE-1, décisions du
+  RSSI du 22/11/2026, [ADR 0100](docs/adr/0100-module-vulnerabilites.md), migration `101`). Nouvelle source « Dictionnaire
+  des produits (CPE) » dans l'écran « Veille », désactivée au départ, sous le flux de la veille (même hôte que NVD, aucune
+  destination nouvelle) : la liste des produits distincts du dictionnaire (obsolètes exclus) est chargée par lots, à chaque
+  passage de l'exécutant (une page de 10 000 entrées par passage, sans attente), puis tenue à jour par les nouveautés une fois par jour
+  (ou par semaine) ; l'état affiche le chargement en cours (entrées lues sur le total), la dernière mise à jour et
+  l'erreur éventuelle. Dans le formulaire d'un produit surveillé, la recherche propose les produits de la liste pendant la
+  frappe (deux caractères au moins, sans casse ni accent, 20 propositions, le produit exact d'abord), sans aucun appel
+  extérieur ; choisir un produit remplit l'éditeur, le nom et l'identifiant CPE 2.3, et ses versions connues sont
+  demandées à la NVD par une file dédiée (une demande par produit, trente par heure et par personne, réponse gardée un
+  jour) puis proposées dans le champ de la version, qui reste libre pendant l'attente ; les versions déjà vues dans les
+  CVE de la veille sont proposées aussitôt, à part, et « * » vaut toutes versions. Un CPE 2.3 collé remplit l'éditeur, le
+  produit et la version, sans appel. « Copier le dictionnaire complet » range aussi toutes les versions sur le serveur
+  (plus aucune demande à la NVD) ; « Supprimer la copie complète » libère la place. Réglages, copie demandée et supprimée
+  sont journalisés. La demande des versions d'un produit choisi fait connaître ce produit à la NVD (texte du flux mis à
+  jour) ; la copie complète l'évite (session « Module surveillance vulnérabilités SMSI »).
 
 ### Corrigé
 
