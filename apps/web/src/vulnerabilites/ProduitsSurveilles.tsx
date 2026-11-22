@@ -296,6 +296,7 @@ export function ProduitsSurveillesPage() {
           <EditeurProduit
             produit={edition.produit}
             fournisseurs={can('fournisseurs', 'lire') ? (fournisseurs.data ?? []) : null}
+            onAnnuler={() => setEdition(null)}
             onFait={async () => {
               setEdition(null);
               await rafraichir();
@@ -375,11 +376,13 @@ function ConfirmerSuppression({ produit, onFait }: { produit: ProduitSurveilleDt
 function EditeurProduit({
   produit,
   fournisseurs,
+  onAnnuler,
   onFait,
 }: {
   produit: ProduitSurveilleDto | null;
   /** Fournisseurs lisibles ; null : pas de droit de lecture des fournisseurs (champ non proposé). */
   fournisseurs: FournisseurCourt[] | null;
+  onAnnuler: () => void;
   onFait: () => Promise<void>;
 }) {
   const [f, setF] = useState<FormulaireProduit>(() => formulaireDepuis(produit));
@@ -497,7 +500,10 @@ function EditeurProduit({
         nothingFoundMessage="Aucun responsable"
       />
       <ErrorAlert error={annuaire.error} />
-      <Group justify="flex-end">
+      <Group justify="flex-end" className="fenetre-actions">
+        <Button variant="subtle" onClick={onAnnuler} disabled={enCours}>
+          Annuler
+        </Button>
         <Button onClick={() => void enregistrer()} loading={enCours}>
           {produit ? 'Enregistrer' : 'Ajouter'}
         </Button>

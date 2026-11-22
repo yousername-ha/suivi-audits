@@ -4,7 +4,8 @@
 
 Le RSSI a refusé la variante à fond cyan/bleu/lavande et souhaite trouver un style épuré comme ses références Tenacy.
 Cette proposition présente **un seul exemple clair**, pour juger la composition avant d’en multiplier les variantes.
-Elle garde Lexend et l’identité du menu de l’application. Aucun visuel n’est déclaré approuvé.
+Elle garde Lexend et l’identité du menu de l’application. La direction claire a reçu « Top » du RSSI. L’[intégration native React et CSS](../../integration-fiches-sobres-2026-11-22/README.md)
+prend la suite ; les sources de cet aperçu restent historiques.
 
 ![Fiche sobre — détail HD](captures/fiche-epuree-claire-hd.png)
 

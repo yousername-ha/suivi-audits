@@ -16,6 +16,11 @@ Si ces documents sont absents de ta branche, consulte-les sur GitHub ou lis cett
 ta version de travail par une ancienne archive. Les rapports des anciens lots restent datés : les dernières règles de
 ce dossier remplacent leurs anciennes décisions contradictoires. Ne réintroduis pas de module retiré à partir d’une image.
 
+Dernière référence : `docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md`. La piste claire sobre a été retenue
+par le RSSI (« Top ») et intégrée dans le socle commun ; la palette du cube a été refusée. Réutilise `DescriptionChamp.ts`,
+le raccordement Mantine et les jetons `FICHES` s’ils existent. Ne copie pas le script de décoration DOM des aperçus.
+Vérifie les aides hors fiche, les erreurs, les états métier et le clavier ; le découpage du prototype reste à finaliser.
+
 ## Résultat à obtenir
 
 1. **Densité** : le mode normal doit être moins volumineux que l’ancien compact ; le compact doit réduire encore

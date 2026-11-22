@@ -18,6 +18,7 @@ import {
   TextInput,
   type CSSVariablesResolver,
 } from '@mantine/core';
+import { DescriptionChamp } from './DescriptionChamp.ts';
 import { rendreFocusFiche } from './focus-fiche.ts';
 import { proportionChamp } from './proportions-champs.ts';
 import {
@@ -25,6 +26,7 @@ import {
   ENCRE,
   ESPACEMENTS,
   FONDS,
+  FICHES,
   GRIS,
   POINTS_DE_RUPTURE,
   POLICE,
@@ -59,7 +61,10 @@ export const theme = createTheme({
   breakpoints: POINTS_DE_RUPTURE,
   components: {
     InputWrapper: InputWrapper.extend({
-      defaultProps: { inputWrapperOrder: ['label', 'input', 'description', 'error'] },
+      defaultProps: {
+        inputWrapperOrder: ['label', 'input', 'description', 'error'],
+        descriptionProps: { component: DescriptionChamp },
+      },
     }),
     TextInput: TextInput.extend({ classNames: (_theme, props) => ({ root: proportionChamp(props) }) }),
     NativeSelect: NativeSelect.extend({ classNames: (_theme, props) => ({ root: proportionChamp(props) }) }),
@@ -143,6 +148,9 @@ const variablesNeon = (mode: 'clair' | 'sombre'): Record<string, string> => ({
   '--neon-doux': NEON[mode].doux,
 });
 
+const variablesFiches = (mode: 'clair' | 'sombre'): Record<string, string> =>
+  Object.fromEntries(Object.entries(FICHES[mode]).map(([nom, valeur]) => [`--fiche-${nom}`, valeur]));
+
 /** Variables CSS : celles de Mantine, ajustées (fonds, bordures, texte secondaire) et complétées par la charte. */
 export const cssVariablesResolver: CSSVariablesResolver = (t) => {
   const base = defaultCssVariablesResolver(t);
@@ -172,6 +180,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       ...variablesEtats('clair'),
       ...variablesCarte(CARTE.clair),
       ...variablesNeon('clair'),
+      ...variablesFiches('clair'),
     },
     dark: {
       ...base.dark,
@@ -188,6 +197,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       ...variablesEtats('sombre'),
       ...variablesCarte(CARTE.sombre),
       ...variablesNeon('sombre'),
+      ...variablesFiches('sombre'),
     },
   };
 };

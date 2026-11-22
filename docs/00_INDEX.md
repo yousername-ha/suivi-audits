@@ -2,6 +2,9 @@
 
 ## Jeu court à lire d'abord (18/10/2026)
 
+0. [Intégration des fiches sobres du 22/11/2026](refonte-neon/integration-fiches-sobres-2026-11-22/README.md) : direction claire
+   retenue, aides React natives, palettes communes, source CSS et captures après intégration ; limites du découpage conservées.
+
 0. [Fenêtres dans le style de la maintenance — proposition du 22/11/2026](refonte-neon/propositions/fenetres-maintenance-2026-11-22/README.md) :
    sept variantes en clair/sombre, détails HD, écrans complets et exemples compacts ; CSS isolé, validation graphique attendue.
 

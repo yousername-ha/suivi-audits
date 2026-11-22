@@ -1,0 +1,402 @@
+{
+  "date": "2026-11-22",
+  "fuseau": "Europe/Paris",
+  "contexte": "Frontend compilé avec API interceptée et données fictives ; CSS et composants React du produit, aucun script de décoration DOM des propositions.",
+  "casPages": 14,
+  "ouverturesFenetres": 30,
+  "variantes": 7,
+  "campagnes": [
+    {
+      "groupe": "final-corrige-1920",
+      "casPages": 6,
+      "ouvertures": 14,
+      "erreursClient": 0,
+      "routesInattendues": 0,
+      "mutationsMetier": 0,
+      "cas": [
+        {
+          "nom": "risques-1920-1080-clair-normale",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Pictogrammes des 24 commandes centrés à moins de 1 px",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "creation : 2 parties sans débordement vertical",
+            "Code court, noms longs lisibles dans un menu borné et sélection conservée",
+            "Saisies conservées entre parties, focus et clavier du mini-menu, liens dépliés sans débordement vertical",
+            "fiche : 2 parties sans débordement vertical"
+          ],
+          "fenetres": [
+            "creation",
+            "fiche",
+            "liens"
+          ]
+        },
+        {
+          "nom": "fournisseurs-1920-1080-clair-normale",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "fiche : 2 parties sans débordement vertical"
+          ],
+          "fenetres": [
+            "creation",
+            "fiche",
+            "evaluation"
+          ]
+        },
+        {
+          "nom": "produits-1920-1080-clair-normale",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Aide React native : description originale accessible, ouverture et Échap sans fermeture de la fiche",
+            "Annuler natif ferme la fiche sans écriture métier"
+          ],
+          "fenetres": [
+            "creation"
+          ]
+        },
+        {
+          "nom": "risques-1920-1080-sombre-normale",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Pictogrammes des 24 commandes centrés à moins de 1 px",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "creation : 2 parties sans débordement vertical",
+            "Code court, noms longs lisibles dans un menu borné et sélection conservée",
+            "Saisies conservées entre parties, focus et clavier du mini-menu, liens dépliés sans débordement vertical",
+            "fiche : 2 parties sans débordement vertical"
+          ],
+          "fenetres": [
+            "creation",
+            "fiche",
+            "liens"
+          ]
+        },
+        {
+          "nom": "fournisseurs-1920-1080-sombre-normale",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "fiche : 2 parties sans débordement vertical"
+          ],
+          "fenetres": [
+            "creation",
+            "fiche",
+            "evaluation"
+          ]
+        },
+        {
+          "nom": "produits-1920-1080-sombre-normale",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Aide React native : description originale accessible, ouverture et Échap sans fermeture de la fiche",
+            "Annuler natif ferme la fiche sans écriture métier"
+          ],
+          "fenetres": [
+            "creation"
+          ]
+        }
+      ]
+    },
+    {
+      "groupe": "final-corrige-1280",
+      "casPages": 6,
+      "ouvertures": 14,
+      "erreursClient": 0,
+      "routesInattendues": 0,
+      "mutationsMetier": 0,
+      "cas": [
+        {
+          "nom": "risques-1280-720-clair-compacte",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Pictogrammes des 24 commandes centrés à moins de 1 px",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "creation : 3 parties sans débordement vertical",
+            "Code court, noms longs lisibles dans un menu borné et sélection conservée",
+            "Saisies conservées entre parties, focus et clavier du mini-menu, liens dépliés sans débordement vertical",
+            "fiche : 3 parties sans débordement vertical"
+          ],
+          "fenetres": [
+            "creation",
+            "fiche",
+            "liens"
+          ]
+        },
+        {
+          "nom": "fournisseurs-1280-720-clair-compacte",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "fiche : 2 parties sans débordement vertical"
+          ],
+          "fenetres": [
+            "creation",
+            "fiche",
+            "evaluation"
+          ]
+        },
+        {
+          "nom": "produits-1280-720-clair-compacte",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Aide React native : description originale accessible, ouverture et Échap sans fermeture de la fiche",
+            "Annuler natif ferme la fiche sans écriture métier"
+          ],
+          "fenetres": [
+            "creation"
+          ]
+        },
+        {
+          "nom": "risques-1280-720-sombre-compacte",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Pictogrammes des 24 commandes centrés à moins de 1 px",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "creation : 3 parties sans débordement vertical",
+            "Code court, noms longs lisibles dans un menu borné et sélection conservée",
+            "Saisies conservées entre parties, focus et clavier du mini-menu, liens dépliés sans débordement vertical",
+            "fiche : 3 parties sans débordement vertical"
+          ],
+          "fenetres": [
+            "creation",
+            "fiche",
+            "liens"
+          ]
+        },
+        {
+          "nom": "fournisseurs-1280-720-sombre-compacte",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Raccourci / disponible après fermeture du panneau",
+            "fiche : 2 parties sans débordement vertical"
+          ],
+          "fenetres": [
+            "creation",
+            "fiche",
+            "evaluation"
+          ]
+        },
+        {
+          "nom": "produits-1280-720-sombre-compacte",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Aide React native : description originale accessible, ouverture et Échap sans fermeture de la fiche",
+            "Annuler natif ferme la fiche sans écriture métier"
+          ],
+          "fenetres": [
+            "creation"
+          ]
+        }
+      ]
+    },
+    {
+      "groupe": "final-corrige-hd",
+      "casPages": 2,
+      "ouvertures": 2,
+      "erreursClient": 0,
+      "routesInattendues": 0,
+      "mutationsMetier": 0,
+      "cas": [
+        {
+          "nom": "produits-1600-1000-clair-normale",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Aide React native : description originale accessible, ouverture et Échap sans fermeture de la fiche",
+            "Annuler natif ferme la fiche sans écriture métier"
+          ],
+          "fenetres": [
+            "creation"
+          ]
+        },
+        {
+          "nom": "produits-1600-1000-sombre-normale",
+          "pointsVerifies": [
+            "Une seule apparence de boîte d’outils",
+            "Contrôles du panneau au premier plan, sans recouvrement par les tableaux",
+            "Filtres : ouverture, dimensions, Échap et retour du focus",
+            "Aide React native : description originale accessible, ouverture et Échap sans fermeture de la fiche",
+            "Annuler natif ferme la fiche sans écriture métier"
+          ],
+          "fenetres": [
+            "creation"
+          ]
+        }
+      ]
+    }
+  ],
+  "captures": [
+    {
+      "fichier": "captures/risques-creation-clair-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "7e2b2e1c784eb7793a5077e2e0ebd96385729958f683619fa415fd3200541855"
+    },
+    {
+      "fichier": "captures/risques-creation-sombre-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "b86dbf3dd88a816a21ba129a9bc29d32a092b1edae5f3eddb10a924426256cb1"
+    },
+    {
+      "fichier": "captures/risques-fiche-clair-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "c8a01318f548d9ac94a9bd81737f74e8a0a7ec1fccbad51c46bb94ba04d36552"
+    },
+    {
+      "fichier": "captures/risques-fiche-sombre-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "4ab39dcf0dd9824615f6d3e8fec73009642fb1b3784120efd6cc6279f4520cb0"
+    },
+    {
+      "fichier": "captures/risques-liens-clair-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "edf6f9f5ff570d614f26b7a5a08b65e79cb19e942240bd0128c821be66716024"
+    },
+    {
+      "fichier": "captures/risques-liens-sombre-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "e64142ac492821a700f522b0456a6bf9506210ad92607eed82e35b5f473f3630"
+    },
+    {
+      "fichier": "captures/fournisseurs-creation-clair-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "709c6895cabfe7bd8b0347452af35a6e7323856ec987ce6784264c943bdb5e59"
+    },
+    {
+      "fichier": "captures/fournisseurs-creation-sombre-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "9bc1e6f0848da4f9b81f7feaf0be2b994174f68fc34b309e8830ee65a981557b"
+    },
+    {
+      "fichier": "captures/fournisseurs-fiche-clair-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "2de8cd5005cf518e40c7f038e263672b8d47b98a7ef4556581b208c5ba3cd290"
+    },
+    {
+      "fichier": "captures/fournisseurs-fiche-sombre-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "f362801d5af4b201d78b77d9aa50f163ee1216f904af86e603442b98e4504476"
+    },
+    {
+      "fichier": "captures/fournisseurs-evaluation-clair-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "85073c5f91ca333b7f208eec1c0ec5976a9152199ec3e8d41b0dfc1f6b2011fc"
+    },
+    {
+      "fichier": "captures/fournisseurs-evaluation-sombre-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "519ac5e3fb99565afab2a09a5b4dfcc48692a357c556f803e9c40ac1a2ed02dd"
+    },
+    {
+      "fichier": "captures/produits-creation-clair-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "a77dd4b3097cfd15b0edbc104066af330478ab4ae441ced7769abeb95f225f62"
+    },
+    {
+      "fichier": "captures/produits-creation-sombre-1920.png",
+      "largeurPhysique": 1920,
+      "hauteurPhysique": 1080,
+      "rapportPixels": 1,
+      "sha256": "296f5ff089043ed7994e402bc811403331940968dcc83b3e9147e521bedf13b4"
+    },
+    {
+      "fichier": "captures/produit-clair-hd.png",
+      "largeurPhysique": 1472,
+      "hauteurPhysique": 932,
+      "rapportPixels": 2,
+      "sha256": "51c73b720ce523355158e4692db44d4589b0080da77b05f53b1db29cb8fcff3c"
+    },
+    {
+      "fichier": "captures/risque-clair-compact-1280.png",
+      "largeurPhysique": 1280,
+      "hauteurPhysique": 720,
+      "rapportPixels": 1,
+      "sha256": "8ee4159ae2bda297bd92e4406df543bb1e42b8ac49e2d0007ee5ac0257c1e95f"
+    },
+    {
+      "fichier": "captures/produit-clair-compact-1280.png",
+      "largeurPhysique": 1280,
+      "hauteurPhysique": 720,
+      "rapportPixels": 1,
+      "sha256": "c0d2bf5e0ddc16095ec4a640af8ff0e415da4f3a2210dd6c2e5b503aa92e064c"
+    },
+    {
+      "fichier": "captures/produit-sombre-hd.png",
+      "largeurPhysique": 1472,
+      "hauteurPhysique": 932,
+      "rapportPixels": 2,
+      "sha256": "d3ec1e7cb00a7971b386a3f2019c250f5a2aa90e3ea821a78984fcd72a723306"
+    },
+    {
+      "fichier": "captures/risque-sombre-compact-1280.png",
+      "largeurPhysique": 1280,
+      "hauteurPhysique": 720,
+      "rapportPixels": 1,
+      "sha256": "d6c80e289021e82a3669a1a6b5115b12e6debb765b22db1ddbb89667ec276bdb"
+    },
+    {
+      "fichier": "captures/produit-sombre-compact-1280.png",
+      "largeurPhysique": 1280,
+      "hauteurPhysique": 720,
+      "rapportPixels": 1,
+      "sha256": "09483ccf6d1fe6f4e3eb7071ac1ca9e8060cd74a18edbbf6c547b0601229e237"
+    }
+  ],
+  "incidentCompactCorrige": "À 1280 px le pied de la fiche Risque recouvrait Liens et preuves dans les deux thèmes. Le Stack principal passe en flux bloc seulement dans les fiches paginées, et les détails fermés restent indivisibles. Les campagnes finales ci-dessus sont rejouées après correction et reconstruction.",
+  "limites": [
+    "Les tests de géométrie ne prouvent pas l’absence de toute coupure sur toutes les structures et données possibles.",
+    "Le dessin clair a été retenu par le RSSI ; les captures sombres attendent sa validation visuelle.",
+    "Pas de recette individuelle de toutes les 127 déclarations, ni recette serveur/API/base/Docker ou E2E serveur."
+  ]
+}

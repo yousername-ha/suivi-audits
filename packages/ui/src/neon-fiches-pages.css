@@ -128,3 +128,17 @@ html .auth-panneau .mantine-Button-root.commande-neon {
   color: var(--suivi-nav-texte);
   border-color: color-mix(in srgb, var(--menu-teinte-pilotage) 65%, var(--suivi-nav-texte));
 }
+
+/* Le flux bloc fragmente les sections entre les parties ; un Stack flex pouvait peindre une section sous le pied fixe. */
+[data-fiche-paginee] > :is(.mantine-Modal-body, .mantine-Drawer-body) > .mantine-Stack-root {
+  display: block;
+}
+[data-fiche-paginee]
+  > :is(.mantine-Modal-body, .mantine-Drawer-body)
+  > .mantine-Stack-root
+  > :not(:first-child):not([data-fiche-actions-fixes]) {
+  margin-block-start: var(--stack-gap, var(--mantine-spacing-sm));
+}
+[data-fiche-paginee] .a-propos:not([open]) {
+  break-inside: avoid;
+}

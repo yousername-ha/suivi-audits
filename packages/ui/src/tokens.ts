@@ -23,6 +23,34 @@ export const NEON = {
   sombre: { navigation: '#0C1429', titre: '#FFFFFF', accent: '#CE97FF', doux: '#1C2946' },
 } as const;
 
+/** Fiches de travail sobres : proposition claire retenue par le RSSI le 22/11/2026 ; déclinaison sombre assortie. */
+export const FICHES = {
+  clair: {
+    fond: '#FFFFFF',
+    encre: '#203244',
+    secondaire: '#637184',
+    trait: '#B5C2CF',
+    separateur: '#E1E7ED',
+    accent: '#165463',
+    focus: '#2E8999',
+    doux: '#F3F7F9',
+    bord: '#CCD6DF',
+    ombre: '#0F1E30',
+  },
+  sombre: {
+    fond: '#131D2F',
+    encre: '#EDF2FA',
+    secondaire: '#A8B7CB',
+    trait: '#52627A',
+    separateur: '#344258',
+    accent: '#83C9D5',
+    focus: '#77CAD9',
+    doux: '#1A293D',
+    bord: '#43516A',
+    ombre: '#030A16',
+  },
+} as const;
+
 /** Matrice des risques : encre du texte sur les cases claires et fond d'une case sans niveau défini (les couleurs de niveau
     viennent de la méthode publiée, jamais d'ici). */
 export const MATRICE = { encre: '#173f34', neutre: '#e5e9e2' } as const;

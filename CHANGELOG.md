@@ -12,6 +12,11 @@ Les préférences explicites de taille et le mode mural sont conservés. Contrô
 
 ### Changé
 
+- **Fiches sobres, direction claire retenue le 22/11** : surfaces opaques, champs rectangulaires, accent néon discret,
+  aide contextuelle React conservant les descriptions accessibles et palette commune clair/sombre. Annuler est ajouté
+  dans l’éditeur Produit via sa fermeture existante. [Sources, captures et contrôles](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md).
+  Les limites du découpage automatique restent à finaliser ; pas de nouvelle dépendance, migration ou modification API.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
 - **Proposition graphique, sans changement du produit** : [fenêtres en clair et sombre](docs/refonte-neon/propositions/fenetres-maintenance-2026-11-22/README.md)
   inspirées de la maintenance, sept variantes et détails HD. CSS isolé et preuves de présentation fournis pour validation
   du RSSI avant généralisation. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_

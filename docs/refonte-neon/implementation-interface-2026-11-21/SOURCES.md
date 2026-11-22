@@ -18,3 +18,10 @@ fichiers à ceux de la version cible. Ne pas appliquer leur remplacement complet
 - [apps/web/src/components/BarreFiltres.tsx](../../../apps/web/src/components/BarreFiltres.tsx) — Adaptateur des champs/menus existants ; conserve les contrats.
 - [apps/web/test/proportions-champs.test.ts](../../../apps/web/test/proportions-champs.test.ts) — Contrats des champs, aides et boutons.
 - [packages/ui/package.json](../../../packages/ui/package.json) — Export des feuilles ; aucune nouvelle dépendance.
+
+## Complément intégré après validation de la direction sobre
+
+- [DescriptionChamp.ts](../../../packages/ui/src/DescriptionChamp.ts) — aide React native, identifiants et clavier Mantine.
+- [neon-fiches-sobres.css](../../../packages/ui/src/neon-fiches-sobres.css) — habillage commun et descriptions repliées uniquement dans les fiches.
+- [ProduitsSurveilles.tsx](../../../apps/web/src/vulnerabilites/ProduitsSurveilles.tsx) — Annuler relié à la fermeture existante de l’éditeur.
+- [Dossier et preuves d’intégration](../integration-fiches-sobres-2026-11-22/README.md) — référence récente, limites et captures.

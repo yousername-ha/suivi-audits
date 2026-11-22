@@ -1,5 +1,11 @@
 # État synthétique du projet
 
+> **22/11/2026 — style sobre retenu et intégré** : [sources et recette](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md).
+> Réponse « Top » sur la proposition claire ; aide React native via Mantine, palette centralisée, CSS commun clair/sombre,
+> Annuler natif dans la fiche Produit. 1 222 tests web/UI réussis. Déclinaison sombre à valider visuellement, recette serveur
+> non exécutée. Les limites du découpage automatique des fiches restent documentées, sans généralisation de leur validation.
+>
+
 > **22/11/2026 — proposition graphique des fenêtres** : [galerie clair/sombre](docs/refonte-neon/propositions/fenetres-maintenance-2026-11-22/README.md)
 > dans le style de la page de maintenance : surfaces bleu nuit/blanc bleuté, contours cyan et accents violets discrets,
 > champs rectangulaires et commandes en contour. Sept variantes, 28 images dont détails HD et exemples compacts.
