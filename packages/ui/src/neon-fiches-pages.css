@@ -35,8 +35,8 @@ html
 /* Groupes indivisibles : un champ et son libellé, une rangée de champs, une ligne de tableau ou de liste, un bloc replié
    et une commande restent entiers dans leur partie. Les encadrés (message, groupe de champs, panneau) ne le sont que s'ils sont
    petits devant une partie : le composant les marque alors data-fiche-entier ; plus grands, ils se poursuivent sur la
-   partie suivante. Une carte (bloc à débordement masqué) ne se découpe jamais : plus haute qu'une partie, elle fait
-   garder à la fenêtre son défilement habituel, ce que le composant vérifie après chaque découpage. */
+   partie suivante (voir plus bas). Le composant vérifie chaque découpage : au moindre champ tronqué ou recouvert, la
+   fenêtre garde son défilement habituel. */
 [data-fiche-paginee]
   :is(
     [data-fiche-entier],
@@ -56,6 +56,23 @@ html
     .mantine-Button-root
   ) {
   break-inside: avoid;
+}
+/* Blocs que le navigateur ne sait pas découper et qui feraient retomber la fenêtre sur le défilement : une grande carte
+   masque son débordement, une grille de formulaire ou un tableau empilable porte une requête de conteneur (bloc isolé).
+   Dans une fiche découpée, le grand encadré laisse voir son contenu d'une partie à l'autre, et la requête de conteneur
+   est portée par le corps de la fenêtre, de même largeur : même nombre de colonnes, contenu découpable. Les conteneurs
+   nommés des écrans métier (fiche fournisseur, SWOT, PESTEL…) ne sont pas touchés. */
+[data-fiche-paginee] :is(.mantine-Card-root, .mantine-Paper-root, .mantine-Alert-root):not([data-fiche-entier]) {
+  overflow: visible;
+  box-decoration-break: clone;
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content)[data-fiche-paginee]
+  > :is(.mantine-Modal-body, .mantine-Drawer-body):has(.grille-formulaire, .tableau-empilable-conteneur) {
+  container-type: inline-size;
+}
+[data-fiche-paginee] :is(.grille-formulaire, .tableau-empilable-conteneur) {
+  container-type: normal;
 }
 [data-fiche-paginee] [data-fiche-titre] {
   break-inside: avoid;

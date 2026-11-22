@@ -88,6 +88,7 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
     const retablir = () => {
       cadre.removeAttribute('data-fiche-paginee');
       cadre.removeAttribute('data-fiche-pied');
+      cadre.removeAttribute('data-fiche-repli');
       cadre.style.removeProperty('--fiche-hauteur');
       cadre.style.removeProperty('--fiche-pied');
       cadre.style.removeProperty('--fiche-pas');
@@ -101,8 +102,10 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
       }
       modifiees.clear();
     };
-    const defilementClassique = () => {
+    /** Repli sur le défilement habituel ; la raison est posée sur le cadre (data-fiche-repli) pour la recette. */
+    const defilementClassique = (raison?: 'indivisible' | 'tronque' | 'chevauchement') => {
       retablir();
+      if (raison) cadre.setAttribute('data-fiche-repli', raison);
       total = 0;
       courant = 0;
       titres = [];
@@ -115,8 +118,12 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
       const focus = document.activeElement;
       retablir();
       corps.scrollLeft = 0;
-      if (corps.scrollHeight <= corps.clientHeight + 2 || corps.querySelector(INDIVISIBLES)) {
+      if (corps.scrollHeight <= corps.clientHeight + 2) {
         defilementClassique();
+        return;
+      }
+      if (corps.querySelector(INDIVISIBLES)) {
+        defilementClassique('indivisible');
         return;
       }
       // Un encadré reste entier s'il est petit devant une partie ; plus grand, il doit pouvoir se poursuivre sur la
@@ -164,7 +171,7 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
         parties = compter();
       }
       if (tronque()) {
-        defilementClassique();
+        defilementClassique('tronque');
         return;
       }
       // Contrôle du découpage : certains blocs ne se découpent pas (grille à requête de conteneur, bloc à défilement
@@ -233,7 +240,7 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
         }
       }
       if (!sain()) {
-        defilementClassique();
+        defilementClassique('chevauchement');
         return;
       }
       total = parties;
@@ -319,7 +326,8 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
       subtree: true,
       characterData: true,
       attributes: true,
-      attributeFilter: ['style', 'hidden', 'open', 'data-active'],
+      // data-aide-ouverte : aide contextuelle d'un champ dépliée ou repliée (DescriptionChamp), qui change la hauteur.
+      attributeFilter: ['style', 'hidden', 'open', 'data-active', 'data-aide-ouverte'],
     });
     const dimensions = new ResizeObserver(planifier);
     dimensions.observe(cadre);
