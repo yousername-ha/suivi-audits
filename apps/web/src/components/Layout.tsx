@@ -380,7 +380,15 @@ export function Layout({ children }: { children: ReactNode }) {
       </div>
       <div className="shell-body">
         <aside className="shell-nav">{navigation}</aside>
-        <main className="shell-main app-main">
+        {/* Module Vulnérabilités : style de la page de maintenance, limité au module (neon-vulnerabilites.css). */}
+        <main
+          className="shell-main app-main"
+          data-module={
+            familleDeLaPage && localiser(loc.pathname)?.destination.id === 'vulnerabilites'
+              ? 'vulnerabilites'
+              : undefined
+          }
+        >
           <ErrorAlert error={logoutError} />
           <BandeauCrise />
           <OngletsRubriques />

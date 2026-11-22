@@ -42,6 +42,7 @@ import { useCan } from '../session';
 import { CLE_ALERTES, lienFicheAlerte, urlAlertes } from './alertes';
 import { FicheConstat, FicheDeclaree } from './FaillesDetectees';
 import { FicheFaille } from './FicheFaille';
+import { Ondes, Reacteur, TeteCase } from './Instruments';
 import { ANNEAUX, disposerRadar, libelleEpss, libelleTouches, RAYON, type SceneRadar, VUE } from './radar';
 import { SuiviFaille } from './SuiviFaille';
 import { ADRESSE_TENDANCES } from './tendances';
@@ -105,12 +106,15 @@ export function NiveauAlerteBloc({ niveau }: { niveau: VueEnsembleDto['niveau'] 
       <h2 className="pc-etiquette" id={id}>
         Niveau d’alerte
       </h2>
-      <p className="pc-niveau__gros">
-        <b>{niveau.niveau}</b>
-        <span>/ 4</span>
-      </p>
-      <p className="pc-niveau__libelle">{niveau.libelle}</p>
-      <p className="pc-niveau__explication">{niveau.explication}</p>
+      {/* Réacteur (choix du RSSI du 22/11/2026) : le dessin est décoratif, le niveau et son libellé restent écrits. */}
+      <div className="vu-niveau">
+        <Reacteur niveau={niveau.niveau} />
+        <p className="pc-niveau__gros">
+          <b>{niveau.niveau}</b>
+          <span>/ 4</span>
+        </p>
+        <p className="pc-niveau__libelle">{niveau.libelle}</p>
+      </div>
       <ol className="pc-jauge" aria-label="Échelle du niveau d’alerte">
         {NIVEAUX_ALERTE_GLOBAL.map((n) => (
           <li
@@ -125,7 +129,11 @@ export function NiveauAlerteBloc({ niveau }: { niveau: VueEnsembleDto['niveau'] 
           </li>
         ))}
       </ol>
-      <p className="pc-niveau__regle">{REGLE_NIVEAU_ALERTE_GLOBAL}</p>
+      <p className="pc-niveau__explication">{niveau.explication}</p>
+      <details className="vu-regle">
+        <summary>Règle des niveaux</summary>
+        <p className="pc-niveau__regle">{REGLE_NIVEAU_ALERTE_GLOBAL}</p>
+      </details>
     </section>
   );
 }
@@ -139,7 +147,11 @@ function libelleLu(n: { lisibles: number; horsLecture: boolean }, feminin: boole
 export function Tuiles({ tuiles }: { tuiles: VueEnsembleDto['tuiles'] }) {
   return (
     <nav className="pc-tuiles" aria-label="Chiffres clés : listes filtrées">
-      <Link to={LIENS_TUILES.exploitees} className="pc-tuile pc-teinte--rouge">
+      <Link
+        to={LIENS_TUILES.exploitees}
+        className={`pc-tuile pc-teinte--rouge${tuiles.exploiteesPresentes > 0 ? ' vu-case--active' : ''}`}
+      >
+        <TeteCase icone="exploitees" rang={1} />
         <span className="pc-etiquette">
           Exploitées et présentes
           {tuiles.exploiteesPresentes > 0 && (
@@ -150,8 +162,12 @@ export function Tuiles({ tuiles }: { tuiles: VueEnsembleDto['tuiles'] }) {
           )}
         </span>
         <b>{deuxChiffres(tuiles.exploiteesPresentes)}</b>
+        {tuiles.exploiteesPresentes > 0 && <Ondes />}
       </Link>
-      <div className="pc-tuile pc-tuile--double pc-teinte--orange">
+      <div
+        className={`pc-tuile pc-tuile--double pc-teinte--orange${tuiles.aTraiter.p1 + tuiles.aTraiter.p2 > 0 ? ' vu-case--active' : ''}`}
+      >
+        <TeteCase icone="aTraiter" rang={2} />
         <span className="pc-etiquette">À traiter (P1 et P2)</span>
         <span className="pc-tuile__liens">
           <Link to={LIENS_TUILES.p1} aria-label={`P1 : ${tuiles.aTraiter.p1}`}>
@@ -163,6 +179,7 @@ export function Tuiles({ tuiles }: { tuiles: VueEnsembleDto['tuiles'] }) {
         </span>
       </div>
       <Link to={LIENS_TUILES.aConfirmer} className="pc-tuile pc-teinte--violet">
+        <TeteCase icone="aConfirmer" rang={3} />
         <span className="pc-etiquette">
           Produits à confirmer
           <small>
@@ -172,14 +189,20 @@ export function Tuiles({ tuiles }: { tuiles: VueEnsembleDto['tuiles'] }) {
         </span>
         <b>{deuxChiffres(tuiles.aConfirmer.failles)}</b>
       </Link>
-      <Link to={LIENS_TUILES.depassement} className="pc-tuile pc-teinte--rouge">
+      <Link
+        to={LIENS_TUILES.depassement}
+        className={`pc-tuile pc-teinte--rouge${tuiles.enDepassement > 0 ? ' vu-case--active' : ''}`}
+      >
+        <TeteCase icone="depassement" rang={4} />
         <span className="pc-etiquette">
           En dépassement
           <small>délai de correction dépassé</small>
         </span>
         <b>{deuxChiffres(tuiles.enDepassement)}</b>
+        {tuiles.enDepassement > 0 && <Ondes />}
       </Link>
       <Link to={LIENS_TUILES.finSupport} className="pc-tuile pc-teinte--orange">
+        <TeteCase icone="finSupport" rang={5} />
         <span className="pc-etiquette">
           Fin de support
           <small>
@@ -190,6 +213,7 @@ export function Tuiles({ tuiles }: { tuiles: VueEnsembleDto['tuiles'] }) {
         <b>{deuxChiffres(tuiles.finDeSupport.constats)}</b>
       </Link>
       <Link to={LIENS_TUILES.corrigees} className="pc-tuile pc-teinte--vert">
+        <TeteCase icone="corrigees" rang={6} />
         <span className="pc-etiquette">Corrigées ce mois</span>
         <b>{deuxChiffres(tuiles.corrigeesCeMois)}</b>
       </Link>

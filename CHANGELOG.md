@@ -2,6 +2,31 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+Aucune action. Changement d'affichage du module Vulnérabilités seulement : ni migration, ni commande sur le serveur.
+
+### Modifié
+
+- Vulnérabilités, **aspect graphique** (demande du RSSI du 22/11/2026 : un module « moins fin, moins lien hypertexte »,
+  dans le style de la page de maintenance).
+  - Le poste de commandement et les tableaux prennent la grande dalle de la page de maintenance (biseau, bord teinté de
+    violet, traits lumineux), les en-têtes de tableau passent en capitales espacées, et le bleu nuit du menu remplace le
+    cyan, plus foncé en mode sombre.
+  - Plus aucun lien souligné : les noms de failles et de machines deviennent des titres en gras avec une flèche, les liens
+    d'action (« Configurer l'intégration », « Voir les alertes », « Tendances »…) deviennent des boutons, et les
+    pastilles sont pleines.
+  - Vue d'ensemble : le **niveau d'alerte** s'affiche dans un réacteur animé (anneaux, graduations, orbites, crans du
+    niveau allumés) et la règle des niveaux se replie sous « Règle des niveaux ». Les **chiffres clés** deviennent six
+    cases sur deux colonnes, avec une icône, un numéro, et un trait lumineux quand une action est attendue.
+  - **Failles détectées** : chaque ligne tient en trois lignes (nom ; numéro, famille et source ; faits sans doublon :
+    exploitation avérée, rançongiciels, exploitable, fin de support, non maintenu). La priorité donne sa raison courte et
+    le délai tient sur une ligne. Le détail des sources et la règle du délai restent dans la fiche de la faille.
+  - Animations décoratives coupées par la préférence « réduire les animations » et à l'impression. Libellés, liens et
+    noms accessibles inchangés (session « Ergonomie et refonte Neon »).
+
 ## [7.5.1] — 2026-11-21
 
 ### Notes de mise à jour

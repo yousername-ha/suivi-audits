@@ -1,0 +1,670 @@
+/* Module Vulnérabilités : style de la page de maintenance (docker/maintenance), choix du RSSI du 22/11/2026, limité au module
+   par l'attribut data-module de la zone principale (Layout). Demande : un module « moins fin, moins lien hypertexte ».
+   - Grande dalle de la maintenance (biseau, bord teinté de violet, traits lumineux) pour le poste et les tableaux ;
+     en-têtes en capitales espacées ; cartes d'état (liseré épais de la teinte, bord violet à droite, dégradé en biais).
+   - Liens d'action en boutons (bord bleu nuit, fond teinté, flèche violette), noms de failles et de machines en titres
+     gras, sans soulignement ; pastilles pleines, sans trait fin.
+   - Bleu nuit du menu à la place du cyan de la maintenance (clair), bleu doux assombri (sombre), sur décision du RSSI.
+   - Instruments de la vue d'ensemble : réacteur du niveau d'alerte et cases des chiffres clés (Instruments.tsx).
+   Jetons de la charte seulement : ni px, ni rem, ni couleur codée. Aucun style en ligne (ADR 0006). Animations décoratives
+   et continues (ADR 0099), en transform et opacity, coupées par le mouvement réduit et à l'impression. */
+.app-main[data-module='vulnerabilites'] {
+  --vu-trait: calc(var(--mantine-spacing-2xs) / 4);
+  --vu-trait-2: calc(var(--mantine-spacing-2xs) / 2);
+  --vu-trait-3: calc(var(--mantine-spacing-2xs) * 0.75);
+  --vu-biseau: calc(var(--mantine-radius-lg) * 1.8) var(--mantine-radius-xs);
+  --vu-encre: var(--mantine-color-text);
+  --vu-doux: var(--neon-secondaire);
+  --vu-ligne: color-mix(in srgb, var(--mantine-color-text) 14%, var(--suivi-trait));
+  --vu-panneau: color-mix(in srgb, var(--menu-fond-haut) 3%, var(--suivi-surface));
+  --vu-fond: color-mix(in srgb, var(--menu-fond-haut) 7%, var(--suivi-fond-page));
+  --vu-accent: var(--menu-fond-haut);
+  --vu-violet: var(--mantine-color-violet-7);
+  --vu-vert: var(--mantine-color-teal-8);
+  --vu-ombre: color-mix(in srgb, var(--menu-fond-haut) 22%, transparent);
+}
+[data-mantine-color-scheme='dark'] .app-main[data-module='vulnerabilites'] {
+  --vu-ligne: var(--suivi-trait);
+  --vu-panneau: color-mix(in srgb, var(--suivi-surface) 45%, var(--suivi-fond-page));
+  --vu-fond: color-mix(in srgb, var(--menu-fond-haut) 55%, var(--suivi-fond-page));
+  --vu-accent: color-mix(in srgb, var(--menu-teinte-pilotage) 80%, var(--suivi-fond-page));
+  --vu-violet: var(--mantine-color-violet-4);
+  --vu-vert: var(--mantine-color-teal-3);
+  --vu-ombre: color-mix(in srgb, var(--suivi-fond-page) 70%, var(--mantine-color-dark-9));
+}
+
+/* ------------------------------------------------------------------------------------------------ Titres */
+.app-main[data-module='vulnerabilites'] h1 {
+  font-size: calc(var(--mantine-font-size-xl) * 1.55);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+}
+.app-main[data-module='vulnerabilites'] h2 {
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+/* ------------------------------------------------------------------------------------------------ Grande dalle */
+.app-main[data-module='vulnerabilites'] .poste,
+.app-main[data-module='vulnerabilites'] .data-table {
+  position: relative;
+  isolation: isolate;
+  border: calc(var(--vu-trait) * 1.5) solid var(--vu-ligne);
+  border-block-start-color: color-mix(in srgb, var(--vu-violet) 34%, var(--vu-ligne));
+  border-block-end-color: color-mix(in srgb, var(--vu-violet) 20%, var(--vu-ligne));
+  border-radius: var(--vu-biseau);
+  background: linear-gradient(125deg, var(--vu-panneau), color-mix(in srgb, var(--vu-panneau) 75%, var(--vu-fond)));
+  box-shadow: 0 2em 5em -2.5em var(--vu-ombre);
+}
+.app-main[data-module='vulnerabilites'] .poste {
+  --pc-cyan: var(--vu-accent);
+}
+.app-main[data-module='vulnerabilites'] .poste::before,
+.app-main[data-module='vulnerabilites'] .poste::after {
+  content: '';
+  position: absolute;
+  inline-size: calc(var(--mantine-spacing-2xl) * 3);
+  block-size: var(--vu-trait-2);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--vu-violet) 60%, transparent), transparent);
+  pointer-events: none;
+}
+.app-main[data-module='vulnerabilites'] .poste::before {
+  inset-block-start: calc(-1 * var(--vu-trait));
+  inset-inline-start: var(--mantine-spacing-2xl);
+}
+.app-main[data-module='vulnerabilites'] .poste::after {
+  inset-block-end: calc(-1 * var(--vu-trait));
+  inset-inline-end: var(--mantine-spacing-2xl);
+}
+/* Colonne collante et en-tête des tableaux : même fond que la dalle. */
+.app-main[data-module='vulnerabilites'] .data-table {
+  --suivi-surface: var(--vu-panneau);
+}
+.app-main[data-module='vulnerabilites'] .data-table .mantine-Table-th {
+  border-block-end: var(--vu-trait) solid var(--vu-ligne);
+  color: var(--vu-doux);
+  font-size: calc(var(--mantine-font-size-xs) * 0.92);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.app-main[data-module='vulnerabilites'] .data-table .mantine-Table-td {
+  font-weight: 450;
+}
+/* En-tête de dalle : capitales espacées, carré bleu nuit, heure du calcul avec un point lumineux. */
+.app-main[data-module='vulnerabilites'] .poste__tete .pc-etiquette {
+  color: var(--vu-doux);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+.app-main[data-module='vulnerabilites'] .poste__tete .pc-etiquette:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  color: var(--vu-accent);
+}
+.app-main[data-module='vulnerabilites'] .poste__tete .pc-etiquette:last-child::before {
+  content: '';
+  inline-size: 0.5em;
+  block-size: 0.5em;
+  border-radius: 50%;
+  background: var(--vu-accent);
+  box-shadow: 0 0 0.8em color-mix(in srgb, var(--vu-accent) 60%, transparent);
+}
+.app-main[data-module='vulnerabilites'] .poste__note {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.app-main[data-module='vulnerabilites'] .poste__note::before {
+  content: '';
+  flex: none;
+  inline-size: 0.5em;
+  block-size: 0.5em;
+  border: var(--vu-trait) solid var(--vu-accent);
+  transform: rotate(45deg);
+}
+
+/* ------------------------------------------------------------------------------------------------ Cartes d'état */
+.app-main[data-module='vulnerabilites'] :is(.pc-niveau, .pc-cible, .pc-tuile) {
+  position: relative;
+  overflow: hidden;
+  border: calc(var(--vu-trait) * 1.5) solid color-mix(in srgb, var(--pc-c) 38%, var(--vu-ligne));
+  border-inline-start: calc(var(--vu-trait-3) * 1.3) solid var(--pc-c);
+  border-inline-end-color: color-mix(in srgb, var(--vu-violet) 50%, var(--vu-ligne));
+  border-radius: var(--mantine-radius-xs) calc(var(--mantine-radius-lg) * 1.25);
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--pc-c) 9%, var(--vu-panneau)),
+    color-mix(in srgb, var(--vu-panneau) 80%, transparent)
+  );
+}
+.app-main[data-module='vulnerabilites'] .pc-etiquette {
+  color: var(--vu-encre);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.app-main[data-module='vulnerabilites'] .pc-etiquette small {
+  color: var(--vu-doux);
+  font-weight: 550;
+  letter-spacing: 0.02em;
+}
+.app-main[data-module='vulnerabilites'] :is(.pc-niveau, .pc-cible) > .pc-etiquette:first-child {
+  color: var(--vu-violet);
+}
+.app-main[data-module='vulnerabilites'] :is(.pc-panneau, .pc-capteur, .pc-ecran) {
+  border: var(--vu-trait) solid var(--vu-ligne);
+  border-block-start: var(--vu-trait-2) solid var(--vu-ligne);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-lg);
+  background: var(--vu-panneau);
+}
+.app-main[data-module='vulnerabilites'] .pc-capteur {
+  border-block-start-color: var(--pc-c);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--pc-c) 7%, var(--vu-panneau)), var(--vu-panneau));
+}
+.app-main[data-module='vulnerabilites'] .pc-ecran {
+  border-block-start-color: color-mix(in srgb, var(--vu-accent) 60%, var(--vu-ligne));
+}
+
+/* ------------------------------------------------------------------------------------------------ Niveau d'alerte */
+.app-main[data-module='vulnerabilites'] .pc-niveau {
+  display: grid;
+  gap: 0.6em;
+}
+.vu-niveau {
+  position: relative;
+  inline-size: min(100%, 15.5em);
+  margin-inline: auto;
+}
+.vu-reacteur {
+  display: block;
+  inline-size: 100%;
+  overflow: visible;
+  fill: none;
+}
+.vu-reacteur__croix {
+  stroke: var(--vu-ligne);
+  stroke-width: 1;
+}
+.vu-reacteur__fin {
+  opacity: 0.6;
+}
+.vu-reacteur__anneau circle:first-child {
+  stroke: color-mix(in srgb, var(--pc-c) 70%, var(--vu-ligne));
+  stroke-width: 1.6;
+  filter: drop-shadow(0 0 0.25em color-mix(in srgb, var(--pc-c) 35%, transparent));
+}
+.vu-reacteur__arc {
+  stroke: var(--vu-violet);
+  stroke-width: 4;
+}
+.vu-reacteur__point {
+  fill: var(--pc-c);
+}
+.vu-reacteur__orbites {
+  stroke: var(--vu-violet);
+  stroke-width: 1;
+  opacity: 0.4;
+}
+.vu-reacteur__satellite {
+  fill: var(--vu-violet);
+  stroke: none;
+}
+.vu-reacteur__graduations {
+  stroke: color-mix(in srgb, var(--vu-accent) 35%, var(--vu-ligne));
+  stroke-width: 4.5;
+}
+.vu-reacteur__coeur {
+  fill: color-mix(in srgb, var(--pc-c) 14%, transparent);
+  stroke: color-mix(in srgb, var(--pc-c) 40%, transparent);
+  stroke-width: 1;
+}
+.vu-cran {
+  stroke: var(--vu-cran);
+}
+.vu-cran--1 {
+  --vu-cran: var(--carte-vert-accent);
+}
+.vu-cran--2 {
+  --vu-cran: var(--carte-bleu-accent);
+}
+.vu-cran--3 {
+  --vu-cran: var(--carte-orange-accent);
+}
+.vu-cran--4 {
+  --vu-cran: var(--carte-rouge-accent);
+}
+.vu-cran__arc {
+  stroke-width: 11;
+  opacity: 0.2;
+}
+.vu-cran--atteint .vu-cran__arc {
+  opacity: 1;
+  filter: drop-shadow(0 0 0.35em color-mix(in srgb, var(--vu-cran) 45%, transparent));
+}
+.vu-cran__halo {
+  stroke-width: 24;
+  opacity: 0.3;
+  filter: blur(0.2em);
+}
+/* Niveau et libellé posés sur le réacteur (texte de la page, lu tel quel). */
+.app-main[data-module='vulnerabilites'] .vu-niveau .pc-niveau__gros {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.2em;
+  margin: 0;
+  transform: translateY(-52%);
+  pointer-events: none;
+}
+.app-main[data-module='vulnerabilites'] .vu-niveau .pc-niveau__gros b {
+  color: var(--pc-c);
+  font-size: calc(var(--mantine-font-size-xl) * 3.1);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.app-main[data-module='vulnerabilites'] .vu-niveau .pc-niveau__gros span {
+  color: var(--vu-doux);
+  font-weight: 650;
+}
+.app-main[data-module='vulnerabilites'] .vu-niveau .pc-niveau__libelle {
+  position: absolute;
+  inset-block-end: 4%;
+  inset-inline: 0;
+  margin: 0;
+  color: var(--pc-c);
+  font-size: calc(var(--mantine-font-size-xs) * 0.95);
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-align: center;
+  text-transform: uppercase;
+}
+/* Échelle : quatre points de couleur, le niveau en cours en gras. */
+.app-main[data-module='vulnerabilites'] .pc-niveau .pc-jauge {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.3em;
+  margin: 0;
+  padding: 0;
+}
+.app-main[data-module='vulnerabilites'] .pc-niveau .pc-jauge__cran {
+  display: grid;
+  justify-items: center;
+  gap: 0.25em;
+  border: 0;
+  color: var(--vu-doux);
+  font-size: calc(var(--mantine-font-size-xs) * 0.9);
+  text-align: center;
+}
+.app-main[data-module='vulnerabilites'] .pc-niveau .pc-jauge__cran i {
+  inline-size: 0.55em;
+  block-size: 0.55em;
+  border-radius: 50%;
+  background: var(--pc-c);
+  opacity: 0.4;
+}
+.app-main[data-module='vulnerabilites'] .pc-niveau .pc-jauge__cran--atteint i {
+  opacity: 1;
+}
+.app-main[data-module='vulnerabilites'] .pc-niveau .pc-jauge__cran[aria-current='step'] {
+  color: var(--vu-encre);
+  font-weight: 750;
+}
+.app-main[data-module='vulnerabilites'] .pc-niveau .pc-jauge__cran[aria-current='step'] i {
+  inline-size: 0.7em;
+  block-size: 0.7em;
+  box-shadow: 0 0 0.6em var(--pc-c);
+}
+.app-main[data-module='vulnerabilites'] .pc-niveau__explication {
+  margin: 0;
+  font-weight: 550;
+  text-align: center;
+}
+.vu-regle {
+  color: var(--vu-doux);
+  font-size: calc(var(--mantine-font-size-xs) * 0.95);
+}
+.vu-regle summary {
+  color: var(--vu-encre);
+  font-weight: 650;
+  cursor: pointer;
+}
+.vu-regle summary:focus-visible {
+  outline: var(--suivi-trait-focus) solid var(--neon-accent);
+  outline-offset: var(--vu-trait);
+}
+
+/* ------------------------------------------------------------------------------------------------ Cases des chiffres clés */
+.app-main[data-module='vulnerabilites'] .pc-tuiles {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.app-main[data-module='vulnerabilites'] .pc-tuile {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'icone . rang'
+    'chiffre chiffre ondes'
+    'libelle libelle libelle';
+  align-items: center;
+  align-content: start;
+  gap: 0.35em 0.6em;
+  padding: 0.7em 0.8em 0.75em;
+  border: var(--vu-trait) solid color-mix(in srgb, var(--pc-c) 30%, var(--vu-ligne));
+  border-block-start: var(--vu-trait-2) solid var(--pc-c);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-lg);
+  background: linear-gradient(130deg, color-mix(in srgb, var(--pc-c) 8%, var(--vu-panneau)), var(--vu-panneau));
+}
+.app-main[data-module='vulnerabilites'] a.pc-tuile:hover {
+  background: linear-gradient(130deg, color-mix(in srgb, var(--pc-c) 15%, var(--vu-panneau)), var(--vu-panneau));
+}
+.app-main[data-module='vulnerabilites'] .pc-tuile > .pc-etiquette {
+  grid-area: libelle;
+  font-size: calc(var(--mantine-font-size-xs) * 0.92);
+  letter-spacing: 0.1em;
+}
+.app-main[data-module='vulnerabilites'] .pc-tuile > .pc-etiquette small {
+  margin-block-start: 0.35em;
+  line-height: 1.35;
+  text-transform: none;
+}
+.app-main[data-module='vulnerabilites'] .pc-tuile > b,
+.app-main[data-module='vulnerabilites'] .pc-tuile > .pc-tuile__liens {
+  grid-area: chiffre;
+}
+.app-main[data-module='vulnerabilites'] .pc-tuile b {
+  color: var(--pc-c);
+  font-size: calc(var(--mantine-font-size-xl) * 1.45);
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.app-main[data-module='vulnerabilites'] .pc-tuile__liens {
+  gap: 0.4em;
+}
+.app-main[data-module='vulnerabilites'] .pc-tuile__liens a {
+  align-items: baseline;
+  padding: 0 0.3em;
+  color: var(--vu-doux);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+}
+.app-main[data-module='vulnerabilites'] .pc-tuile__liens b {
+  font-size: calc(var(--mantine-font-size-xl) * 1.2);
+}
+.vu-case__icone {
+  grid-area: icone;
+  display: grid;
+  place-items: center;
+  inline-size: 2em;
+  block-size: 2em;
+  border: var(--vu-trait) solid color-mix(in srgb, var(--pc-c) 45%, var(--vu-ligne));
+  border-radius: var(--mantine-radius-xs);
+  background: color-mix(in srgb, var(--pc-c) 9%, transparent);
+  color: var(--pc-c);
+}
+.vu-case__icone svg {
+  inline-size: 1.15em;
+  block-size: 1.15em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.vu-case__rang {
+  grid-area: rang;
+  color: var(--vu-doux);
+  font-size: var(--mantine-font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+.vu-case__ondes {
+  grid-area: ondes;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.18em;
+  block-size: 1.1em;
+}
+.vu-case__ondes i {
+  display: block;
+  inline-size: 0.2em;
+  block-size: 100%;
+  background: var(--pc-c);
+  transform: scaleY(0.6);
+  transform-origin: bottom;
+}
+/* Trait lumineux qui parcourt le bord haut d'une case qui demande une action. */
+.vu-case--active::after {
+  content: '';
+  position: absolute;
+  inset-block-start: calc(-1 * var(--vu-trait-2));
+  inset-inline-start: 0;
+  inline-size: 30%;
+  block-size: var(--vu-trait-3);
+  background: linear-gradient(90deg, transparent, var(--pc-c), transparent);
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------------------------------------------ Radar */
+.app-main[data-module='vulnerabilites'] :is(.pc-r-anneau, .pc-r-graduation, .pc-r-rayon) {
+  stroke: color-mix(in srgb, var(--vu-accent) 30%, var(--vu-ligne));
+  stroke-width: 1.5;
+}
+.app-main[data-module='vulnerabilites'] .pc-r-anneau--bord {
+  stroke: color-mix(in srgb, var(--vu-accent) 70%, var(--vu-ligne));
+  stroke-width: 2.5;
+}
+.app-main[data-module='vulnerabilites'] .pc-r-secteur {
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------------------------------------------ Noms et liens */
+/* La règle commune des liens (styles.css) pèse (0,5,0) : la portée doublée (.app-main.app-main) la dépasse ici. */
+/* Noms de failles et de machines : titres en encre, sans soulignement, flèche violette. */
+.app-main.app-main[data-module='vulnerabilites']
+  :is(.pc-table__nom, .veille-texte, .pc-cible__bouton, td .mantine-Anchor-root).mantine-Anchor-root {
+  color: var(--vu-encre);
+  font-weight: 650;
+  text-align: start;
+  text-decoration: none;
+}
+.app-main.app-main[data-module='vulnerabilites']
+  :is(.pc-table__nom, .veille-texte, .pc-cible__bouton, td .mantine-Anchor-root).mantine-Anchor-root:is(
+    :hover,
+    :focus-visible
+  ) {
+  color: var(--vu-violet);
+}
+.app-main.app-main[data-module='vulnerabilites']
+  :is(.pc-table__nom, .veille-texte, .pc-cible__bouton, td .mantine-Anchor-root).mantine-Anchor-root::after {
+  content: ' →' / '';
+  color: var(--vu-violet);
+  font-weight: 600;
+  opacity: 0.6;
+}
+.app-main.app-main[data-module='vulnerabilites']
+  tr:hover
+  :is(.pc-table__nom, .veille-texte, td .mantine-Anchor-root).mantine-Anchor-root::after {
+  opacity: 1;
+}
+/* Liens d'action : bouton « Consulter le résultat » de la maintenance. */
+.app-main.app-main[data-module='vulnerabilites']
+  :is(a.mantine-Anchor-root, p a:not([class])):not(td a, .pc-tuile, .pc-tuile *),
+.app-main.app-main[data-module='vulnerabilites'] .pc-bandeau__lien.pc-bandeau__lien {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.35em 0.8em;
+  border: var(--vu-trait) solid var(--vu-accent);
+  border-radius: var(--mantine-radius-xs);
+  background: color-mix(in srgb, var(--vu-accent) 9%, var(--vu-panneau));
+  color: var(--vu-encre);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+  vertical-align: baseline;
+}
+.app-main.app-main[data-module='vulnerabilites']
+  :is(a.mantine-Anchor-root, p a:not([class])):not(td a, .pc-tuile, .pc-tuile *)::after,
+.app-main.app-main[data-module='vulnerabilites'] .pc-bandeau__lien.pc-bandeau__lien::after {
+  content: '→' / '';
+  color: var(--vu-violet);
+  font-weight: 700;
+}
+.app-main.app-main[data-module='vulnerabilites']
+  :is(a.mantine-Anchor-root, p a:not([class])):not(td a, .pc-tuile, .pc-tuile *):hover {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+.app-main.app-main[data-module='vulnerabilites'] .pc-bandeau__lien.pc-bandeau__lien {
+  border-color: var(--carte-rouge-accent);
+  background: color-mix(in srgb, var(--carte-rouge-accent) 12%, var(--vu-panneau));
+}
+.app-main.app-main[data-module='vulnerabilites'] .pc-bandeau__lien.pc-bandeau__lien::after {
+  color: var(--carte-rouge-accent);
+}
+
+/* ------------------------------------------------------------------------------------------------ Ligne allégée des failles */
+.vu-raison {
+  color: var(--vu-encre);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+}
+.vu-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15em 0.6em;
+  margin-block: 0.15em 0.45em;
+}
+.vu-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  white-space: nowrap;
+}
+.vu-une-ligne {
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------------------------------------ Pastilles */
+.app-main[data-module='vulnerabilites'] .pc-puce {
+  padding: 0.25em 0.7em;
+  border: 0;
+  background: color-mix(in srgb, var(--pc-c) 10%, var(--pc-boite));
+  font-weight: 700;
+}
+.app-main[data-module='vulnerabilites'] .mantine-Badge-root {
+  font-weight: 700;
+}
+.app-main[data-module='vulnerabilites'] .mantine-Badge-root[data-variant='light'] {
+  border-width: 0;
+}
+.app-main[data-module='vulnerabilites'] .pc-prio {
+  border-width: var(--vu-trait-2);
+  font-weight: 800;
+}
+.app-main[data-module='vulnerabilites'] :is(.veille-code, .pc-mono, .horodatage) {
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------------------------------------ Mouvements */
+@media (prefers-reduced-motion: no-preference) {
+  .vu-reacteur__anneau,
+  .vu-reacteur__graduations {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+  }
+  .vu-reacteur__anneau {
+    animation: vu-orbite 32s linear infinite;
+  }
+  .vu-reacteur__graduations {
+    animation: vu-orbite 55s linear infinite reverse;
+  }
+  .vu-reacteur__satellite {
+    animation: vu-souffle 3s ease-in-out infinite;
+  }
+  .vu-cran__halo {
+    animation: vu-halo 2.4s ease-in-out infinite;
+  }
+  .vu-case__ondes i {
+    animation: vu-onde 1.5s ease-in-out infinite;
+  }
+  .vu-case__ondes i:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .vu-case__ondes i:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+  .vu-case__ondes i:nth-child(4) {
+    animation-delay: 0.45s;
+  }
+  .vu-case--active::after {
+    animation: vu-trace 3.2s ease-in-out infinite;
+  }
+}
+@keyframes vu-orbite {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes vu-souffle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes vu-halo {
+  0%,
+  100% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+@keyframes vu-onde {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes vu-trace {
+  0% {
+    transform: translateX(-30%);
+    opacity: 0;
+  }
+  20%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(330%);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vu-reacteur *,
+  .vu-reacteur,
+  .vu-case__ondes i,
+  .vu-case--active::after {
+    animation: none !important;
+  }
+}
+@media print {
+  .vu-reacteur *,
+  .vu-reacteur,
+  .vu-case__ondes i,
+  .vu-case--active::after {
+    animation: none !important;
+  }
+}

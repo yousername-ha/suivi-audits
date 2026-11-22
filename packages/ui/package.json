@@ -40,7 +40,8 @@
     "./neon-recherche.css": "./src/neon-recherche.css",
     "./neon-ergonomie.css": "./src/neon-ergonomie.css",
     "./neon-tendances.css": "./src/neon-tendances.css",
-    "./neon-veille.css": "./src/neon-veille.css"
+    "./neon-veille.css": "./src/neon-veille.css",
+    "./neon-vulnerabilites.css": "./src/neon-vulnerabilites.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
