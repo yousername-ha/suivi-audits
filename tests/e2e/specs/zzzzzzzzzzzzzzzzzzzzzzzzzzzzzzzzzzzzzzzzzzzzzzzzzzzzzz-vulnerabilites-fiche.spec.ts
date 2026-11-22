@@ -7,6 +7,7 @@
    droits, la non-fuite et la règle des sources sur des données rangées sont couverts par les tests de l'API et de
    l'interface (apps/api/test/vulnerabilites-fiches.test.ts, apps/web/test/vulnerabilites-fiche-faille.test.ts). */
 import AxeBuilder from '@axe-core/playwright';
+import type { FicheFailleDto } from '../../../packages/shared/src/fiche-faille-vulnerabilites';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
 
@@ -32,6 +33,8 @@ const FICHE = {
   nature: 'cve',
   cves: [CVE],
   nombreCves: 1,
+  delai: null,
+  exception: null,
   composant: 'editeur_fictif produit_fictif',
   priorite: {
     niveau: 'P3',
@@ -73,7 +76,7 @@ const FICHE = {
     alh: [],
     alhTronquees: false,
   },
-};
+} satisfies FicheFailleDto;
 
 for (const [mode, scheme] of [
   ['clair', 'light'],

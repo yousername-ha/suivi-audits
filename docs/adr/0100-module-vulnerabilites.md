@@ -4079,6 +4079,17 @@ dépendance, aucune extension de PostgreSQL. **Trois hôtes nouveaux en sortie**
 `scripts/exploitation-worker.py` modifié sur le modèle existant (à relire par la session Coeur) ; `scripts/update-worker.py`,
 `docker*` et `apps/*/src/assistant/*` inchangés.
 
+### Hôtes nouveaux autorisés par le RSSI
+
+| Hôte | Décision | Ce qui sort |
+| --- | --- | --- |
+| `cveawg.mitre.org` (cve.org) | 19/11/2026 : consultation de cve.org et de NVD sur clic pour une CVE inconnue de la veille ([reprise du 20/11/2026](../01_REPRISE_IA/REPRISE-2026-11-20.md), § 3, point 5) ; évaluation SSVC de la CISA ajoutée le 20/11/2026 ; lot retenu pour réalisation le 22/11/2026 | l'identifiant de la CVE consultée, sur clic |
+| `radar.cloudflare.com` (Cloudflare Radar) | 20/11/2026 : préavis lu toutes les 15 minutes, filtre « produits surveillés + critiques », remplacé à l'arrivée de la CVE ; briefings Zero Wire exclus le 22/11/2026 ; lot retenu le 22/11/2026 | aucun paramètre (lecture du flux JSON) |
+| `tldrcve.com` (tldrcve) | 20/11/2026 : source facultative, cartes construites par la plateforme dans le thème du module à partir du contenu du flux ; « tldrcve seul » confirmé le 22/11/2026 ; lot retenu le 22/11/2026 | aucun paramètre (lecture du flux RSS) |
+
+Les trois sont sous le flux « veille-vulnerabilites » (fermé par défaut, ADR 0097) ; les deux dernières sources sont en plus
+désactivées au départ. Dates relevées dans les échanges de la session avec le RSSI.
+
 ### Décisions du RSSI (19, 20 et 22/11/2026)
 
 A. **CVE inconnue de la veille** (recherche d'une CVE absente des données locales), sur clic, jamais automatiquement :

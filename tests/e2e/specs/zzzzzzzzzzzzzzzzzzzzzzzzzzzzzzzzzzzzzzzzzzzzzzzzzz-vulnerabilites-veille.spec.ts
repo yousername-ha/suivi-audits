@@ -5,6 +5,7 @@
    Lot L1 : alertes et avis en liste aérée, pastilles de source, fiche d'une alerte et CVE citées, en clair et en sombre, à
    1 366 et 390 px ; lectures remplacées par des données fictives (`page.route`, rien n'atteint la base ni n'y est écrit). */
 import AxeBuilder from '@axe-core/playwright';
+import type { FicheFailleDto } from '../../../packages/shared/src/fiche-faille-vulnerabilites';
 import { expect, test } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
 
@@ -89,6 +90,8 @@ const FICHE_CVE = {
   nature: 'cve',
   cves: ['CVE-2026-90001'],
   nombreCves: 1,
+  delai: null,
+  exception: null,
   composant: 'Passerelle fictive',
   priorite: {
     niveau: 'P4',
@@ -127,7 +130,7 @@ const FICHE_CVE = {
     alh: [],
     alhTronquees: false,
   },
-};
+} satisfies FicheFailleDto;
 
 for (const [mode, scheme, largeur] of [
   ['clair', 'light', 1366],

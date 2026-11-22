@@ -10,8 +10,10 @@ import { SOURCES_ANNONCES_DEFINITIONS } from './annonces-veille.js';
 import { SOURCE_CVE_ORG } from './cve-inconnue.js';
 import { SOURCES_VEILLE_DEFINITIONS } from './veille-vulnerabilites.js';
 
-/** Lot CVE-INC (ADR 0100) : hôtes nouveaux du flux « veille-vulnerabilites », joints seulement sur le clic d'une personne
-    (cve.org) ou si la source facultative est activée (Cloudflare Radar, tldrcve). */
+/** Lot CVE-INC (ADR 0100, addendum « lot CVE-INC », tableau « Hôtes nouveaux autorisés par le RSSI ») : hôtes nouveaux du
+    flux « veille-vulnerabilites », joints seulement sur le clic d'une personne (cve.org, décision du RSSI du 19/11/2026) ou si
+    la source facultative est activée (Cloudflare Radar, décision du 20/11/2026 ; tldrcve, décision du 20/11/2026 ; lot retenu
+    le 22/11/2026). */
 export const HOTES_VEILLE_COMPLEMENTAIRES: readonly { hote: string; organisme: string }[] = [
   { hote: SOURCE_CVE_ORG.hote, organisme: SOURCE_CVE_ORG.organisme },
   ...SOURCES_ANNONCES_DEFINITIONS.map((s) => ({ hote: s.hote, organisme: s.organisme })),
