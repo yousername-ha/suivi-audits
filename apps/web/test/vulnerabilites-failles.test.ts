@@ -16,6 +16,7 @@ import { ficheFaille } from './fiche-faille-fixture';
 import { BandeauSansRole, DepotsTenableTable, MachinesTable } from '../src/vulnerabilites/Machines';
 import {
   corpsAffectation,
+  faitsListe,
   FILTRES_CONSTATS_VIDES,
   FILTRES_MACHINES_VIDES,
   groupesParRole,
@@ -304,12 +305,15 @@ describe('rendu', () => {
         onOuvrir: rien,
       }),
     );
-    expect(html).toContain('Exploitée (KEV)');
+    // Ligne allégée (choix du RSSI du 22/11/2026) : un seul fait par sujet, sans le détail des sources (donné par la fiche).
+    expect(html).toContain('Exploitation avérée');
+    expect(html).not.toContain('Exploitée (KEV)');
     expect(html).toContain('CVE-2026-90005, CVE-2026-90004 et 5 autres');
-    // Lot V4a : priorité calculée, ses faits en clair, mention « détecté par Tenable ».
+    // Lot V4a : priorité calculée et sa raison courte ; la source reste nommée (pastille et nom, type lu à l'écran).
     expect(html).toContain('>P1<');
-    expect(html).toContain('Exploitation avérée (catalogue KEV) · Détectée par Tenable');
-    expect(html).toContain('Détecté par Tenable');
+    expect(html).toMatch(/class="[^"]*vu-raison[^"]*">Exploitation avérée</);
+    expect(html).not.toContain('Exploitation avérée (catalogue KEV)');
+    expect(html).toMatch(/Source : <\/span>Tenable fictif<span[^>]*> \(Tenable Security Center\)/);
     expect(html).toContain('&lt;img src=x');
     expect(html).not.toContain('<img');
     expect(rendu(createElement(ConstatsTable, { constats: [], onOuvrir: rien }))).toContain('Aucune faille détectée');
@@ -341,11 +345,12 @@ describe('rendu', () => {
     expect(marquesConstat(malware)[0]!.etat).toBe('erreur');
     const html = rendu(createElement(ConstatsTable, { constats: [malware], onOuvrir: rien }));
     expect(html).toContain('>P1<');
-    expect(html).toContain('Logiciel malveillant (Tenable)');
+    // Ligne allégée (choix du RSSI du 22/11/2026) : l'exploitation avérée une seule fois, sa source dans la fiche.
+    expect(faitsListe(malware).map((m) => m.libelle)).toEqual(['Exploitation avérée', 'Exploitable']);
+    expect(html).toContain('Exploitation avérée');
     expect(html).not.toContain('Exploited by malware');
-    expect(html).toContain('Exploitation avérée (Logiciel malveillant (Tenable)) · Détectée par Tenable');
-    expect(html).toContain('Exploitation avérée (1 source)');
-    expect(html).toContain('d’abord Logiciel malveillant (Tenable)');
+    expect(html).not.toContain('Logiciel malveillant (Tenable)');
+    expect(html).not.toContain('Exploitation avérée (1 source)');
     const ficheHtml = rendu(createElement(FicheConstat, { c: fiche({ ...malware }) }));
     expect(ficheHtml).toContain('Exploitée par un logiciel malveillant selon Tenable (« Exploited by malware »)');
     expect(ficheHtml).toContain(
