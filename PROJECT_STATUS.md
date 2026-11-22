@@ -3,17 +3,27 @@
 > **22/11/2026** : versions 7.5.0 et 7.5.1 publiées (module Vulnérabilités : PERF, outils de l'assistant, règles de priorité,
 > rapport de l'Active Directory, veille réglementaire première tranche). Sur `claude-suivi-smsi`, non publiés : ACR et AES de
 > Tenable (migration `100`), dictionnaire CPE de la NVD (migration `101`), correctif de la page « Machines », pagination
-> nommée. 7.6.0 en préparation avec les fiches sobres. Détail et file : [reprise du 22/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-22.md).
+> nommée. 7.6.0 préparée le 22/11 au soir avec les fiches sobres (voir ci-dessous). Détail et file : [reprise du 22/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-22.md).
+>
+> **22/11/2026 — version 7.6.0 (session Coeur)** : préparée le soir du 22/11 à la demande du RSSI (« tout dans main ce
+> soir »). Contenu : fiches sobres et refonte Neon compacte (PR 363 et 358, **validées par le RSSI le 22/11/2026** :
+> habillage, captures de référence et tests modifiés), aspect graphique du module Vulnérabilités (PR 366), ACR et AES de
+> Tenable (PR 359, migration `100`), recherche CPE (PR 362, migration `101`) et veille active du service de mise à jour
+> (PR 360), correctifs regroupés de Tenable (PR 365, migration `102`), jeu de démonstration du module Vulnérabilités
+> (PR 364), performance du socle (PR 361). L'étiquette `v7.6.0` est posée par le RSSI. Reportés : alerte précoce sur les
+> CVE inconnues, veille réglementaire tranche 2. Reste à faire côté socle : mesurer les délais réels de la veille active
+> de la recherche CPE ; rendre visible un acquittement (`--acquitter`) refusé parce qu'un passage de l'exécutant tient
+> le verrou ; décider si le jeu de démonstration doit laisser ses alertes critiques en attente.
 >
 > **22/11/2026 — fiches sobres et harmonisation de l'interface Neon (session Coeur)** : branche `claude/fiches-sobres`
-> (elle contient `claude/refonte-neon-compacte`), PR de travail vers `claude-suivi-smsi`, **sans fusion, publication ni
-> mise en production**. [Résumé technique](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md),
+> (elle contient `claude/refonte-neon-compacte`), **validée par le RSSI et fusionnée le 22/11/2026 (PR 363), livrée en
+> 7.6.0**. [Résumé technique](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md),
 > [recette](docs/refonte-neon/integration-fiches-sobres-2026-11-22/RECETTE.md) et
 > [captures](docs/refonte-neon/integration-fiches-sobres-2026-11-22/captures/README.md). Habillage sobre validé par le
 > RSSI et aides contextuelles repris de la livraison Codex `0ac9992d` ; moteur des fiches terminé (élargissement sur
 > écran de bureau, parties nommées par leur premier champ, « Sécurité » découpée, journaux et longs tableaux en
-> défilement). **Attendu du RSSI** : validation graphique sur les captures (clair, sombre, normal, compact), des six
-> captures de référence modifiées et du test de bout en bout étendu. La suite graphique revient à la session Neon.
+> défilement). Validation du RSSI donnée le 22/11/2026.
+> La suite graphique revient à la session Neon.
 >
 > **22/11/2026 — refonte Neon compacte intégrée et recettée sur pile réelle (session Coeur)** : branche
 > `claude/refonte-neon-compacte`, PR de travail vers `claude-suivi-smsi`, **sans fusion ni déploiement**.

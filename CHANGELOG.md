@@ -2,12 +2,21 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
-## [Non publié]
+## [7.6.0] — 2026-11-22
 
 ### Notes de mise à jour
 
-**En bref.** Refonte d'apparence (« Neon compacte ») : aucune migration, aucune dépendance nouvelle, aucun changement du
-contrat de l'API, aucune commande sur le serveur. À la mise à jour, l'interface est reconstruite avec l'image.
+**En bref.** Trois migrations automatiques additives (`100`, `101`, `102`), sans reprise de données : aucune commande
+sur le serveur, aucune action dans l'application ; sauvegarde habituelle avant la mise à jour. Aucun flux nouveau vers
+l'extérieur n'est ouvert par la mise à jour : la recherche dans le dictionnaire CPE reste désactivée tant que vous ne
+l'activez pas, et les correctifs regroupés de Tenable sont lus par le même appel que les failles. Ce que vous verrez :
+des fenêtres à l'habillage sobre, plus larges sur un écran de bureau et sans défilement vertical ; l'aide d'un champ
+derrière un bouton ; dans le module Vulnérabilités, la criticité et l'exposition des machines selon Tenable, la saisie
+assistée d'un produit surveillé, les correctifs regroupés de Tenable et un nouvel aspect graphique ; un jeu de
+démonstration qui remplit ce module ; des pages plus rapides pour qui n'est pas administrateur.
+
+**Apparence.** Refonte « Neon compacte » et fiches sobres (validées par le RSSI le 22/11/2026) : aucune dépendance
+nouvelle, aucun changement du contrat de l'API. À la mise à jour, l'interface est reconstruite avec l'image. À la mise à jour, l'interface est reconstruite avec l'image.
 Les préférences explicites de taille et le mode mural sont conservés. L'essai « boîte d'outils claire ou bleu nuit » de
 « Mon compte » disparaît : la boîte est bleu nuit dans les deux thèmes.
 Dossiers : [fiches sobres et harmonisation du 22/11/2026](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md),
@@ -39,6 +48,10 @@ Autres changements de cette version :
   mesurer.
 - Jeu de démonstration enrichi pour le module Vulnérabilités : sans migration ; sans effet sur une instance déjà en
   service (le jeu ne se charge que sur une instance vide).
+- Migration automatique additive `102` (deux tables des correctifs regroupés de Tenable et une colonne de l'état de la
+  synchronisation, vides au départ), sans reprise de données : aucune commande sur le serveur, aucune action dans
+  l'application. Les correctifs regroupés sont lus à la prochaine synchronisation de Tenable Security Center (une ou
+  quelques pages de plus de la même analyse, en lecture seule) ; rien ne change pour l'import d'un fichier `.nessus`.
 
 ### Ajouté
 
@@ -53,13 +66,6 @@ Autres changements de cette version :
   l'organisation et à ses deux sites fictifs. Aucun appel ne part vers Tenable : l'intégration reste inactive, le flux
   reste fermé, rien n'est planifié. Si le module Vulnérabilités ou Intégrations est désactivé, cette partie est
   simplement sautée (session « Projet audit_suivi Coeur »).
-- Migration automatique additive `102` (deux tables des correctifs regroupés de Tenable et une colonne de l'état de la
-  synchronisation, vides au départ), sans reprise de données : aucune commande sur le serveur, aucune action dans
-  l'application. Les correctifs regroupés sont lus à la prochaine synchronisation de Tenable Security Center (une ou
-  quelques pages de plus de la même analyse, en lecture seule) ; rien ne change pour l'import d'un fichier `.nessus`.
-
-### Ajouté
-
 - Vulnérabilités, **correctifs regroupés de Tenable dans « Quoi faire »** (lot QF-TEN, demande du RSSI du 22/11/2026,
   [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : la synchronisation de Tenable Security Center lit aussi la vue
   `sumremediation` de l'analyse (même appel `POST /rest/analysis`, mêmes filtres que les failles), en liste blanche stricte
