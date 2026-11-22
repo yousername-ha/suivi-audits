@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Destinataires des notifications (Administration, Plateforme) : réglage par groupe ou par rôle (« profil »), aperçu « qui
    recevrait quoi » avec l'origine de chaque destinataire et les exclusions personnelles. Les réglages d'un compte se font
    depuis sa fiche (Utilisateurs) ; chaque personne règle les siens dans Mon compte. Un réglage personnel l'emporte toujours
@@ -155,7 +156,7 @@ function Apercu() {
       <Title order={3} size="h5">
         Qui recevrait quoi
       </Title>
-      <Group align="flex-end">
+      <BarreFiltres label="Notifications">
         <Select
           label="Type de notification"
           data={NOTIFICATION_TYPES.map((t) => ({ value: t.id, label: t.label }))}
@@ -170,7 +171,7 @@ function Apercu() {
           allowDeselect={false}
           onChange={(v) => v && setCanal(v as NotificationCanal)}
         />
-      </Group>
+      </BarreFiltres>
       <ErrorAlert error={q.error} />
       {d && (
         <>

@@ -15,7 +15,7 @@
 import path from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 const FIXTURES = path.resolve(import.meta.dirname, '../../fixtures/silene');
 const RAPPORT1 = path.join(FIXTURES, 'rapport-fictif-1.json');
@@ -195,6 +195,7 @@ for (const [mode, scheme, largeur] of [
       await constatsHote.getByRole('button', { name: 'Fermer la fenêtre', exact: true }).click();
       await expect(constatsHote).toBeHidden();
       // Regroupement par adresse IP : tout replier, puis déplier la branche 192.0.2.10 jusqu'à ses noms.
+      await ouvrirFiltres(page, 'Regrouper par');
       const regrouper = page.getByRole('combobox', { name: 'Regrouper par', exact: true });
       await regrouper.click();
       await page.getByRole('option', { name: 'Adresse IP publique', exact: true }).click();
@@ -218,11 +219,13 @@ for (const [mode, scheme, largeur] of [
         }),
       ).toBeVisible();
       await axe(page);
+      await ouvrirFiltres(page, 'Regrouper par');
       await page.getByRole('button', { name: 'Effacer le filtre par nom', exact: true }).click();
       await expect(page.getByRole('textbox', { name: 'Nom de domaine ou adresse IP', exact: true })).toHaveValue('');
       // La vue (regroupement) est gardée pendant la navigation dans la page.
       await page.getByRole('tab', { name: 'Actifs', exact: true }).click();
       await page.getByRole('tab', { name: 'Carte', exact: true }).click();
+      await ouvrirFiltres(page, 'Regrouper par');
       await expect(page.getByRole('combobox', { name: 'Regrouper par', exact: true })).toHaveValue(
         'Adresse IP publique',
       );

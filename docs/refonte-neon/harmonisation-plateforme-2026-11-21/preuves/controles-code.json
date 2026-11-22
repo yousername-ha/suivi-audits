@@ -1,0 +1,322 @@
+{
+  "date": "2026-11-21",
+  "fuseau": "Europe/Paris",
+  "parent": "919ffa8129143e42e536b6e8f6690906ed6c535c",
+  "environnement": {
+    "node": "26.13.0",
+    "chromium": "151.0.7922.173",
+    "api": "interceptée, données fictives"
+  },
+  "controles": [
+    {
+      "controle": "typecheck-ui",
+      "cwd": "<racine>",
+      "commandes": [
+        [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "packages/ui/tsconfig.json",
+          "--noEmit"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 9.14
+    },
+    {
+      "controle": "lint",
+      "cwd": "<racine>",
+      "commandes": [
+        [
+          "node",
+          "node_modules/eslint/bin/eslint.js",
+          "apps/web/src/carto/Construire.tsx",
+          "apps/web/src/carto/Dialogues.tsx",
+          "apps/web/src/components/BarreFiltres.tsx",
+          "apps/web/src/components/BarreOutils.tsx",
+          "apps/web/src/components/DispositionTableauDeBord.tsx",
+          "apps/web/src/components/Layout.tsx",
+          "apps/web/src/components/TableauDeBord.tsx",
+          "apps/web/src/components/TableauxDeBord.tsx",
+          "apps/web/src/config-grc/ConfigurationGrc.tsx",
+          "apps/web/src/grc/ObjectEditor.tsx",
+          "apps/web/src/grc/Relations.tsx",
+          "apps/web/src/incidents/Incidents.tsx",
+          "apps/web/src/main.tsx",
+          "apps/web/src/pages/Account.tsx",
+          "apps/web/src/pages/Admin.tsx",
+          "apps/web/src/pages/AdminJournauxTechniques.tsx",
+          "apps/web/src/pages/AdminNotifications.tsx",
+          "apps/web/src/pages/AdminOperations.tsx",
+          "apps/web/src/pages/Cartographie.tsx",
+          "apps/web/src/pages/Grc.tsx",
+          "apps/web/src/pages/Help.tsx",
+          "apps/web/src/pilotage/Couverture.tsx",
+          "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+          "apps/web/src/pilotage/Decision.tsx",
+          "apps/web/src/pilotage/EvaluationsClausier.tsx",
+          "apps/web/src/pilotage/Fields.tsx",
+          "apps/web/src/pilotage/Plans.tsx",
+          "apps/web/src/pilotage/RecordEditor.tsx",
+          "apps/web/src/processus/FicheCarteProcessus.tsx",
+          "apps/web/src/registres/AccesSujets.tsx",
+          "apps/web/src/veille-reglementaire/VeilleReglementaire.tsx",
+          "apps/web/src/vulnerabilites/Alertes.tsx",
+          "apps/web/src/vulnerabilites/CarteSurface.tsx",
+          "apps/web/src/vulnerabilites/Correctifs.tsx",
+          "apps/web/src/vulnerabilites/DelaisExceptions.tsx",
+          "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+          "apps/web/src/vulnerabilites/Machines.tsx",
+          "apps/web/src/vulnerabilites/Perimetres.tsx",
+          "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+          "apps/web/src/vulnerabilites/Rapport.tsx",
+          "apps/web/src/vulnerabilites/RechercheVulnerabilites.tsx",
+          "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+          "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+          "apps/web/src/vulnerabilites/SurfaceSilene.tsx",
+          "apps/web/src/vulnerabilites/Tendances.tsx",
+          "apps/web/src/vulnerabilites/Veille.tsx",
+          "apps/web/test/harmonisation-outils.test.tsx",
+          "packages/ui/src/components.tsx",
+          "packages/ui/src/theme.ts",
+          "tests/e2e/helpers.ts",
+          "tests/e2e/specs/recette-cartographie.spec.ts",
+          "tests/e2e/specs/zzzzzzzzz-plans.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzz-audit-suivi.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-journal-audit.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-failles.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-surface.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-alertes.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-perimetres.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-vue.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-delais.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-tendances.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-correctifs.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-import-silene.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-import-nessus.spec.ts",
+          "--max-warnings",
+          "0"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 10.9
+    },
+    {
+      "controle": "format",
+      "cwd": "<racine>",
+      "commandes": [
+        [
+          "node",
+          "node_modules/prettier/bin/prettier.cjs",
+          "--check",
+          "apps/web/src/carto/Construire.tsx",
+          "apps/web/src/carto/Dialogues.tsx",
+          "apps/web/src/components/BarreFiltres.tsx",
+          "apps/web/src/components/BarreOutils.tsx",
+          "apps/web/src/components/DispositionTableauDeBord.tsx",
+          "apps/web/src/components/Layout.tsx",
+          "apps/web/src/components/TableauDeBord.tsx",
+          "apps/web/src/components/TableauxDeBord.tsx",
+          "apps/web/src/config-grc/ConfigurationGrc.tsx",
+          "apps/web/src/grc/ObjectEditor.tsx",
+          "apps/web/src/grc/Relations.tsx",
+          "apps/web/src/incidents/Incidents.tsx",
+          "apps/web/src/main.tsx",
+          "apps/web/src/pages/Account.tsx",
+          "apps/web/src/pages/Admin.tsx",
+          "apps/web/src/pages/AdminJournauxTechniques.tsx",
+          "apps/web/src/pages/AdminNotifications.tsx",
+          "apps/web/src/pages/AdminOperations.tsx",
+          "apps/web/src/pages/Cartographie.tsx",
+          "apps/web/src/pages/Grc.tsx",
+          "apps/web/src/pages/Help.tsx",
+          "apps/web/src/pilotage/Couverture.tsx",
+          "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+          "apps/web/src/pilotage/Decision.tsx",
+          "apps/web/src/pilotage/EvaluationsClausier.tsx",
+          "apps/web/src/pilotage/Fields.tsx",
+          "apps/web/src/pilotage/Plans.tsx",
+          "apps/web/src/pilotage/RecordEditor.tsx",
+          "apps/web/src/processus/FicheCarteProcessus.tsx",
+          "apps/web/src/registres/AccesSujets.tsx",
+          "apps/web/src/veille-reglementaire/VeilleReglementaire.tsx",
+          "apps/web/src/vulnerabilites/Alertes.tsx",
+          "apps/web/src/vulnerabilites/CarteSurface.tsx",
+          "apps/web/src/vulnerabilites/Correctifs.tsx",
+          "apps/web/src/vulnerabilites/DelaisExceptions.tsx",
+          "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+          "apps/web/src/vulnerabilites/Machines.tsx",
+          "apps/web/src/vulnerabilites/Perimetres.tsx",
+          "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+          "apps/web/src/vulnerabilites/Rapport.tsx",
+          "apps/web/src/vulnerabilites/RechercheVulnerabilites.tsx",
+          "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+          "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+          "apps/web/src/vulnerabilites/SurfaceSilene.tsx",
+          "apps/web/src/vulnerabilites/Tendances.tsx",
+          "apps/web/src/vulnerabilites/Veille.tsx",
+          "apps/web/test/harmonisation-outils.test.tsx",
+          "packages/ui/package.json",
+          "packages/ui/src/components.tsx",
+          "packages/ui/src/neon-ergonomie.css",
+          "packages/ui/src/neon-fenetres.css",
+          "packages/ui/src/neon-harmonisation.css",
+          "packages/ui/src/theme.ts",
+          "tests/e2e/helpers.ts",
+          "tests/e2e/specs/recette-cartographie.spec.ts",
+          "tests/e2e/specs/zzzzzzzzz-plans.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzz-audit-suivi.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-journal-audit.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-failles.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-surface.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-alertes.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-perimetres.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-vue.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-delais.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-tendances.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-correctifs.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-import-silene.spec.ts",
+          "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-import-nessus.spec.ts"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 12.75
+    },
+    {
+      "controle": "tests-ui",
+      "cwd": "<racine>/packages/ui",
+      "commandes": [
+        [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--maxWorkers=2"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 4.8
+    },
+    {
+      "controle": "build-web",
+      "cwd": "<racine>/apps/web",
+      "commandes": [
+        [
+          "node",
+          "scripts/mantine-css-vars.ts"
+        ],
+        [
+          "node",
+          "node_modules/vite/bin/vite.js",
+          "build"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 7.23
+    },
+    {
+      "controle": "typecheck-web",
+      "cwd": "<racine>",
+      "commandes": [
+        [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "apps/web/tsconfig.json",
+          "--noEmit"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 76.48
+    },
+    {
+      "controle": "tests-web",
+      "cwd": "<racine>/apps/web",
+      "commandes": [
+        [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--maxWorkers=2"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 94.52
+    },
+    {
+      "controle": "finition-format",
+      "cwd": "<racine>",
+      "commandes": [
+        [
+          "node",
+          "node_modules/prettier/bin/prettier.cjs",
+          "--check",
+          "packages/ui/src/neon-harmonisation.css",
+          "packages/ui/src/theme.ts"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 0.35
+    },
+    {
+      "controle": "finition-build",
+      "cwd": "<racine>/apps/web",
+      "commandes": [
+        [
+          "node",
+          "scripts/mantine-css-vars.ts"
+        ],
+        [
+          "node",
+          "node_modules/vite/bin/vite.js",
+          "build"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 2.83
+    },
+    {
+      "controle": "finition-tests-ui",
+      "cwd": "<racine>/packages/ui",
+      "commandes": [
+        [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--maxWorkers=2"
+        ]
+      ],
+      "codeRetour": 0,
+      "dureeSecondes": 3.09
+    },
+    {
+      "controle": "typecheck-e2e",
+      "cwd": "<racine>",
+      "commandes": [
+        [
+          "node",
+          "node_modules/typescript/bin/tsc",
+          "-p",
+          "tests/e2e/tsconfig.json",
+          "--noEmit"
+        ]
+      ],
+      "codeRetour": 0
+    }
+  ],
+  "testsDistincts": {
+    "web": 929,
+    "ui": 285,
+    "total": 1214
+  },
+  "limites": [
+    "Aucune exécution API/base/Docker/E2E serveur",
+    "Pas de validation humaine ni approbation des références visuelles",
+    "Finitions CSS de superposition et de fond du pied : format, build, UI et captures rejoués ; suite web exécutée avant ces finitions, sans changement de logique TS/TSX."
+  ],
+  "codeUiControle": "e29d6f656e3142b870be0a6f5a05ab99b7cd71b3",
+  "raccordementAmont": {
+    "commit": "01130ce47e0e2fa92fb4ef0efc233aff7d965126",
+    "version": "7.5.1",
+    "portee": "Numéros de version, manifeste de publication et CHANGELOG ; sources fonctionnelles web/UI/E2E inchangées."
+  }
+}

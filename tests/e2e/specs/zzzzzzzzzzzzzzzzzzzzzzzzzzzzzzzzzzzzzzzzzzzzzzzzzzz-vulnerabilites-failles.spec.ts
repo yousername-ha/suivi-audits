@@ -10,7 +10,7 @@
    remise à sa valeur d'origine en fin de parcours, même en cas d'échec. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { csrfOf, sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, csrfOf, sessionAdmin, watchPage } from '../helpers';
 
 test('Vulnérabilités : failles détectées par faille et par machine, écran des machines', async ({ browser }) => {
   const session = await sessionAdmin(browser);
@@ -28,16 +28,19 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     await page.goto('/vulnerabilites/failles');
     await expect(page.getByRole('heading', { name: 'Failles détectées', level: 1 })).toBeVisible();
     await expect(page.getByText('Aucune faille détectée ne correspond')).toBeVisible();
+    await ouvrirFiltres(page, 'Exploitation avérée');
     await page.getByLabel('Exploitation avérée').check();
     await expect(page.getByText('Aucune faille détectée ne correspond')).toBeVisible();
+    await ouvrirFiltres(page, 'Priorité');
     await expect(page.getByRole('combobox', { name: 'Priorité', exact: true })).toBeVisible();
+    await ouvrirFiltres(page, 'Suivi');
     await expect(page.getByRole('combobox', { name: 'Suivi', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Failles déclarées/ })).toBeVisible();
     await expect(page.getByText('Aucune faille déclarée ne correspond')).toBeVisible();
     // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
     await page.waitForTimeout(400);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
-    await page.getByText('Par machine', { exact: true }).click();
+    await page.getByRole('button', { name: 'Par machine', exact: true }).click();
     await expect(page.getByText('Aucune machine ne correspond')).toBeVisible();
 
     await page.getByRole('link', { name: 'Machines', exact: true }).first().click();
@@ -69,8 +72,8 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     // Lot PRIO-1 : le triangle dit « exploitation avérée » ; « zero-day » est réservé aux failles sans correctif connu.
     await expect(page.getByRole('list', { name: 'Légende des marques' })).toContainText('Exploitation avérée');
     await expect(page.getByRole('list', { name: 'Légende des marques' })).toContainText('sans correctif connu');
-    const presentation = page.getByRole('radiogroup', { name: 'Présentation des machines' });
-    await presentation.getByText('Parc', { exact: true }).click();
+    const presentation = page.getByRole('group', { name: 'Présentation des machines' });
+    await presentation.getByRole('button', { name: 'Parc', exact: true }).click();
     for (const zone of ['Front', 'Back applicatif', 'Base de données', 'Rôle non indiqué'])
       await expect(page.getByRole('heading', { name: zone, level: 3, exact: true })).toBeVisible();
     await expect(page.getByText('Frontière front · back', { exact: true })).toBeVisible();
@@ -79,6 +82,7 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     await expect(page.getByRole('group', { name: 'Affectation des machines choisies' })).toHaveCount(0);
     // Les filtres restent.
     await expect(page.getByRole('textbox', { name: 'Rechercher', exact: true })).toBeVisible();
+    await ouvrirFiltres(page, 'Rôle');
     await expect(page.getByRole('combobox', { name: 'Rôle', exact: true })).toBeVisible();
     await page.waitForTimeout(400);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
@@ -92,8 +96,8 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
     await page.getByRole('radiogroup', { name: 'Échelle du parc' }).getByText('Réduit', { exact: true }).click();
     await expect(page.locator('.parc--reduit')).toBeVisible();
     await page
-      .getByRole('radiogroup', { name: 'Présentation des machines' })
-      .getByText('Liste', { exact: true })
+      .getByRole('group', { name: 'Présentation des machines' })
+      .getByRole('button', { name: 'Liste', exact: true })
       .click();
     await expect(page.getByRole('group', { name: 'Affectation des machines choisies' })).toBeVisible();
 

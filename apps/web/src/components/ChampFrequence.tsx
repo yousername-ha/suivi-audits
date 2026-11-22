@@ -38,6 +38,8 @@ export function ChampFrequence({
           </Text>
         ) : undefined
       }
+      // Un avertissement n'est jamais replié derrière le bouton d'aide des fiches.
+      descriptionProps={{ 'data-aide-permanente': true }}
       inputWrapperOrder={['label', 'input', 'description']}
       value={String(valeur)}
       disabled={disabled}

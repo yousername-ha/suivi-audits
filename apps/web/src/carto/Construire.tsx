@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Construire une carte de zéro (CARTO-15 à CARTO-19, ADR 0026) : palette en glisser-déposer, menu contextuel,
    fenêtre de création d'un objet de la plateforme (enregistré dans son module), renommage, notes et cadres libres,
    sélection multiple (aligner, répartir, grouper). Le menu est dessiné dans la surcouche SVG du canevas
@@ -126,13 +127,15 @@ export function Palette(p: PaletteProps) {
           <Title order={3} size="h6">
             Objets de la plateforme non placés ({p.nonPlaces.length})
           </Title>
-          <TextInput
-            size="xs"
-            aria-label="Rechercher un objet non placé"
-            placeholder="Rechercher"
-            value={q}
-            onChange={(e) => setQ(e.currentTarget.value)}
-          />
+          <BarreFiltres label="Rechercher un objet non placé">
+            <TextInput
+              size="xs"
+              aria-label="Rechercher un objet non placé"
+              placeholder="Rechercher"
+              value={q}
+              onChange={(e) => setQ(e.currentTarget.value)}
+            />
+          </BarreFiltres>
           <div className="carte-palette-liste">
             {libres
               .slice(0, 60)

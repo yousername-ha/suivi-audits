@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lot S2) : onglet « Tendances ». Courbes jour par jour (30 jours) ou semaine après semaine
    (13, 26 ou 52 semaines) des failles présentes par priorité, des failles exploitées, en dépassement, sous exception et
    corrigées, du niveau d'alerte de la plateforme et, pour un périmètre, des machines et actifs touchés ; indicateur
@@ -23,12 +24,12 @@ import {
   FORMES_MARQUES,
   NeonCourbes,
   Page,
-  PageHeader,
   StatusChip,
 } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useId, useState } from 'react';
 import { Link } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan } from '../session';
@@ -93,9 +94,10 @@ export function CourbeTendance({
       <Title order={2} size="h4" id={id}>
         {titre}
       </Title>
-      <Text size="sm" c="dimmed">
-        {description}
-      </Text>
+      <details className="a-propos">
+        <summary>Lire ce graphique</summary>
+        <div className="a-propos__texte">{description}</div>
+      </details>
       <LegendeCourbe series={series} />
       <div className="vt-graphique">
         <NeonCourbes
@@ -150,9 +152,10 @@ export function IndicateurTendance({ tendance }: { tendance: TendancesDto['tenda
         </StatusChip>
       </Group>
       <Text size="sm">{tendance.explication}</Text>
-      <Text size="xs" c="dimmed">
-        {REGLE_TENDANCE}
-      </Text>
+      <details className="a-propos">
+        <summary>Règle de tendance</summary>
+        <div className="a-propos__texte">{REGLE_TENDANCE}</div>
+      </details>
     </section>
   );
 }
@@ -233,13 +236,13 @@ export function TendancesPage() {
   const v = vue.data;
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Tendances"
         description="La situation semaine après semaine (ou jour par jour sur 30 jours) : failles ouvertes par priorité, corrections, dépassements et niveau d’alerte, pour toute la plateforme ou un périmètre que vous lisez. Les nombres de failles sont calculés par la plateforme, les mêmes pour tout le monde. Aucun nom de machine ici."
       />
       <Stack>
         <ErrorAlert error={vue.error} />
-        <Group align="flex-end">
+        <BarreFiltres label="Affichage et filtres">
           <Select
             label="Période"
             allowDeselect={false}
@@ -256,7 +259,7 @@ export function TendancesPage() {
             data={v ? optionsPortee(v) : [{ value: PORTEE_TOUT, label: 'Toute la plateforme' }]}
             comboboxProps={{ withinPortal: false }}
           />
-        </Group>
+        </BarreFiltres>
         {v && (
           <>
             <Text size="xs" c="dimmed">

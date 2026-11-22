@@ -3,7 +3,7 @@
    famille, modification, suppression, accessibilité, CSP. Données fictives. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 test('Vulnérabilités : produits surveillés ajoutés, filtrés, modifiés puis supprimés', async ({ browser }) => {
   const ctx = await browser.newContext({
@@ -59,9 +59,11 @@ test('Vulnérabilités : produits surveillés ajoutés, filtrés, modifiés puis
     await page.keyboard.press('Escape');
     await expect(fiche).toBeHidden();
 
-    // Filtre par famille, appliqué par le serveur.
+    // Filtre par famille, appliqué par le serveur (replié dans le panneau de filtres depuis la refonte du 22/11/2026).
+    await ouvrirFiltres(page, 'Famille');
     await choisir('Famille', 'Réseau');
     await expect(ligne).toHaveCount(0);
+    await ouvrirFiltres(page, 'Famille');
     await choisir('Famille', 'Web');
     await expect(ligne).toBeVisible();
 

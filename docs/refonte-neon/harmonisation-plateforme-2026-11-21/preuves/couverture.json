@@ -1,0 +1,1512 @@
+{
+  "nature": "Inventaire syntaxique de couverture ; il ne remplace pas une recette visuelle de chaque fenêtre.",
+  "fenetres": [
+    {
+      "fichier": "apps/web/src/audit/CycleAudit.tsx",
+      "ligne": 47,
+      "type": "Modal",
+      "titre": "\"Cycle d’audit\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/audit/Organisation.tsx",
+      "ligne": 169,
+      "type": "Modal",
+      "titre": "{ouvert ? `${jourLibelle(plan, ouvert)} ${heureFr(ouvert.start)}` : ''}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/audit/Pronostic.tsx",
+      "ligne": 201,
+      "type": "Modal",
+      "titre": "{ouverte ? `${itemCode(ouverte)} — ${ouverte.title}` : ''}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/carto/Construire.tsx",
+      "ligne": 386,
+      "type": "Modal",
+      "titre": "{titre}",
+      "classes": null,
+      "taille": "\"md\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/carto/Construire.tsx",
+      "ligne": 559,
+      "type": "Modal",
+      "titre": "\"Renommer\"",
+      "classes": null,
+      "taille": "\"md\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/carto/Dialogues.tsx",
+      "ligne": 55,
+      "type": "Modal",
+      "titre": "{view === 'context' ? 'Générer la carte du contexte' : 'Générer la carte des processus'}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/carto/Dialogues.tsx",
+      "ligne": 196,
+      "type": "Modal",
+      "titre": "\"Ajouter depuis la plateforme\"",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/carto/Dialogues.tsx",
+      "ligne": 281,
+      "type": "Modal",
+      "titre": "\"Nouvelle relation\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/carto/Dialogues.tsx",
+      "ligne": 349,
+      "type": "Modal",
+      "titre": "\"Versions de la carte\"",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/carto/Dialogues.tsx",
+      "ligne": 428,
+      "type": "Modal",
+      "titre": "\"Carte modifiée entre-temps\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/components/ClesSecurite.tsx",
+      "ligne": 179,
+      "type": "Modal",
+      "titre": "\"Renommer la clé\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/components/ClesSecurite.tsx",
+      "ligne": 245,
+      "type": "Modal",
+      "titre": "\"Vos codes de récupération\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/components/DispositionTableauDeBord.tsx",
+      "ligne": 155,
+      "type": "Drawer",
+      "titre": "\"Ajouter une dalle\"",
+      "classes": null,
+      "taille": "\"md\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/components/FacteursCompte.tsx",
+      "ligne": 152,
+      "type": "Modal",
+      "titre": "{action?.titre ?? ''}",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/components/FluxExternes.tsx",
+      "ligne": 77,
+      "type": "Modal",
+      "titre": "{`Fermer le flux « ${f.libelle} »`}",
+      "classes": "{{ content: 'fenetre-flux' }}",
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/components/Layout.tsx",
+      "ligne": 389,
+      "type": "Drawer",
+      "titre": "\"Menu\"",
+      "classes": "{{ content: 'nav-tiroir' }}",
+      "taille": "\"xs\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/components/RemiseAVide.tsx",
+      "ligne": 175,
+      "type": "Modal",
+      "titre": "\"Remettre la base à vide\"",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/components/TableauDeBord.tsx",
+      "ligne": 1097,
+      "type": "Drawer",
+      "titre": "{selection?.dalle.titre}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/components/TableauxDeBord.tsx",
+      "ligne": 484,
+      "type": "Modal",
+      "titre": "\"Créer un tableau de bord\"",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/components/ValidationFlux.tsx",
+      "ligne": 123,
+      "type": "Modal",
+      "titre": "{`Activer « ${f.libelle} » : ouvrir son flux`}",
+      "classes": "{{ content: 'fenetre-flux' }}",
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/components/common.tsx",
+      "ligne": 79,
+      "type": "Modal",
+      "titre": "{title}",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+      "ligne": 343,
+      "type": "Modal",
+      "titre": "{`Nouvel élément : ${CFG_KIND_LABELS[kind].toLowerCase()}`}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/config-grc/Fiche.tsx",
+      "ligne": 314,
+      "type": "Modal",
+      "titre": "{`Publier la version ${simulation?.nextVersion ?? ''}`}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/config-grc/Fiche.tsx",
+      "ligne": 426,
+      "type": "Modal",
+      "titre": "\"Créer une variante\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/config-grc/MigrationEtude.tsx",
+      "ligne": 115,
+      "type": "Modal",
+      "titre": "\"Migrer l’étude\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/dda/Dda.tsx",
+      "ligne": 256,
+      "type": "Modal",
+      "titre": "{\n          ouverte ? (\n            <span className=\"dda-modal-titre\">\n              <span className=\"dda-tuile-icone\">\n                <IconeDda type=\"applicabilite\" />\n              </span>\n              <span className=\"dda-modal-libelle\">\n                <span>\n                  {codeMesure(ouverte)} — {ouverte.title}\n                </span>\n                <small>{nom} · Fiche mesure</small>\n              </span>\n            </span>\n          ) : (\n            ''\n          )\n        }",
+      "classes": "{{ content: 'dda-modal' }}",
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/grc/ActionDeTraitement.tsx",
+      "ligne": 52,
+      "type": "Modal",
+      "titre": "\"Générer une action de traitement\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/grc/Ebios.tsx",
+      "ligne": 310,
+      "type": "Modal",
+      "titre": "\"Choisir une source dans la bibliothèque\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+      "ligne": 250,
+      "type": "Modal",
+      "titre": "{`${object ? 'Fiche' : 'Créer'} — ${GRC_LABELS[kind]}`}",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/grc/PlanTraitementRisque.tsx",
+      "ligne": 82,
+      "type": "Modal",
+      "titre": "{risque ? `Plan d’action : ${risque.name}` : ''}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/grc/Risks.tsx",
+      "ligne": 160,
+      "type": "Modal",
+      "titre": "{`Appréciation — ${risk?.name ?? ''}`}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/grc/ValidationRapide.tsx",
+      "ligne": 59,
+      "type": "Modal",
+      "titre": "{occurrence ? 'Résultat de réalisation' : 'Suivi de réalisation'}",
+      "classes": "{{ content: 'validation-rapide' }}",
+      "taille": "\"md\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/incidents/Declarations.tsx",
+      "ligne": 125,
+      "type": "Modal",
+      "titre": "{fiche ? `Fiche de préparation : ${libelleDeclaration(fiche)}` : 'Fiche de préparation'}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/incidents/Declarations.tsx",
+      "ligne": 325,
+      "type": "Modal",
+      "titre": "{ecart ? `Non requise : ${libelleDeclaration(ecart)}` : 'Non requise'}",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/incidents/Declarations.tsx",
+      "ligne": 357,
+      "type": "Modal",
+      "titre": "{envoi ? `Marquer envoyée : ${libelleDeclaration(envoi)}` : 'Marquer envoyée'}",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/incidents/MesContributionsRetex.tsx",
+      "ligne": 294,
+      "type": "Modal",
+      "titre": "\"Modifier mon élément\"",
+      "classes": "{{ content: 'retex-modal' }}",
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/incidents/Retex.tsx",
+      "ligne": 134,
+      "type": "Modal",
+      "titre": "\"Chronologie du RETEX\"",
+      "classes": "{{ content: 'retex-modal' }}",
+      "taille": "défaut",
+      "pleinEcran": "true"
+    },
+    {
+      "fichier": "apps/web/src/incidents/Retex.tsx",
+      "ligne": 173,
+      "type": "Modal",
+      "titre": "\"Ouvrir un RETEX\"",
+      "classes": "{{ content: 'retex-modal' }}",
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/incidents/Retex.tsx",
+      "ligne": 515,
+      "type": "Modal",
+      "titre": "\"Modifier l’événement\"",
+      "classes": "{{ content: 'retex-modal' }}",
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/incidents/Retex.tsx",
+      "ligne": 784,
+      "type": "Modal",
+      "titre": "\"Corriger puis accepter\"",
+      "classes": "{{ content: 'retex-modal' }}",
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/incidents/Retex.tsx",
+      "ligne": 833,
+      "type": "Modal",
+      "titre": "\"Élément déjà connu\"",
+      "classes": "{{ content: 'retex-modal' }}",
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/incidents/Retex.tsx",
+      "ligne": 886,
+      "type": "Modal",
+      "titre": "\"Ne pas retenir la proposition\"",
+      "classes": "{{ content: 'retex-modal' }}",
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/integrations/IntegrationsPage.tsx",
+      "ligne": 467,
+      "type": "Modal",
+      "titre": "{edition?.instance ? `Configurer ${edition.instance.nom}` : `Ajouter : ${edition?.type.libelle ?? ''}`}",
+      "classes": "{{ content: 'fenetre-admin' }}",
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/integrations/IntegrationsPage.tsx",
+      "ligne": 488,
+      "type": "Modal",
+      "titre": "{`Exécutions : ${historique?.nom ?? ''}`}",
+      "classes": "{{ content: 'fenetre-admin' }}",
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/integrations/IntegrationsPage.tsx",
+      "ligne": 500,
+      "type": "Modal",
+      "titre": "{`${importation ? libelleOperation('importer', importation.type) : 'Importer'} : ${importation?.nom ?? ''}`}",
+      "classes": "{{ content: 'fenetre-admin' }}",
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/integrations/IntegrationsPage.tsx",
+      "ligne": 529,
+      "type": "Modal",
+      "titre": "{`Supprimer : ${suppression?.nom ?? ''}`}",
+      "classes": "{{ content: 'fenetre-admin' }}",
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminAccess.tsx",
+      "ligne": 283,
+      "type": "Modal",
+      "titre": "{form?.user ? `Modifier ${form.user.username}` : 'Nouveau compte'}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminAccess.tsx",
+      "ligne": 299,
+      "type": "Modal",
+      "titre": "{`Droits effectifs de ${rightsOf?.username ?? ''}`}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminAccess.tsx",
+      "ligne": 308,
+      "type": "Modal",
+      "titre": "{`Notifications de ${notifsOf?.username ?? ''}`}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminAccess.tsx",
+      "ligne": 325,
+      "type": "Modal",
+      "titre": "{`Facteurs d’authentification de ${facteursOf?.username ?? ''}`}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminAccess.tsx",
+      "ligne": 703,
+      "type": "Modal",
+      "titre": "{edit?.group ? `Modifier le groupe ${edit.group.name}` : 'Nouveau groupe'}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminAccess.tsx",
+      "ligne": 848,
+      "type": "Modal",
+      "titre": "{`Rôle ${matrix?.name ?? ''}`}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminAccess.tsx",
+      "ligne": 851,
+      "type": "Modal",
+      "titre": "{`Dupliquer le rôle ${dup?.name ?? ''}`}",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminCalendriers.tsx",
+      "ligne": 171,
+      "type": "Modal",
+      "titre": "\"Nouveau calendrier\"",
+      "classes": "{{ content: 'fenetre-admin' }}",
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminCalendriers.tsx",
+      "ligne": 215,
+      "type": "Modal",
+      "titre": "{maj ? `Mettre à jour « ${maj.name} »` : ''}",
+      "classes": "{{ content: 'fenetre-admin' }}",
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminCalendriers.tsx",
+      "ligne": 226,
+      "type": "Modal",
+      "titre": "{historique ? `Historique de « ${historique.name} »` : ''}",
+      "classes": "{{ content: 'fenetre-admin' }}",
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminFonctions.tsx",
+      "ligne": 108,
+      "type": "Modal",
+      "titre": "{edit?.fonction ? `Modifier la fonction ${edit.fonction.name}` : 'Nouvelle fonction'}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminOperations.tsx",
+      "ligne": 612,
+      "type": "Modal",
+      "titre": "\"Restaurer cette sauvegarde\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminTypesProcessus.tsx",
+      "ligne": 185,
+      "type": "Modal",
+      "titre": "{edition?.id ? 'Modifier le type' : 'Nouveau type de processus'}",
+      "classes": "{{ content: 'fenetre-admin' }}",
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/Administration.tsx",
+      "ligne": 550,
+      "type": "Modal",
+      "titre": "{ouverte?.titre}",
+      "classes": "{{ content: 'fenetre-admin' }}",
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/Cartographie.tsx",
+      "ligne": 1480,
+      "type": "Modal",
+      "titre": "\"Modifications non enregistrées\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/Documents.tsx",
+      "ligne": 245,
+      "type": "Drawer",
+      "titre": "\"Fiche du document\"",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/Documents.tsx",
+      "ligne": 996,
+      "type": "Modal",
+      "titre": "{edit?.id ? 'Modifier le lien' : 'Ajouter un lien'}",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/Pilotage.tsx",
+      "ligne": 538,
+      "type": "Modal",
+      "titre": "\"Liens et justificatifs\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pages/Pilotage.tsx",
+      "ligne": 627,
+      "type": "Modal",
+      "titre": "\"Planifier les répétitions du contrôle\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/parcours-iso/FicheEtape.tsx",
+      "ligne": 35,
+      "type": "Modal",
+      "titre": "{etape.titre}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/parcours-iso/ParcoursIso.tsx",
+      "ligne": 201,
+      "type": "Modal",
+      "titre": "\"Sources et limites\"",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+      "ligne": 158,
+      "type": "Modal",
+      "titre": "{consulte ? `Exigences de ${consulte.cible.name}` : ''}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+      "ligne": 250,
+      "type": "Modal",
+      "titre": "{cible ? `Nouvelle version de ${cible.name}` : 'Importer un référentiel dans la bibliothèque'}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+      "ligne": 533,
+      "type": "Modal",
+      "titre": "{edite ? `Copie : ${edite.name}` : ''}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+      "ligne": 843,
+      "type": "Modal",
+      "titre": "\"Promouvoir dans la bibliothèque\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/CartesPerimetres.tsx",
+      "ligne": 1048,
+      "type": "Drawer",
+      "titre": "{detailCarte?.name}",
+      "classes": "{{ content: 'perimetre-detail-panneau' }}",
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/ContextPresentation.tsx",
+      "ligne": 261,
+      "type": "Modal",
+      "titre": "{GRC_LABELS.context}",
+      "classes": "{{ root: 'contexte-fenetre', content: 'contexte-presentation', body: 'contexte-presentation-corps' }}",
+      "taille": "\"xl\"",
+      "pleinEcran": "{fullScreen}"
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Couverture.tsx",
+      "ligne": 470,
+      "type": "Modal",
+      "titre": "{ouverte ? `Évaluation de l’exigence ${ouverte.id}` : ''}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+      "ligne": 249,
+      "type": "Modal",
+      "titre": "{formulaire?.edition ? 'Modifier le critère' : 'Définir un critère'}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+      "ligne": 333,
+      "type": "Modal",
+      "titre": "{concernes ? `Fournisseurs concernés par « ${concernes.label} »` : ''}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+      "ligne": 352,
+      "type": "Modal",
+      "titre": "\"Retirer le critère\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Decision.tsx",
+      "ligne": 159,
+      "type": "Modal",
+      "titre": "{OPERATION_LABELS[operation]}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+      "ligne": 147,
+      "type": "Modal",
+      "titre": "{`Processus ${id}`}",
+      "classes": "{{ content: 'objectifs-fiche' }}",
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+      "ligne": 282,
+      "type": "Modal",
+      "titre": "{`Objectif ${id}`}",
+      "classes": "{{ content: 'objectifs-fiche' }}",
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+      "ligne": 474,
+      "type": "Modal",
+      "titre": "{`Indicateur ${id}`}",
+      "classes": "{{ content: 'objectifs-fiche' }}",
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+      "ligne": 174,
+      "type": "Modal",
+      "titre": "\"Ajouter un fournisseur\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+      "ligne": 188,
+      "type": "Modal",
+      "titre": "{fiche ? `Fiche de ${fiche.name}` : ''}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+      "ligne": 191,
+      "type": "Modal",
+      "titre": "{evaluer ? `Évaluer ${evaluer.name}` : ''}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+      "ligne": 199,
+      "type": "Modal",
+      "titre": "{historique ? `Évaluations de ${historique.name}` : ''}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+      "ligne": 207,
+      "type": "Modal",
+      "titre": "{perimetres ? `Périmètres de ${perimetres.name}` : ''}",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/KitIa.tsx",
+      "ligne": 137,
+      "type": "Modal",
+      "titre": "\"Importer le kit d’intégration IA\"",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/KitIa.tsx",
+      "ligne": 227,
+      "type": "Modal",
+      "titre": "\"Veille et annexes du kit IA\"",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/PartiePresentation.tsx",
+      "ligne": 48,
+      "type": "Modal",
+      "titre": "\"Partie intéressée · Consultation\"",
+      "classes": "{{ content: 'partie-presentation', body: 'pi-presentation-body' }}",
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Perimetres.tsx",
+      "ligne": 363,
+      "type": "Modal",
+      "titre": "{formulaire?.edition ? 'Modifier le périmètre' : 'Créer un périmètre'}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Perimetres.tsx",
+      "ligne": 474,
+      "type": "Modal",
+      "titre": "\"Renommer aussi les référentiels ?\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Perimetres.tsx",
+      "ligne": 517,
+      "type": "Modal",
+      "titre": "{referentiels ? `Référentiels du périmètre ${referentiels.name}` : ''}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Perimetres.tsx",
+      "ligne": 526,
+      "type": "Modal",
+      "titre": "{acces ? `Accès au périmètre ${acces.name}` : ''}",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/PlanEcarts.tsx",
+      "ligne": 70,
+      "type": "Modal",
+      "titre": "\"Créer le plan d’action des écarts\"",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Plans.tsx",
+      "ligne": 163,
+      "type": "Modal",
+      "titre": "{ouverte ? `${ouverte.id} — ${PLANS[ouverte.type].plan}` : ''}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/RecordEditor.tsx",
+      "ligne": 238,
+      "type": "Modal",
+      "titre": "{`${object ? (lectureDistincte ? 'Modifier' : 'Fiche') : 'Ajouter'} — ${GRC_LABELS[kind]}`}",
+      "classes": "{{ content: 'fenetre-fiche', body: 'fenetre-fiche-corps' }}",
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Registry.tsx",
+      "ligne": 640,
+      "type": "Modal",
+      "titre": "\"Décisions et réalisations\"",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/SwotMatrice.tsx",
+      "ligne": 508,
+      "type": "Modal",
+      "titre": "{lecture.label}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/pilotage/SwotMatrice.tsx",
+      "ligne": 566,
+      "type": "Modal",
+      "titre": "{`Processus — ${process ? code : ''}`}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/processus/FicheCarteProcessus.tsx",
+      "ligne": 257,
+      "type": "Modal",
+      "titre": "{`${carte.id} · ${carte.name}`}",
+      "classes": "{{ content: 'fenetre-admin' }}",
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/processus/FicheCarteProcessus.tsx",
+      "ligne": 371,
+      "type": "Modal",
+      "titre": "\"Nouveau processus\"",
+      "classes": "{{ content: 'fenetre-admin' }}",
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/processus/ProcessusPresentation.tsx",
+      "ligne": 43,
+      "type": "Modal",
+      "titre": "\"Processus · Consultation\"",
+      "classes": "{{ content: 'processus-studio pr-presentation' }}",
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/registres/Droits.tsx",
+      "ligne": 185,
+      "type": "Modal",
+      "titre": "{apercu ? `Attribuer un droit à ${apercu.titulaire.libelle}` : ''}",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/registres/Registres.tsx",
+      "ligne": 289,
+      "type": "Modal",
+      "titre": "\"Nouveau registre\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/registres/Registres.tsx",
+      "ligne": 558,
+      "type": "Modal",
+      "titre": "\"Modifier les périmètres du registre\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Alertes.tsx",
+      "ligne": 317,
+      "type": "Modal",
+      "titre": "{fiche.data?.titre ?? 'Alerte'}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Correctifs.tsx",
+      "ligne": 376,
+      "type": "Modal",
+      "titre": "{g ? (g.solution ? 'Correctif indiqué par Tenable' : SANS_CORRECTIF_LIBELLE) : 'Correctif'}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Correctifs.tsx",
+      "ligne": 424,
+      "type": "Modal",
+      "titre": "{ficheMachine.data ? libelleMachine(ficheMachine.data) : 'Machine'}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+      "ligne": 821,
+      "type": "Modal",
+      "titre": "{fiche.data?.nom ?? 'Faille détectée'}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+      "ligne": 839,
+      "type": "Modal",
+      "titre": "{ficheDeclaree.data ? `${ficheDeclaree.data.cve} (faille déclarée)` : 'Faille déclarée'}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Machines.tsx",
+      "ligne": 824,
+      "type": "Modal",
+      "titre": "{ouverte ? libelleMachine(ouverte) : 'Machine'}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Perimetres.tsx",
+      "ligne": 415,
+      "type": "Modal",
+      "titre": "{ouverte ? libelleMachine(ouverte) : 'Machine'}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+      "ligne": 286,
+      "type": "Modal",
+      "titre": "{edition?.produit ? `Modifier ${edition.produit.nom}` : 'Ajouter un produit surveillé'}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+      "ligne": 306,
+      "type": "Modal",
+      "titre": "{ouvert ? `${ouvert.nom} ${ouvert.versionProduit}` : 'Produit surveillé'}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+      "ligne": 317,
+      "type": "Modal",
+      "titre": "\"Supprimer un produit surveillé\"",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+      "ligne": 1335,
+      "type": "Modal",
+      "titre": "{fiche.data?.titre ?? 'Alerte AlgoLightHouse'}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+      "ligne": 1452,
+      "type": "Modal",
+      "titre": "{\n          ouvert\n            ? ouvert.alhId\n              ? `Machines internes de ${ouvert.valeur}`\n              : `Actif exposé : ${ouvert.valeur}`\n            : 'Actif exposé'\n        }",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+      "ligne": 1474,
+      "type": "Modal",
+      "titre": "\"Relier en masse les actifs exposés aux machines internes\"",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+      "ligne": 1609,
+      "type": "Modal",
+      "titre": "{ficheAlerte.data?.titre ?? 'Alerte AlgoLightHouse'}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+      "ligne": 1626,
+      "type": "Modal",
+      "titre": "{\n          actif\n            ? actif.alhId\n              ? `Machines internes de ${actif.valeur}`\n              : `Actif exposé : ${actif.valeur}`\n            : 'Actif exposé'\n        }",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+      "ligne": 1648,
+      "type": "Modal",
+      "titre": "{\n          constats\n            ? `Constats Silène de ${constats.hote.valeur}${constats.port ? `, port ${constats.port.port}${constats.port.protocole ? `/${constats.port.protocole}` : ''}` : ''}`\n            : 'Constats Silène'\n        }",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+      "ligne": 1689,
+      "type": "Modal",
+      "titre": "{ficheMachine.data ? libelleMachine(ficheMachine.data) : 'Machine'}",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceSilene.tsx",
+      "ligne": 491,
+      "type": "Modal",
+      "titre": "{ouvert ? `Constat Silène : ${ouvert.controle}` : 'Constat Silène'}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Veille.tsx",
+      "ligne": 740,
+      "type": "Modal",
+      "titre": "{cveOuverte ? `${cveOuverte} (veille)` : 'Faille de la veille'}",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Veille.tsx",
+      "ligne": 751,
+      "type": "Modal",
+      "titre": "{\n          avisOuvert ? `${identifiantAvis(avisOuvert)} (${avisOuvert.nature === 'alerte' ? 'alerte' : 'avis'})` : 'Avis'\n        }",
+      "classes": null,
+      "taille": "\"lg\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/VueEnsemble.tsx",
+      "ligne": 962,
+      "type": "Modal",
+      "titre": "{\n          ouverte?.nature === 'constat'\n            ? (fiche.data?.nom ?? 'Faille détectée')\n            : ouverte?.nature === 'declaree'\n              ? ficheDeclaree.data\n                ? `${ficheDeclaree.data.cve} (faille déclarée)`\n                : 'Faille déclarée'\n              : 'Faille suivie'\n        }",
+      "classes": null,
+      "taille": "\"xl\"",
+      "pleinEcran": false
+    },
+    {
+      "fichier": "packages/ui/src/components.tsx",
+      "ligne": 170,
+      "type": "Modal",
+      "titre": "{title}",
+      "classes": null,
+      "taille": "défaut",
+      "pleinEcran": false
+    }
+  ],
+  "outils": [
+    {
+      "fichier": "apps/web/src/audit/Couverture.tsx",
+      "ligne": 119,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils de la couverture du cycle\""
+    },
+    {
+      "fichier": "apps/web/src/audit/Organisation.tsx",
+      "ligne": 141,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils du déroulé\""
+    },
+    {
+      "fichier": "apps/web/src/carto/Construire.tsx",
+      "ligne": 130,
+      "composant": "BarreFiltres",
+      "nom": "\"Rechercher un objet non placé\""
+    },
+    {
+      "fichier": "apps/web/src/components/BarreFiltres.tsx",
+      "ligne": 161,
+      "composant": "BoiteOutils",
+      "nom": "{label}"
+    },
+    {
+      "fichier": "apps/web/src/components/TableauDeBord.tsx",
+      "ligne": 1032,
+      "composant": "BarreFiltres",
+      "nom": "\"Rechercher une dalle\""
+    },
+    {
+      "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+      "ligne": 162,
+      "composant": "BarreFiltres",
+      "nom": "\"Méthodes et modèles\""
+    },
+    {
+      "fichier": "apps/web/src/grc/LegacyFrameworks.tsx",
+      "ligne": 57,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils des exigences historiques\""
+    },
+    {
+      "fichier": "apps/web/src/grc/RegistreRisques.tsx",
+      "ligne": 166,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils du registre des risques\""
+    },
+    {
+      "fichier": "apps/web/src/grc/Relations.tsx",
+      "ligne": 83,
+      "composant": "BarreFiltres",
+      "nom": "\"Rechercher un objet lié\""
+    },
+    {
+      "fichier": "apps/web/src/grc/RiskMap.tsx",
+      "ligne": 227,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils de la cartographie des risques\""
+    },
+    {
+      "fichier": "apps/web/src/grc/Tasks.tsx",
+      "ligne": 326,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils des actions\""
+    },
+    {
+      "fichier": "apps/web/src/incidents/Incidents.tsx",
+      "ligne": 120,
+      "composant": "BarreFiltres",
+      "nom": "\"Incidents\""
+    },
+    {
+      "fichier": "apps/web/src/pages/Admin.tsx",
+      "ligne": 206,
+      "composant": "BarreFiltres",
+      "nom": "\"Journal d’audit\""
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminJournauxTechniques.tsx",
+      "ligne": 185,
+      "composant": "BarreFiltres",
+      "nom": "\"Journaux techniques\""
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminNotifications.tsx",
+      "ligne": 159,
+      "composant": "BarreFiltres",
+      "nom": "\"Notifications\""
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminOperations.tsx",
+      "ligne": 203,
+      "composant": "BarreFiltres",
+      "nom": "\"Rechercher une archive\""
+    },
+    {
+      "fichier": "apps/web/src/pages/Cartographie.tsx",
+      "ligne": 919,
+      "composant": "BarreFiltres",
+      "nom": "\"Rechercher un objet sur la carte\""
+    },
+    {
+      "fichier": "apps/web/src/pages/Documents.tsx",
+      "ligne": 343,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils des documents\""
+    },
+    {
+      "fichier": "apps/web/src/pages/Documents.tsx",
+      "ligne": 881,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils des liens\""
+    },
+    {
+      "fichier": "apps/web/src/pages/Grc.tsx",
+      "ligne": 61,
+      "composant": "BarreFiltres",
+      "nom": "\"Rechercher dans le registre\""
+    },
+    {
+      "fichier": "apps/web/src/pages/Help.tsx",
+      "ligne": 27,
+      "composant": "BarreFiltres",
+      "nom": "\"Rechercher dans le guide\""
+    },
+    {
+      "fichier": "apps/web/src/parcours-iso/ListeEtapes.tsx",
+      "ligne": 45,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils de la liste des étapes\""
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+      "ligne": 127,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils du catalogue\""
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Couverture.tsx",
+      "ligne": 386,
+      "composant": "BarreFiltres",
+      "nom": "\"Couverture des exigences\""
+    },
+    {
+      "fichier": "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+      "ligne": 145,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils des critères\""
+    },
+    {
+      "fichier": "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+      "ligne": 433,
+      "composant": "BarreFiltres",
+      "nom": "\"Rechercher un fournisseur\""
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Decision.tsx",
+      "ligne": 204,
+      "composant": "BarreFiltres",
+      "nom": "\"Rechercher un justificatif\""
+    },
+    {
+      "fichier": "apps/web/src/pilotage/EvaluationsClausier.tsx",
+      "ligne": 275,
+      "composant": "BarreFiltres",
+      "nom": "\"Points du clausier\""
+    },
+    {
+      "fichier": "apps/web/src/pilotage/FournisseursStudio.tsx",
+      "ligne": 270,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils des fournisseurs\""
+    },
+    {
+      "fichier": "apps/web/src/pilotage/ObjectifsProcessus.tsx",
+      "ligne": 475,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils des indicateurs\""
+    },
+    {
+      "fichier": "apps/web/src/pilotage/PartiesInteresseesStudio.tsx",
+      "ligne": 525,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils des parties intéressées\""
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Plans.tsx",
+      "ligne": 510,
+      "composant": "BarreFiltres",
+      "nom": "\"Affichage et filtres\""
+    },
+    {
+      "fichier": "apps/web/src/pilotage/RecordEditor.tsx",
+      "ligne": 331,
+      "composant": "BarreFiltres",
+      "nom": "\"Rechercher une référence\""
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Registry.tsx",
+      "ligne": 422,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils du registre\""
+    },
+    {
+      "fichier": "apps/web/src/processus/ProcessusStudio.tsx",
+      "ligne": 197,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils des processus\""
+    },
+    {
+      "fichier": "apps/web/src/registres/AccesSujets.tsx",
+      "ligne": 97,
+      "composant": "BarreFiltres",
+      "nom": "\"Affichage et filtres\""
+    },
+    {
+      "fichier": "apps/web/src/registres/ElementsFiltres.tsx",
+      "ligne": 62,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils des éléments par périmètre\""
+    },
+    {
+      "fichier": "apps/web/src/registres/Registres.tsx",
+      "ligne": 147,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils des registres\""
+    },
+    {
+      "fichier": "apps/web/src/registres/Registres.tsx",
+      "ligne": 419,
+      "composant": "BoiteOutils",
+      "nom": "\"Outils des éléments du registre\""
+    },
+    {
+      "fichier": "apps/web/src/veille-reglementaire/VeilleReglementaire.tsx",
+      "ligne": 665,
+      "composant": "BarreFiltres",
+      "nom": "\"Veille réglementaire\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Alertes.tsx",
+      "ligne": 285,
+      "composant": "BarreFiltres",
+      "nom": "\"Alertes\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/CarteSurface.tsx",
+      "ligne": 757,
+      "composant": "BarreFiltres",
+      "nom": "\"Carte de la surface externe\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/CarteSurface.tsx",
+      "ligne": 804,
+      "composant": "BarreFiltres",
+      "nom": "\"Présentation de la surface externe\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Correctifs.tsx",
+      "ligne": 348,
+      "composant": "BarreFiltres",
+      "nom": "\"Correctifs\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/DelaisExceptions.tsx",
+      "ligne": 190,
+      "composant": "BarreFiltres",
+      "nom": "\"Affichage et filtres\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/DelaisExceptions.tsx",
+      "ligne": 229,
+      "composant": "BarreFiltres",
+      "nom": "\"Affichage et filtres\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+      "ligne": 677,
+      "composant": "BarreFiltres",
+      "nom": "\"Failles détectées\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Machines.tsx",
+      "ligne": 696,
+      "composant": "BarreFiltres",
+      "nom": "\"Machines\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Perimetres.tsx",
+      "ligne": 292,
+      "composant": "BarreFiltres",
+      "nom": "\"Présentation des périmètres\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+      "ligne": 259,
+      "composant": "BarreFiltres",
+      "nom": "\"Produits surveillés\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+      "ligne": 778,
+      "composant": "BarreFiltres",
+      "nom": "\"Rechercher une machine\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Rapport.tsx",
+      "ligne": 167,
+      "composant": "BarreFiltres",
+      "nom": "\"Affichage et filtres\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+      "ligne": 532,
+      "composant": "BarreFiltres",
+      "nom": "\"Rechercher une action\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+      "ligne": 1282,
+      "composant": "BarreFiltres",
+      "nom": "\"Alertes de la surface externe\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+      "ligne": 1402,
+      "composant": "BarreFiltres",
+      "nom": "\"Actifs exposés\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+      "ligne": 1519,
+      "composant": "BarreFiltres",
+      "nom": "\"Technologies exposées\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceSilene.tsx",
+      "ligne": 475,
+      "composant": "BarreFiltres",
+      "nom": "\"Constats Silène\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Tendances.tsx",
+      "ligne": 245,
+      "composant": "BarreFiltres",
+      "nom": "\"Affichage et filtres\""
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Veille.tsx",
+      "ligne": 690,
+      "composant": "BarreFiltres",
+      "nom": "\"Veille des vulnérabilités\""
+    }
+  ],
+  "recherchesRestantes": [
+    {
+      "fichier": "apps/web/src/components/BarreOutils.tsx",
+      "ligne": 302,
+      "nom": "{`Chercher dans « ${libelle} »`}",
+      "contexte": "champ interne de sélection de valeur / fabrication de la boîte"
+    }
+  ]
+}

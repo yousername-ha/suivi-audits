@@ -53,7 +53,7 @@ import {
   type Synthese,
   type Visualisation,
 } from '@suivi/shared';
-import { ConfirmButton, ErrorAlert, type LargeurDalle } from '@suivi/ui';
+import { ConfirmButton, ErrorAlert, type LargeurDalle, APropos } from '@suivi/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useEffect,
@@ -154,9 +154,11 @@ function Catalogue({
   return (
     <Drawer opened={ouvert} onClose={onFermer} title="Ajouter une dalle" position="right" size="md" lockScroll={false}>
       <div className="tdb-catalogue">
-        <Text size="sm" c="dimmed">
-          Une dalle ajoutée se place à la fin, puis l’aimant la remonte dans la première place libre.
-        </Text>
+        <APropos label="Aide et précisions">
+          <Text size="sm" c="dimmed">
+            Une dalle ajoutée se place à la fin, puis l’aimant la remonte dans la première place libre.
+          </Text>
+        </APropos>
         {GROUPES_DALLES.map((groupe) => {
           const membres = dalles
             .filter((x) => x.groupe === groupe)

@@ -1,0 +1,277 @@
+/* Fiches longues : parties horizontales discrètes, sans défilement vertical de la fenêtre ni déplacement du formulaire.
+   Le composant FichesSansDefilement pose les attributs et deux mesures (--fiche-hauteur : plus petite hauteur qui garde
+   le nombre de parties ; --fiche-pied : hauteur du pied fixé). Sans ces mesures, la fenêtre occupe la hauteur
+   disponible. Une fiche dont le découpage n'est pas sûr ne reçoit aucun de ces attributs et défile comme avant. */
+[data-fiche-paginee] {
+  block-size: var(--fiche-hauteur, calc(100dvh - 2 * var(--modal-y-offset, 5dvh)));
+}
+[data-fiche-paginee][data-full-screen],
+.mantine-Drawer-content[data-fiche-paginee] {
+  block-size: 100dvh;
+}
+html:has([data-fiche-paginee]) {
+  overflow: hidden;
+}
+/* « html » et la classe du cadre donnent à ces règles le pas sur le retrait commun des fenêtres
+   (neon-harmonisation.css) : sans cela la place du pied n'est pas réservée et la dernière rangée passe dessous. */
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content)[data-fiche-paginee]
+  > :is(.mantine-Modal-body, .mantine-Drawer-body) {
+  overflow: hidden;
+  column-count: 1;
+  column-fill: auto;
+  column-gap: calc(2 * var(--suivi-padding-dialogue));
+  overscroll-behavior: contain;
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))[data-fiche-paginee][data-fiche-pied]
+  > :is(.mantine-Modal-body, .mantine-Drawer-body) {
+  padding-block-end: calc(var(--fiche-pied, 2.5rem) + 2 * var(--suivi-padding-dialogue));
+}
+/* Une section déclarée par le formulaire ouvre toujours une nouvelle partie. */
+[data-fiche-paginee] [data-fiche-section] {
+  break-before: column;
+}
+/* Groupes indivisibles : un champ et son libellé, une rangée de champs, une ligne de tableau ou de liste, un bloc replié
+   et une commande restent entiers dans leur partie. Les encadrés (message, groupe de champs, panneau) ne le sont que s'ils sont
+   petits devant une partie : le composant les marque alors data-fiche-entier ; plus grands, ils se poursuivent sur la
+   partie suivante (voir plus bas). Le composant vérifie chaque découpage : au moindre champ tronqué ou recouvert, la
+   fenêtre garde son défilement habituel. */
+[data-fiche-paginee]
+  :is(
+    [data-fiche-entier],
+    .mantine-InputWrapper-root,
+    tr,
+    li,
+    details:not([open]),
+    summary,
+    .mantine-Group-root:has(> .mantine-InputWrapper-root),
+    .mantine-Group-root:has(> .mantine-Button-root),
+    .mantine-SimpleGrid-root:has(> .mantine-InputWrapper-root),
+    .mantine-Checkbox-root,
+    .mantine-Radio-root,
+    .mantine-Switch-root,
+    .mantine-Chip-root,
+    .mantine-Badge-root,
+    .mantine-Button-root
+  ) {
+  break-inside: avoid;
+}
+/* Blocs que le navigateur ne sait pas découper et qui feraient retomber la fenêtre sur le défilement : une grande carte
+   masque son débordement, une grille de formulaire ou un tableau empilable porte une requête de conteneur (bloc isolé).
+   Dans une fiche découpée, le grand encadré laisse voir son contenu d'une partie à l'autre, et la requête de conteneur
+   est portée par le corps de la fenêtre, de même largeur : même nombre de colonnes, contenu découpable. Les conteneurs
+   nommés des écrans métier (fiche fournisseur, SWOT, PESTEL…) ne sont pas touchés. */
+[data-fiche-paginee] :is(.mantine-Card-root, .mantine-Paper-root, .mantine-Alert-root):not([data-fiche-entier]) {
+  overflow: visible;
+  box-decoration-break: clone;
+}
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content)[data-fiche-paginee]
+  > :is(.mantine-Modal-body, .mantine-Drawer-body):has(.grille-formulaire, .tableau-empilable-conteneur) {
+  container-type: inline-size;
+}
+[data-fiche-paginee] :is(.grille-formulaire, .tableau-empilable-conteneur) {
+  container-type: normal;
+}
+[data-fiche-paginee] [data-fiche-titre] {
+  break-inside: avoid;
+  break-after: avoid;
+}
+[data-fiche-paginee] :is(.data-table, .table-wrap) {
+  display: contents;
+  overflow: visible;
+}
+[data-fiche-paginee] table {
+  inline-size: 100%;
+  min-inline-size: 0;
+  table-layout: fixed;
+}
+[data-fiche-paginee] :is(th, td) {
+  overflow-wrap: anywhere;
+}
+[data-fiche-paginee] textarea {
+  max-block-size: 12rem;
+  overflow: auto;
+}
+/* Accrochage : le corps est le bloc de référence du rail (un repère par partie, posé par le composant) ; le navigateur
+   arrête tout défilement horizontal sur un repère. Le pied, placé dans ce même bloc, est décalé de la position de
+   défilement (--fiche-defile) pour rester sous la partie affichée. */
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content)[data-fiche-paginee]
+  > :is(.mantine-Modal-body, .mantine-Drawer-body) {
+  position: relative;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: auto;
+}
+.fiche-rail {
+  display: none;
+}
+[data-fiche-paginee] .fiche-rail {
+  display: flex;
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  block-size: 0;
+  pointer-events: none;
+}
+.fiche-rail > i {
+  flex: 0 0 var(--fiche-pas, 100%);
+  block-size: 0;
+  scroll-snap-align: start;
+}
+[data-fiche-paginee] [data-fiche-actions-fixes] {
+  position: absolute !important;
+  inset-inline-start: calc(var(--fiche-defile, 0px) + var(--suivi-padding-dialogue));
+  inline-size: calc(100% - 2 * var(--suivi-padding-dialogue));
+  top: auto;
+  bottom: var(--suivi-padding-dialogue);
+  margin: 0;
+  z-index: 6;
+  background: var(--suivi-surface);
+}
+.fiche-mini-menu-hote {
+  flex: none;
+  block-size: 2.5rem;
+  padding-inline: var(--suivi-padding-dialogue);
+  border-block-end: var(--suivi-trait-l) solid var(--suivi-trait);
+}
+.fiche-mini-menu-hote[hidden] {
+  display: none;
+}
+.fiche-mini-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  block-size: 100%;
+  overflow: auto hidden;
+  scrollbar-width: none;
+}
+.fiche-mini-menu button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-2xs) var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid transparent;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  color: var(--mantine-color-dimmed);
+  font: inherit;
+  font-size: var(--mantine-font-size-xs);
+  cursor: pointer;
+}
+.fiche-mini-menu button span {
+  opacity: 0.65;
+}
+.fiche-mini-menu button:is([aria-current='page'], :hover, :focus-visible) {
+  color: var(--neon-titre);
+  border-color: var(--menu-teinte-pilotage);
+  background: color-mix(in srgb, var(--menu-teinte-pilotage) 10%, transparent);
+}
+
+/* Commandes sobres, aux couleurs du menu ; les couleurs métier explicites conservent leur sémantique. */
+html .mantine-Button-root.commande-neon {
+  color: var(--neon-titre);
+  border: var(--suivi-trait-l) solid color-mix(in srgb, var(--menu-teinte-pilotage) 65%, var(--neon-titre));
+  background: transparent;
+  box-shadow: none;
+  font-weight: 500;
+}
+html .mantine-Button-root.commande-neon:hover {
+  border-color: var(--menu-teinte-pilotage);
+  background: color-mix(in srgb, var(--menu-teinte-pilotage) 10%, transparent);
+}
+html .mantine-Button-root.commande-neon:is([aria-pressed='true'], [aria-selected='true'], [data-active='true']) {
+  border-color: var(--menu-teinte-pilotage);
+  background: color-mix(in srgb, var(--menu-teinte-pilotage) 12%, transparent);
+}
+html .mantine-Button-root.commande-neon:is([data-variant='subtle'], [data-variant='transparent']) {
+  color: var(--mantine-color-dimmed);
+  border-color: transparent;
+  background: transparent;
+}
+html .mantine-Button-root.commande-neon:is(:disabled, [data-disabled]) {
+  opacity: 0.5;
+}
+html .auth-panneau .mantine-Button-root.commande-neon {
+  color: var(--suivi-nav-texte);
+  border-color: color-mix(in srgb, var(--menu-teinte-pilotage) 65%, var(--suivi-nav-texte));
+}
+
+/* Élargissement sur écran de bureau (data-fiche-etendue, posé par FichesSansDefilement) : une fenêtre de formulaire dont
+   le contenu dépasse la hauteur disponible prend plus de largeur avant d'être découpée. Le formulaire passe sur une
+   grille de douze colonnes : un code, un nombre, une date ou un état n'occupent que leur place, deux zones de texte
+   tiennent côte à côte. L'ordre du document et du clavier est conservé ; titres, messages, listes et rangées de boutons
+   restent sur toute la ligne. */
+html .mantine-Modal-content.fenetre-large[data-fiche-etendue] {
+  --modal-size: 76rem;
+}
+html .fenetre-large[data-fiche-etendue] :is(.fenetre-formulaire, .fenetre-champs),
+html
+  .fenetre-large[data-fiche-etendue]
+  > .mantine-Modal-body
+  > .mantine-Stack-root:where(
+    :has(> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root ~ .mantine-InputWrapper-root)
+  ) {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+html .fenetre-large[data-fiche-etendue] :is(.fenetre-formulaire, .fenetre-champs) > .mantine-InputWrapper-root,
+html
+  .fenetre-large[data-fiche-etendue]
+  > .mantine-Modal-body
+  > .mantine-Stack-root:where(
+    :has(> .mantine-InputWrapper-root ~ .mantine-InputWrapper-root ~ .mantine-InputWrapper-root)
+  )
+  > .mantine-InputWrapper-root {
+  grid-column: span 6;
+}
+html
+  .fenetre-large[data-fiche-etendue]
+  :is(.mantine-Modal-body)
+  .mantine-Stack-root
+  > .mantine-InputWrapper-root.champ-format-personne {
+  grid-column: span 4;
+}
+html
+  .fenetre-large[data-fiche-etendue]
+  :is(.mantine-Modal-body)
+  .mantine-Stack-root
+  > .mantine-InputWrapper-root:is(
+    .champ-format-date,
+    .champ-format-court,
+    .champ-format-moyen,
+    :is(.mantine-Select-root, .mantine-NativeSelect-root).champ-format-libre
+  ) {
+  grid-column: span 3;
+}
+html
+  .fenetre-large[data-fiche-etendue]
+  :is(.mantine-Modal-body)
+  .mantine-Stack-root
+  > .mantine-InputWrapper-root:is(.champ-format-code, .champ-format-nombre) {
+  grid-column: span 2;
+}
+html
+  .fenetre-large[data-fiche-etendue]
+  :is(.mantine-Modal-body)
+  .mantine-Stack-root
+  > .mantine-InputWrapper-root:first-child {
+  grid-column: 1 / -1;
+}
+
+/* Piles imbriquées : le navigateur découpe mal une pile flexible placée dans une autre (deux champs voisins peuvent se
+   recouvrir au changement de partie). Dans une fiche découpée, une pile imbriquée passe en flux bloc, avec le même
+   espacement ; une pile qui demande un alignement particulier (propriété align, lue dans la variable --stack-align que
+   Mantine pose sur l'élément) et les grilles de formulaire gardent leur disposition. */
+[data-fiche-paginee]
+  .mantine-Stack-root
+  .mantine-Stack-root[style*='--stack-align: stretch']:not(.fenetre-formulaire, .fenetre-champs) {
+  display: block;
+}
+[data-fiche-paginee]
+  .mantine-Stack-root
+  .mantine-Stack-root[style*='--stack-align: stretch']:not(.fenetre-formulaire, .fenetre-champs)
+  > :not(:first-child) {
+  margin-block-start: var(--stack-gap, var(--mantine-spacing-md));
+}

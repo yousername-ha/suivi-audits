@@ -1,0 +1,122 @@
+/* Verre transparent — correction du 21/11/2026 après retour sur les aplats bleus.
+   Les couleurs d'état métier et les teintes des familles restent intactes. Le verre concerne les onglets et les
+   commandes principales déjà habillées en bleu dans neon-ergonomie.css. Le repli sans backdrop-filter reste lisible. */
+:root {
+  --suivi-verre-fond: color-mix(in srgb, var(--suivi-surface) 78%, transparent);
+  --suivi-verre-trait: color-mix(in srgb, var(--suivi-trait) 78%, transparent);
+  --suivi-verre-repere: var(--mantine-color-cyan-9);
+  --suivi-verre-reflet: color-mix(in srgb, var(--mantine-color-white) 78%, transparent);
+  --suivi-verre-ombre: color-mix(in srgb, var(--suivi-encre) 12%, transparent);
+}
+[data-mantine-color-scheme='dark'] {
+  --suivi-verre-fond: color-mix(in srgb, var(--suivi-surface) 64%, transparent);
+  --suivi-verre-trait: color-mix(in srgb, var(--suivi-trait) 88%, transparent);
+  --suivi-verre-repere: var(--mantine-color-cyan-3);
+  --suivi-verre-reflet: color-mix(in srgb, var(--mantine-color-white) 12%, transparent);
+  --suivi-verre-ombre: color-mix(in srgb, var(--mantine-color-black) 28%, transparent);
+}
+
+html:is([data-onglets='barre'], [data-onglets='pastilles'])
+  :is(.app-main .onglets-rubriques, .mantine-Tabs-list:not([data-orientation='vertical']), .retex-onglets, .as-tabs) {
+  border: var(--suivi-trait-l) solid var(--suivi-verre-trait);
+  background: linear-gradient(125deg, var(--suivi-verre-reflet), transparent 42%), var(--suivi-verre-fond);
+  box-shadow:
+    inset 0 1px 0 var(--suivi-verre-reflet),
+    0 4px 14px -8px var(--suivi-verre-ombre);
+  backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
+}
+html:is([data-onglets='barre'], [data-onglets='pastilles'])
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ) {
+  color: var(--mantine-color-dimmed);
+  border: var(--suivi-trait-l) solid transparent;
+  transition:
+    background var(--suivi-motion),
+    border-color var(--suivi-motion),
+    box-shadow var(--suivi-motion);
+}
+html:is([data-onglets='barre'], [data-onglets='pastilles'])
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ):hover:not(:disabled, [data-disabled]) {
+  color: var(--mantine-color-text);
+  background: color-mix(in srgb, var(--suivi-verre-repere) 7%, transparent);
+}
+html:is([data-onglets='barre'], [data-onglets='pastilles'])
+  :is(
+    .app-main .onglets-rubriques a[aria-current='page'],
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab[data-active],
+    .retex-onglet[aria-current='page'],
+    .as-tabs > button[aria-selected='true']
+  ) {
+  color: var(--mantine-color-text);
+  border-color: color-mix(in srgb, var(--suivi-verre-repere) 42%, var(--suivi-verre-trait));
+  background:
+    linear-gradient(130deg, var(--suivi-verre-reflet), transparent 68%),
+    color-mix(in srgb, var(--suivi-verre-repere) 9%, var(--suivi-verre-fond));
+  box-shadow:
+    inset 0 1px 0 var(--suivi-verre-reflet),
+    inset 0 -2px 0 var(--suivi-verre-repere),
+    0 2px 6px -4px var(--suivi-verre-ombre);
+  font-weight: 500;
+}
+
+/* Reprendre le sélecteur des commandes bleues garantit que le vieux fond plein et le liseré massif sont annulés. */
+.app-main
+  :is(.barre-outils__ajout, .fs-toolbar-end, .pr-toolbar-end, .barre-registre)
+  :is(.mantine-Button-root:not([data-variant]), .mantine-Button-root[data-variant='filled'], .fs-ajouter):not(
+    :disabled,
+    [data-disabled]
+  ),
+.shell-header .theme-bascule {
+  border: var(--suivi-trait-l) solid var(--suivi-verre-trait);
+  background: linear-gradient(130deg, var(--suivi-verre-reflet), transparent 68%), var(--suivi-verre-fond);
+  color: var(--mantine-color-text);
+  box-shadow:
+    inset 0 1px 0 var(--suivi-verre-reflet),
+    0 3px 10px -6px var(--suivi-verre-ombre);
+  backdrop-filter: blur(12px) saturate(125%);
+  -webkit-backdrop-filter: blur(12px) saturate(125%);
+}
+.app-main
+  :is(.barre-outils__ajout, .fs-toolbar-end, .pr-toolbar-end, .barre-registre)
+  :is(.mantine-Button-root:not([data-variant]), .mantine-Button-root[data-variant='filled'], .fs-ajouter):hover:not(
+    :disabled,
+    [data-disabled]
+  ),
+.shell-header .theme-bascule:hover {
+  border-color: var(--suivi-verre-repere);
+  background:
+    linear-gradient(130deg, var(--suivi-verre-reflet), transparent),
+    color-mix(in srgb, var(--suivi-verre-repere) 10%, var(--suivi-verre-fond));
+}
+.theme-bascule svg {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+.nav-commandes {
+  justify-content: center;
+}
+.nav-commandes > .theme-bascule {
+  flex: none;
+  border: var(--suivi-trait-l) solid var(--menu-trait);
+  background: color-mix(in srgb, var(--menu-fond-haut) 38%, transparent);
+  color: var(--menu-texte);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  html:is([data-onglets='barre'], [data-onglets='pastilles'])
+    :is(.app-main .onglets-rubriques, .mantine-Tabs-list:not([data-orientation='vertical']), .retex-onglets, .as-tabs) {
+    background: var(--suivi-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

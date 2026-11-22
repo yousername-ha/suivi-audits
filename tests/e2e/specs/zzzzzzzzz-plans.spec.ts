@@ -25,7 +25,7 @@ test('Plans : action de formation créée, calendrier, planning décalé au clav
     await fiche.getByLabel('Participants prévus').fill('12');
     await fiche.getByRole('button', { name: 'Enregistrer' }).click();
     await expect(fiche.getByText('Modifications enregistrées.')).toBeVisible();
-    await fiche.getByRole('button', { name: 'Fermer' }).click();
+    await fiche.getByRole('button', { name: 'Fermer', exact: true }).click();
     const liste = page.getByRole('region', { name: 'Plan de formation' });
     await expect(liste.getByText(titre)).toBeVisible();
     await expect(liste.getByText(`Planifié`).or(liste.getByText('En retard')).first()).toBeVisible();
@@ -35,7 +35,7 @@ test('Plans : action de formation créée, calendrier, planning décalé au clav
     const calendrier = page.getByRole('region', { name: `Calendrier des plans ${annee}` });
     await calendrier.getByRole('button', { name: new RegExp(titre) }).click();
     await expect(page.getByRole('dialog').getByRole('textbox', { name: 'Intitulé de l’action' })).toHaveValue(titre);
-    await page.getByRole('dialog').getByRole('button', { name: 'Fermer' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Fermer', exact: true }).click();
 
     // Planning annuel : la barre se décale d'un jour avec la flèche droite.
     await page.goto('/pilotage/plans-planning');
@@ -53,7 +53,7 @@ test('Plans : action de formation créée, calendrier, planning décalé au clav
     await relue;
     await barre.press('Enter');
     await expect(page.getByRole('dialog').getByLabel('Date prévue')).toHaveValue(`${annee}-03-11`);
-    await page.getByRole('dialog').getByRole('button', { name: 'Fermer' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Fermer', exact: true }).click();
     await page.screenshot({ path: 'test-results/plans-planning.png', fullPage: true });
 
     // Exercice : fiche, puis action créée dans le registre des écarts.

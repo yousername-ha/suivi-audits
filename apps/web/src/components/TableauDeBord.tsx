@@ -1,3 +1,4 @@
+import { BarreFiltres } from './BarreFiltres';
 /* Tableau de bord de l'accueil, unique depuis l'ADR 0108 : les dalles « Suivi de la conformité » (ADR 0069) et les
    cartes de la vue analytique Neon (ADR 0093) forment un seul catalogue, rendu dans le cadre et le style graphique de la
    vue analytique. La disposition choisie par la personne (ADR 0078) place, dimensionne et règle chaque dalle ; sans
@@ -1028,21 +1029,23 @@ export function TableauDeBordConformite({
         <Group gap="xs" className="tdb-outils">
           {outils}
           {rechercheOuverte || recherche ? (
-            <TextInput
-              aria-label="Rechercher une dalle"
-              placeholder="Rechercher une dalle"
-              className="tdb-recherche"
-              autoFocus={rechercheOuverte}
-              leftSection={<IconeLoupe />}
-              value={recherche}
-              onChange={(e) => setRecherche(e.currentTarget.value)}
-              onBlur={() => setRechercheOuverte(false)}
-              onKeyDown={(e) => {
-                if (e.key !== 'Escape') return;
-                setRecherche('');
-                setRechercheOuverte(false);
-              }}
-            />
+            <BarreFiltres label="Rechercher une dalle">
+              <TextInput
+                aria-label="Rechercher une dalle"
+                placeholder="Rechercher une dalle"
+                className="tdb-recherche"
+                autoFocus={rechercheOuverte}
+                leftSection={<IconeLoupe />}
+                value={recherche}
+                onChange={(e) => setRecherche(e.currentTarget.value)}
+                onBlur={() => setRechercheOuverte(false)}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Escape') return;
+                  setRecherche('');
+                  setRechercheOuverte(false);
+                }}
+              />
+            </BarreFiltres>
           ) : (
             <Tooltip label="Rechercher une dalle" withArrow>
               <ActionIcon
