@@ -302,6 +302,7 @@ function NouveauRegistre({
           allowDeselect={false}
           label="Périmètre de référence"
           description="Politique métier et fuseau des éléments : il ne peut plus être retiré du registre."
+          descriptionProps={{ 'data-aide-permanente': true }}
           required
           searchable
           data={options}

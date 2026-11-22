@@ -21,6 +21,10 @@
      integrations-claim | integrations-lot <id> | integrations-finish <id>  connecteurs : réclame une exécution, rapporte un lot (synchronisation), son résultat (JSON sur l'entrée standard)
      veille-claim | veille-lot <id> | veille-finish <id>  veille des vulnérabilités : réclame une collecte, rapporte un lot, la termine (JSON sur l'entrée standard)
      veille-reglementaire-claim | -lot <id> | -finish <id>  veille réglementaire : mêmes commandes, file propre au module
+  cpe-versions-claim | cpe-versions-finish <id>  dictionnaire CPE : réclame une demande de versions ({actif, demande}), la termine (JSON sur l'entrée standard)
+  cpe-dictionnaire-claim | -lot <id> | -finish <id>  dictionnaire CPE : réclame une tranche du chargement par lots, rapporte un lot, la termine
+     cpe-versions-claim | cpe-versions-finish <id>  dictionnaire CPE : réclame une demande de versions ({actif, demande}), la termine (JSON sur l'entrée standard)
+     cpe-dictionnaire-claim | -lot <id> | -finish <id>  dictionnaire CPE : réclame une tranche du chargement par lots, rapporte un lot, la termine
      flux-souhaites              flux vers l'extérieur voulus ouverts (JSON, ADR 0097)
      flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
      flux-reprise                reprise des modules en service jamais décidés (JSON sur l'entrée standard), puis flux voulus ouverts
@@ -38,9 +42,12 @@ import {
   FluxAppliques,
   FluxReprise,
   formaterPoivreGenere,
+  LotDictionnaireCpe,
   LotSynchronisation,
   LotVeille,
   RapportCollecte,
+  RapportDictionnaireCpe,
+  RapportVersionsCpe,
   RapportExecution,
   type SettingsValues,
 } from '@suivi/shared';
@@ -298,6 +305,51 @@ async function main() {
       try {
         if (lot) console.log(JSON.stringify(await svc.veilleReglementaire.lot(arg!, valeur)));
         else await svc.veilleReglementaire.terminer(arg!, valeur);
+      } catch (e) {
+        console.error((e as Error).message);
+        process.exit((e as { status?: number }).status === 422 ? 2 : 1);
+      }
+      break;
+    }
+    case 'cpe-versions-claim': {
+      // Dictionnaire CPE (ADR 0100, lot CPE-1) : rend toujours { actif, demande } (demande null s'il n'y en a pas) ; module
+      // désactivé, flux fermé ou source désactivée : actif faux, aucune demande remise.
+      const actif = !(await svc.modules.state(true)).disabled.includes('vulnerabilites');
+      console.log(JSON.stringify(await svc.vulnerabilites.dictionnaireCpe.reclamerVersions(actif)));
+      break;
+    }
+    case 'cpe-dictionnaire-claim': {
+      const actif = !(await svc.modules.state(true)).disabled.includes('vulnerabilites');
+      const job = await svc.vulnerabilites.dictionnaireCpe.reclamerTranche(actif);
+      if (job) console.log(JSON.stringify(job));
+      break;
+    }
+    case 'cpe-versions-finish':
+    case 'cpe-dictionnaire-lot':
+    case 'cpe-dictionnaire-finish': {
+      // Même contrôle que la veille : taille bornée, champ inattendu ou élément mal formé refusés (code 2).
+      const brut = await readStdin(CPE_ENTREE_MAX);
+      let valeur: unknown;
+      try {
+        valeur = brut === null ? null : JSON.parse(brut);
+      } catch {
+        valeur = null;
+      }
+      const schema =
+        cmd === 'cpe-versions-finish'
+          ? RapportVersionsCpe
+          : cmd === 'cpe-dictionnaire-lot'
+            ? LotDictionnaireCpe
+            : RapportDictionnaireCpe;
+      if (!z.uuid().safeParse(arg).success || valeur === null || !schema.safeParse(valeur).success) {
+        console.error('Envoi refusé : identifiant, taille ou contenu invalide.');
+        process.exit(2);
+      }
+      const d = svc.vulnerabilites.dictionnaireCpe;
+      try {
+        if (cmd === 'cpe-versions-finish') await d.terminerVersions(arg!, valeur);
+        else if (cmd === 'cpe-dictionnaire-lot') console.log(JSON.stringify(await d.lotTranche(arg!, valeur)));
+        else await d.terminerTranche(arg!, valeur);
       } catch (e) {
         console.error((e as Error).message);
         process.exit((e as { status?: number }).status === 422 ? 2 : 1);
@@ -669,6 +721,8 @@ async function main() {
 const VEILLE_ENTREE_MAX = 16 * 1024 * 1024;
 /** Lot de la veille réglementaire : 200 publications d'au plus deux kilooctets chacune. */
 const VEILLE_REGLEMENTAIRE_ENTREE_MAX = 2 * 1024 * 1024;
+/** Dictionnaire CPE : un lot de 5 000 produits et 5 000 versions tient sous 4 Mio. */
+const CPE_ENTREE_MAX = 4 * 1024 * 1024;
 /** Lot d'une synchronisation de Tenable : 500 éléments, dont des constats qui citent jusqu'à 500 CVE. */
 const INTEGRATIONS_LOT_MAX = 8 * 1024 * 1024;
 

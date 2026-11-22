@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Registre des incidents (reprise des pages « Incidents » de l'outil de suivi) et fiche d'un incident à onglets
    (ADR 0091) : « Fiche », « Qualification guidée » (questionnaire oui / non / je ne sais pas, qualification proposée,
    obligations) et « Chronologie et RETEX ». Priorité ITIL impact × urgence, action du registre des écarts. Bloc
@@ -116,7 +117,7 @@ export function RegistreIncidents({ smsi }: { smsi?: string }) {
           ]}
         />
       )}
-      <Group align="flex-end" justify="space-between">
+      <BarreFiltres label="Incidents">
         <SegmentedControl
           aria-label="Filtre du registre"
           value={filtre}
@@ -137,7 +138,7 @@ export function RegistreIncidents({ smsi }: { smsi?: string }) {
           value={filtreRetex}
           onChange={(v) => setFiltreRetex((v as 'tous' | CleEtatRetex | null) ?? 'tous')}
         />
-      </Group>
+      </BarreFiltres>
       <DataTable label="Registre des incidents">
         <Table>
           <Table.Thead>

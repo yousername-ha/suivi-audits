@@ -23,6 +23,34 @@ export const NEON = {
   sombre: { navigation: '#0C1429', titre: '#FFFFFF', accent: '#CE97FF', doux: '#1C2946' },
 } as const;
 
+/** Fiches de travail sobres : proposition claire retenue par le RSSI le 22/11/2026 ; déclinaison sombre assortie. */
+export const FICHES = {
+  clair: {
+    fond: '#FFFFFF',
+    encre: '#203244',
+    secondaire: '#637184',
+    trait: '#B5C2CF',
+    separateur: '#E1E7ED',
+    accent: '#165463',
+    focus: '#2E8999',
+    doux: '#F3F7F9',
+    bord: '#CCD6DF',
+    ombre: '#0F1E30',
+  },
+  sombre: {
+    fond: '#131D2F',
+    encre: '#EDF2FA',
+    secondaire: '#A8B7CB',
+    trait: '#52627A',
+    separateur: '#344258',
+    accent: '#83C9D5',
+    focus: '#77CAD9',
+    doux: '#1A293D',
+    bord: '#43516A',
+    ombre: '#030A16',
+  },
+} as const;
+
 /** Matrice des risques : encre du texte sur les cases claires et fond d'une case sans niveau défini (les couleurs de niveau
     viennent de la méthode publiée, jamais d'ici). */
 export const MATRICE = { encre: '#173f34', neutre: '#e5e9e2' } as const;
@@ -266,16 +294,118 @@ export function variablesTableauDeBord(p: PaletteTableauDeBord): Record<string, 
 /** Rayons : de 6 à 12 px, conformément à la charte (inchangés par la refonte Neon : le test de contraste les borne). */
 export const RAYONS = { xs: '6px', sm: '8px', md: '10px', lg: '12px', xl: '12px' } as const;
 
-/** Espacements (rem). */
-export const ESPACEMENTS = {
-  '2xs': '0.25rem',
-  xs: '0.5rem',
-  sm: '0.75rem',
-  md: '1rem',
-  lg: '1.5rem',
-  xl: '2rem',
-  '2xl': '3rem',
+/** Densités de travail (21/11/2026). Le normal est plus resserré que l'ancien compact : les grandes marges,
+    commandes et lignes suivent maintenant le même réglage. La taille d'affichage reste une préférence distincte. */
+export const DENSITES = {
+  normale: {
+    espacements: {
+      '2xs': '0.125rem',
+      xs: '0.25rem',
+      sm: '0.375rem',
+      md: '0.625rem',
+      lg: '0.75rem',
+      xl: '1rem',
+      '2xl': '1.5rem',
+    },
+    variables: {
+      '--suivi-entete-h': '2.75rem',
+      '--suivi-nav-l': '14rem',
+      '--suivi-marge-page': 'clamp(0.625rem, 0.8vw, 1.25rem)',
+      '--suivi-controle-h': '1.875rem',
+      '--suivi-petit-controle-h': '1.625rem',
+      '--suivi-controle-px': '0.625rem',
+      '--suivi-ligne-h': '2.25rem',
+      '--suivi-ligne-riche-h': '4.5rem',
+      '--suivi-nav-ligne-h': '2.125rem',
+      '--suivi-nav-enfant-h': '1.875rem',
+      '--suivi-carte-padding': '0.75rem',
+      '--suivi-cellule-py': '0.375rem',
+      '--suivi-section-gap': '0.75rem',
+      '--suivi-titre-page': '1.375rem',
+      '--suivi-titre-section': '1.0625rem',
+      '--suivi-chiffre': '1.5rem',
+      '--suivi-graphique-h': '15rem',
+      '--suivi-padding-dialogue': '0.875rem',
+      '--suivi-statut-h': '1.375rem',
+    },
+  },
+  compacte: {
+    espacements: {
+      '2xs': '0.125rem',
+      xs: '0.1875rem',
+      sm: '0.25rem',
+      md: '0.375rem',
+      lg: '0.5rem',
+      xl: '0.75rem',
+      '2xl': '1rem',
+    },
+    variables: {
+      '--suivi-entete-h': '2.5rem',
+      '--suivi-nav-l': '13rem',
+      '--suivi-marge-page': 'clamp(0.5rem, 0.65vw, 1rem)',
+      '--suivi-controle-h': '1.625rem',
+      '--suivi-petit-controle-h': '1.5rem',
+      '--suivi-controle-px': '0.5rem',
+      '--suivi-ligne-h': '1.875rem',
+      '--suivi-ligne-riche-h': '4rem',
+      '--suivi-nav-ligne-h': '1.875rem',
+      '--suivi-nav-enfant-h': '1.625rem',
+      '--suivi-carte-padding': '0.5rem',
+      '--suivi-cellule-py': '0.25rem',
+      '--suivi-section-gap': '0.5rem',
+      '--suivi-titre-page': '1.3125rem',
+      '--suivi-titre-section': '1rem',
+      '--suivi-chiffre': '1.375rem',
+      '--suivi-graphique-h': '13rem',
+      '--suivi-padding-dialogue': '0.625rem',
+      '--suivi-statut-h': '1.25rem',
+    },
+  },
+  confortable: {
+    espacements: {
+      '2xs': '0.25rem',
+      xs: '0.625rem',
+      sm: '1rem',
+      md: '1.25rem',
+      lg: '2rem',
+      xl: '2rem',
+      '2xl': '3rem',
+    },
+    variables: {
+      '--suivi-entete-h': '3.75rem',
+      '--suivi-nav-l': '15.5rem',
+      '--suivi-marge-page': 'clamp(0.75rem, 1vw, 2rem)',
+      '--suivi-controle-h': '2.25rem',
+      '--suivi-petit-controle-h': '1.875rem',
+      '--suivi-controle-px': '0.875rem',
+      '--suivi-ligne-h': '3rem',
+      '--suivi-ligne-riche-h': '6.5rem',
+      '--suivi-nav-ligne-h': '2.75rem',
+      '--suivi-nav-enfant-h': '2.5rem',
+      '--suivi-carte-padding': '1.25rem',
+      '--suivi-cellule-py': '0.625rem',
+      '--suivi-section-gap': '1.25rem',
+      '--suivi-titre-page': '1.625rem',
+      '--suivi-titre-section': '1.25rem',
+      '--suivi-chiffre': '2rem',
+      '--suivi-graphique-h': '19rem',
+      '--suivi-padding-dialogue': '1.25rem',
+      '--suivi-statut-h': '1.625rem',
+    },
+  },
 } as const;
+export const ESPACEMENTS = DENSITES.normale.espacements;
+
+/** Même source pour les styles statiques CSP et pour les contrôles de géométrie. */
+export function variablesDensite(densite: keyof typeof DENSITES): Record<string, string> {
+  const profil = DENSITES[densite];
+  return {
+    ...Object.fromEntries(
+      Object.entries(profil.espacements).map(([nom, valeur]) => [`--mantine-spacing-${nom}`, valeur]),
+    ),
+    ...profil.variables,
+  };
+}
 
 /** Points de rupture (largeur de fenêtre) : téléphone < 576, tablette 576 à 1024, bureau 1024 à 1440,
     large 1440 à 1920, très large 1920 à 2560, ultra au-delà de 2560 px. « sm » (768) reste pour les menus. */

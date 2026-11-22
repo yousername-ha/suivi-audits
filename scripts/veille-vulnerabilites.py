@@ -36,10 +36,18 @@ Règles :
   le résumé n'est jamais lu. EUR-Lex : seuls les actes dont le titre contient un mot-clé de la liste reçue de l'application
   (parametres.motsCles, forme contrôlée et bornée) sont remontés ; les autres sont comptés comme écartés. Un titre ou un résumé trop long n'est pas tronqué (licence CC BY-ND de la CNIL : aucune
   modification du texte) : la publication est écartée (titre) ou gardée sans résumé ; lien gardé seulement en https sur
-  l'hôte de la source, sinon la publication est écartée ; date illisible : écartée.
+  l'hôte de la source, sinon la publication est écartée ; date illisible : écartée ;
+- dictionnaire CPE de la NVD (ADR 0100, lot CPE-1 ; SOURCES_CPE, recopiée de packages/shared/src/dictionnaire-cpe.ts) :
+  source « nvd-cpe », même hôte que la veille NVD, un seul chemin. Deux opérations : « dictionnaire » (une page à
+  partir d'un indice reçu, sans aucune attente, ou les entrées modifiées pendant une fenêtre de dates ;
+  produits distincts et, pour la copie complète, versions distinctes ; entrées obsolètes écartées) et « versions » (une
+  page pour un éditeur et un produit reçus, versions distinctes non obsolètes, les plus récentes d'abord,
+  BORNES_CPE["versions"] au plus). Rien d'autre n'est reçu de l'application que ces paramètres ; l'intitulé anglais est
+  nettoyé, borné et privé de la version.
 """
 import base64
 import datetime as dt
+import functools
 from email.utils import parsedate_to_datetime
 import hashlib
 import html
@@ -64,7 +72,11 @@ SOURCES_REGLEMENTAIRES = {"cnil": {"hote": "www.cnil.fr", "chemins": ["/fr/rss.x
 RESUME_REGLEMENTAIRE = ["cnil", "cepd", "eur-lex"]
 BORNES_REGLEMENTAIRES = {"identifiant": 300, "titre": 300, "resume": 1000, "lien": 500, "items": 200, "motsCles": 60, "motCle": 60}
 DOMAINES_REGLEMENTAIRES = ("securite", "donnees-personnelles")
-TOUTES_SOURCES = {**SOURCES, **SOURCES_REGLEMENTAIRES}
+# Dictionnaire CPE (ADR 0100, lot CPE-1) : hôte et chemin exacts, recopiés de SOURCE_DICTIONNAIRE_CPE
+# (packages/shared/src/dictionnaire-cpe.ts) et comparés par apps/api/test/veille-architecture.test.ts ; bornes de CPE_BORNES.
+SOURCES_CPE = {"nvd-cpe": {"hote": "services.nvd.nist.gov", "chemins": ["/rest/json/cpes/2.0"]}}
+BORNES_CPE = {"parPage": 10000, "pagesParPassage": 1, "versions": 2000, "intitule": 300}
+TOUTES_SOURCES = {**SOURCES, **SOURCES_REGLEMENTAIRES, **SOURCES_CPE}
 # Bornes, recopiées de VEILLE_BORNES (packages/shared) et comparées par le même test.
 BORNES = {"titre": 300, "resume": 1000, "description": 1000, "action": 1000, "nomFaille": 300, "editeur": 200, "produit": 200, "nomsCpe": 20, "produitsTouches": 20, "cvesParAvis": 200, "fichesCertSante": 30, "lot": 500, "lots": 40, "epss": 2000}
 CVE_ID = re.compile(r"^CVE-[12]\d{3}-\d{4,9}$")
@@ -93,6 +105,9 @@ SEULE_BASIC = "Seule l'authentification simple (Basic) est prise en charge ; NTL
 ELEMENTS_MAX = BORNES["lot"] * BORNES["lots"]
 REPONSE_MAX = {"cisa-kev": 16 * 1024 * 1024, "nvd": 32 * 1024 * 1024, "epss": 1024 * 1024, "cert-fr": 2 * 1024 * 1024, "cert-sante": 2 * 1024 * 1024}
 REPONSE_MAX.update({s: 2 * 1024 * 1024 for s in SOURCES_REGLEMENTAIRES})
+REPONSE_MAX["nvd-cpe"] = 32 * 1024 * 1024
+# Dictionnaire CPE : une seule page par tranche, sans aucune attente dans le script ; le débit de la NVD (une demande toutes
+# les 6,5 secondes au plus pour les versions, cinq par trente secondes sans clé) est tenu par l'exécutant.
 ERREUR_MAX = 300
 DELAI_REQUETE = 30
 DUREE_MAX = 240
@@ -403,7 +418,7 @@ class Client:
     def lire(self, chemin, requete="", maximum=None):
         if not chemin_admis(self.source, chemin):
             raise Refus("Lecture refusée : %s hors de la liste fermée de la source." % chemin[:80])
-        if requete and (not re.fullmatch(r"[A-Za-z0-9=&,:.\-]{1,4000}", requete)
+        if requete and (not re.fullmatch(r"[A-Za-z0-9=&,:._~%\-]{1,4000}", requete)
                         or chemin not in TOUTES_SOURCES[self.source]["chemins"]):
             raise Refus("Paramètres de lecture refusés.")
         if time.monotonic() - self.debut > DUREE_MAX:
@@ -1006,8 +1021,185 @@ def reglementaire(source):
     return collecter
 
 
+# ------------------------------------------------------------------ Dictionnaire CPE de la NVD (ADR 0100, lot CPE-1)
+PARTIES_CPE = ("a", "o", "h")
+
+
+def echapper_cpe(v):
+    """Échappement d'une composante au format « chaîne formatée » du CPE 2.3 : lettres, chiffres, « _ », « - » et « . »
+    tels quels, tout autre caractère précédé d'une barre oblique inverse (echapperComposanteCpe de packages/shared)."""
+    return re.sub(r"[^A-Za-z0-9_.\-]", lambda m: "\\" + m.group(0), v)
+
+
+def pourcent(v):
+    """Encodage d'URL d'un paramètre, écrit ici (aucun module de requêtes de haut niveau dans ce script) : lettres,
+    chiffres, « _ », « . », « ~ », « - » et « : » tels quels, tout autre octet en %XX."""
+    return "".join(c if re.fullmatch(r"[A-Za-z0-9_.~:\-]", c) else "".join("%%%02X" % o for o in c.encode("utf-8")) for c in v)
+
+
+def nom_cpe_valide(v):
+    return isinstance(v, str) and v not in SANS_VERSION and bool(NOM_CPE.fullmatch(v))
+
+
+def morceaux_version(v):
+    return [int(m[:15]) if m[0].isdigit() else m for m in re.findall(r"\d+|[a-z]+", v.lower())]
+
+
+def comparer_versions(a, b):
+    """Même règle que comparerVersionsCpe (packages/shared) : nombres comparés comme des nombres, lettres dans l'ordre
+    alphabétique, un nombre l'emporte sur des lettres ; un morceau de plus en chiffres rend la version plus récente, en
+    lettres plus ancienne ; à égalité, ordre des textes."""
+    x, y = morceaux_version(a), morceaux_version(b)
+    for i in range(max(len(x), len(y))):
+        u = x[i] if i < len(x) else None
+        w = y[i] if i < len(y) else None
+        if u is None:
+            return -1 if isinstance(w, int) else 1
+        if w is None:
+            return 1 if isinstance(u, int) else -1
+        if isinstance(u, int) and isinstance(w, int):
+            if u != w:
+                return -1 if u < w else 1
+        elif isinstance(u, int):
+            return 1
+        elif isinstance(w, int):
+            return -1
+        elif u != w:
+            return -1 if u < w else 1
+    return -1 if a < b else 1 if a > b else 0
+
+
+def versions_triees(versions, maximum):
+    """Versions distinctes, de la plus récente à la plus ancienne, bornées."""
+    return sorted(set(versions), key=functools.cmp_to_key(comparer_versions), reverse=True)[:maximum]
+
+
+def titre_sans_version(titre, version):
+    """Intitulé sans la version, retirée seulement en mot entier (intituleSansVersion de packages/shared)."""
+    t = titre.strip()
+    if not version or version in SANS_VERSION:
+        return t
+    motif = " " + version
+    i = t.rfind(motif)
+    while i > 0:
+        apres = t[i + len(motif): i + len(motif) + 1]
+        if apres in ("", " "):
+            return t[:i].strip() or t
+        i = t.rfind(motif, 0, i)
+    return t
+
+
+def entree_cpe(p):
+    """Une entrée du dictionnaire : partie, éditeur, produit (échappements retirés), version (None pour « * », « - » ou une
+    forme non admise), intitulé anglais nettoyé, borné et privé de la version, drapeau « obsolète ». None si le nom CPE est
+    illisible."""
+    c = p.get("cpe") if isinstance(p, dict) else None
+    nom = c.get("cpeName") if isinstance(c, dict) else None
+    if not isinstance(nom, str) or len(nom) > 500:
+        return None
+    parts = composantes_cpe(nom)
+    if len(parts) != 13 or parts[0] != "cpe" or parts[1] != "2.3" or parts[2] not in PARTIES_CPE:
+        return None
+    if not nom_cpe_valide(parts[3]) or not nom_cpe_valide(parts[4]):
+        return None
+    version = parts[5] if parts[5] not in SANS_VERSION and VERSION_CPE.fullmatch(parts[5]) else None
+    titres = c.get("titles") if isinstance(c.get("titles"), list) else []
+    anglais = next((t.get("title") for t in titres if isinstance(t, dict) and t.get("lang") == "en"), None)
+    intitule = texte(anglais, BORNES_CPE["intitule"] * 4) if isinstance(anglais, str) else ""
+    intitule = titre_sans_version(intitule, version)[: BORNES_CPE["intitule"]].strip() if intitule else ""
+    return {"partie": parts[2], "editeur": parts[3], "produit": parts[4], "version": version,
+            "intitule": intitule or None, "obsolete": c.get("deprecated") is True}
+
+
+def page_cpe(client, requete):
+    d = client.json(SOURCES_CPE["nvd-cpe"]["chemins"][0], requete)
+    if (not isinstance(d, dict) or not isinstance(d.get("products"), list) or not isinstance(d.get("totalResults"), int)
+            or isinstance(d.get("totalResults"), bool) or not 0 <= d["totalResults"] <= 10000000):
+        raise Refus("Réponse du dictionnaire CPE illisible.")
+    return d["products"][: BORNES_CPE["parPage"]], d["totalResults"]
+
+
+def entier_borne(v, mini, maxi):
+    return isinstance(v, int) and not isinstance(v, bool) and mini <= v <= maxi
+
+
+def cpe_dictionnaire(client, parametres, bilan):
+    """Une page du dictionnaire (BORNES_CPE["pagesParPassage"]) à partir de l'indice reçu, sans attente (ou des entrées modifiées pendant une fenêtre de dates) :
+    produits distincts (premier intitulé gardé) et, si la copie complète est demandée, versions distinctes ; entrées
+    obsolètes écartées et comptées. Jamais de recherche par produit."""
+    debut, pages, avec_versions = parametres.get("debut"), parametres.get("pages"), parametres.get("versions")
+    if (not entier_borne(debut, 0, 10000000) or not entier_borne(pages, 1, BORNES_CPE["pagesParPassage"])
+            or not isinstance(avec_versions, bool)):
+        raise Refus("Demande de tranche illisible : rien n'a été lu.")
+    fenetre = ""
+    if "depuis" in parametres or "jusqua" in parametres:
+        depuis, jusqua = instant(parametres.get("depuis")), instant(parametres.get("jusqua"))
+        if not dt.timedelta(0) < jusqua - depuis <= NVD_FENETRE_MAX:
+            raise Refus("Fenêtre de dates refusée (120 jours au plus) : rien n'a été lu.")
+        f = "%Y-%m-%dT%H:%M:%S.000Z"
+        fenetre = "&lastModStartDate=%s&lastModEndDate=%s" % (depuis.strftime(f), jusqua.strftime(f))
+    produits, versions = {}, set()
+    indice, total, entrees, obsoletes = debut, 0, 0, 0
+    for _page in range(pages):
+        liste, total = page_cpe(client, "resultsPerPage=%d&startIndex=%d%s" % (BORNES_CPE["parPage"], indice, fenetre))
+        if not liste and indice < total:
+            raise Refus("Page vide du dictionnaire CPE avant la fin annoncée : nouvel essai plus tard.")
+        for p in liste:
+            e = entree_cpe(p)
+            if e is None:
+                bilan.ecartes += 1
+                continue
+            entrees += 1
+            if e["obsolete"]:
+                obsoletes += 1
+                continue
+            cle = (e["partie"], e["editeur"], e["produit"])
+            if produits.get(cle) is None:
+                produits[cle] = e["intitule"]
+            if avec_versions and e["version"]:
+                versions.add(cle + (e["version"],))
+        indice += len(liste)
+        if not liste or indice >= total:
+            break
+    return {
+        "produits": [{"partie": k[0], "editeur": k[1], "produit": k[2], "intitule": v} for k, v in produits.items()],
+        "versions": [{"partie": k[0], "editeur": k[1], "produit": k[2], "version": k[3]} for k in sorted(versions)],
+        "bilan": {"total": total, "suivant": min(indice, total), "entrees": entrees, "obsoletes": obsoletes},
+    }
+
+
+def cpe_versions(client, parametres, bilan):
+    """Versions d'un éditeur et d'un produit reçus de l'application : une page (nom CPE commençant par la partie, l'éditeur
+    et le produit), entrées du même produit seulement, obsolètes écartées, les plus récentes d'abord, bornées."""
+    partie, editeur, produit = parametres.get("partie"), parametres.get("editeur"), parametres.get("produit")
+    if partie not in PARTIES_CPE or not nom_cpe_valide(editeur) or not nom_cpe_valide(produit):
+        raise Refus("Produit demandé illisible : rien n'a été lu.")
+    motif = "cpe:2.3:%s:%s:%s" % (partie, echapper_cpe(editeur), echapper_cpe(produit))
+    liste, total = page_cpe(client, "cpeMatchString=%s&resultsPerPage=%d" % (
+        pourcent(motif), BORNES_CPE["parPage"]))
+    trouvees = set()
+    for p in liste:
+        e = entree_cpe(p)
+        if e is None:
+            bilan.ecartes += 1
+        elif (e["partie"], e["editeur"], e["produit"]) == (partie, editeur, produit) and not e["obsolete"] and e["version"]:
+            trouvees.add(e["version"])
+    bilan.tronque = total > len(liste) or len(trouvees) > BORNES_CPE["versions"]
+    return versions_triees(trouvees, BORNES_CPE["versions"])
+
+
+def cpe(client, parametres, bilan):
+    operation = parametres.get("operation")
+    if operation == "dictionnaire":
+        return cpe_dictionnaire(client, parametres, bilan)
+    if operation == "versions":
+        return cpe_versions(client, parametres, bilan)
+    raise Refus("Opération inconnue : rien n'a été lu.")
+
+
 COLLECTES = {"cisa-kev": kev, "nvd": nvd, "epss": epss, "cert-fr": cert_fr, "cert-sante": cert_sante}
 COLLECTES.update({s: reglementaire(s) for s in SOURCES_REGLEMENTAIRES})
+COLLECTES["nvd-cpe"] = cpe
 
 
 def executer(p):
@@ -1022,6 +1214,13 @@ def executer(p):
         mandataire = lire_mandataire(p.get("mandataire"))
         bilan = Bilan()
         elements = COLLECTES[source](Client(source, mandataire=mandataire), parametres, bilan)
+        if source == "nvd-cpe" and isinstance(elements, dict):
+            # Dictionnaire : produits en éléments, versions à part, curseur dans le bilan.
+            return {"ok": True, "elements": elements["produits"], "versions": elements["versions"], "erreur": None,
+                    "bilan": {**elements["bilan"], "ecartes": bilan.ecartes}}
+        if source == "nvd-cpe":
+            return {"ok": True, "elements": elements, "erreur": None,
+                    "bilan": {"elements": len(elements), "ecartes": bilan.ecartes, "tronque": bilan.tronque}}
         if len(elements) > ELEMENTS_MAX:
             elements, bilan.tronque = elements[:ELEMENTS_MAX], True
         return {"ok": True, "elements": elements, "erreur": None,

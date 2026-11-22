@@ -1,0 +1,6732 @@
+[
+  {
+    "fichier": "apps/web/src/assistant/AutonomieAssistant.tsx",
+    "ligne": 133,
+    "composant": "TextInput",
+    "label": "\"Votre avis sur cette ronde (motif facultatif)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/AutonomieAssistant.tsx",
+    "ligne": 186,
+    "composant": "Select",
+    "label": "\"Profil de la ronde\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/AutonomieAssistant.tsx",
+    "ligne": 296,
+    "composant": "Select",
+    "label": "\"Profil de la nouvelle mission\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/AutonomieAssistant.tsx",
+    "ligne": 304,
+    "composant": "Textarea",
+    "label": "\"Consigne de la nouvelle mission\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/AutonomieAssistant.tsx",
+    "ligne": 413,
+    "composant": "Textarea",
+    "label": "{`Texte de la fiche « ${m.titre} » (modifiable avant validation)`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/AutonomieAssistant.tsx",
+    "ligne": 510,
+    "composant": "Select",
+    "label": "\"Profil de la nouvelle fiche\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/AutonomieAssistant.tsx",
+    "ligne": 518,
+    "composant": "TextInput",
+    "label": "\"Titre de la nouvelle fiche\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/AutonomieAssistant.tsx",
+    "ligne": 524,
+    "composant": "Textarea",
+    "label": "\"Texte de la nouvelle fiche\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/AutonomieAssistant.tsx",
+    "ligne": 692,
+    "composant": "TextInput",
+    "label": "{p.type === 'constat' ? 'Intitulé du constat proposé' : 'Intitulé de l’action proposée'}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/AutonomieAssistant.tsx",
+    "ligne": 698,
+    "composant": "Textarea",
+    "label": "{`Description de l’action « ${p.titre} »`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/AutonomieAssistant.tsx",
+    "ligne": 712,
+    "composant": "TextInput",
+    "label": "{`Échéance de l’action « ${p.titre} »`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/AutonomieAssistant.tsx",
+    "ligne": 719,
+    "composant": "TextInput",
+    "label": "{`Motif de votre décision sur « ${p.titre} » (facultatif)`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 206,
+    "composant": "Select",
+    "label": "\"Fournisseur du modèle\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 220,
+    "composant": "Select",
+    "label": "\"Modèle\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 232,
+    "composant": "TextInput",
+    "label": "\"Adresse du service de modèle\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 238,
+    "composant": "TextInput",
+    "label": "\"Nom du modèle\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 247,
+    "composant": "PasswordInput",
+    "label": "{d.cleDefinie ? 'Remplacer la clé d’API' : 'Clé d’API du fournisseur'}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 256,
+    "composant": "Select",
+    "label": "\"Niveau d’habilitation de l’assistant\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 297,
+    "composant": "NumberInput",
+    "label": "\"Budget quotidien, en jetons\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 344,
+    "composant": "MultiSelect",
+    "label": "{`Périmètres ouverts au profil « ${p.libelle} »`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 366,
+    "composant": "Select",
+    "label": "{`Classification la plus élevée lisible par le profil « ${p.libelle} »`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 381,
+    "composant": "Select",
+    "label": "{`Référent du profil « ${p.libelle} »`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 419,
+    "composant": "NumberInput",
+    "label": "\"Heure de la ronde quotidienne\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 427,
+    "composant": "NumberInput",
+    "label": "\"Rappels et questions par personne et par jour, au plus\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 437,
+    "composant": "Select",
+    "label": "\"Synthèse de la semaine\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 461,
+    "composant": "NumberInput",
+    "label": "\"Délai avant relance d’une question, en jours\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/assistant/ReglagesAssistant.tsx",
+    "ligne": 471,
+    "composant": "Textarea",
+    "label": "\"Contexte de l’organisation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/CycleAudit.tsx",
+    "ligne": 50,
+    "composant": "Select",
+    "label": "\"Prochain audit AFNOR\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/audit/CycleAudit.tsx",
+    "ligne": 61,
+    "composant": "TextInput",
+    "label": "\"Date de l’audit AFNOR\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/audit/CycleAudit.tsx",
+    "ligne": 68,
+    "composant": "TextInput",
+    "label": "\"Date de l’audit interne\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/audit/CycleAudit.tsx",
+    "ligne": 75,
+    "composant": "TextInput",
+    "label": "\"Échéance de clôture des écarts\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/audit/CycleAudit.tsx",
+    "ligne": 83,
+    "composant": "TextInput",
+    "label": "{`Libellé de ${y}`}",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 102,
+    "composant": "TextInput",
+    "label": "\"Note\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 111,
+    "composant": "Select",
+    "label": "\"État du plan\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 250,
+    "composant": "TextInput",
+    "label": "{`Date du ${j.label}`}",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 513,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 525,
+    "composant": "TextInput",
+    "label": "\"Fonction\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 666,
+    "composant": "TextInput",
+    "label": "\"Thème du créneau\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 674,
+    "composant": "Select",
+    "label": "\"Jour\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 682,
+    "composant": "TextInput",
+    "label": "\"Début\"",
+    "type": "\"time\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 689,
+    "composant": "TextInput",
+    "label": "\"Fin\"",
+    "type": "\"time\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 696,
+    "composant": "Select",
+    "label": "\"Type\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 704,
+    "composant": "TextInput",
+    "label": "\"Lieu ou visio\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 713,
+    "composant": "Textarea",
+    "label": "\"Contenu\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 747,
+    "composant": "MultiSelect",
+    "label": "{`Mesures abordées (${v.requirements.length})`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 788,
+    "composant": "TextInput",
+    "label": "\"Preuve\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 819,
+    "composant": "TextInput",
+    "label": "\"Nouvelle preuve\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 852,
+    "composant": "TextInput",
+    "label": "\"Question\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/audit/Organisation.tsx",
+    "ligne": 883,
+    "composant": "TextInput",
+    "label": "\"Nouvelle question\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/carto/Construire.tsx",
+    "ligne": 131,
+    "composant": "TextInput",
+    "label": "\"Rechercher un objet non placé\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/carto/Construire.tsx",
+    "ligne": 404,
+    "composant": "Select",
+    "label": "\"Processus parent\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Construire.tsx",
+    "ligne": 416,
+    "composant": "TextInput",
+    "label": "\"Code\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Construire.tsx",
+    "ligne": 425,
+    "composant": "Textarea",
+    "label": "\"Texte\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Construire.tsx",
+    "ligne": 435,
+    "composant": "TextInput",
+    "label": "{\n                item.k === 'frame' ? 'Titre du cadre' : item.k === 'type' && item.type === 'issue' ? 'Libellé' : 'Nom'\n              }",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Construire.tsx",
+    "ligne": 449,
+    "composant": "Select",
+    "label": "\"Catégorie\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Construire.tsx",
+    "ligne": 457,
+    "composant": "Textarea",
+    "label": "\"Besoins et attentes\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Construire.tsx",
+    "ligne": 469,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Construire.tsx",
+    "ligne": 491,
+    "composant": "Select",
+    "label": "\"Famille\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Construire.tsx",
+    "ligne": 501,
+    "composant": "TextInput",
+    "label": "\"Pilote\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Construire.tsx",
+    "ligne": 504,
+    "composant": "Select",
+    "label": "\"Teinte\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Construire.tsx",
+    "ligne": 579,
+    "composant": "TextInput",
+    "label": "\"Nouveau nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Dialogues.tsx",
+    "ligne": 100,
+    "composant": "Select",
+    "label": "\"Profondeur des relations\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Dialogues.tsx",
+    "ligne": 141,
+    "composant": "Select",
+    "label": "\"Carte existante\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Dialogues.tsx",
+    "ligne": 202,
+    "composant": "TextInput",
+    "label": "\"Filtrer les objets\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Dialogues.tsx",
+    "ligne": 235,
+    "composant": "Select",
+    "label": "\"Ajouter aussi\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Dialogues.tsx",
+    "ligne": 287,
+    "composant": "Select",
+    "label": "\"Type de relation\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Dialogues.tsx",
+    "ligne": 354,
+    "composant": "TextInput",
+    "label": "\"Nouvelle version\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/carto/Inspecteur.tsx",
+    "ligne": 131,
+    "composant": "Textarea",
+    "label": "{note ? 'Texte de la note' : 'Titre du cadre'}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/carto/Inspecteur.tsx",
+    "ligne": 140,
+    "composant": "Select",
+    "label": "\"Teinte\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/carto/Inspecteur.tsx",
+    "ligne": 325,
+    "composant": "Select",
+    "label": "\"Nature de l’enjeu\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/carto/Inspecteur.tsx",
+    "ligne": 582,
+    "composant": "Select",
+    "label": "\"Type de relation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/AdresseSite.tsx",
+    "ligne": 71,
+    "composant": "TextInput",
+    "label": "\"Nouvelle adresse\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/AdresseSite.tsx",
+    "ligne": 81,
+    "composant": "TextInput",
+    "label": "\"Code de double authentification\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/BarreOutils.tsx",
+    "ligne": 302,
+    "composant": "TextInput",
+    "label": "{`Chercher dans « ${libelle} »`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/BarreOutils.tsx",
+    "ligne": 480,
+    "composant": "TextInput",
+    "label": "{recherche.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/ChampFrequence.tsx",
+    "ligne": 29,
+    "composant": "NativeSelect",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/CleSecours.tsx",
+    "ligne": 124,
+    "composant": "TextInput",
+    "label": "\"Les 8 derniers caractères de la clé privée\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/CleSecours.tsx",
+    "ligne": 213,
+    "composant": "TextInput",
+    "label": "\"Code de double authentification\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/ClesSecurite.tsx",
+    "ligne": 75,
+    "composant": "PasswordInput",
+    "label": "\"Mot de passe\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/ClesSecurite.tsx",
+    "ligne": 83,
+    "composant": "TextInput",
+    "label": "\"Code de double authentification\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/ClesSecurite.tsx",
+    "ligne": 146,
+    "composant": "TextInput",
+    "label": "\"Nom de la clé\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/ClesSecurite.tsx",
+    "ligne": 181,
+    "composant": "TextInput",
+    "label": "\"Nom de la clé\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/components/ContactCriseCompte.tsx",
+    "ligne": 104,
+    "composant": "TextInput",
+    "label": "\"Rôle de crise\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/ContactCriseCompte.tsx",
+    "ligne": 110,
+    "composant": "TextInput",
+    "label": "\"Téléphone\"",
+    "type": "\"tel\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/ContactCriseCompte.tsx",
+    "ligne": 117,
+    "composant": "TextInput",
+    "label": "\"Téléphone 2\"",
+    "type": "\"tel\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/ContactCriseCompte.tsx",
+    "ligne": 124,
+    "composant": "TextInput",
+    "label": "\"Disponibilité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/ContactCriseCompte.tsx",
+    "ligne": 142,
+    "composant": "MultiSelect",
+    "label": "\"Périmètres\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/ContactCriseCompte.tsx",
+    "ligne": 239,
+    "composant": "TextInput",
+    "label": "\"Téléphone\"",
+    "type": "\"tel\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/ContactCriseCompte.tsx",
+    "ligne": 246,
+    "composant": "TextInput",
+    "label": "\"Téléphone 2\"",
+    "type": "\"tel\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/ContactCriseCompte.tsx",
+    "ligne": 253,
+    "composant": "TextInput",
+    "label": "\"Disponibilité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/DispositionTableauDeBord.tsx",
+    "ligne": 233,
+    "composant": "NumberInput",
+    "label": "{`Orange à partir de (${unite})`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/DispositionTableauDeBord.tsx",
+    "ligne": 245,
+    "composant": "NumberInput",
+    "label": "{`Vert à partir de (${unite})`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/DispositionTableauDeBord.tsx",
+    "ligne": 285,
+    "composant": "NativeSelect",
+    "label": "\"Visualisation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/DispositionTableauDeBord.tsx",
+    "ligne": 315,
+    "composant": "NumberInput",
+    "label": "\"Cible (%)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/DispositionTableauDeBord.tsx",
+    "ligne": 630,
+    "composant": "TextInput",
+    "label": "\"Nom du tableau\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/DispositionTableauDeBord.tsx",
+    "ligne": 720,
+    "composant": "NativeSelect",
+    "label": "{`Largeur de « ${nom} »`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/DispositionTableauDeBord.tsx",
+    "ligne": 731,
+    "composant": "NativeSelect",
+    "label": "{`Hauteur de « ${nom} »`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/FacteursCompte.tsx",
+    "ligne": 155,
+    "composant": "Textarea",
+    "label": "\"Motif\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/components/Mandataire.tsx",
+    "ligne": 100,
+    "composant": "TextInput",
+    "label": "\"Adresse du mandataire\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/Mandataire.tsx",
+    "ligne": 110,
+    "composant": "TextInput",
+    "label": "\"Identifiant (facultatif)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/Mandataire.tsx",
+    "ligne": 118,
+    "composant": "Textarea",
+    "label": "\"Autorité de certification de l’établissement (facultatif)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/Mandataire.tsx",
+    "ligne": 155,
+    "composant": "PasswordInput",
+    "label": "{defini ? 'Nouveau mot de passe' : 'Mot de passe'}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/Poivre.tsx",
+    "ligne": 99,
+    "composant": "PasswordInput",
+    "label": "\"Votre poivre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/Poivre.tsx",
+    "ligne": 133,
+    "composant": "TextInput",
+    "label": "\"Les 8 derniers caractères du poivre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/Poivre.tsx",
+    "ligne": 216,
+    "composant": "PasswordInput",
+    "label": "\"Ancien poivre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/Poivre.tsx",
+    "ligne": 224,
+    "composant": "TextInput",
+    "label": "\"Code de double authentification\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/PolitiqueCles.tsx",
+    "ligne": 70,
+    "composant": "NumberInput",
+    "label": "\"Période de grâce pour l’enrôlement (jours)\"",
+    "type": null,
+    "largeur": "\"fit-content\"",
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/PolitiqueCles.tsx",
+    "ligne": 93,
+    "composant": "Textarea",
+    "label": "\"Modèles autorisés (AAGUID, un par ligne)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/PolitiqueCles.tsx",
+    "ligne": 117,
+    "composant": "Textarea",
+    "label": "\"Autorités racines supplémentaires (PEM)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/RemiseAVide.tsx",
+    "ligne": 122,
+    "composant": "TextInput",
+    "label": "\"Code de double authentification\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/RemiseAVide.tsx",
+    "ligne": 212,
+    "composant": "TextInput",
+    "label": "{`Recopier exactement : ${REMISE_A_VIDE_PHRASES[portee]}`}",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/components/RemiseAVide.tsx",
+    "ligne": 219,
+    "composant": "TextInput",
+    "label": "\"Code de double authentification\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/components/TableauDeBord.tsx",
+    "ligne": 1033,
+    "composant": "TextInput",
+    "label": "\"Rechercher une dalle\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/TableauxDeBord.tsx",
+    "ligne": 489,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/components/TableauxDeBord.tsx",
+    "ligne": 509,
+    "composant": "NativeSelect",
+    "label": "\"Tableau à copier\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/components/TableauxDeBord.tsx",
+    "ligne": 622,
+    "composant": "MultiSelect",
+    "label": "\"Partager avec\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/Updates.tsx",
+    "ligne": 371,
+    "composant": "TextInput",
+    "label": "\"Taper METTRE À JOUR pour confirmer\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/Updates.tsx",
+    "ligne": 377,
+    "composant": "TextInput",
+    "label": "\"Code de double authentification\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/selecteurs.tsx",
+    "ligne": 42,
+    "composant": "Select",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/components/selecteurs.tsx",
+    "ligne": 116,
+    "composant": "Select",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+    "ligne": 163,
+    "composant": "TextInput",
+    "label": "\"Recherche\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+    "ligne": 164,
+    "composant": "Select",
+    "label": "\"État\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+    "ligne": 172,
+    "composant": "Select",
+    "label": "\"Méthode concernée\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+    "ligne": 352,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+    "ligne": 361,
+    "composant": "TextInput",
+    "label": "\"Identifiant\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+    "ligne": 371,
+    "composant": "Select",
+    "label": "\"Portée\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+    "ligne": 384,
+    "composant": "Select",
+    "label": "\"Périmètre\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+    "ligne": 394,
+    "composant": "Select",
+    "label": "\"Catégorie\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+    "ligne": 411,
+    "composant": "Select",
+    "label": "\"Catégorie\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+    "ligne": 431,
+    "composant": "TextInput",
+    "label": "\"Premier critère\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+    "ligne": 442,
+    "composant": "Select",
+    "label": "\"Finalité\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+    "ligne": 449,
+    "composant": "TextInput",
+    "label": "\"Première catégorie\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/EchellesScenario.tsx",
+    "ligne": 61,
+    "composant": "Select",
+    "label": "{`${cible.titre} (échelle « ${def.name} »)`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/EpinglagesMethode.tsx",
+    "ligne": 91,
+    "composant": "Select",
+    "label": "\"Dimension en lignes de la matrice\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/EpinglagesMethode.tsx",
+    "ligne": 106,
+    "composant": "MultiSelect",
+    "label": "\"Types d’objets mobilisés par la méthode\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/EpinglagesMethode.tsx",
+    "ligne": 116,
+    "composant": "TextInput",
+    "label": "{`Livrable ${i + 1}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/EpinglagesMethode.tsx",
+    "ligne": 129,
+    "composant": "Select",
+    "label": "\"Étape\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/Fiche.tsx",
+    "ligne": 342,
+    "composant": "Textarea",
+    "label": "\"Motif de la publication\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/Fiche.tsx",
+    "ligne": 350,
+    "composant": "TextInput",
+    "label": "\"Pour confirmer, saisissez PUBLIER\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/Fiche.tsx",
+    "ligne": 432,
+    "composant": "TextInput",
+    "label": "\"Identifiant\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/Fiche.tsx",
+    "ligne": 438,
+    "composant": "TextInput",
+    "label": "\"Nom (facultatif)\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/Fiche.tsx",
+    "ligne": 439,
+    "composant": "Select",
+    "label": "\"Portée\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/Fiche.tsx",
+    "ligne": 450,
+    "composant": "Select",
+    "label": "\"Périmètre\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/Gravite.tsx",
+    "ligne": 75,
+    "composant": "Select",
+    "label": "{`Catégorie d’impact ${i + 1}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/Gravite.tsx",
+    "ligne": 84,
+    "composant": "Select",
+    "label": "{`Niveau d’impact ${i + 1}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/Gravite.tsx",
+    "ligne": 126,
+    "composant": "Select",
+    "label": "\"Gravité retenue\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/MigrationEtude.tsx",
+    "ligne": 117,
+    "composant": "Textarea",
+    "label": "\"Motif de la migration\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/MigrationEtude.tsx",
+    "ligne": 125,
+    "composant": "TextInput",
+    "label": "\"Pour confirmer, saisissez MIGRER\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/config-grc/Pertinence.tsx",
+    "ligne": 118,
+    "composant": "Select",
+    "label": "{def.rows.label || 'Ressources'}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/Pertinence.tsx",
+    "ligne": 127,
+    "composant": "Select",
+    "label": "{def.columns.label || 'Motivation'}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/Pertinence.tsx",
+    "ligne": 149,
+    "composant": "Select",
+    "label": "\"Pertinence retenue\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/commun.tsx",
+    "ligne": 129,
+    "composant": "Select",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/commun.tsx",
+    "ligne": 145,
+    "composant": "Select",
+    "label": "\"Version épinglée\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 67,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 74,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 90,
+    "composant": "MultiSelect",
+    "label": "\"Familles de méthode concernées\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 185,
+    "composant": "Select",
+    "label": "\"Catégorie\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 193,
+    "composant": "Select",
+    "label": "\"Nature\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 206,
+    "composant": "TextInput",
+    "label": "\"Unité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 214,
+    "composant": "Textarea",
+    "label": "\"Règles d’utilisation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 239,
+    "composant": "TextInput",
+    "label": "\"Libellé\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 246,
+    "composant": "TextInput",
+    "label": "\"Identifiant\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 253,
+    "composant": "NumberInput",
+    "label": "\"Valeur numérique\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 261,
+    "composant": "Select",
+    "label": "\"Effet sur la suite de l’analyse\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 270,
+    "composant": "Select",
+    "label": "\"Acceptabilité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 287,
+    "composant": "TextInput",
+    "label": "{`Couleur du niveau ${l.label || i + 1}`}",
+    "type": "\"color\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 297,
+    "composant": "Textarea",
+    "label": "\"Description du niveau\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 307,
+    "composant": "Textarea",
+    "label": "{`Descripteur : ${d.label}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 332,
+    "composant": "TextInput",
+    "label": "\"Libellé de la dimension\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 342,
+    "composant": "TextInput",
+    "label": "\"Identifiant\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 424,
+    "composant": "Select",
+    "label": "\"Catégorie\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 454,
+    "composant": "TextInput",
+    "label": "\"Titre de l’axe des lignes\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 460,
+    "composant": "TextInput",
+    "label": "\"Titre de l’axe des colonnes\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 506,
+    "composant": "Select",
+    "label": "{`${value.rows.label || 'Ligne'} ${l.label}, ${value.columns.label || 'colonne'} ${c.label}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 562,
+    "composant": "Select",
+    "label": "\"Agrégation de plusieurs entrées\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 578,
+    "composant": "Select",
+    "label": "{s.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 622,
+    "composant": "TextInput",
+    "label": "\"Libellé\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 629,
+    "composant": "TextInput",
+    "label": "\"Identifiant\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 642,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 672,
+    "composant": "Select",
+    "label": "\"Finalité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 703,
+    "composant": "TextInput",
+    "label": "\"Libellé\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 710,
+    "composant": "TextInput",
+    "label": "\"Identifiant\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/config-grc/editeurs.tsx",
+    "ligne": 716,
+    "composant": "Select",
+    "label": "\"Catégorie parente\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ActionDeTraitement.tsx",
+    "ligne": 58,
+    "composant": "TextInput",
+    "label": "\"Nom de l’action\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ActionDeTraitement.tsx",
+    "ligne": 65,
+    "composant": "TextInput",
+    "label": "\"Échéance (facultative)\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/BusinessPolicy.tsx",
+    "ligne": 56,
+    "composant": "Textarea",
+    "label": "\"Motif de publication métier\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ConfigurationEditor.tsx",
+    "ligne": 219,
+    "composant": "Select",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ConfigurationEditor.tsx",
+    "ligne": 230,
+    "composant": "NumberInput",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ConfigurationEditor.tsx",
+    "ligne": 241,
+    "composant": "Textarea",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ConfigurationEditor.tsx",
+    "ligne": 243,
+    "composant": "TextInput",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Ebios.tsx",
+    "ligne": 325,
+    "composant": "Select",
+    "label": "\"Source de risque\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/Imports.tsx",
+    "ligne": 106,
+    "composant": "Textarea",
+    "label": "\"Contenu à simuler\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Imports.tsx",
+    "ligne": 151,
+    "composant": "Select",
+    "label": "\"Référentiel à exporter\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 271,
+    "composant": "TextInput",
+    "label": "\"Date de réalisation\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 277,
+    "composant": "Textarea",
+    "label": "\"Commentaire et justification\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 282,
+    "composant": "Textarea",
+    "label": "\"Justificatif historique\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 286,
+    "composant": "TextInput",
+    "label": "\"Nom de la fiche\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 292,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 326,
+    "composant": "Select",
+    "label": "\"Catégorie d’action\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 334,
+    "composant": "Select",
+    "label": "\"Priorité\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 351,
+    "composant": "Select",
+    "label": "\"Modèle d’action\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 360,
+    "composant": "Select",
+    "label": "\"État de l’action\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 369,
+    "composant": "TextInput",
+    "label": "{k === 'startAt' ? 'Début' : 'Échéance'}",
+    "type": "\"datetime-local\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 381,
+    "composant": "NumberInput",
+    "label": "\"Rappel avant l’échéance (jours)\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 389,
+    "composant": "Textarea",
+    "label": "\"Justification de clôture\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 395,
+    "composant": "MultiSelect",
+    "label": "\"Dépendances (actions)\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 451,
+    "composant": "MultiSelect",
+    "label": "\"Objets SMSI liés à chaque occurrence\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 462,
+    "composant": "Select",
+    "label": "\"Méthode publiée\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 473,
+    "composant": "Select",
+    "label": "\"Version de la méthode\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 485,
+    "composant": "TextInput",
+    "label": "{{ code: 'Code', domain: 'Domaine', entity: 'Entité', scope: 'Périmètre' }[k]}",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 493,
+    "composant": "Select",
+    "label": "\"Stratégie\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 501,
+    "composant": "Textarea",
+    "label": "\"Justification d’acceptation\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 507,
+    "composant": "TextInput",
+    "label": "\"Date de réévaluation\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 536,
+    "composant": "Textarea",
+    "label": "{l}",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 579,
+    "composant": "MultiSelect",
+    "label": "\"Objets liés dans le référentiel SMSI\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 684,
+    "composant": "Select",
+    "label": "{f.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 695,
+    "composant": "NumberInput",
+    "label": "{f.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 711,
+    "composant": "MultiSelect",
+    "label": "{f.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 721,
+    "composant": "Textarea",
+    "label": "{f.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 730,
+    "composant": "TextInput",
+    "label": "{f.label}",
+    "type": "{f.type === 'date' ? 'date' : 'text'}",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 740,
+    "composant": "Textarea",
+    "label": "{'Commentaire — ' + step.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+    "ligne": 746,
+    "composant": "Select",
+    "label": "{'Validation — ' + step.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/PlanningSerie.tsx",
+    "ligne": 120,
+    "composant": "NumberInput",
+    "label": "\"Ouverture (jours avant l’échéance)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/PlanningSerie.tsx",
+    "ligne": 129,
+    "composant": "NumberInput",
+    "label": "\"Clôture (jours après l’échéance)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/PlanningSerie.tsx",
+    "ligne": 145,
+    "composant": "MultiSelect",
+    "label": "\"Jours de la semaine exclus\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/PlanningSerie.tsx",
+    "ligne": 179,
+    "composant": "Select",
+    "label": "\"Calendrier de la plateforme\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/PlanningSerie.tsx",
+    "ligne": 190,
+    "composant": "Select",
+    "label": "\"Année\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/PlanningSerie.tsx",
+    "ligne": 245,
+    "composant": "Textarea",
+    "label": "\"Ou collez le contenu du calendrier\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Publication.tsx",
+    "ligne": 121,
+    "composant": "Select",
+    "label": "{type === 'methods' ? 'Méthode publiée' : 'Référentiel publié'}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Publication.tsx",
+    "ligne": 130,
+    "composant": "Select",
+    "label": "\"Consulter une version publiée\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Publication.tsx",
+    "ligne": 247,
+    "composant": "Textarea",
+    "label": "\"Définition JSON avancée\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Publication.tsx",
+    "ligne": 269,
+    "composant": "Textarea",
+    "label": "\"Motif de publication\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RegistreRisques.tsx",
+    "ligne": 174,
+    "composant": "Select",
+    "label": "\"Démarche\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RegistreRisques.tsx",
+    "ligne": 182,
+    "composant": "Select",
+    "label": "\"Étude\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RegistreRisques.tsx",
+    "ligne": 190,
+    "composant": "Select",
+    "label": "\"Option de traitement\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RegistreRisques.tsx",
+    "ligne": 198,
+    "composant": "Select",
+    "label": "\"Acceptation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Relations.tsx",
+    "ligne": 84,
+    "composant": "TextInput",
+    "label": "\"Rechercher un objet lié\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Relations.tsx",
+    "ligne": 86,
+    "composant": "Select",
+    "label": "\"Objet ou version de preuve\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Relations.tsx",
+    "ligne": 99,
+    "composant": "Select",
+    "label": "\"Type de relation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Relations.tsx",
+    "ligne": 107,
+    "composant": "Textarea",
+    "label": "\"Justification du lien\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RiskMap.tsx",
+    "ligne": 235,
+    "composant": "Select",
+    "label": "\"Base d’appréciation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RiskMap.tsx",
+    "ligne": 246,
+    "composant": "Select",
+    "label": "\"Méthode\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RiskMap.tsx",
+    "ligne": 258,
+    "composant": "TextInput",
+    "label": "\"Domaine\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RiskMap.tsx",
+    "ligne": 259,
+    "composant": "TextInput",
+    "label": "\"Périmètre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RiskMap.tsx",
+    "ligne": 260,
+    "composant": "Select",
+    "label": "\"Objet lié\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RiskMap.tsx",
+    "ligne": 269,
+    "composant": "TextInput",
+    "label": "\"Entité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RiskMap.tsx",
+    "ligne": 270,
+    "composant": "Select",
+    "label": "\"Stratégie de traitement\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RiskMap.tsx",
+    "ligne": 278,
+    "composant": "TextInput",
+    "label": "\"Appréciations au\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RiskMap.tsx",
+    "ligne": 284,
+    "composant": "TextInput",
+    "label": "\"Comparer au\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RiskMap.tsx",
+    "ligne": 290,
+    "composant": "Select",
+    "label": "\"Regroupement\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/RiskMap.tsx",
+    "ligne": 307,
+    "composant": "Select",
+    "label": "\"Représentation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Risks.tsx",
+    "ligne": 39,
+    "composant": "Select",
+    "label": "{d.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Risks.tsx",
+    "ligne": 48,
+    "composant": "Select",
+    "label": "\"Vraisemblance\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Risks.tsx",
+    "ligne": 56,
+    "composant": "Select",
+    "label": "\"Niveau de risque — jugement documenté\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Risks.tsx",
+    "ligne": 70,
+    "composant": "Select",
+    "label": "{f?.label ?? k}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Risks.tsx",
+    "ligne": 189,
+    "composant": "Textarea",
+    "label": "\"Justification de l’appréciation\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/Risks.tsx",
+    "ligne": 198,
+    "composant": "Select",
+    "label": "\"Décision\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/grc/SelecteurPeriodicite.tsx",
+    "ligne": 35,
+    "composant": "Select",
+    "label": "\"Périodicité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/SelecteurPeriodicite.tsx",
+    "ligne": 53,
+    "composant": "NumberInput",
+    "label": "\"Tous les\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/SelecteurPeriodicite.tsx",
+    "ligne": 62,
+    "composant": "Select",
+    "label": "\"Unité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/SocleEditeur.tsx",
+    "ligne": 35,
+    "composant": "TextInput",
+    "label": "\"Référentiel\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/SocleEditeur.tsx",
+    "ligne": 41,
+    "composant": "Select",
+    "label": "\"État\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/SocleEditeur.tsx",
+    "ligne": 48,
+    "composant": "Textarea",
+    "label": "\"Écart constaté\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/TachesAction.tsx",
+    "ligne": 81,
+    "composant": "TextInput",
+    "label": "\"Intitulé de la tâche\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/TachesAction.tsx",
+    "ligne": 97,
+    "composant": "TextInput",
+    "label": "\"Échéance de la tâche\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/TachesAction.tsx",
+    "ligne": 155,
+    "composant": "TextInput",
+    "label": "\"Nouvelle tâche\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Tasks.tsx",
+    "ligne": 342,
+    "composant": "Select",
+    "label": "\"Vue synchronisée\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Tasks.tsx",
+    "ligne": 350,
+    "composant": "TextInput",
+    "label": "\"Mois\"",
+    "type": "\"month\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Tasks.tsx",
+    "ligne": 359,
+    "composant": "Select",
+    "label": "\"Registre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/Tasks.tsx",
+    "ligne": 370,
+    "composant": "Select",
+    "label": "\"État\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/TimelineOccurrences.tsx",
+    "ligne": 244,
+    "composant": "Select",
+    "label": "\"Série à suivre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/TimelineStudio.tsx",
+    "ligne": 696,
+    "composant": "Select",
+    "label": null,
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ebios-visuel/Chemins.tsx",
+    "ligne": 68,
+    "composant": "Select",
+    "label": "\"Animations\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ebios-visuel/Synthese.tsx",
+    "ligne": 60,
+    "composant": "Select",
+    "label": "\"Gravité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/grc/ebios-visuel/Synthese.tsx",
+    "ligne": 68,
+    "composant": "Select",
+    "label": "\"Vraisemblance\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/historique/champs.tsx",
+    "ligne": 34,
+    "composant": "TextInput",
+    "label": "{label}",
+    "type": "{type}",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/historique/champs.tsx",
+    "ligne": 68,
+    "composant": "Textarea",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/historique/champs.tsx",
+    "ligne": 110,
+    "composant": "Select",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Crise.tsx",
+    "ligne": 170,
+    "composant": "TextInput",
+    "label": "\"Intitulé\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Crise.tsx",
+    "ligne": 176,
+    "composant": "Select",
+    "label": "\"Scénario\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Crise.tsx",
+    "ligne": 184,
+    "composant": "Select",
+    "label": "\"Exercice planifié lié\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Crise.tsx",
+    "ligne": 370,
+    "composant": "Select",
+    "label": "\"Type d’entrée\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Crise.tsx",
+    "ligne": 377,
+    "composant": "TextInput",
+    "label": "\"Auteur\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Crise.tsx",
+    "ligne": 379,
+    "composant": "Textarea",
+    "label": "\"Entrée\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Crise.tsx",
+    "ligne": 453,
+    "composant": "TextInput",
+    "label": "\"Échéance\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Crise.tsx",
+    "ligne": 459,
+    "composant": "TextInput",
+    "label": "\"Heures\"",
+    "type": "\"number\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Declarations.tsx",
+    "ligne": 285,
+    "composant": "Select",
+    "label": "\"Ouvrir une déclaration non proposée\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Declarations.tsx",
+    "ligne": 305,
+    "composant": "TextInput",
+    "label": "\"Date et heure de qualification\"",
+    "type": "\"datetime-local\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Declarations.tsx",
+    "ligne": 334,
+    "composant": "Textarea",
+    "label": "\"Motif\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/incidents/Declarations.tsx",
+    "ligne": 369,
+    "composant": "TextInput",
+    "label": "\"Numéro de dossier ou d’accusé de réception\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/incidents/Declarations.tsx",
+    "ligne": 435,
+    "composant": "TextInput",
+    "label": "\"Numéro de dossier pressenti\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Declarations.tsx",
+    "ligne": 473,
+    "composant": "Textarea",
+    "label": "{r.libelle}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/FormulaireEvenementRetex.tsx",
+    "ligne": 71,
+    "composant": "TextInput",
+    "label": "\"Date et heure\"",
+    "type": "\"datetime-local\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/FormulaireEvenementRetex.tsx",
+    "ligne": 78,
+    "composant": "Select",
+    "label": "\"Type d’événement\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/FormulaireEvenementRetex.tsx",
+    "ligne": 87,
+    "composant": "Select",
+    "label": "\"Gravité à ce moment\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/FormulaireEvenementRetex.tsx",
+    "ligne": 96,
+    "composant": "TextInput",
+    "label": "\"Acteur\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/FormulaireEvenementRetex.tsx",
+    "ligne": 104,
+    "composant": "TextInput",
+    "label": "\"Intitulé\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/FormulaireEvenementRetex.tsx",
+    "ligne": 111,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Incidents.tsx",
+    "ligne": 134,
+    "composant": "Select",
+    "label": "\"RETEX\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Retex.tsx",
+    "ligne": 197,
+    "composant": "MultiSelect",
+    "label": "\"Contributeurs\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/incidents/Retex.tsx",
+    "ligne": 207,
+    "composant": "Textarea",
+    "label": "\"Consigne aux contributeurs\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/incidents/Retex.tsx",
+    "ligne": 214,
+    "composant": "TextInput",
+    "label": "\"Échéance de la collecte\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/incidents/Retex.tsx",
+    "ligne": 577,
+    "composant": "MultiSelect",
+    "label": "\"Inviter d’autres personnes\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Retex.tsx",
+    "ligne": 846,
+    "composant": "Select",
+    "label": "\"Événement correspondant\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/incidents/Retex.tsx",
+    "ligne": 856,
+    "composant": "TextInput",
+    "label": "\"Précision (facultative)\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/incidents/Retex.tsx",
+    "ligne": 896,
+    "composant": "Textarea",
+    "label": "\"Motif\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/incidents/Retex.tsx",
+    "ligne": 1010,
+    "composant": "Select",
+    "label": "\"Cellule de crise\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/incidents/Retex.tsx",
+    "ligne": 1092,
+    "composant": "Select",
+    "label": "\"Type d’événement\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/integrations/IntegrationsPage.tsx",
+    "ligne": 629,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/integrations/IntegrationsPage.tsx",
+    "ligne": 637,
+    "composant": "TextInput",
+    "label": "\"Adresse du service\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/integrations/IntegrationsPage.tsx",
+    "ligne": 647,
+    "composant": "Textarea",
+    "label": "\"Autorité de certification (facultatif)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/integrations/IntegrationsPage.tsx",
+    "ligne": 659,
+    "composant": "NumberInput",
+    "label": "\"Délai d’une requête (secondes)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/integrations/IntegrationsPage.tsx",
+    "ligne": 755,
+    "composant": "PasswordInput",
+    "label": "{`${s.libelle} (${libelleSecret(definis[s.id] === true).toLowerCase()})`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/integrations/SuppressionNessus.tsx",
+    "ligne": 83,
+    "composant": "TextInput",
+    "label": "{`Saisissez ${MOT_SUPPRESSION} pour confirmer`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/notifications/Reglages.tsx",
+    "ligne": 90,
+    "composant": "Select",
+    "label": "{`${t.label} : ${NOTIFICATION_CANAL_LABELS[canal]}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Account.tsx",
+    "ligne": 115,
+    "composant": "Select",
+    "label": "\"Taille d’affichage\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Account.tsx",
+    "ligne": 210,
+    "composant": "PasswordInput",
+    "label": "\"Mot de passe actuel\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Account.tsx",
+    "ligne": 217,
+    "composant": "PasswordInput",
+    "label": "\"Nouveau mot de passe\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Account.tsx",
+    "ligne": 232,
+    "composant": "PasswordInput",
+    "label": "\"Confirmation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Account.tsx",
+    "ligne": 273,
+    "composant": "PasswordInput",
+    "label": "\"Mot de passe\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Admin.tsx",
+    "ligne": 207,
+    "composant": "TextInput",
+    "label": "\"Rechercher\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Admin.tsx",
+    "ligne": 213,
+    "composant": "TextInput",
+    "label": "\"Compte\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Admin.tsx",
+    "ligne": 219,
+    "composant": "TextInput",
+    "label": "\"Du\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Admin.tsx",
+    "ligne": 225,
+    "composant": "TextInput",
+    "label": "\"Au\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 426,
+    "composant": "TextInput",
+    "label": "\"Identifiant\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 433,
+    "composant": "TextInput",
+    "label": "\"Nom affiché\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 438,
+    "composant": "TextInput",
+    "label": "\"Adresse e-mail\"",
+    "type": "\"email\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 447,
+    "composant": "MultiSelect",
+    "label": "\"Rôles\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 457,
+    "composant": "MultiSelect",
+    "label": "\"Modules ouverts à l’auditeur externe (lecture seule)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 466,
+    "composant": "MultiSelect",
+    "label": "\"Groupes\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 474,
+    "composant": "TextInput",
+    "label": "\"Date d’expiration du compte\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 488,
+    "composant": "Select",
+    "label": "\"État\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 734,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 735,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 742,
+    "composant": "MultiSelect",
+    "label": "\"Rôles portés par le groupe\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 749,
+    "composant": "MultiSelect",
+    "label": "\"Membres\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 877,
+    "composant": "TextInput",
+    "label": "\"Nom du nouveau rôle\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 924,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminAccess.tsx",
+    "ligne": 925,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminCalendriers.tsx",
+    "ligne": 181,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminCalendriers.tsx",
+    "ligne": 188,
+    "composant": "Select",
+    "label": "\"Type\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminCalendriers.tsx",
+    "ligne": 295,
+    "composant": "NumberInput",
+    "label": "\"Année\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminCalendriers.tsx",
+    "ligne": 322,
+    "composant": "Textarea",
+    "label": "\"Ou collez le contenu du calendrier\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminCalendriers.tsx",
+    "ligne": 384,
+    "composant": "Select",
+    "label": "\"Année\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminCalendriers.tsx",
+    "ligne": 391,
+    "composant": "TextInput",
+    "label": "\"Motif (consigné)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminFonctions.tsx",
+    "ligne": 144,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminFonctions.tsx",
+    "ligne": 145,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminFonctions.tsx",
+    "ligne": 152,
+    "composant": "MultiSelect",
+    "label": "\"Titulaires\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminImport.tsx",
+    "ligne": 163,
+    "composant": "Select",
+    "label": "\"Module à remplacer\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminImport.tsx",
+    "ligne": 213,
+    "composant": "TextInput",
+    "label": "\"Nom du module à remplacer\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminImportTenacy.tsx",
+    "ligne": 124,
+    "composant": "Select",
+    "label": "\"Périmètre de destination\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminJournauxTechniques.tsx",
+    "ligne": 137,
+    "composant": "Select",
+    "label": "\"Seuil permanent\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminJournauxTechniques.tsx",
+    "ligne": 157,
+    "composant": "Select",
+    "label": "\"Débogage temporaire\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminJournauxTechniques.tsx",
+    "ligne": 186,
+    "composant": "Select",
+    "label": "\"Niveau minimal\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminJournauxTechniques.tsx",
+    "ligne": 193,
+    "composant": "TextInput",
+    "label": "\"Rechercher\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminModules.tsx",
+    "ligne": 198,
+    "composant": "TextInput",
+    "label": "\"Saisissez VALIDER pour confirmer ces conséquences\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminMurs.tsx",
+    "ligne": 65,
+    "composant": "TextInput",
+    "label": "\"Nom de l’écran\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminMurs.tsx",
+    "ligne": 73,
+    "composant": "NumberInput",
+    "label": "\"Durée de validité (jours)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminMurs.tsx",
+    "ligne": 82,
+    "composant": "MultiSelect",
+    "label": "\"Modules affichés\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminNotifications.tsx",
+    "ligne": 95,
+    "composant": "Select",
+    "label": "\"Groupe ou rôle\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminNotifications.tsx",
+    "ligne": 160,
+    "composant": "Select",
+    "label": "\"Type de notification\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminNotifications.tsx",
+    "ligne": 167,
+    "composant": "Select",
+    "label": "\"Canal\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminOperations.tsx",
+    "ligne": 204,
+    "composant": "TextInput",
+    "label": "\"Rechercher une archive\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminOperations.tsx",
+    "ligne": 382,
+    "composant": "TextInput",
+    "label": "\"Adresse de courriel de contact ACME\"",
+    "type": "\"email\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminOperations.tsx",
+    "ligne": 389,
+    "composant": "TextInput",
+    "label": "\"Serveur ACME (laisser vide pour Let’s Encrypt)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminOperations.tsx",
+    "ligne": 638,
+    "composant": "TextInput",
+    "label": "\"Taper RESTAURER pour confirmer\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminOperations.tsx",
+    "ligne": 644,
+    "composant": "TextInput",
+    "label": "\"Code de double authentification\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminPolitiqueSauvegardes.tsx",
+    "ligne": 85,
+    "composant": "MultiSelect",
+    "label": "\"Jours de sauvegarde\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminPolitiqueSauvegardes.tsx",
+    "ligne": 93,
+    "composant": "NumberInput",
+    "label": "\"Heure UTC\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminPolitiqueSauvegardes.tsx",
+    "ligne": 102,
+    "composant": "NumberInput",
+    "label": "\"Minute UTC\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminPolitiqueSauvegardes.tsx",
+    "ligne": 117,
+    "composant": "NumberInput",
+    "label": "\"Rétention (jours)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminPolitiqueSauvegardes.tsx",
+    "ligne": 127,
+    "composant": "NumberInput",
+    "label": "\"Nombre maximal de sauvegardes\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminPolitiqueSauvegardes.tsx",
+    "ligne": 137,
+    "composant": "NumberInput",
+    "label": "\"Sauvegardes d’avant mise à jour gardées\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminTypesProcessus.tsx",
+    "ligne": 194,
+    "composant": "TextInput",
+    "label": "\"Libellé\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminTypesProcessus.tsx",
+    "ligne": 201,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pages/AdminTypesProcessus.tsx",
+    "ligne": 208,
+    "composant": "Select",
+    "label": "\"Teinte\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pages/Cartographie.tsx",
+    "ligne": 920,
+    "composant": "TextInput",
+    "label": "\"Rechercher un objet sur la carte\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Documents.tsx",
+    "ligne": 633,
+    "composant": "TextInput",
+    "label": "\"Titre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Documents.tsx",
+    "ligne": 638,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Documents.tsx",
+    "ligne": 645,
+    "composant": "TextInput",
+    "label": "\"Catégorie\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Documents.tsx",
+    "ligne": 674,
+    "composant": "Select",
+    "label": "\"Classification\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Documents.tsx",
+    "ligne": 889,
+    "composant": "MultiSelect",
+    "label": "\"Étiquettes\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Documents.tsx",
+    "ligne": 901,
+    "composant": "Select",
+    "label": "\"Trier par\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Documents.tsx",
+    "ligne": 1005,
+    "composant": "TextInput",
+    "label": "\"Adresse\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pages/Documents.tsx",
+    "ligne": 1012,
+    "composant": "TextInput",
+    "label": "\"Titre\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pages/Documents.tsx",
+    "ligne": 1017,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pages/Exports.tsx",
+    "ligne": 52,
+    "composant": "Select",
+    "label": "\"Périmètre exporté\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Grc.tsx",
+    "ligne": 47,
+    "composant": "Select",
+    "label": "\"Type de fiche\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Grc.tsx",
+    "ligne": 62,
+    "composant": "TextInput",
+    "label": "\"Rechercher dans le registre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Help.tsx",
+    "ligne": 28,
+    "composant": "TextInput",
+    "label": "\"Rechercher dans le guide\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Login.tsx",
+    "ligne": 392,
+    "composant": "TextInput",
+    "label": "\"Code de récupération\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Login.tsx",
+    "ligne": 545,
+    "composant": "PasswordInput",
+    "label": "\"Mot de passe temporaire\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Login.tsx",
+    "ligne": 553,
+    "composant": "PasswordInput",
+    "label": "\"Nouveau mot de passe\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Login.tsx",
+    "ligne": 569,
+    "composant": "PasswordInput",
+    "label": "\"Confirmation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Mur.tsx",
+    "ligne": 147,
+    "composant": "Select",
+    "label": "\"Vue affichée\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Mur.tsx",
+    "ligne": 161,
+    "composant": "Select",
+    "label": "\"Durée de chaque vue\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Pilotage.tsx",
+    "ligne": 287,
+    "composant": "Select",
+    "label": "\"Périmètre affiché\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Pilotage.tsx",
+    "ligne": 630,
+    "composant": "TextInput",
+    "label": "\"Première échéance\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pages/Pilotage.tsx",
+    "ligne": 636,
+    "composant": "Select",
+    "label": "\"Unité de récurrence\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pages/Pilotage.tsx",
+    "ligne": 648,
+    "composant": "NumberInput",
+    "label": "\"Tous les\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pages/Pilotage.tsx",
+    "ligne": 829,
+    "composant": "Textarea",
+    "label": "\"Votre réponse à l’assistant\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/QuestionsFlux.tsx",
+    "ligne": 129,
+    "composant": "TextInput",
+    "label": "\"Adresse du service de modèle\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/QuestionsFlux.tsx",
+    "ligne": 140,
+    "composant": "TextInput",
+    "label": "\"Nom du modèle\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 110,
+    "composant": "Select",
+    "label": "\"Section\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 245,
+    "composant": "TextInput",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 270,
+    "composant": "NumberInput",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 339,
+    "composant": "Select",
+    "label": "\"Chiffrement\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 384,
+    "composant": "Textarea",
+    "label": "\"Autorité de certification du serveur SMTP (facultatif)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 404,
+    "composant": "PasswordInput",
+    "label": "{defini ? 'Nouveau mot de passe' : 'Mot de passe'}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 505,
+    "composant": "NumberInput",
+    "label": "\"Durée (jours)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 822,
+    "composant": "TextInput",
+    "label": "\"Début (heure de Paris)\"",
+    "type": "\"time\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 829,
+    "composant": "TextInput",
+    "label": "\"Fin (heure de Paris)\"",
+    "type": "\"time\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 865,
+    "composant": "Textarea",
+    "label": "\"Adresse postale\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 948,
+    "composant": "TextInput",
+    "label": "{`Libellé de l’année ${y}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 960,
+    "composant": "Select",
+    "label": "\"Année du prochain audit\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 1005,
+    "composant": "Select",
+    "label": "\"Référentiel complémentaire actif\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 1014,
+    "composant": "Select",
+    "label": "\"Catégorie d’entité (NIS 2)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Settings.tsx",
+    "ligne": 1065,
+    "composant": "Select",
+    "label": "\"Format par défaut de la revue des accès\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Setup.tsx",
+    "ligne": 205,
+    "composant": "TextInput",
+    "label": "\"Jeton d’installation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Setup.tsx",
+    "ligne": 219,
+    "composant": "TextInput",
+    "label": "\"Adresse du site\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Setup.tsx",
+    "ligne": 232,
+    "composant": "TextInput",
+    "label": "\"Nom de l’organisation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Setup.tsx",
+    "ligne": 241,
+    "composant": "TextInput",
+    "label": "\"Identifiant\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Setup.tsx",
+    "ligne": 249,
+    "composant": "TextInput",
+    "label": "\"Nom affiché\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Setup.tsx",
+    "ligne": 257,
+    "composant": "TextInput",
+    "label": "\"Adresse e-mail (facultatif)\"",
+    "type": "\"email\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Setup.tsx",
+    "ligne": 265,
+    "composant": "PasswordInput",
+    "label": "\"Mot de passe\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pages/Setup.tsx",
+    "ligne": 279,
+    "composant": "PasswordInput",
+    "label": "\"Confirmation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/parcours-iso/Associations.tsx",
+    "ligne": 125,
+    "composant": "TextInput",
+    "label": "\"Motif du retrait\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/parcours-iso/Associations.tsx",
+    "ligne": 152,
+    "composant": "Select",
+    "label": "\"Associer une fiche ou une preuve existante\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/parcours-iso/Associations.tsx",
+    "ligne": 163,
+    "composant": "TextInput",
+    "label": "\"Note (facultative)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/parcours-iso/ParcoursIso.tsx",
+    "ligne": 143,
+    "composant": "Select",
+    "label": "\"Animations\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+    "ligne": 166,
+    "composant": "Select",
+    "label": "\"Version\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+    "ligne": 262,
+    "composant": "Textarea",
+    "label": "\"Définition du référentiel (JSON)\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+    "ligne": 293,
+    "composant": "TextInput",
+    "label": "\"Motif de la publication\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+    "ligne": 481,
+    "composant": "Select",
+    "label": "\"Attribuer un référentiel de la bibliothèque\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+    "ligne": 503,
+    "composant": "Select",
+    "label": "\"Édition\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+    "ligne": 603,
+    "composant": "Select",
+    "label": "\"Version de la copie\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+    "ligne": 618,
+    "composant": "TextInput",
+    "label": "\"Nom de la copie\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+    "ligne": 735,
+    "composant": "Select",
+    "label": "\"Domaine\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+    "ligne": 744,
+    "composant": "TextInput",
+    "label": "\"Ou nouveau domaine\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+    "ligne": 750,
+    "composant": "TextInput",
+    "label": "\"Identifiant de l’exigence\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+    "ligne": 756,
+    "composant": "TextInput",
+    "label": "\"Intitulé\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+    "ligne": 757,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Bibliotheque.tsx",
+    "ligne": 764,
+    "composant": "TextInput",
+    "label": "\"Applicabilité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Couverture.tsx",
+    "ligne": 156,
+    "composant": "Select",
+    "label": "\"Applicabilité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Couverture.tsx",
+    "ligne": 172,
+    "composant": "Textarea",
+    "label": "\"Justification de l’exclusion\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Couverture.tsx",
+    "ligne": 181,
+    "composant": "Select",
+    "label": "\"Mise en œuvre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Couverture.tsx",
+    "ligne": 188,
+    "composant": "Textarea",
+    "label": "\"Note sur la mise en œuvre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Couverture.tsx",
+    "ligne": 196,
+    "composant": "TextInput",
+    "label": "\"Date du test d’efficacité\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Couverture.tsx",
+    "ligne": 202,
+    "composant": "Select",
+    "label": "\"Résultat du test\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Couverture.tsx",
+    "ligne": 210,
+    "composant": "TextInput",
+    "label": "\"Référence de la preuve du test\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Couverture.tsx",
+    "ligne": 216,
+    "composant": "Textarea",
+    "label": "\"Note sur le test\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Couverture.tsx",
+    "ligne": 223,
+    "composant": "TextInput",
+    "label": "\"Date de validation métier\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Couverture.tsx",
+    "ligne": 236,
+    "composant": "Textarea",
+    "label": "\"Note de validation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Couverture.tsx",
+    "ligne": 253,
+    "composant": "TextInput",
+    "label": "\"Motif de cette version\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Couverture.tsx",
+    "ligne": 392,
+    "composant": "Select",
+    "label": "\"Filtrer par état\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+    "ligne": 258,
+    "composant": "TextInput",
+    "label": "\"Libellé\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+    "ligne": 264,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+    "ligne": 269,
+    "composant": "MultiSelect",
+    "label": "\"Usages\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+    "ligne": 313,
+    "composant": "Textarea",
+    "label": "\"Motif\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+    "ligne": 360,
+    "composant": "Textarea",
+    "label": "\"Motif\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+    "ligne": 434,
+    "composant": "TextInput",
+    "label": "\"Rechercher un fournisseur\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Decision.tsx",
+    "ligne": 169,
+    "composant": "TextInput",
+    "label": "{acceptation ? 'Date de la décision' : 'Date de réalisation'}",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Decision.tsx",
+    "ligne": 176,
+    "composant": "TextInput",
+    "label": "\"Échéance de l’acceptation\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Decision.tsx",
+    "ligne": 184,
+    "composant": "Select",
+    "label": "\"Résultat\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Decision.tsx",
+    "ligne": 194,
+    "composant": "Textarea",
+    "label": "{acceptation ? 'Conditions et justification de la décision' : 'Observations et justification'}",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Decision.tsx",
+    "ligne": 205,
+    "composant": "TextInput",
+    "label": "\"Rechercher un justificatif\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Decision.tsx",
+    "ligne": 211,
+    "composant": "MultiSelect",
+    "label": "{\n            operation === 'proof_review'\n              ? 'Versions exactes des documents examinés'\n              : 'Travaux réalisés et justificatifs'\n          }",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Decision.tsx",
+    "ligne": 247,
+    "composant": "Textarea",
+    "label": "\"Motif écrit de la clôture malgré les liens ouverts\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/ExtremiteChamps.tsx",
+    "ligne": 42,
+    "composant": "Select",
+    "label": "{`Référentiel (${titre.toLowerCase()})`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/ExtremiteChamps.tsx",
+    "ligne": 56,
+    "composant": "Select",
+    "label": "{`Version (${titre.toLowerCase()})`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/ExtremiteChamps.tsx",
+    "ligne": 67,
+    "composant": "Select",
+    "label": "{`Exigence (${titre.toLowerCase()})`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 120,
+    "composant": "Textarea",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 130,
+    "composant": "TextInput",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 156,
+    "composant": "Select",
+    "label": "\"Type de processus\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 286,
+    "composant": "Textarea",
+    "label": "\"Objectif\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 295,
+    "composant": "TextInput",
+    "label": "\"Échéance\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 302,
+    "composant": "TextInput",
+    "label": "\"Responsable\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 324,
+    "composant": "Textarea",
+    "label": "\"Enjeux associés (un par ligne)\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 334,
+    "composant": "Textarea",
+    "label": "\"Ce qui sera fait\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 342,
+    "composant": "Textarea",
+    "label": "\"Ressources nécessaires\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 350,
+    "composant": "Textarea",
+    "label": "\"Comment les résultats seront évalués\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 478,
+    "composant": "Textarea",
+    "label": "\"Indicateur\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 487,
+    "composant": "Select",
+    "label": "\"Objectif\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 495,
+    "composant": "Select",
+    "label": "\"Sens\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 508,
+    "composant": "TextInput",
+    "label": "\"Cible\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 516,
+    "composant": "TextInput",
+    "label": "\"Responsable\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 522,
+    "composant": "TextInput",
+    "label": "\"Fréquence de mesure\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 540,
+    "composant": "Textarea",
+    "label": "\"Ce qui est surveillé et mesuré\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 548,
+    "composant": "Textarea",
+    "label": "\"Méthodes de surveillance et de mesure\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 557,
+    "composant": "TextInput",
+    "label": "\"Quand surveiller\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 563,
+    "composant": "TextInput",
+    "label": "\"Quand analyser et évaluer\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 571,
+    "composant": "Select",
+    "label": "\"Catégorie\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 582,
+    "composant": "TextInput",
+    "label": "\"Source de l’information\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 645,
+    "composant": "TextInput",
+    "label": "\"Date de la mesure\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 651,
+    "composant": "TextInput",
+    "label": "\"Valeur\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 657,
+    "composant": "TextInput",
+    "label": "\"Commentaire\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 658,
+    "composant": "TextInput",
+    "label": "\"Période historique\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 673,
+    "composant": "TextInput",
+    "label": "\"Action\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 679,
+    "composant": "TextInput",
+    "label": "\"Responsable de l’action\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 687,
+    "composant": "TextInput",
+    "label": "\"Échéance de l’action\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FichesObjectifs.tsx",
+    "ligne": 694,
+    "composant": "TextInput",
+    "label": "\"Dernière revue\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fields.tsx",
+    "ligne": 60,
+    "composant": "Select",
+    "label": "{f.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fields.tsx",
+    "ligne": 73,
+    "composant": "MultiSelect",
+    "label": "{f.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fields.tsx",
+    "ligne": 110,
+    "composant": "MultiSelect",
+    "label": "\"Référentiels audités\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fields.tsx",
+    "ligne": 171,
+    "composant": "Select",
+    "label": "{f.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fields.tsx",
+    "ligne": 187,
+    "composant": "MultiSelect",
+    "label": "{f.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fields.tsx",
+    "ligne": 208,
+    "composant": "NumberInput",
+    "label": "{f.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fields.tsx",
+    "ligne": 219,
+    "composant": "Select",
+    "label": "{f.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fields.tsx",
+    "ligne": 231,
+    "composant": "MultiSelect",
+    "label": "{f.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fields.tsx",
+    "ligne": 245,
+    "composant": "TextInput",
+    "label": "{f.label}",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fields.tsx",
+    "ligne": 255,
+    "composant": "Textarea",
+    "label": "{f.label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 136,
+    "composant": "Select",
+    "label": "{`${LIBELLE_CHAMP[champ]} de ${f.name}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 177,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 299,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 317,
+    "composant": "TextInput",
+    "label": "\"Rattachement (annuaire)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 323,
+    "composant": "TextInput",
+    "label": "\"Contact\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 330,
+    "composant": "Textarea",
+    "label": "\"Notes\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 355,
+    "composant": "Select",
+    "label": "\"Certificat\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 363,
+    "composant": "TextInput",
+    "label": "\"Valide jusqu’au\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 370,
+    "composant": "TextInput",
+    "label": "\"Reçu le\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 377,
+    "composant": "TextInput",
+    "label": "\"Périmètre couvert\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 383,
+    "composant": "TextInput",
+    "label": "\"Emplacement du fichier\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 407,
+    "composant": "TextInput",
+    "label": "\"Contrôle\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 413,
+    "composant": "TextInput",
+    "label": "\"Référence\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 419,
+    "composant": "Select",
+    "label": "\"Fréquence\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 427,
+    "composant": "TextInput",
+    "label": "\"Dernier contrôle\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 434,
+    "composant": "Select",
+    "label": "\"Résultat\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 446,
+    "composant": "TextInput",
+    "label": "\"Commentaire\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 565,
+    "composant": "Select",
+    "label": "\"Rattacher un critère\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 652,
+    "composant": "TextInput",
+    "label": "\"Date de l’évaluation\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 658,
+    "composant": "TextInput",
+    "label": "\"Prochaine réévaluation (facultatif)\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 689,
+    "composant": "Select",
+    "label": "{`Répond au critère « ${k.label} » ?`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 696,
+    "composant": "TextInput",
+    "label": "{`Résultat pour « ${k.label} »`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 711,
+    "composant": "Textarea",
+    "label": "\"Conclusion\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 916,
+    "composant": "Select",
+    "label": "\"Type de suite\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 926,
+    "composant": "Select",
+    "label": "\"Périmètre où la créer\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 935,
+    "composant": "TextInput",
+    "label": "\"Intitulé\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 936,
+    "composant": "Textarea",
+    "label": "\"Précisions\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 939,
+    "composant": "TextInput",
+    "label": "\"Première échéance\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 946,
+    "composant": "NumberInput",
+    "label": "\"Tous les\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 947,
+    "composant": "Select",
+    "label": "\"Unité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Fournisseurs.tsx",
+    "ligne": 950,
+    "composant": "TextInput",
+    "label": "\"Échéance (facultative)\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/FournisseursStudio.tsx",
+    "ligne": 288,
+    "composant": "Select",
+    "label": "\"Situation\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Journey.tsx",
+    "ligne": 64,
+    "composant": "Select",
+    "label": "\"Parcours à reprendre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/KitIa.tsx",
+    "ligne": 188,
+    "composant": "TextInput",
+    "label": "\"Motif de l’import\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/KitIa.tsx",
+    "ligne": 194,
+    "composant": "TextInput",
+    "label": "\"Confirmation\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Members.tsx",
+    "ligne": 25,
+    "composant": "Select",
+    "label": "\"Compte à ajouter\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Members.tsx",
+    "ligne": 33,
+    "composant": "Select",
+    "label": "\"Accès au périmètre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/PartiesInteresseesStudio.tsx",
+    "ligne": 450,
+    "composant": "Select",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Perimetres.tsx",
+    "ligne": 378,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Perimetres.tsx",
+    "ligne": 406,
+    "composant": "Select",
+    "label": "\"Fiche du registre des fournisseurs\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Perimetres.tsx",
+    "ligne": 423,
+    "composant": "Select",
+    "label": "\"Rattaché à\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Perimetres.tsx",
+    "ligne": 448,
+    "composant": "Textarea",
+    "label": "\"Périmètre\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Perimetres.tsx",
+    "ligne": 456,
+    "composant": "TextInput",
+    "label": "\"Fuseau horaire\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/PestelStudio.tsx",
+    "ligne": 119,
+    "composant": "Select",
+    "label": "\"Classement\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/PlanEcarts.tsx",
+    "ligne": 96,
+    "composant": "Select",
+    "label": "\"Plan d’actions d’accueil\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/PlanEcarts.tsx",
+    "ligne": 104,
+    "composant": "TextInput",
+    "label": "\"Échéance commune (facultative)\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/PlanEcarts.tsx",
+    "ligne": 110,
+    "composant": "TextInput",
+    "label": "\"Confirmation\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Plans.tsx",
+    "ligne": 511,
+    "composant": "Select",
+    "label": "\"Plan affiché\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Plans.tsx",
+    "ligne": 730,
+    "composant": "Textarea",
+    "label": "{label}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Plans.tsx",
+    "ligne": 740,
+    "composant": "TextInput",
+    "label": "{label}",
+    "type": "{o.type}",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Plans.tsx",
+    "ligne": 797,
+    "composant": "Select",
+    "label": "\"Statut\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Plans.tsx",
+    "ligne": 809,
+    "composant": "Select",
+    "label": "{def.libelleGenre}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Plans.tsx",
+    "ligne": 828,
+    "composant": "Select",
+    "label": "\"Indicateur alimenté\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Plans.tsx",
+    "ligne": 847,
+    "composant": "Select",
+    "label": "\"Résultat\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Plans.tsx",
+    "ligne": 867,
+    "composant": "MultiSelect",
+    "label": "{`Mesures auditées (${v.items.length})`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/RecordEditor.tsx",
+    "ligne": 262,
+    "composant": "TextInput",
+    "label": "\"Intitulé\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/RecordEditor.tsx",
+    "ligne": 268,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/RecordEditor.tsx",
+    "ligne": 294,
+    "composant": "Select",
+    "label": "{\n                    kind === 'control'\n                      ? 'Type de contrôle'\n                      : kind === 'evidence'\n                        ? 'Catégorie de preuve'\n                        : 'Catégorie de mesure'\n                  }",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/RecordEditor.tsx",
+    "ligne": 315,
+    "composant": "Select",
+    "label": "\"Fréquence\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/RecordEditor.tsx",
+    "ligne": 332,
+    "composant": "TextInput",
+    "label": "\"Rechercher une référence\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/RecordEditor.tsx",
+    "ligne": 338,
+    "composant": "MultiSelect",
+    "label": "\"Éléments liés\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Registry.tsx",
+    "ligne": 430,
+    "composant": "Select",
+    "label": "\"État\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Registry.tsx",
+    "ligne": 438,
+    "composant": "Select",
+    "label": "\"Responsable\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Registry.tsx",
+    "ligne": 446,
+    "composant": "Select",
+    "label": "\"Échéance\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Registry.tsx",
+    "ligne": 460,
+    "composant": "Select",
+    "label": "\"Classification\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/Registry.tsx",
+    "ligne": 473,
+    "composant": "Select",
+    "label": "\"Origine\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/SwotMatrice.tsx",
+    "ligne": 339,
+    "composant": "Select",
+    "label": "\"Choisir un processus\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/pilotage/SwotMatrice.tsx",
+    "ligne": 359,
+    "composant": "Select",
+    "label": "\"Analyse affichée\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/processus/FicheCarteProcessus.tsx",
+    "ligne": 183,
+    "composant": "Select",
+    "label": "{`Rattacher : ${LIBELLES_RATTACHEMENT[nature]}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/processus/FicheCarteProcessus.tsx",
+    "ligne": 268,
+    "composant": "TextInput",
+    "label": "\"Nom du processus\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/processus/FicheCarteProcessus.tsx",
+    "ligne": 274,
+    "composant": "TextInput",
+    "label": "\"Pilote\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/processus/FicheCarteProcessus.tsx",
+    "ligne": 282,
+    "composant": "Select",
+    "label": "\"Type de processus\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/processus/FicheCarteProcessus.tsx",
+    "ligne": 290,
+    "composant": "Select",
+    "label": "\"Processus parent\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/processus/FicheCarteProcessus.tsx",
+    "ligne": 301,
+    "composant": "Textarea",
+    "label": "\"Finalité\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/processus/FicheCarteProcessus.tsx",
+    "ligne": 374,
+    "composant": "TextInput",
+    "label": "\"Nom du processus\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/processus/FicheCarteProcessus.tsx",
+    "ligne": 381,
+    "composant": "Select",
+    "label": "\"Type de processus\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/processus/FicheCarteProcessus.tsx",
+    "ligne": 388,
+    "composant": "Select",
+    "label": "\"Processus parent (pour un sous-processus)\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/processus/FicheCarteProcessus.tsx",
+    "ligne": 396,
+    "composant": "TextInput",
+    "label": "\"Pilote\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/processus/ProcessusStudio.tsx",
+    "ligne": 216,
+    "composant": "Select",
+    "label": "\"Type de processus\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/processus/ProcessusStudio.tsx",
+    "ligne": 228,
+    "composant": "Select",
+    "label": "\"Pilote\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/processus/ProcessusStudio.tsx",
+    "ligne": 241,
+    "composant": "Select",
+    "label": "\"Rattachement présent\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/AccesSujets.tsx",
+    "ligne": 84,
+    "composant": "Select",
+    "label": "{type === 'utilisateur' ? 'Personne' : 'Groupe'}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/AccesSujets.tsx",
+    "ligne": 98,
+    "composant": "TextInput",
+    "label": "\"Nom du registre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Contribution.tsx",
+    "ligne": 69,
+    "composant": "Select",
+    "label": "\"Statut\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Contribution.tsx",
+    "ligne": 76,
+    "composant": "Textarea",
+    "label": "\"Compte rendu\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/ContributionsAction.tsx",
+    "ligne": 72,
+    "composant": "Textarea",
+    "label": "\"Commentaire\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/ContributionsAction.tsx",
+    "ligne": 91,
+    "composant": "Textarea",
+    "label": "\"Note sur la preuve\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Deplacement.tsx",
+    "ligne": 75,
+    "composant": "Select",
+    "label": "\"Registre cible\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Deplacement.tsx",
+    "ligne": 120,
+    "composant": "Textarea",
+    "label": "\"Motif du déplacement\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Droits.tsx",
+    "ligne": 164,
+    "composant": "Select",
+    "label": "\"Utilisateur ou groupe\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Droits.tsx",
+    "ligne": 175,
+    "composant": "Select",
+    "label": "\"Rôle\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Droits.tsx",
+    "ligne": 214,
+    "composant": "Textarea",
+    "label": "\"Motif (facultatif)\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/registres/ElementsFiltres.tsx",
+    "ligne": 49,
+    "composant": "Select",
+    "label": "\"Périmètre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/ElementsFiltres.tsx",
+    "ligne": 69,
+    "composant": "MultiSelect",
+    "label": "\"Registres\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Registres.tsx",
+    "ligne": 154,
+    "composant": "Select",
+    "label": "\"Famille\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Registres.tsx",
+    "ligne": 292,
+    "composant": "Select",
+    "label": "\"Famille\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/registres/Registres.tsx",
+    "ligne": 293,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/registres/Registres.tsx",
+    "ligne": 294,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/registres/Registres.tsx",
+    "ligne": 301,
+    "composant": "Select",
+    "label": "\"Périmètre de référence\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/registres/Registres.tsx",
+    "ligne": 311,
+    "composant": "MultiSelect",
+    "label": "\"Autres périmètres\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/registres/Registres.tsx",
+    "ligne": 561,
+    "composant": "MultiSelect",
+    "label": "\"Périmètres du registre\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/registres/Registres.tsx",
+    "ligne": 586,
+    "composant": "Textarea",
+    "label": "\"Motif du changement\"",
+    "type": null,
+    "largeur": null,
+    "parents": [
+      "Modal"
+    ]
+  },
+  {
+    "fichier": "apps/web/src/registres/Registres.tsx",
+    "ligne": 673,
+    "composant": "TextInput",
+    "label": "\"Nom\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Registres.tsx",
+    "ligne": 674,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Registres.tsx",
+    "ligne": 684,
+    "composant": "TextInput",
+    "label": "\"Début du plan\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Registres.tsx",
+    "ligne": 690,
+    "composant": "TextInput",
+    "label": "\"Fin du plan\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Registres.tsx",
+    "ligne": 697,
+    "composant": "Select",
+    "label": "\"Statut du plan\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/SelecteurRegistre.tsx",
+    "ligne": 59,
+    "composant": "Select",
+    "label": "{`${REGISTRE_LABELS[famille]} d’accueil`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Validation.tsx",
+    "ligne": 80,
+    "composant": "Select",
+    "label": "\"Preuve\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Validation.tsx",
+    "ligne": 206,
+    "composant": "Select",
+    "label": "\"Résultat\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Validation.tsx",
+    "ligne": 213,
+    "composant": "Textarea",
+    "label": "\"Compte rendu\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/registres/Validation.tsx",
+    "ligne": 246,
+    "composant": "Textarea",
+    "label": "\"Motif de la réouverture\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/veille-reglementaire/VeilleReglementaire.tsx",
+    "ligne": 376,
+    "composant": "Textarea",
+    "label": "{`Mots du domaine « ${LIBELLES_DOMAINES[d]} »`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/veille-reglementaire/VeilleReglementaire.tsx",
+    "ligne": 666,
+    "composant": "Select",
+    "label": "\"Statut\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/veille-reglementaire/VeilleReglementaire.tsx",
+    "ligne": 675,
+    "composant": "Select",
+    "label": "\"Domaine\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/veille-reglementaire/VeilleReglementaire.tsx",
+    "ligne": 684,
+    "composant": "Select",
+    "label": "\"Source\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/veille-reglementaire/VeilleReglementaire.tsx",
+    "ligne": 693,
+    "composant": "TextInput",
+    "label": "\"Rechercher\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Alertes.tsx",
+    "ligne": 286,
+    "composant": "Select",
+    "label": "\"État\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Alertes.tsx",
+    "ligne": 296,
+    "composant": "Select",
+    "label": "\"Niveau\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/AnnuaireAd.tsx",
+    "ligne": 613,
+    "composant": "TextInput",
+    "label": "{`Saisissez ${MOT_SUPPRESSION} pour confirmer`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/CarteSurface.tsx",
+    "ligne": 758,
+    "composant": "TextInput",
+    "label": "\"Filtrer la carte\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/CarteSurface.tsx",
+    "ligne": 765,
+    "composant": "Select",
+    "label": "\"Périmètre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/CarteSurface.tsx",
+    "ligne": 774,
+    "composant": "Select",
+    "label": "\"Type d’alerte\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/CarteSurface.tsx",
+    "ligne": 817,
+    "composant": "Select",
+    "label": "\"Regrouper par\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/CarteSurface.tsx",
+    "ligne": 825,
+    "composant": "TextInput",
+    "label": "\"Nom de domaine ou adresse IP\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Correctifs.tsx",
+    "ligne": 349,
+    "composant": "TextInput",
+    "label": "\"Rechercher un correctif\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Correctifs.tsx",
+    "ligne": 359,
+    "composant": "Select",
+    "label": "\"Priorité du correctif\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/DelaisExceptions.tsx",
+    "ligne": 191,
+    "composant": "Select",
+    "label": "\"Période\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/DelaisExceptions.tsx",
+    "ligne": 230,
+    "composant": "Select",
+    "label": "\"Statut de l’exception\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+    "ligne": 690,
+    "composant": "TextInput",
+    "label": "\"Rechercher\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+    "ligne": 707,
+    "composant": "Select",
+    "label": "\"Suivi\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+    "ligne": 716,
+    "composant": "Select",
+    "label": "\"Priorité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+    "ligne": 725,
+    "composant": "Select",
+    "label": "\"Gravité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+    "ligne": 734,
+    "composant": "Select",
+    "label": "\"Délai\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+    "ligne": 743,
+    "composant": "Select",
+    "label": "\"Trier par\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Machines.tsx",
+    "ligne": 271,
+    "composant": "Select",
+    "label": "{`Périmètre de la plateforme pour ${d.nom}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Machines.tsx",
+    "ligne": 534,
+    "composant": "Select",
+    "label": "\"Produit surveillé à relier\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Machines.tsx",
+    "ligne": 706,
+    "composant": "TextInput",
+    "label": "\"Rechercher\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Machines.tsx",
+    "ligne": 716,
+    "composant": "Select",
+    "label": "\"Rôle\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Machines.tsx",
+    "ligne": 725,
+    "composant": "Select",
+    "label": "\"Périmètre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Machines.tsx",
+    "ligne": 753,
+    "composant": "Select",
+    "label": "\"Rôle à indiquer\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Machines.tsx",
+    "ligne": 762,
+    "composant": "Select",
+    "label": "\"Périmètre à indiquer\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/MotsNonMasques.tsx",
+    "ligne": 179,
+    "composant": "TextInput",
+    "label": "\"Mot\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 260,
+    "composant": "Select",
+    "label": "\"Famille\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 422,
+    "composant": "Select",
+    "label": "\"Fournisseur (registre de l’organisation)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 441,
+    "composant": "TextInput",
+    "label": "\"Éditeur\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 448,
+    "composant": "TextInput",
+    "label": "\"Nom du produit\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 455,
+    "composant": "TextInput",
+    "label": "\"Version\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 463,
+    "composant": "TextInput",
+    "label": "\"Identifiant CPE 2.3\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 472,
+    "composant": "Select",
+    "label": "\"Famille\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 480,
+    "composant": "Select",
+    "label": "\"Criticité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 489,
+    "composant": "Select",
+    "label": "\"Responsable\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 529,
+    "composant": "Select",
+    "label": "\"Identifiants connus de la veille\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 779,
+    "composant": "TextInput",
+    "label": "\"Rechercher une machine\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 790,
+    "composant": "Select",
+    "label": "\"Machine à relier\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 871,
+    "composant": "Textarea",
+    "label": "\"Note (facultative)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+    "ligne": 905,
+    "composant": "Textarea",
+    "label": "\"Note (facultative)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Rapport.tsx",
+    "ligne": 169,
+    "composant": "Select",
+    "label": "\"Mois\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Rapport.tsx",
+    "ligne": 179,
+    "composant": "TextInput",
+    "label": "\"Du\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Rapport.tsx",
+    "ligne": 186,
+    "composant": "TextInput",
+    "label": "\"Au\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Rapport.tsx",
+    "ligne": 195,
+    "composant": "Select",
+    "label": "\"Périmètre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SeuilsPriorite.tsx",
+    "ligne": 151,
+    "composant": "NumberInput",
+    "label": "\"Seuil EPSS (en %)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SeuilsPriorite.tsx",
+    "ligne": 228,
+    "composant": "Select",
+    "label": "{`Unité du délai ${p}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SeuilsPriorite.tsx",
+    "ligne": 247,
+    "composant": "NumberInput",
+    "label": "{`Durée du délai ${p}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+    "ligne": 301,
+    "composant": "Textarea",
+    "label": "\"Note du refus (obligatoire pour refuser)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+    "ligne": 341,
+    "composant": "Select",
+    "label": "\"Nouvel état\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+    "ligne": 351,
+    "composant": "TextInput",
+    "label": "\"Échéance de l’exception (obligatoire)\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+    "ligne": 364,
+    "composant": "Textarea",
+    "label": "{\n                  etat === 'risque_accepte'\n                    ? 'Justification (obligatoire)'\n                    : changement?.erreur\n                      ? 'Note (obligatoire)'\n                      : 'Note (facultative)'\n                }",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+    "ligne": 377,
+    "composant": "Textarea",
+    "label": "\"Mesure compensatoire (obligatoire)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+    "ligne": 453,
+    "composant": "Select",
+    "label": "\"Périmètre de l’action\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+    "ligne": 463,
+    "composant": "TextInput",
+    "label": "\"Intitulé\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+    "ligne": 469,
+    "composant": "Textarea",
+    "label": "\"Description\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+    "ligne": 479,
+    "composant": "Textarea",
+    "label": "\"Actifs touchés, ajoutés à la description\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+    "ligne": 488,
+    "composant": "TextInput",
+    "label": "\"Échéance (facultative)\"",
+    "type": "\"date\"",
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+    "ligne": 523,
+    "composant": "Select",
+    "label": "\"Périmètre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+    "ligne": 533,
+    "composant": "TextInput",
+    "label": "\"Rechercher une action\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+    "ligne": 548,
+    "composant": "Select",
+    "label": "\"Action à relier\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 828,
+    "composant": "Select",
+    "label": "\"Machine interne à relier\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 860,
+    "composant": "TextInput",
+    "label": "\"Note de la décision (facultative)\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1006,
+    "composant": "Select",
+    "label": "{`Périmètre de la plateforme pour ${p.nom}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1192,
+    "composant": "Select",
+    "label": "\"Mode\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1200,
+    "composant": "TextInput",
+    "label": "\"Motif des actifs\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1209,
+    "composant": "TextInput",
+    "label": "\"Motif des machines\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1218,
+    "composant": "Select",
+    "label": "\"Machine interne\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1283,
+    "composant": "TextInput",
+    "label": "\"Rechercher une alerte\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1294,
+    "composant": "Select",
+    "label": "\"Type d’alerte\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1303,
+    "composant": "Select",
+    "label": "\"Criticité\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1312,
+    "composant": "Select",
+    "label": "\"Statut chez l’éditeur\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1321,
+    "composant": "Select",
+    "label": "\"Trier les alertes par\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1403,
+    "composant": "TextInput",
+    "label": "\"Rechercher un actif\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1413,
+    "composant": "Select",
+    "label": "\"Type d’actif\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1425,
+    "composant": "Select",
+    "label": "\"Machine interne\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1520,
+    "composant": "TextInput",
+    "label": "\"Rechercher une technologie\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+    "ligne": 1538,
+    "composant": "Select",
+    "label": "\"Trier les technologies par\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceSilene.tsx",
+    "ligne": 476,
+    "composant": "TextInput",
+    "label": "\"Rechercher un constat\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/SurfaceSilene.tsx",
+    "ligne": 542,
+    "composant": "Select",
+    "label": "{`Périmètre de la plateforme pour ${p.nom}`}",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Tendances.tsx",
+    "ligne": 246,
+    "composant": "Select",
+    "label": "\"Période\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Tendances.tsx",
+    "ligne": 254,
+    "composant": "Select",
+    "label": "\"Périmètre\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  },
+  {
+    "fichier": "apps/web/src/vulnerabilites/Veille.tsx",
+    "ligne": 691,
+    "composant": "TextInput",
+    "label": "\"Rechercher\"",
+    "type": null,
+    "largeur": null,
+    "parents": []
+  }
+]

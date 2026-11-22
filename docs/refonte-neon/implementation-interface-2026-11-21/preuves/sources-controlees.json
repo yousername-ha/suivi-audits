@@ -1,0 +1,66 @@
+{
+  "branche": "codex/refonte-densite-2026-11-21",
+  "parent": "2742e16",
+  "fichiers": [
+    {
+      "fichier": "apps/web/src/components/FichesSansDefilement.tsx",
+      "sha256": "56fd888b206832530421461c229ce86ed5adbb4e2cc31a4ad6123953ff1c3e2d"
+    },
+    {
+      "fichier": "apps/web/src/main.tsx",
+      "sha256": "393151078cb495a468a3ead6a453f5e59aa974dacda7bd7cef060e2dee013838"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fiches-pages.css",
+      "sha256": "ecd802b5366e7a9c095e35d0023861310fd8b95650404fd8ba88da94e6c35ac4"
+    },
+    {
+      "fichier": "packages/ui/src/theme.ts",
+      "sha256": "12b3882b5c86c23f62c4f45783ebba2dc9edbdfdfa72e13fe5eda2a1f6e2e7c8"
+    },
+    {
+      "fichier": "packages/ui/src/proportions-champs.ts",
+      "sha256": "71dd1e2210e8b4b13cb04ba6dfea7cf5732d828bab641ca1ba16ec7be7ee892a"
+    },
+    {
+      "fichier": "packages/ui/src/neon-harmonisation.css",
+      "sha256": "d076b769f6189613ec4219c5cf82aa5afae1c6189d134555dcda93d9b29791f7"
+    },
+    {
+      "fichier": "packages/ui/src/neon-ergonomie.css",
+      "sha256": "0371e36d23eab6c731d7f81427b9116eb947266260d44e9d59a4ed3265978dc3"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "sha256": "8a98bb6e0c29319a339a2d20fb11ad96d7fb74aa1284503505c33649c8dad1bd"
+    },
+    {
+      "fichier": "packages/ui/src/neon-densite.css",
+      "sha256": "600df368597ce13bf46c5ca547442efa74601b66858df3f21da8e90723cde02a"
+    },
+    {
+      "fichier": "packages/ui/src/tokens.ts",
+      "sha256": "c62da4e077404774a63bb05ced4cb6bd99b1ef7b570e69760d00d1c3d3b83296"
+    },
+    {
+      "fichier": "packages/ui/src/neon-verre.css",
+      "sha256": "2323d39aa01f9e28c4b0dcac771d8909c4a0b557947c19bf3179969e0dc362a2"
+    },
+    {
+      "fichier": "apps/web/src/components/BarreOutils.tsx",
+      "sha256": "9a143eafa37cdfb9c7c8d7823cdc3048133eefe664fa9b91d11ea0b5194ea447"
+    },
+    {
+      "fichier": "apps/web/src/components/BarreFiltres.tsx",
+      "sha256": "3860a4e4f61095c1e817abe421ea1bfff619b2a8cf22672bac7df44f2e8df186"
+    },
+    {
+      "fichier": "apps/web/test/proportions-champs.test.ts",
+      "sha256": "e10a46753ded4ca2dcc561f32b3e2b244e892f86125cf36bb18b52c6b7007c9a"
+    },
+    {
+      "fichier": "packages/ui/package.json",
+      "sha256": "07632557b6cf5543f08c9ae46cc658472380c4e47743892297dab6d01c659e3d"
+    }
+  ]
+}

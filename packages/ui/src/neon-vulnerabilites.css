@@ -340,20 +340,6 @@
   font-weight: 550;
   text-align: center;
 }
-.vu-regle {
-  color: var(--vu-doux);
-  font-size: calc(var(--mantine-font-size-xs) * 0.95);
-}
-.vu-regle summary {
-  color: var(--vu-encre);
-  font-weight: 650;
-  cursor: pointer;
-}
-.vu-regle summary:focus-visible {
-  outline: var(--suivi-trait-focus) solid var(--neon-accent);
-  outline-offset: var(--vu-trait);
-}
-
 /* ------------------------------------------------------------------------------------------------ Cases des chiffres clés */
 .app-main:is([data-module='vulnerabilites'], [data-module='veille-reglementaire']) .pc-tuiles {
   grid-template-columns: repeat(2, minmax(0, 1fr));

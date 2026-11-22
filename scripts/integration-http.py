@@ -407,12 +407,13 @@ def tenable_tester(client):
 
 # ------------------------------------------------------------------ Tenable : synchronisation des failles et des machines
 # Champs lus dans un résultat de l'analyse `vulndetails` (cadrage, §5 bis) : tout autre champ, `pluginText` d'abord, est
-# écarté dès la lecture et ne sort jamais du script.
+# écarté dès la lecture et ne sort jamais du script. Lot TEN-SCORES (décision du RSSI du 22/11/2026) : `assetExposureScore`
+# (AES, score d'exposition de l'actif selon Tenable), seul champ ajouté.
 CHAMPS_ANALYSE = ("pluginID", "pluginName", "severity", "family", "synopsis", "solution", "cvssV3Vector", "cvssV3BaseScore",
                   "vprScore", "epssScore", "exploitAvailable", "exploitEase", "exploitFrameworks", "vulnPubDate",
                   "patchPubDate", "seolDate",
-                  "seeAlso", "cve", "ip", "dnsName", "netbiosName", "operatingSystem", "hostUUID", "acrScore", "keyDrivers",
-                  "firstSeen", "lastSeen", "port", "protocol", "hasBeenMitigated", "acceptRisk", "recastRisk", "repository")
+                  "seeAlso", "cve", "ip", "dnsName", "netbiosName", "operatingSystem", "hostUUID", "acrScore",
+                  "assetExposureScore", "keyDrivers", "firstSeen", "lastSeen", "port", "protocol", "hasBeenMitigated", "acceptRisk", "recastRisk", "repository")
 # Lot PRIO-1 : kits d'exploitation que Tenable nomme (« Exploitable with ») dans la CHAÎNE `exploitFrameworks` (pas une liste).
 # Seuls ces trois noms sont retenus, comme KITS_EXPLOITATION du paquet partagé ; le reste de la chaîne ne sort jamais.
 KITS_EXPLOITATION = (("metasploit", re.compile(r"\bmetasploit\b")), ("core_impact", re.compile(r"\bcore\s+impact\b")),
@@ -492,6 +493,23 @@ def decimal(v, minimum, maximum, diviseur=1):
 
 def oui(v):
     return isinstance(v, str) and v.strip() in ("1", "Yes", "true")
+
+
+AES = re.compile(r"^\d{1,4}$")
+
+
+def score_exposition(v):
+    """AES (`assetExposureScore`, lot TEN-SCORES) : entier de 0 à 1000, en texte ou en nombre entier. Vide (Tenable ne le
+    calcule pas, par exemple pour un actif non licencié), absent, hors bornes, décimal ou non numérique : None."""
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, int):
+        n = v
+    elif isinstance(v, str) and AES.fullmatch(v.strip()):
+        n = int(v.strip())
+    else:
+        return None
+    return n if 0 <= n <= 1000 else None
 
 
 def adresse_ip(v):
@@ -598,12 +616,13 @@ def lire_resultat(brut, sortie, bilan):
     d = depot(r.get("repository"))
     m = sortie["machines"].get(cle)
     if m is None:
+        # ACR et AES (lot TEN-SCORES) : ceux du premier résultat lu pour la machine dans la synchronisation.
         acr = decimal(r.get("acrScore"), 0, 10)
         m = sortie["machines"][cle] = {
             "type": "machine", "cle": cle, "uuid": uuid, "nom": nom_m, "adresse": adresse,
             "systeme": texte(r.get("operatingSystem"), BORNES_SYNCHRO["systeme"]),
             "premiere": premiere, "derniere": derniere, "exposition": exposition(r.get("keyDrivers")), "acr": acr,
-            "depot": d,
+            "aes": score_exposition(r.get("assetExposureScore")), "depot": d,
         }
     else:
         if premiere and (not m["premiere"] or premiere < m["premiere"]):

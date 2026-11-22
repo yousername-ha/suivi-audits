@@ -1,3 +1,4 @@
+import { APropos } from '@suivi/ui';
 /* Fiche d'une carte de processus : identité (type, parent, pilote, finalité) et rattachements. Chaque rattachement se lit et
    s'écrit à sa source : objectifs (champ `processes` de l'objectif), liens transverses (indicateurs, SWOT, risques,
    fournisseurs). Ce qui vient d'une autre fiche (objectif du processus, champ « processus » d'un SWOT, références d'un
@@ -319,9 +320,11 @@ export function FicheCarteProcessus({
         )}
         <Rattachements smsi={smsi} carte={carte} donnees={donnees} modifiable={modifiable} />
         <Group justify="space-between">
-          <Text size="sm" c="dimmed">
-            Fiche détaillée (ISO 9001, 4.4.1), objectifs et indicateurs : page « Objectifs par processus ».
-          </Text>
+          <APropos label="Aide et précisions">
+            <Text size="sm" c="dimmed">
+              Fiche détaillée (ISO 9001, 4.4.1), objectifs et indicateurs : page « Objectifs par processus ».
+            </Text>
+          </APropos>
           <Button component={Link} to="/pilotage/processus" variant="default" size="compact-sm">
             Ouvrir les objectifs par processus
           </Button>

@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Veille réglementaire (ADR 0110, lot VR-1) : publications de la CNIL, du CEPD, d'EUR-Lex et de l'ANSSI, filtrées
    par statut, domaine et source, avec recherche ; qualification en un clic (« Sans objet », « À suivre », « Impactant ») pour
    qui tient le rôle du domaine (RSSI pour la sécurité, DPO pour les données personnelles) ; état des sources (activation,
@@ -71,6 +72,7 @@ import {
   qualifieurDuDomaine,
   urlPublications,
 } from './veille-reglementaire';
+import { NOMS_PAGINATION } from '../vulnerabilites/pagination';
 
 const CLE = ['veille-reglementaire'] as const;
 const FLUX = 'veille-reglementaire' as const;
@@ -682,7 +684,7 @@ export function VeilleReglementairePage() {
           Publications
         </Title>
         <form onSubmit={chercher} role="search">
-          <Group align="flex-end">
+          <BarreFiltres label="Veille réglementaire">
             <Select
               label="Statut"
               placeholder="Tous"
@@ -720,7 +722,7 @@ export function VeilleReglementairePage() {
             <Button type="submit" variant="default">
               Rechercher
             </Button>
-          </Group>
+          </BarreFiltres>
         </form>
         <ErrorAlert error={publications.error} />
         {publications.data && (
@@ -733,7 +735,13 @@ export function VeilleReglementairePage() {
         )}
         {pages > 1 && (
           <Group justify="center">
-            <Pagination total={pages} value={page} onChange={setPage} aria-label="Pages des publications" />
+            <Pagination
+              {...NOMS_PAGINATION}
+              total={pages}
+              value={page}
+              onChange={setPage}
+              aria-label="Pages des publications"
+            />
           </Group>
         )}
         <ErrorAlert error={etat.error} />

@@ -1938,6 +1938,69 @@ export interface VulnerabilitesConstats {
   kits_exploitation: Generated<string[]>;
 }
 
+export interface VulnerabilitesCpeCopie {
+  partie: "a" | "o" | "h";
+  editeur: string;
+  produit: string;
+  version: string;
+}
+
+export interface VulnerabilitesCpeDemandes {
+  id: Generated<string>;
+  partie: "a" | "o" | "h";
+  editeur: string;
+  produit: string;
+  etat: Generated<"en_file" | "en_cours" | "reussie" | "echec" | "expire">;
+  demande_par: string | null;
+  demande_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  debute_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  termine_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  erreur: string | null;
+}
+
+export interface VulnerabilitesCpeDictionnaire {
+  id: Generated<number>;
+  activee: Generated<boolean>;
+  frequence_heures: number | null;
+  planifiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  mode: string | null;
+  avec_versions: Generated<boolean>;
+  curseur: Generated<number>;
+  total: number | null;
+  debut_chargement: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  fenetre_debut: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  fenetre_fin: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  tranche_id: string | null;
+  tranche_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  complet_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  a_jour_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  dernier_essai: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  erreur: string | null;
+  copie_voulue: Generated<boolean>;
+  copie_complete_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  saisie_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  version: Generated<number>;
+}
+
+export interface VulnerabilitesCpeProduits {
+  partie: "a" | "o" | "h";
+  editeur: string;
+  produit: string;
+  intitule: string | null;
+  cle: string;
+  cle_produit: string;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesCpeVersions {
+  partie: "a" | "o" | "h";
+  editeur: string;
+  produit: string;
+  versions: string[];
+  tronque: Generated<boolean>;
+  obtenu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface VulnerabilitesDepassements {
   nature: "constat" | "declaree";
   objet_id: string;
@@ -2022,6 +2085,7 @@ export interface VulnerabilitesMachines {
   maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
   maj_par: string | null;
   depot_id: string | null;
+  aes: number | null;
 }
 
 export interface VulnerabilitesProduits {
@@ -2557,6 +2621,11 @@ export interface DB {
   vulnerabilites_assistant_reperes_externes: VulnerabilitesAssistantReperesExternes;
   vulnerabilites_constat_cves: VulnerabilitesConstatCves;
   vulnerabilites_constats: VulnerabilitesConstats;
+  vulnerabilites_cpe_copie: VulnerabilitesCpeCopie;
+  vulnerabilites_cpe_demandes: VulnerabilitesCpeDemandes;
+  vulnerabilites_cpe_dictionnaire: VulnerabilitesCpeDictionnaire;
+  vulnerabilites_cpe_produits: VulnerabilitesCpeProduits;
+  vulnerabilites_cpe_versions: VulnerabilitesCpeVersions;
   vulnerabilites_depassements: VulnerabilitesDepassements;
   vulnerabilites_detections: VulnerabilitesDetections;
   vulnerabilites_imports: VulnerabilitesImports;

@@ -99,6 +99,7 @@ export function SaisiePoivre({ interdits, ancien, onChange }: SaisieProps) {
           <PasswordInput
             label="Votre poivre"
             description="32 à 256 caractères, ou une phrase d’au moins 6 mots. Il ne sera plus jamais affiché."
+            descriptionProps={{ 'data-aide-permanente': true }}
             autoComplete="off"
             value={saisie}
             onChange={(e) => {

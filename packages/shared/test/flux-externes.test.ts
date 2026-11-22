@@ -95,7 +95,14 @@ describe('registre des flux vers l’extérieur', () => {
       ['sortant', 'TCP 443 (HTTPS)', 'cyberveille.esante.gouv.fr'],
     ]);
     expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(/adresse IP du serveur et des demandes de lecture/);
-    expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(/Aucune donnée métier/);
+    // Lot CPE-1 (décision du RSSI du 22/11/2026) : la demande des versions d'un produit choisi dans la saisie lui fait
+    // connaître ce produit ; le texte le dit, et rien d'autre ne part (ni machine, ni version déclarée).
+    expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(
+      /l’éditeur et le produit choisis pour en lire les versions/,
+    );
+    expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(
+      /Aucune donnée métier en dehors de ce produit : ni machine, ni version déclarée, ni contenu de la plateforme\./,
+    );
     expect(fluxExterne('veille-vulnerabilites').pareFeu.join(' ')).toContain('cyberveille.esante.gouv.fr');
     expect(fluxExterne('mises-a-jour').destinations.map((d) => d.hote)).toEqual(
       expect.arrayContaining(['github.com et api.github.com (publications)', 'ghcr.io (registre des images)']),

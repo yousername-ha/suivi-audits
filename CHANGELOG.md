@@ -6,9 +6,77 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action. Changement d'affichage du module Vulnérabilités seulement : ni migration, ni commande sur le serveur.
+**En bref.** Refonte d'apparence (« Neon compacte ») : aucune migration, aucune dépendance nouvelle, aucun changement du
+contrat de l'API, aucune commande sur le serveur. À la mise à jour, l'interface est reconstruite avec l'image.
+Les préférences explicites de taille et le mode mural sont conservés. L'essai « boîte d'outils claire ou bleu nuit » de
+« Mon compte » disparaît : la boîte est bleu nuit dans les deux thèmes.
+Dossiers : [fiches sobres et harmonisation du 22/11/2026](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md),
+[intégration et recette sur pile réelle du 22/11/2026](docs/refonte-neon/integration-2026-11-22/README.md),
+[dossier préparé par la session « Codex »](docs/refonte-neon/implementation-interface-2026-11-21/README.md).
 
-### Modifié
+Autres changements de cette version :
+
+- Aspect graphique du module Vulnérabilités et de la veille réglementaire (style de la page de maintenance) : sans
+  migration.
+- Correctif de l'interface du module Vulnérabilités (page « Machines ») : sans migration.
+- Migration automatique additive `100` (colonne `aes` des machines du module Vulnérabilités, vide au départ), sans reprise
+  de données : aucune commande sur le serveur, aucune action dans l'application. L'exposition des machines selon Tenable
+  (AES) apparaît après la prochaine synchronisation de Tenable Security Center ; la criticité (ACR), déjà lue, s'affiche
+  dès la mise à jour.
+- Service de mise à jour préparé pour la recherche CPE du module Vulnérabilités : sans effet tant que cette recherche
+  n'est pas livrée.
+- Correctifs de performance du socle (liste des registres, synthèse du mur) : sans migration.
+- Migration automatique additive `101` (cinq tables du dictionnaire CPE de la NVD, vides au départ, aucune extension de
+  PostgreSQL), sans reprise de données ni commande sur le serveur. **Rien n'est chargé ni demandé à la NVD tant que la
+  source « Dictionnaire des produits (CPE) » n'est pas activée** (écran « Veille », droit d'administrer le module), ni tant
+  que la veille (flux « veille-vulnerabilites ») est fermée. Place une fois activée : liste des produits seule, environ 40 Mo
+  dans la base et 3 Mo par sauvegarde compressée ; premier chargement : environ une heure (environ 190 pages de 10 000
+  entrées, une par passage de l'exécutant, sans attente) ; copie complète facultative en plus : environ 270 Mo dans la
+  base et 17 Mo de plus par sauvegarde, sur les mêmes pages (aucune page de plus si elle est demandée dès l'activation,
+  environ une heure de plus si la liste est déjà chargée) (tailles mesurées par le RSSI sur le vrai dictionnaire,
+  22/11/2026 ; durées calculées, non mesurées). La demande des versions s'appuie sur la
+  veille active du service de mise à jour (passages courts toutes les 3 secondes pendant une saisie) ; délais réels à
+  mesurer.
+
+### Ajouté
+
+- Vulnérabilités, **criticité (ACR) et exposition (AES) des machines selon Tenable** (lot TEN-SCORES, décision du RSSI du
+  22/11/2026, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : quand une intégration Tenable Security Center est
+  configurée, la liste de l'écran « Machines » a deux colonnes, « Criticité (ACR, Tenable) » et « Exposition (AES,
+  Tenable) », et la fiche d'une machine une rubrique « Selon Tenable », avec les catégories officielles de Tenable
+  (« Tenable Exposure Management Metrics ») : ACR Critique 9–10, Élevée 7–8, Moyenne 4–6, Faible 1–3 ; AES Élevée
+  650–1000, Moyenne 350–649, Faible 0–349 ; « — » quand Tenable ne fournit pas la valeur. Deux filtres, par catégorie
+  minimale (ACR : Critique, Élevée ou plus, Moyenne ou plus ; AES : Élevée, Moyenne ou plus), s'appliquent à la liste et
+  au parc ; une machine sans valeur n'y répond pas. L'AES est lu dans le champ `assetExposureScore` de l'analyse, seul
+  champ de Tenable ajouté à la liste blanche du connecteur (migration `100`). Sans intégration Tenable, colonnes, rubrique
+  et filtres n'apparaissent pas ; un import Nessus ne porte ni l'une ni l'autre valeur. Ces valeurs sont affichées
+  seulement : ni la priorité, ni le rang, ni les alertes ne changent
+  (session « Module surveillance vulnérabilités SMSI »).
+- **Service de mise à jour : veille active pour la recherche CPE** (décision du RSSI du 22/11/2026,
+  [ADR 0097, addendum](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md)). Quand une saisie de produit est en cours
+  dans le module Vulnérabilités, le service intercale entre ses passages habituels (toutes les 15 secondes) des passages
+  courts toutes les 3 secondes, limités à la demande de versions CPE et bornés à 30 secondes. Aucun appel de plus hors de
+  ces moments, rien pendant une maintenance, une intervention ou une mise à jour, rien si le flux « veille-vulnerabilites »
+  est fermé. L'application ne lance toujours pas l'exécutant et n'écrit rien sur le serveur. Sans effet avant la livraison
+  de la recherche CPE par le module Vulnérabilités.
+- Vulnérabilités, **saisie assistée d'un produit surveillé par le dictionnaire CPE de la NVD** (lot CPE-1, décisions du
+  RSSI du 22/11/2026, [ADR 0100](docs/adr/0100-module-vulnerabilites.md), migration `101`). Nouvelle source « Dictionnaire
+  des produits (CPE) » dans l'écran « Veille », désactivée au départ, sous le flux de la veille (même hôte que NVD, aucune
+  destination nouvelle) : la liste des produits distincts du dictionnaire (obsolètes exclus) est chargée par lots, à chaque
+  passage de l'exécutant (une page de 10 000 entrées par passage, sans attente), puis tenue à jour par les nouveautés une fois par jour
+  (ou par semaine) ; l'état affiche le chargement en cours (entrées lues sur le total), la dernière mise à jour et
+  l'erreur éventuelle. Dans le formulaire d'un produit surveillé, la recherche propose les produits de la liste pendant la
+  frappe (deux caractères au moins, sans casse ni accent, 20 propositions, le produit exact d'abord), sans aucun appel
+  extérieur ; choisir un produit remplit l'éditeur, le nom et l'identifiant CPE 2.3, et ses versions connues sont
+  demandées à la NVD par une file dédiée (une demande par produit, trente par heure et par personne, réponse gardée un
+  jour) puis proposées dans le champ de la version, qui reste libre pendant l'attente ; les versions déjà vues dans les
+  CVE de la veille sont proposées aussitôt, à part, et « * » vaut toutes versions. Un CPE 2.3 collé remplit l'éditeur, le
+  produit et la version, sans appel. « Copier le dictionnaire complet » range aussi toutes les versions sur le serveur
+  (plus aucune demande à la NVD) ; « Supprimer la copie complète » libère la place. Réglages, copie demandée et supprimée
+  sont journalisés. La demande des versions d'un produit choisi fait connaître ce produit à la NVD (texte du flux mis à
+  jour) ; la copie complète l'évite (session « Module surveillance vulnérabilités SMSI »).
+
+### Changé
 
 - Vulnérabilités, **aspect graphique** (demande du RSSI du 22/11/2026 : un module « moins fin, moins lien hypertexte »,
   dans le style de la page de maintenance).
@@ -31,6 +99,78 @@ Aucune action. Changement d'affichage du module Vulnérabilités seulement : ni 
   carte d'acte. La carte donne la source et son autorité, le statut marqué d'un point de couleur, le titre, le résumé en
   citation, la date de publication, le domaine, la qualification, puis les boutons de qualification et le lien vers la
   source. Libellés et noms accessibles inchangés.
+
+- **Fiches sobres** (direction validée par le RSSI le 22/11/2026, habillage de la session « Codex », intégration et
+  recette sur pile réelle par la session Coeur — [détails](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md)) :
+  fenêtres à fond blanc opaque, champs rectangulaires compacts, séparateurs discrets, validation en contour bleu pétrole,
+  « Annuler » et « Fermer » neutres dans toutes les fenêtres, suppressions en rouge ; même composition en sombre.
+  L'explication d'un champ se replie derrière un bouton « Aide sur ce champ » (Échap la referme, le lecteur d'écran la
+  lit toujours) ; un avertissement, un effet irréversible ou un format de saisie restent affichés, comme les erreurs.
+- **Fiches longues sur écran de bureau** : une fenêtre de formulaire trop haute s'élargit d'abord et range ses champs
+  sur plusieurs colonnes (un code, une date ou un état n'occupent que leur place) ; elle n'est découpée en parties que
+  si cela ne suffit pas. En 1920 × 1080, la création d'un risque tient en une seule vue (quatre parties en 1280 × 720
+  avant, deux maintenant). Une partie sans titre porte le libellé de son premier champ (« Échéance… ») au lieu de
+  « Informations (suite 2) ». La fenêtre « Sécurité » se découpe au lieu de défiler. Un journal ou un long tableau garde
+  son défilement dans sa fenêtre, pour conserver ses en-têtes de colonnes.
+- **Fiches longues en parties** : une fiche trop haute pour l'écran se lit en parties nommées, sans défilement
+  vertical de la fenêtre, avec ses boutons toujours visibles en bas ; les champs restent montés dans leur formulaire
+  (valeurs, contraintes et enregistrement inchangés). La fenêtre prend la hauteur de son contenu et les parties sont
+  équilibrées ; les intitulés viennent des sections de la fiche (« Informations », « Analyse », « Liens et preuves »
+  pour un risque), jamais « Suite 2 ». Un champ d'une autre partie atteint au clavier ou par son libellé affiche sa
+  partie. Une fenêtre dont le contenu ne peut pas être découpé sans risque (document intégré, bloc plus haut qu'une
+  partie) garde son défilement habituel. Prototype de la session « Codex », moteur repris et recetté sur pile réelle
+  par la session Coeur ([détails](docs/refonte-neon/integration-2026-11-22/README.md)).
+- **Commandes en contour** : boutons transparents à contour bleu/cyan, « Annuler » discret, couleurs métier (rouge de
+  suppression, états) conservées. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **Proportions des formulaires** : codes, dates, états et responsables reçoivent des largeurs adaptées. Les aides passent
+  sous les saisies pour aligner les champs voisins ; les listes longues se replient dans un menu borné. Les fiches lg/xl
+  deviennent moins larges, avec des colonnes adaptées à leur espace réel. Les grands graphiques et tableaux gardent leur
+  place utile. [Détails et recette](docs/refonte-neon/proportions-fenetres-2026-11-21/README.md) ; aucune migration,
+  dépendance ou modification du contrat API.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **Harmonisation des outils et fenêtres** : vues en icônes, recherche et filtres réunis dans la même boîte de verre
+  bleu nuit sur les deux thèmes. Les écrans existants conservent leurs champs, callbacks et soumissions ; les filtres
+  fermés restent dans leur formulaire. Fenêtres centrées et moins volumineuses, champs courts en colonnes, aides et
+  historique repliés, actions maintenues en bas et pictogrammes centrés. Détails, captures fictives et contrôles dans le
+  [dossier de reprise](docs/refonte-neon/harmonisation-plateforme-2026-11-21/README.md). Aucune migration ou dépendance ;
+  recette Docker/API réelle et validation des images à effectuer.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **Densité de travail** : le normal devient plus resserré que l’ancien compact, et le compact resserre encore le cadre,
+  les commandes et les listes. Les profils partagent une source de jetons et du CSS statique compatible avec la CSP.
+  L’agrandissement automatique des grands écrans est réservé au mode mural ; les tailles choisies manuellement restent
+  disponibles. Le planning adapte sa largeur sans étirer textes et lignes, les explications des pages Vulnérabilités se
+  replient dans une aide contextuelle, et les raccourcis en pictogrammes gardent leurs noms accessibles et leurs droits.
+  Lot fondé sur la version 7.5.0 après analyse d’une vidéo privée, absente du dépôt et des preuves publiques.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **En-tête et apparence** : signature d’organisation et pastille « En direct » retirées, bascule de thème en icônes
+  dans l’en-tête et le pied de menu, onglets et actions principales d’ajout en verre transparent. Les couleurs métier
+  restent conservées. Le flux temps réel continue de fonctionner ; s'il est coupé plus de huit secondes, l'en-tête
+  affiche « Hors ligne » (ajout de la session Coeur : la coupure n'était plus visible).
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+
+### Corrigé
+
+- **Barres d'outils** : une barre qui ne contient qu'une recherche ne porte plus le même nom accessible que son champ
+  (dix écrans : guide, fournisseurs, registres, cartographie…). Les lecteurs d'écran n'annoncent plus deux éléments
+  du même nom.
+- **Pages plus rapides pour une personne qui n'est pas administrateur** (défauts PERF-06, PERF-11 et PERF-15 du banc de
+  performance du 21/11/2026). La liste des registres, appelée par toutes les pages, vérifiait les droits et décrivait
+  chaque registre l'un après l'autre : environ 2 000 lectures de la base et 2 secondes d'attente par page pour un RSSI ou
+  un pilote. Les droits de toute la liste sont désormais lus ensemble, en une dizaine de lectures quel que soit le nombre
+  de registres ; « Ce que je dois alimenter » fait de même pour ses éléments. Sur le jeu d'essai (50 registres), la liste
+  passe de 1 463 lectures et près d'une seconde à 9 lectures et moins de 10 ms. Les droits ne changent pas : un test
+  compare, pour des comptes de profils différents, la nouvelle liste à l'ancienne. Pour ses prochaines échéances, la synthèse du mur
+  ne relit plus que deux fois les données de chaque action, au lieu de six, ce qui comptait depuis que les actions portent
+  leurs tâches ; les échéances affichées sont les mêmes (session « Projet audit_suivi Coeur »).
+- Vulnérabilités et Veille réglementaire, **accessibilité** : les boutons de pagination (flèches, page active) des écrans
+  Machines, Alertes, Surface externe, Silène, Veille et Veille réglementaire n'avaient pas de nom pour les lecteurs d'écran
+  (règle « button-name », niveau A) ; ils sont nommés comme ceux de « Failles détectées ». Un test vérifie chaque
+  pagination de ces deux modules (session « Module surveillance vulnérabilités SMSI »).
+- Vulnérabilités, **page « Machines » en erreur** en venant de l'onglet « Périmètres » (par exemple depuis la carte
+  « Sans périmètre ») : « Une erreur est survenue » avec le message technique « (perimetres.data ?? []).map is not a
+  function ». Les deux écrans rangeaient deux réponses différentes sous la même clé du cache de l'interface ; la liste des
+  périmètres a désormais sa propre clé. Un test vérifie qu'aucune clé du cache ne sert à deux adresses d'API différentes
+  (session « Module surveillance vulnérabilités SMSI »).
 
 ## [7.5.1] — 2026-11-21
 

@@ -11,9 +11,12 @@ import {
   CVE_ID,
   CVSS31_VECTEUR,
   CVSS40_VECTEUR,
+  CPE_BORNES,
   fluxExterne,
   NOM_CPE,
   SLUG_CERTSANTE,
+  SOURCE_DICTIONNAIRE_CPE,
+  sourceVeille,
   SOURCES_VEILLE,
   SOURCES_VEILLE_DEFINITIONS,
   VEILLE_BORNES,
@@ -86,12 +89,41 @@ describe('architecture : veille des vulnérabilités', () => {
     expect(entier(EXECUTANT, 'VEILLE_LOTS_MAX')).toBe(VEILLE_BORNES.lots);
   });
 
+  it('dictionnaire CPE (lot CPE-1) : même hôte que NVD, un seul chemin, mêmes bornes dans le script et l’exécutant', () => {
+    expect(constante(SCRIPT, 'SOURCES_CPE')).toEqual({
+      [SOURCE_DICTIONNAIRE_CPE.id]: {
+        hote: SOURCE_DICTIONNAIRE_CPE.hote,
+        chemins: [...SOURCE_DICTIONNAIRE_CPE.chemins],
+      },
+    });
+    // Aucune destination nouvelle : l'hôte est celui de la veille NVD, déjà déclaré par le flux.
+    expect(SOURCE_DICTIONNAIRE_CPE.hote).toBe(sourceVeille('nvd').hote);
+    expect(fluxExterne('veille-vulnerabilites').pareFeu.join(' ')).toContain(SOURCE_DICTIONNAIRE_CPE.hote);
+    expect(constante(SCRIPT, 'BORNES_CPE')).toEqual({
+      parPage: CPE_BORNES.parPage,
+      pagesParPassage: CPE_BORNES.pagesParPassage,
+      versions: CPE_BORNES.versions,
+      intitule: CPE_BORNES.intitule,
+    });
+    expect(/^CPE_FLUX = VEILLE_FLUX$/m.test(EXECUTANT)).toBe(true);
+    expect(entier(EXECUTANT, 'CPE_LOT')).toBe(CPE_BORNES.lot);
+    expect(entier(EXECUTANT, 'CPE_LOTS_MAX')).toBe(CPE_BORNES.lotsMax);
+    expect(entier(EXECUTANT, 'CPE_VERSIONS_MAX')).toBe(CPE_BORNES.versions);
+    // Débit des demandes de versions tenu par l'exécutant seul ; le script n'attend jamais pour le dictionnaire.
+    expect(/^CPE_PAUSE = 6\.5$/m.test(EXECUTANT)).toBe(true);
+    expect(SCRIPT).not.toMatch(/CPE_PAUSE/);
+    expect(CPE_BORNES.pagesParPassage).toBe(1);
+    expect(/^MODES_COURTS = \("cpe-versions",\)$/m.test(EXECUTANT)).toBe(true);
+  });
+
   it('le script n’utilise que la bibliothèque standard, ne lit qu’en GET et ne suit aucune redirection', () => {
     const imports = [...SCRIPT.matchAll(/^(?:import|from) ([a-z0-9_.]+)/gm)].map((m) => m[1]!.split('.')[0]);
     expect([...new Set(imports)].sort()).toEqual([
       'base64',
       'datetime',
       'email',
+      // Lot CPE-1 : tri des versions (cmp_to_key), bibliothèque standard.
+      'functools',
       'hashlib',
       'html',
       'http',

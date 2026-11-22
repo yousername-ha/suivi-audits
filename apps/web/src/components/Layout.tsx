@@ -1,4 +1,4 @@
-/* Mise en page : barre supérieure, navigation, indicateur temps réel, préférences d'affichage.
+/* Mise en page : barre supérieure, navigation et préférences d'affichage.
    Téléphone : menu en tiroir ; tablette : menu replié en icônes ; bureau : menu déplié (packages/ui/src/styles.css).
    Menu bleu nuit opaque de la refonte Neon (packages/ui/src/neon-menu.css) : même charte dans les deux thèmes, teinte par
    identité d'entrée (data-identite), pictogrammes animés en continu (ADR 0099) ; familles, destinations, compteurs et
@@ -6,8 +6,8 @@
    AppShell de Mantine n'est pas utilisé : il injecte des balises <style>, interdites par la CSP. */
 import {
   Anchor,
+  ActionIcon,
   Badge,
-  Box,
   Burger,
   Button,
   Drawer,
@@ -81,8 +81,6 @@ function useAffichage() {
     appliquerStyleFenetres(html, me.appearance.fenetres);
     // Onglets de page : forme à l'essai (préférence « onglets », barre bleu nuit par défaut).
     html.dataset.onglets = prefs.onglets ?? 'barre';
-    // Boîte d'outils en mode clair : forme à l'essai (préférence « boiteOutils », bloc clair par défaut).
-    html.dataset.boiteOutils = prefs.boiteOutils ?? 'claire';
     if (colorScheme !== SCHEME[theme]) setColorScheme(SCHEME[theme]);
   }, [
     prefs.taille,
@@ -90,12 +88,30 @@ function useAffichage() {
     me.appearance.style,
     me.appearance.fenetres,
     prefs.onglets,
-    prefs.boiteOutils,
     theme,
     colorScheme,
     setColorScheme,
   ]);
   return theme;
+}
+
+/** Délai avant de signaler une coupure du temps réel : une reconnexion brève (chargement, changement de réseau)
+    n'affiche rien. */
+const DELAI_COUPURE_MS = 8000;
+/** Vrai quand le flux temps réel est coupé depuis plus de quelques secondes. L'en-tête n'affiche plus de pastille
+    « En direct » permanente ; seule la coupure qui dure est signalée, pour que personne ne travaille sans le savoir sur
+    un écran qui ne se met plus à jour. */
+function useCoupureDurable(connecte: boolean) {
+  const [echue, setEchue] = useState(false);
+  useEffect(() => {
+    if (connecte) return;
+    const minuterie = setTimeout(() => setEchue(true), DELAI_COUPURE_MS);
+    return () => {
+      clearTimeout(minuterie);
+      setEchue(false);
+    };
+  }, [connecte]);
+  return !connecte && echue;
 }
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -106,6 +122,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const nav = useNavigate();
   const qc = useQueryClient();
   const live = useLive();
+  const coupure = useCoupureDurable(live.connected);
   const can = useCan();
   const { save } = usePreferences();
   const theme = useAffichage();
@@ -287,18 +304,19 @@ export function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="nav-commandes">
-          {withTip(
-            `Thème : ${THEME_LIBELLE[theme]}`,
-            <Button
+          <Tooltip
+            label={`Thème ${THEME_LIBELLE[theme]} · passer en mode ${THEME_LIBELLE[THEME_SUIVANT[theme]]}`}
+            events={{ hover: true, focus: true, touch: false }}
+          >
+            <ActionIcon
               variant="subtle"
-              size="xs"
-              fullWidth
-              leftSection={<IconeTheme />}
+              className="theme-bascule"
+              aria-label={`Activer le mode ${THEME_LIBELLE[THEME_SUIVANT[theme]]}`}
               onClick={() => void save({ theme: THEME_SUIVANT[theme] })}
             >
-              <span className="nav-libelle">Thème : {THEME_LIBELLE[theme]}</span>
-            </Button>,
-          )}
+              <IconeTheme />
+            </ActionIcon>
+          </Tooltip>
         </div>
         <Text size="xs" c="dimmed" ta="center" className="app-version nav-annexe">
           Version {me.version}
@@ -317,7 +335,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <CleSecoursNotice />
         <AlerteSecuriteNotice />
         <RetexInvitationNotice />
-        <header className="shell-header">
+        <header className="shell-header" data-temps-reel={live.connected ? 'connecte' : 'reconnexion'}>
           <Group h="100%" px="md" justify="space-between" wrap="nowrap">
             <Group gap="sm" wrap="nowrap">
               <Burger opened={opened} onClick={toggle} hiddenFrom="xs" size="sm" aria-label="Ouvrir le menu" />
@@ -341,33 +359,28 @@ export function Layout({ children }: { children: ReactNode }) {
                   </div>
                 </Group>
               </Anchor>
-              {me.orgName && (
-                <Box className="org-signature" visibleFrom="lg">
-                  <span className="org-signature__carre" aria-hidden="true" />
-                  <span className="org-signature__nom">{me.orgName}</span>
-                </Box>
-              )}
             </Group>
             <Group gap="xs" wrap="nowrap">
+              {coupure && (
+                <Tooltip label="Temps réel déconnecté : reconnexion en cours. Les changements des autres personnes n’apparaissent plus sans recharger la page.">
+                  <Badge color="orange" variant="dot" className="live-badge" role="status">
+                    Hors ligne
+                  </Badge>
+                </Tooltip>
+              )}
               <Tooltip
-                label={
-                  live.connected ? 'Mises à jour en temps réel actives' : 'Temps réel déconnecté : reconnexion en cours'
-                }
+                label={schema === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
+                events={{ hover: true, focus: true, touch: false }}
               >
-                <Badge color={live.connected ? 'teal' : 'gray'} variant="dot" visibleFrom="xs" className="live-badge">
-                  {live.connected ? 'En direct' : 'Hors ligne'}
-                </Badge>
+                <ActionIcon
+                  variant="default"
+                  className="theme-bascule"
+                  aria-label={schema === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
+                  onClick={() => void save({ theme: schema === 'dark' ? 'clair' : 'sombre' })}
+                >
+                  <IconeTheme />
+                </ActionIcon>
               </Tooltip>
-              {/* Bascule rapide clair / sombre de la refonte Neon (même préférence que le réglage du pied de menu). */}
-              <Button
-                size="xs"
-                variant="default"
-                visibleFrom="md"
-                leftSection={<IconeTheme />}
-                onClick={() => void save({ theme: schema === 'dark' ? 'clair' : 'sombre' })}
-              >
-                {schema === 'dark' ? 'Mode clair' : 'Mode sombre'}
-              </Button>
               <Text size="sm" fw={600} visibleFrom="sm" className="header-user">
                 {me.user?.displayName || me.user?.username}
               </Text>

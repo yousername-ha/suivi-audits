@@ -1,10 +1,14 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100), lot V1 : écran « Produits surveillés », registre de l'organisation (sans périmètre).
    Liste filtrée par famille, création, modification (If-Match) et suppression. Écran sobre avec les composants de la charte
    (packages/ui) ; le style du poste de commandement viendra au lot V8. Les boutons suivent les droits de la session pour
    l'affichage seulement : le serveur reste seul juge (droits, module actif, doublon, version).
    Lot V4a : version obligatoire ; identifiant CPE proposé à partir des couples éditeur et produit déjà connus de la veille
    (aucun appel réseau) ; fiche du produit : machines reliées (recherche de machines, relier, délier), CVE rattachées,
-   écartées et propositions à décider (confirmer, rejeter, note), chacune avec sa priorité et ses faits. */
+   écartées et propositions à décider (confirmer, rejeter, note), chacune avec sa priorité et ses faits.
+   Lot CPE-1 : recherche du produit dans la liste locale du dictionnaire CPE de la NVD (si elle est chargée), versions connues
+   du produit choisi proposées dans le champ de la version (toujours libre), CPE 2.3 construit à partir du choix, et CPE collé
+   qui remplit l'éditeur, le produit et la version sans aucun appel (SaisieCpe.tsx, dictionnaire-cpe.ts). */
 import {
   Alert,
   Anchor,
@@ -27,6 +31,7 @@ import {
   FAMILLE_PRODUIT_LIBELLES,
   FAMILLES_PRODUIT,
   type FicheProduitDto,
+  type IdentiteProduitCpe,
   type MachineRelieeDto,
   type PageMachines,
   type ProduitSurveilleDto,
@@ -35,10 +40,11 @@ import {
   STATUT_RAPPROCHEMENT_LIBELLES,
   type SuggestionCpeDto,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan } from '../session';
@@ -47,6 +53,8 @@ import { PrioriteFaits } from './FaillesDetectees';
 import { ouvertureProduit } from './recherche';
 import { MarquesSources } from './SourcesFaille';
 import { libelleTechnologieRapprochee } from './surface';
+import { appliquerChoixCpe, appliquerCpeColle, appliquerVersionCpe, messageVersionsCpe } from './dictionnaire-cpe';
+import { ChampVersionCpe, RechercheProduitCpe, useSaisieCpe, useVersionsCpe } from './SaisieCpe';
 import {
   champsManquants,
   explicationProposition,
@@ -248,13 +256,13 @@ export function ProduitsSurveillesPage() {
     );
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Produits surveillés"
         description="Registre de l’organisation : les produits dont la plateforme suit les vulnérabilités publiées, par éditeur, produit et version. La version déclarée sert au rapprochement avec les failles de la veille : tenez-la à jour. Un même produit (même éditeur, même version) n’est inscrit qu’une fois."
         actions={modifier && <Button onClick={() => setEdition({ produit: null })}>Ajouter un produit</Button>}
       />
       <Stack>
-        <Group justify="space-between" align="flex-end">
+        <BarreFiltres label="Produits surveillés">
           <Select
             label="Famille"
             data={OPTIONS_FILTRE_FAMILLE}
@@ -267,7 +275,7 @@ export function ProduitsSurveillesPage() {
               {produits.data.length} produit{produits.data.length > 1 ? 's' : ''}
             </Text>
           )}
-        </Group>
+        </BarreFiltres>
         <ErrorAlert error={produits.error} />
         {produits.data && (
           <ProduitsTable
@@ -294,6 +302,7 @@ export function ProduitsSurveillesPage() {
           <EditeurProduit
             produit={edition.produit}
             fournisseurs={can('fournisseurs', 'lire') ? (fournisseurs.data ?? []) : null}
+            onAnnuler={() => setEdition(null)}
             onFait={async () => {
               setEdition(null);
               await rafraichir();
@@ -373,15 +382,21 @@ function ConfirmerSuppression({ produit, onFait }: { produit: ProduitSurveilleDt
 function EditeurProduit({
   produit,
   fournisseurs,
+  onAnnuler,
   onFait,
 }: {
   produit: ProduitSurveilleDto | null;
   /** Fournisseurs lisibles ; null : pas de droit de lecture des fournisseurs (champ non proposé). */
   fournisseurs: FournisseurCourt[] | null;
+  onAnnuler: () => void;
   onFait: () => Promise<void>;
 }) {
   const [f, setF] = useState<FormulaireProduit>(() => formulaireDepuis(produit));
   const [erreur, setErreur] = useState<string | null>(null);
+  // Lot CPE-1 : produit choisi dans la liste (ses versions sont demandées) ou CPE collé (aucun appel).
+  const [identite, setIdentite] = useState<{ i: IdentiteProduitCpe; choisi: boolean } | null>(null);
+  const saisie = useSaisieCpe();
+  const versions = useVersionsCpe(identite?.choisi ? identite.i : null);
   const [enCours, setEnCours] = useState(false);
   const annuaire = useQuery({
     queryKey: ['vulnerabilites', 'responsables'],
@@ -436,6 +451,15 @@ function EditeurProduit({
           </Text>
         )
       )}
+      {saisie.etat?.listeChargee && (
+        <RechercheProduitCpe
+          onFrappe={() => saisie.rechauffer()}
+          onChoisir={(i) => {
+            setIdentite({ i, choisi: true });
+            setF(appliquerChoixCpe(f, i));
+          }}
+        />
+      )}
       <TextInput
         label="Éditeur"
         required
@@ -450,20 +474,22 @@ function EditeurProduit({
         value={f.nom}
         onChange={(e) => setF({ ...f, nom: e.currentTarget.value })}
       />
-      <TextInput
-        label="Version"
-        required
-        description="Obligatoire : c’est elle qui sert au rapprochement avec les failles publiées (par exemple 10.1.2). Même éditeur, même produit et même version : une seule fiche."
-        maxLength={100}
-        value={f.versionProduit}
-        onChange={(e) => setF({ ...f, versionProduit: e.currentTarget.value })}
+      <ChampVersionCpe
+        valeur={f.versionProduit}
+        onChange={(v) => setF(appliquerVersionCpe(f, identite?.i ?? null, v))}
+        versions={versions.reponse}
+        message={messageVersionsCpe(versions.reponse, versions.attenteMs)}
       />
       <TextInput
         label="Identifiant CPE 2.3"
-        description="Facultatif. Son éditeur et son produit permettent le rapprochement exact (sinon : par nom, toujours à confirmer) ; sa version n’est pas lue, seule compte la version déclarée."
+        description="Facultatif. Son éditeur et son produit permettent le rapprochement exact (sinon : par nom, toujours à confirmer) ; sa version n’est pas lue, seule compte la version déclarée. Rempli quand vous choisissez un produit du dictionnaire ; un CPE 2.3 collé ici remplit l’éditeur, le produit et la version."
         maxLength={500}
         value={f.cpe}
-        onChange={(e) => setF({ ...f, cpe: e.currentTarget.value })}
+        onChange={(e) => {
+          const r = appliquerCpeColle(f, e.currentTarget.value);
+          setF(r.formulaire);
+          if (r.identite) setIdentite({ i: r.identite, choisi: false });
+        }}
       />
       <SuggestionCpe formulaire={f} onChoisir={(cpe) => setF({ ...f, cpe })} />
       <Group grow align="flex-start">
@@ -495,7 +521,10 @@ function EditeurProduit({
         nothingFoundMessage="Aucun responsable"
       />
       <ErrorAlert error={annuaire.error} />
-      <Group justify="flex-end">
+      <Group justify="flex-end" className="fenetre-actions">
+        <Button variant="subtle" onClick={onAnnuler} disabled={enCours}>
+          Annuler
+        </Button>
         <Button onClick={() => void enregistrer()} loading={enCours}>
           {produit ? 'Enregistrer' : 'Ajouter'}
         </Button>
@@ -773,16 +802,18 @@ function FicheProduit({ id, modifier, onChange }: { id: string; modifier: boolea
           />
           {modifier && (
             <Group align="flex-end">
-              <TextInput
-                label="Rechercher une machine"
-                description="Nom de la machine, parmi celles que vous pouvez lire."
-                maxLength={100}
-                value={saisie}
-                onChange={(e) => setSaisie(e.currentTarget.value)}
-              />
-              <Button variant="default" onClick={() => setRecherche(saisie.trim())}>
-                Rechercher
-              </Button>
+              <BarreFiltres label="Rechercher une machine">
+                <TextInput
+                  label="Rechercher une machine"
+                  description="Nom de la machine, parmi celles que vous pouvez lire."
+                  maxLength={100}
+                  value={saisie}
+                  onChange={(e) => setSaisie(e.currentTarget.value)}
+                />
+                <Button variant="default" onClick={() => setRecherche(saisie.trim())}>
+                  Rechercher
+                </Button>
+              </BarreFiltres>
               <Select
                 label="Machine à relier"
                 placeholder="Choisir une machine"

@@ -18,7 +18,7 @@
    par adresse IP, filtre par nom, présentation empilée) est dans la spec de l'import Silène, qui a des données. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de l’écran, flux refermé', async ({
   browser,
@@ -108,9 +108,12 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     await accessible();
     await page.getByRole('tab', { name: 'Alertes', exact: true }).click();
     await expect(page.getByText('Aucune alerte ne correspond')).toBeVisible();
+    await ouvrirFiltres(page, 'Criticité');
     await expect(page.getByRole('combobox', { name: 'Criticité', exact: true })).toBeVisible();
+    await ouvrirFiltres(page, 'Statut chez l’éditeur');
     await expect(page.getByRole('combobox', { name: 'Statut chez l’éditeur', exact: true })).toBeVisible();
     await expect(page.locator('th', { hasText: /^Priorité$/ }).first()).toBeVisible();
+    await ouvrirFiltres(page, 'Trier les alertes par');
     const triAlertes = page.getByRole('combobox', { name: 'Trier les alertes par', exact: true });
     await expect(triAlertes).toHaveValue('Criticité de l’éditeur');
     await triAlertes.click();
@@ -126,6 +129,7 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     await expect(page.locator('th', { hasText: /^Machine interne$/ })).toBeVisible();
     await expect(page.locator('th', { hasText: /^Services connus$/ })).toBeVisible();
     await expect(page.getByText(/Seuls les services portés par une alerte sont connus/)).toBeVisible();
+    await ouvrirFiltres(page, 'Machine interne');
     const filtreMachine = page.getByRole('combobox', { name: 'Machine interne', exact: true });
     await filtreMachine.click();
     await page.getByRole('option', { name: 'Proposée, à décider', exact: true }).click();
@@ -156,6 +160,7 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
     await expect(masse).toBeHidden();
     await page.getByRole('tab', { name: 'Technologies', exact: true }).click();
     await expect(page.getByText('Aucune technologie ne correspond')).toBeVisible();
+    await ouvrirFiltres(page, 'Trier les technologies par');
     const triTechnologies = page.getByRole('combobox', { name: 'Trier les technologies par', exact: true });
     await triTechnologies.click();
     await page.getByRole('option', { name: 'Priorité calculée', exact: true }).click();

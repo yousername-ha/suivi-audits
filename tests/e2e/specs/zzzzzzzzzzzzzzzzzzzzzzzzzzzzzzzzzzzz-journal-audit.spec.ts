@@ -1,7 +1,7 @@
 /* Journal d'audit (dossier 012) : filtres par compte et par période, pagination, export JSON et CSV tracés, détails
    techniques avec date du relevé. Données fictives. */
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 test('Journal d’audit : filtres, export JSON, détails techniques datés', async ({ browser }) => {
   const ctx = await browser.newContext({
@@ -18,9 +18,11 @@ test('Journal d’audit : filtres, export JSON, détails techniques datés', asy
     await expect(entrees).not.toHaveText(/^0 entrée/);
 
     // Un compte inexistant ne ramène rien ; la réinitialisation rétablit la liste.
+    await ouvrirFiltres(page, 'Compte');
     await page.getByLabel('Compte', { exact: true }).fill('compte_inexistant_recette');
     await page.getByRole('button', { name: 'Filtrer' }).click();
     await expect(entrees).toHaveText(/^0 entrée/);
+    await ouvrirFiltres(page, 'Du');
     await page.getByLabel('Du', { exact: true }).fill('2999-01-01');
     await page.getByRole('button', { name: 'Réinitialiser' }).click();
     await expect(entrees).not.toHaveText(/^0 entrée/);

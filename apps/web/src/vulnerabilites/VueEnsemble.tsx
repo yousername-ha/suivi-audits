@@ -30,10 +30,11 @@ import {
   SECTEURS_RADAR,
   type VueEnsembleDto,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
 import { LienConfigurerIntegration } from '../integrations/EtatIntegration';
@@ -130,8 +131,8 @@ export function NiveauAlerteBloc({ niveau }: { niveau: VueEnsembleDto['niveau'] 
         ))}
       </ol>
       <p className="pc-niveau__explication">{niveau.explication}</p>
-      <details className="vu-regle">
-        <summary>Règle des niveaux</summary>
+      <details className="a-propos">
+        <summary>Règle du niveau d’alerte</summary>
         <p className="pc-niveau__regle">{REGLE_NIVEAU_ALERTE_GLOBAL}</p>
       </details>
     </section>
@@ -868,7 +869,7 @@ export function VueEnsemblePage() {
 
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Vue d’ensemble"
         description="Poste de commandement du module : niveau d’alerte, radar des failles suivies, cible prioritaire, journal et capteurs. La priorité et le niveau d’alerte sont calculés par la plateforme, les mêmes pour tout le monde ; les nombres de machines et d’actifs sont ceux que vous pouvez lire."
       />

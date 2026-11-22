@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Couverture d'un référentiel dans le périmètre (ADR 0031, 0041 et 0089) : l'état de chaque exigence — applicabilité, mise en
    œuvre, test d'efficacité, validation métier — et les mesures qui la portent. Les états décrivent ce qui est établi dans le
    périmètre ; ils ne constituent ni un taux de conformité ni une preuve de conformité. Affichée dans la page « Bibliothèque de
@@ -382,7 +383,7 @@ export function DetailExigences({
           constituent ni un taux de conformité ni une preuve de conformité à un référentiel.
         </Alert>
         <ErrorAlert error={q.error} />
-        <Group align="flex-end">
+        <BarreFiltres label="Couverture des exigences">
           {can('ecarts', 'modifier') && (
             <Button variant="default" onClick={() => setPlan(true)}>
               Créer le plan d’action des écarts
@@ -396,7 +397,7 @@ export function DetailExigences({
             value={filtre}
             onChange={setFiltre}
           />
-        </Group>
+        </BarreFiltres>
         {q.data?.detail && (
           <DataTable label="Exigences du référentiel, défilement horizontal possible">
             <Table>

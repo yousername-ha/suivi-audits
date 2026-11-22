@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Plans du SMSI (reprise du Calendrier, du Planning, des plans de formation, de sensibilisation, d'audit interne et
    d'exercices de l'outil de suivi) : les données restent dans l'état historique (clé `plans`), l'écran les lit et les
    modifie sous verrou. Le planning annuel est un SVG (aucun style en ligne : CSP stricte, ADR 0006) dont les barres se
@@ -17,8 +18,9 @@ import {
   Textarea,
   TextInput,
 } from '@mantine/core';
+import { useElementSize } from '@mantine/hooks';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import {
   PLANS,
   RESULTATS_EXERCICE,
@@ -35,7 +37,7 @@ import {
   type TacheRecurrente,
   type TypePlan,
 } from '@suivi/shared';
-import { ConfirmButton, DataTable, StatusChip, type Etat } from '@suivi/ui';
+import { APropos, ConfirmButton, DataTable, StatusChip, type Etat } from '@suivi/ui';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
@@ -136,10 +138,8 @@ export function PlansSmsi({ vue, smsi }: { vue: VuePlans; smsi?: string }) {
       <ErrorAlert error={q.error ?? erreur} />
       <Group justify="space-between" align="flex-end">
         <div>
-          <Text fw={600}>{entete.titre}</Text>
-          <Text size="sm" c="dimmed">
-            {entete.description}
-          </Text>
+          {(vue === 'audit' || vue === 'exo') && <Text fw={500}>{entete.titre}</Text>}
+          <APropos>{entete.description}</APropos>
         </div>
         {(vue === 'calendrier' || vue === 'planning') && choixAnnee}
         {vue !== 'calendrier' && vue !== 'planning' && modifier && (
@@ -442,11 +442,9 @@ function Liste({
 }
 
 /* ------------------------------------------------------------------------------------------------ planning (SVG) */
-const LARGEUR = 1000,
-  GAUCHE = 250,
+const LARGEUR_MIN = 960,
   HAUTEUR_LIGNE = 28,
   ENTETE = 30;
-const LONGUEUR = LARGEUR - GAUCHE;
 const TEINTE: Record<NiveauPlan, string> = { ok: 'ok', mid: 'mid', hi: 'hi', bad: 'bad', na: 'na' };
 
 function Planning({
@@ -465,14 +463,28 @@ function Planning({
   onAjouter: (type: TypePlan) => Promise<void>;
 }) {
   const [filtre, setFiltre] = useState<string>('all');
-  const [glisse, setGlisse] = useState<{ id: string; depart: number; dx: number; largeurPx: number } | null>(null);
+  const [glisse, setGlisse] = useState<{
+    id: string;
+    depart: number;
+    dx: number;
+    largeurPx: number;
+    largeurDessin: number;
+    echelle: number;
+  } | null>(null);
+  const mesure = useElementSize<HTMLDivElement>();
+  const decoupe = useId();
+  // Une unité du dessin correspond à un pixel disponible : étirer un viewBox fixe agrandissait également les
+  // caractères et la hauteur des lignes sur grand écran. La petite fenêtre fait défiler le dessin à sa largeur minimale.
+  const largeur = Math.max(LARGEUR_MIN, Math.floor(mesure.width || LARGEUR_MIN));
+  const gauche = Math.min(420, Math.max(280, Math.round(largeur * 0.27)));
+  const longueur = largeur - gauche;
   const jourJ = aujourdhui();
   const debut = Date.UTC(annee, 0, 1),
     fin = Date.UTC(annee + 1, 0, 1);
   const jours = (fin - debut) / 864e5;
-  const echelle = LONGUEUR / jours;
+  const echelle = longueur / jours;
   const position = (date: string) => ((Date.parse(date.slice(0, 10) + 'T00:00:00Z') - debut) / 864e5) * echelle;
-  const bornees = (v: number) => Math.max(0, Math.min(LONGUEUR, v));
+  const bornees = (v: number) => Math.max(0, Math.min(longueur, v));
   const groupes = TYPES_ACTION_PLAN.filter((t) => filtre === 'all' || filtre === t).map((type) => ({
     type,
     actions: d.plans
@@ -488,23 +500,25 @@ function Planning({
   const lignes = groupes.map((g) => ({ ...g, ligneDebut: (ligne += 1), lignes: (ligne += g.actions.length || 1) }));
   const hauteur = ENTETE + ligne * HAUTEUR_LIGNE + 10;
   const jourDansAnnee = jourJ >= `${annee}-01-01` && jourJ < `${annee + 1}-01-01`;
-  const terminer = (p: ActionPlan, dx: number) => {
-    const delta = Math.round(dx / echelle);
+  const terminer = (p: ActionPlan, dx: number, echelleDepart: number) => {
+    const delta = Math.round(dx / echelleDepart);
     if (delta) void onDecaler(p.id, delta);
   };
   return (
     <Stack>
       <Group justify="space-between">
-        <Select
-          label="Plan affiché"
-          allowDeselect={false}
-          value={filtre}
-          onChange={(v) => setFiltre(v ?? 'all')}
-          data={[
-            { value: 'all', label: 'Tous les plans' },
-            ...TYPES_ACTION_PLAN.map((t) => ({ value: t, label: PLANS[t].libelle })),
-          ]}
-        />
+        <BarreFiltres label="Affichage et filtres">
+          <Select
+            label="Plan affiché"
+            allowDeselect={false}
+            value={filtre}
+            onChange={(v) => setFiltre(v ?? 'all')}
+            data={[
+              { value: 'all', label: 'Tous les plans' },
+              ...TYPES_ACTION_PLAN.map((t) => ({ value: t, label: PLANS[t].libelle })),
+            ]}
+          />
+        </BarreFiltres>
         <Group gap="md" component="ul" className="plan-legende">
           {(
             [
@@ -522,15 +536,22 @@ function Planning({
           ))}
         </Group>
       </Group>
-      <div className="plan-planning">
+      <div ref={mesure.ref} className="plan-planning">
         <svg
-          viewBox={`0 0 ${LARGEUR} ${hauteur}`}
+          width={largeur}
+          height={hauteur}
+          viewBox={`0 0 ${largeur} ${hauteur}`}
           role="group"
           aria-label={`Planning des plans ${annee}`}
           className="plan-svg"
         >
+          <defs>
+            <clipPath id={decoupe}>
+              <rect width={gauche - 8} height={hauteur} />
+            </clipPath>
+          </defs>
           {MOIS.map((m, i) => {
-            const x = GAUCHE + position(`${annee}-${String(i + 1).padStart(2, '0')}-01`);
+            const x = gauche + position(`${annee}-${String(i + 1).padStart(2, '0')}-01`);
             return (
               <g key={m}>
                 <line x1={x} x2={x} y1={ENTETE - 6} y2={hauteur} className="plan-grille" />
@@ -542,8 +563,8 @@ function Planning({
           })}
           {jourDansAnnee && (
             <line
-              x1={GAUCHE + position(jourJ)}
-              x2={GAUCHE + position(jourJ)}
+              x1={gauche + position(jourJ)}
+              x2={gauche + position(jourJ)}
               y1={ENTETE - 6}
               y2={hauteur}
               className="plan-aujourdhui"
@@ -554,14 +575,16 @@ function Planning({
           {lignes.map((g) => {
             const s = planStatistiques(d.plans, g.type, annee, jourJ);
             const y0 = ENTETE + (g.ligneDebut - 1) * HAUTEUR_LIGNE;
+            const titreGroupe = `${PLANS[g.type].plan} — ${s.realises}/${s.total} réalisé(s)${s.enRetard ? `, ${s.enRetard} en retard` : ''}`;
             return (
               <g key={g.type}>
-                <text x={4} y={y0 + 18} className="plan-groupe">
-                  {PLANS[g.type].plan} — {s.realises}/{s.total} réalisé(s)
-                  {s.enRetard ? `, ${s.enRetard} en retard` : ''}
+                <text x={4} y={y0 + 18} className="plan-groupe" clipPath={`url(#${decoupe})`}>
+                  <title>{titreGroupe}</title>
+                  {PLANS[g.type].libelle} · {s.realises}/{s.total}
+                  {s.enRetard ? ` · ${s.enRetard} en retard` : ''}
                 </text>
                 {g.actions.length === 0 && (
-                  <text x={GAUCHE + 6} y={y0 + HAUTEUR_LIGNE + 18} className="plan-vide">
+                  <text x={gauche + 6} y={y0 + HAUTEUR_LIGNE + 18} className="plan-vide">
                     Aucune action sur l’année.
                   </text>
                 )}
@@ -572,18 +595,19 @@ function Planning({
                     b = p.end || p.start || p.done;
                   const xa = bornees(position(a)),
                     xb = bornees(position(decalerDate(b, 1)));
-                  const largeur = Math.max(6, xb - xa);
+                  const largeurBarre = Math.max(6, xb - xa);
                   const dx = glisse?.id === p.id ? glisse.dx : 0;
                   const titre = `${p.title || '(sans titre)'} — ${libelle} — ${jour(p.start)}${p.end && p.end !== p.start ? ' au ' + jour(p.end) : ''}${p.done ? ' — réalisé le ' + jour(p.done) : ''}`;
                   return (
                     <g key={p.id}>
-                      <text x={4} y={y + 18} className="plan-etiquette">
+                      <text x={4} y={y + 18} className="plan-etiquette" clipPath={`url(#${decoupe})`}>
+                        <title>{`${p.id} ${p.title || '(sans titre)'}`}</title>
                         {p.id} {p.title || '(sans titre)'}
                       </text>
                       <rect
-                        x={GAUCHE + xa + dx}
+                        x={gauche + xa + dx}
                         y={y + 4}
-                        width={largeur}
+                        width={largeurBarre}
                         height={HAUTEUR_LIGNE - 10}
                         rx={3}
                         className={`plan-barre plan-barre-${TEINTE[niveau]}${glisse?.id === p.id ? ' plan-barre-deplacee' : ''}`}
@@ -592,21 +616,25 @@ function Planning({
                         aria-label={`${titre}. Entrée : ouvrir la fiche.${modifiable ? ' Flèches gauche et droite : décaler d’un jour ; avec Maj, de sept jours.' : ''}`}
                         onPointerDown={(e) => {
                           if (!modifiable || !p.start) return;
-                          const largeurPx = e.currentTarget.ownerSVGElement?.getBoundingClientRect().width ?? LARGEUR;
+                          const largeurPx = e.currentTarget.ownerSVGElement?.getBoundingClientRect().width ?? largeur;
                           e.currentTarget.setPointerCapture(e.pointerId);
-                          setGlisse({ id: p.id, depart: e.clientX, dx: 0, largeurPx });
+                          setGlisse({ id: p.id, depart: e.clientX, dx: 0, largeurPx, largeurDessin: largeur, echelle });
                         }}
                         onPointerMove={(e) => {
                           if (glisse?.id === p.id)
-                            setGlisse({ ...glisse, dx: ((e.clientX - glisse.depart) * LARGEUR) / glisse.largeurPx });
+                            setGlisse({
+                              ...glisse,
+                              dx: ((e.clientX - glisse.depart) * glisse.largeurDessin) / glisse.largeurPx,
+                            });
                         }}
                         onPointerUp={() => {
                           const g2 = glisse;
                           setGlisse(null);
                           if (g2?.id !== p.id) return;
-                          if (Math.abs((g2.dx * g2.largeurPx) / LARGEUR) < 4) onOuvrir(p.id);
-                          else terminer(p, g2.dx);
+                          if (Math.abs((g2.dx * g2.largeurPx) / g2.largeurDessin) < 4) onOuvrir(p.id);
+                          else terminer(p, g2.dx, g2.echelle);
                         }}
+                        onPointerCancel={() => setGlisse(null)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
@@ -620,7 +648,7 @@ function Planning({
                         <title>{titre}</title>
                       </rect>
                       {p.done && Date.parse(p.done) >= debut && Date.parse(p.done) < fin && (
-                        <text x={GAUCHE + position(p.done)} y={y + 19} className="plan-realise">
+                        <text x={gauche + position(p.done)} y={y + 19} className="plan-realise">
                           ✓<title>{`Réalisé le ${jour(p.done)}`}</title>
                         </text>
                       )}

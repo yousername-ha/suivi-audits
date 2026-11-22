@@ -8,7 +8,7 @@
    non-fuite : tests du paquet partagé et de l'API. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 const axe = async (page: Page) => {
   // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
@@ -55,7 +55,9 @@ for (const [mode, scheme] of [
       await expect(
         page.getByRole('navigation', { name: 'Rubriques : Vulnérabilités' }).getByRole('link', { name: 'Tendances' }),
       ).toHaveAttribute('aria-current', 'page');
+      await ouvrirFiltres(page, 'Période');
       await expect(page.getByRole('combobox', { name: 'Période', exact: true })).toHaveValue('30 jours, jour par jour');
+      await ouvrirFiltres(page, 'Périmètre');
       await expect(page.getByRole('combobox', { name: 'Périmètre', exact: true })).toHaveValue('Toute la plateforme');
       await expect(page.getByText(/^(Historique depuis le|Aucun instantané encore)/)).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Failles présentes par priorité', level: 2 })).toBeVisible();
@@ -65,6 +67,7 @@ for (const [mode, scheme] of [
       await expect(page.getByText(/se lisent par périmètre/)).toBeVisible();
       await expect(page.getByText(/à confirmer par le RSSI/).first()).toBeVisible();
       await axe(page);
+      await ouvrirFiltres(page, 'Période');
       await page.getByRole('combobox', { name: 'Période', exact: true }).click();
       await page.getByRole('option', { name: '13 semaines', exact: true }).click();
       await expect(page.locator('th', { hasText: /^Semaine$/ }).first()).toBeVisible();
@@ -81,6 +84,7 @@ for (const [mode, scheme] of [
       // Rapport de pilotage : production, document, impression, CSV.
       await page.goto('/vulnerabilites/rapport');
       await expect(page.getByRole('heading', { name: 'Rapport de pilotage', level: 1 })).toBeVisible();
+      await ouvrirFiltres(page, 'Mois');
       await expect(page.getByRole('combobox', { name: 'Mois', exact: true })).toBeVisible();
       await axe(page);
       await page.getByRole('button', { name: 'Produire le rapport', exact: true }).click();

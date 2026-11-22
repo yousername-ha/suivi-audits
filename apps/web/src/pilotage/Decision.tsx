@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 import {
   Alert,
   Button,
@@ -200,11 +201,13 @@ export function Decision({
           value={note}
           onChange={(e) => setNote(e.currentTarget.value)}
         />
-        <TextInput
-          label="Rechercher un justificatif"
-          value={search}
-          onChange={(e) => setSearch(e.currentTarget.value)}
-        />
+        <BarreFiltres label="Rechercher un justificatif">
+          <TextInput
+            label="Rechercher un justificatif"
+            value={search}
+            onChange={(e) => setSearch(e.currentTarget.value)}
+          />
+        </BarreFiltres>
         <MultiSelect
           label={
             operation === 'proof_review'

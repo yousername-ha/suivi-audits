@@ -342,6 +342,7 @@ function FicheChargee({ item, onClose }: { item: ElementDetail; onClose: () => v
             <Textarea
               label="Motif de la publication"
               description="Obligatoire (5 caractères au moins) ; conservé avec la version."
+              descriptionProps={{ 'data-aide-permanente': true }}
               value={motif}
               onChange={(e) => setMotif(e.currentTarget.value)}
               autosize
