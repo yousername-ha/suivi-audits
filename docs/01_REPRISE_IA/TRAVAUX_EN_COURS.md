@@ -19,14 +19,14 @@ La documentation a été publiée sur la branche au commit 7cc35dc à la demande
 explicite de l’utilisateur ; les workflows habituels se déclenchent automatiquement.
 Le nettoyage ultérieur est tracé dans le diagnostic du 11 octobre.
 
-## Module Vulnérabilités (mise à jour du 20/11/2026, Europe/Paris)
+## Module Vulnérabilités (mise à jour du 22/11/2026, Europe/Paris)
 
-Session « Module surveillance vulnérabilités SMSI ». Voir la [reprise du 20/11/2026](REPRISE-2026-11-20.md).
+Session « Module surveillance vulnérabilités SMSI ». Voir la [reprise du 22/11/2026](REPRISE-2026-11-22.md).
 
 | Sujet | État | Point de reprise |
 | --- | --- | --- |
-| Correctifs de performance PERF-01 à PERF-04 | PR #339 ouverte vers `claude-suivi-smsi`, CI en cours à la rédaction ; aucune migration | CI verte, fusion, nouveau passage du banc. |
-| Bornes de synchronisation Tenable (PERF-09) | Décision du RSSI en attente | [Rapport du banc](../05_RECETTE/performance/2026-11-19/RAPPORT.md), § 9. |
-| Ordre du calcul global de la vue d'ensemble | Décision du RSSI en attente | Addendum « lot PERF » de l'ADR 0100, point ouvert 2. |
-| Veille réglementaire | Décidée, non commencée ; ADR 0110 et migration `098` réservées | Reprise du 20/11/2026, § 3. |
-| Formats `.nessus` et Silène | Livrés, jamais vérifiés sur un export réel | Addenda « lot N1 » et « lot SI1 » de l'ADR 0100. |
+| « Quoi faire » avec les correctifs regroupés de Tenable (QF-TEN) | En cours, visé pour la 7.6.0 | Reprise du 22/11/2026, § 3. |
+| CVE inconnue de la veille et alerte précoce (CVE-INC) | En cours, version suivante ; trois hôtes nouveaux | Reprise du 22/11/2026, § 3. |
+| Veille réglementaire, tranche 2 (VR-2) | En cours, version suivante | ADR 0110, décision du 22/11/2026. |
+| Délais de la veille active (dictionnaire CPE) | À mesurer par la session Coeur | ADR 0097, addendum. |
+| Formats `.nessus`, Silène et `sumremediation` | Jamais vérifiés sur un export réel complet | Addenda de l'ADR 0100. |

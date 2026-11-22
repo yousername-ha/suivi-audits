@@ -2,8 +2,8 @@
 
 ## Jeu court à lire d'abord (18/10/2026)
 
-0. [Reprise du 20/11/2026](01_REPRISE_IA/REPRISE-2026-11-20.md) : état le plus récent (module Vulnérabilités, décisions du RSSI
-   en attente) ; les reprises précédentes sont listées dans [HANDOVER](../HANDOVER.md), dont celle du
+0. [Reprise du 22/11/2026](01_REPRISE_IA/REPRISE-2026-11-22.md) : état le plus récent (module Vulnérabilités, file de la 7.6.0),
+   après celle du [20/11/2026](01_REPRISE_IA/REPRISE-2026-11-20.md) (règles de sécurité du module, limites) ; les reprises précédentes sont listées dans [HANDOVER](../HANDOVER.md), dont celle du
    [29/10/2026](01_REPRISE_IA/REPRISE-2026-10-29.md) (version 6.0.0 préparée) et celle du
    [27/10/2026](01_REPRISE_IA/REPRISE-2026-10-27.md) (règles de fusion et de travail).
 
