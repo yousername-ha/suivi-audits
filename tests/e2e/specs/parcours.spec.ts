@@ -304,7 +304,7 @@ test('temps réel : deux navigateurs, présence et mise à jour sans rechargemen
   await b.page.getByRole('tab', { name: 'Liens' }).click();
   await a.page.goto('/documents');
   await expect(b.page.getByText('Responsable SSI consulte')).toBeVisible();
-  await expect(b.page.getByText('En direct')).toBeVisible();
+  await expect(b.page.locator('.shell-header')).toHaveAttribute('data-temps-reel', 'connecte');
 
   // A ajoute un lien : il apparaît chez B sans rechargement.
   await a.page.getByRole('tab', { name: 'Liens' }).click();

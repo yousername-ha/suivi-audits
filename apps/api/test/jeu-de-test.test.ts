@@ -130,6 +130,8 @@ describe('jeu de données de test', () => {
       series: 1,
       traitements: 1,
     });
+    // Vulnérabilités : instance Tenable fictive et deux synchronisations (détail : demo-vulnerabilites.test.ts).
+    expect(bilan.vulnerabilites).toMatchObject({ depotsRattaches: 3, constats: 34, synchronisations: 2 });
     const plans = (await a.get('/api/plans')).json().plans as { type: string; status: string; result: string }[];
     expect(plans).toHaveLength(11);
     for (const type of ['formation', 'sensi', 'audit', 'exo'])

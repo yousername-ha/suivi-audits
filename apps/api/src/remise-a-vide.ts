@@ -187,6 +187,14 @@ export const TABLES_TRAVAIL = [
   'veille_reglementaire_publications',
   'veille_reglementaire_sources',
   'veille_reglementaire_collectes',
+  // Dictionnaire CPE de la NVD (ADR 0100, lot CPE-1 ; décision de la session Coeur) : liste des produits, copie complète,
+  // cache des versions, file des demandes et état de la source (activation, fréquence, curseur) ; effacés avec le travail,
+  // à recharger (la source revient désactivée).
+  'vulnerabilites_cpe_produits',
+  'vulnerabilites_cpe_copie',
+  'vulnerabilites_cpe_versions',
+  'vulnerabilites_cpe_demandes',
+  'vulnerabilites_cpe_dictionnaire',
   // Failles et machines lues dans Tenable (ADR 0100, lot V5) : relues à la synchronisation suivante ; rôle et périmètre des
   // machines saisis par les utilisateurs, périmètre rattaché à grc_smsis (effacé avec le travail).
   'vulnerabilites_machines',
@@ -196,6 +204,9 @@ export const TABLES_TRAVAIL = [
   'vulnerabilites_constats',
   'vulnerabilites_constat_cves',
   'vulnerabilites_detections',
+  // Correctifs regroupés de Tenable (ADR 0100, lot QF-TEN) : relus à la synchronisation suivante.
+  'vulnerabilites_tenable_correctifs',
+  'vulnerabilites_tenable_correctif_constats',
   // Rapprochement par version (ADR 0100, lot V4a) : produits touchés tirés de NVD (recalculables), liens produit-machine et
   // rapprochements décidés par les utilisateurs, effacés avec les produits, les machines et la veille.
   'vulnerabilites_veille_cve_produits',

@@ -103,6 +103,17 @@ export function messageCollectes(n: number): string {
 /** Nom de la source. */
 export const libelleSource = (s: SourceReglementaire) => sourceReglementaire(s).libelle;
 
+/** Carte d'une publication (choix du RSSI du 22/11/2026, « actes ») : nom court de la source et nature de l'autorité,
+    affichés en tête de la carte. Libellés descriptifs, sans valeur juridique. */
+export const AUTORITES_REGLEMENTAIRES: Record<SourceReglementaire, { court: string; autorite: string }> = {
+  cnil: { court: 'CNIL', autorite: 'Autorité de contrôle' },
+  cepd: { court: 'CEPD', autorite: 'Comité européen' },
+  'eur-lex': { court: 'EUR-Lex', autorite: 'Union européenne' },
+  anssi: { court: 'ANSSI', autorite: 'Agence nationale' },
+  ans: { court: 'ANS', autorite: 'Agence nationale (santé)' },
+  legifrance: { court: 'Légifrance', autorite: 'Journal officiel' },
+};
+
 /* ------------------------------------------------------------------ Pastilles (dessinées pour la charte) */
 export interface PictoReglementaire {
   sigle: string;

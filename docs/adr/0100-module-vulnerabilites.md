@@ -2072,7 +2072,7 @@ correctif », le vrai zero-day). Parc annoncé : 150 machines, 10 000 vulnérabi
 | --- | --- | --- | --- | --- |
 | Correctif | Tenable (`vulndetails`) | `solution` | `vulnerabilites_constats.correctif` (anglais, nettoyé, 2 000 caractères) | **Oui** : clé du regroupement |
 | Correctif | Tenable (`vulndetails`) | `patchPubDate` | `correctif_publie_le` | **Oui** : « correctif disponible » à cette date |
-| Correctif | Tenable (`sumremediation`) | — | **Non** : la vue est permise (même appel `POST /rest/analysis`) mais le connecteur ne la demande pas ; seul `scripts/dev/exemples-tenable.ps1` l'a lue le 16/11/2026 | Non (voir « Points ouverts ») |
+| Correctif | Tenable (`sumremediation`) | `solutionID`, `solution`, `pluginID`, `hostTotal`, `cveTotal`, `total`, `vprScore`, `cvssV3BaseScore`, `epssScore` (lot QF-TEN) | **Oui** depuis le lot QF-TEN (migration `102`, `vulnerabilites_tenable_correctifs`) ; avant : non lue | Non dans ce lot ; fiche et assistant depuis le lot QF-TEN, vue « Correctifs » pas encore (voir l'addendum « lot QF-TEN ») |
 | Correctif | CERT Santé (fiche) | mention « Un correctif existe : Oui / Non » | `vulnerabilites_veille_avis.fiche_correctif` (lot V4c) | **Oui** : « disponible » ou « aucun correctif connu » |
 | Correctif | CISA KEV | `requiredAction` | `kev_action` | Non pour l'état : une consigne (« appliquer les mesures de l'éditeur ou cesser l'usage »), pas la preuve d'un correctif ; reste affichée dans la fiche |
 | Correctif | NVD | bornes `versionEndExcluding` / `versionEndIncluding` | `vulnerabilites_veille_cve_produits` | Non pour l'état : une borne haute publiée suggère une version corrigée sans la prouver ; reste affichée dans la fiche (« n'est plus citée comme touchée ») |
@@ -2142,7 +2142,7 @@ correctif », le vrai zero-day). Parc annoncé : 150 machines, 10 000 vulnérabi
    marque reste « Zero-day : exploitation avérée » et la précision est ajoutée à côté ; alertes et priorité inchangées.
 2. **Priorité d'une machine en fin de support** : doit-elle monter d'un cran (ou la faille qu'elle porte) ? Aucun effet dans ce
    lot.
-3. **Lire `sumremediation`** dans la synchronisation (même appel `POST /rest/analysis`, champs `solutionID`, `solution`,
+3. **Réalisé par le lot QF-TEN (22/11/2026)**, sans `remediationList`, pour la fiche et l'assistant ; la vue « Correctifs » ne l'utilise pas encore. Question d'origine : **Lire `sumremediation`** dans la synchronisation (même appel `POST /rest/analysis`, champs `solutionID`, `solution`,
    `remediationList`, `pluginID`, en liste blanche) pour fusionner les libellés d'un même correctif ? Demanderait une page
    d'analyse de plus par synchronisation et une migration (table des correctifs).
 4. **Lire `latest_version`** d'AlgoLightHouse (exclu au lot ALH6) pour faire entrer les CVE exposées dans la vue par correctif
@@ -3755,3 +3755,316 @@ de référence indépendante, cas d'une seule CVE compris). Sur le code d'avant,
 
 **Non traité ici** : les autres défauts du banc (PERF-01, 02, 04, 05, 16), à remesurer après ce correctif ; la lecture des
 CVE d'AlgoLightHouse de la même fonction (`c.cve = ANY(liste)`, sans recouvrement de tableaux), non mesurée lente.
+
+## Addendum du 22/11/2026 — lot TEN-SCORES : criticité (ACR) et exposition (AES) des machines selon Tenable
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`100`, aucune route nouvelle, aucune dépendance, aucun flux nouveau, rien chez l'assistant ; `scripts/exploitation-worker.py`
+et `docker-compose.yml` inchangés.
+
+### Décision du RSSI (22/11/2026)
+
+1. **Afficher l'ACR** (Asset Criticality Rating), déjà lue (`acrScore`, lot V5), rangée (`vulnerabilites_machines.acr`) et
+   rendue (`MachineDto.acr`) mais affichée nulle part : colonne de la liste des machines et fiche d'une machine.
+2. **Lire et afficher l'AES** (Asset Exposure Score, 0 à 1000) : champ `assetExposureScore` du résultat `vulndetails`.
+3. **Filtres** de la liste des machines par catégorie minimale d'ACR et d'AES ; une machine sans valeur ne répond à aucun
+   filtre actif.
+4. Colonnes, valeurs de la fiche et filtres **seulement si une intégration Tenable Security Center existe** (pas un import
+   Nessus seul).
+5. **Informations affichées seulement** (décision antérieure du RSSI, rappelée) : ni la priorité, ni le rang, ni les alertes
+   ne dépendent de l'ACR ou de l'AES.
+
+### Catégories officielles
+
+Source : documentation de l'éditeur, docs.tenable.com, page « Tenable Exposure Management Metrics » (relevé transmis par la
+session principale le 22/11/2026, non relu dans cette session) :
+
+| Mesure | Critique | Élevée | Moyenne | Faible |
+| --- | --- | --- | --- | --- |
+| ACR (0 à 10) | 9 à 10 | 7 à 8 | 4 à 6 | 1 à 3 |
+| AES (0 à 1000) | — | 650 à 1000 | 350 à 649 | 0 à 349 |
+
+Les catégories se lisent comme des seuils (`SEUILS_ACR`, `SEUILS_AES` de `packages/shared/src/scores-tenable.ts`) : une
+valeur au moins égale au bas d'une catégorie y entre. Filtres : ACR « Critique » (9 ou plus), « Élevée ou plus » (7 ou
+plus), « Moyenne ou plus » (4 ou plus) ; AES « Élevée » (650 ou plus), « Moyenne ou plus » (350 ou plus).
+
+### Réalisation
+
+- **Script** (`scripts/integration-http.py`) : `assetExposureScore` ajouté à `CHAMPS_ANALYSE`, seul champ de plus ; lu par
+  `score_exposition` comme entier de 0 à 1000 (nombre entier ou chiffres) ; vide (Tenable ne le calcule pas, par exemple un
+  actif non licencié), absent, hors bornes, décimal ou non numérique : `null`, sans écarter le résultat. Une machine vue
+  plusieurs fois dans une synchronisation garde l'ACR et l'AES de son **premier** résultat, la règle déjà suivie par l'ACR.
+- **Schéma** (`ElementMachineTenable`) : `aes` entier de 0 à 1000, nul permis, **facultatif** (un script plus ancien reste
+  accepté) ; l'élément reste strict (tout autre champ refusé, le lot entier avec lui).
+- **Rangement** (migration `100`) : colonne `vulnerabilites_machines.aes smallint`, contrainte 0 à 1000, NULL permis. Même
+  règle que l'ACR à la synchronisation suivante : une valeur non fournie garde la valeur rangée (`coalesce`), une valeur
+  nouvelle la remplace. Import `.nessus` : ni ACR ni AES (`null`), son schéma inchangé (un champ `aes` y est refusé).
+- **Rendu** : `MachineDto.aes: number | null`, partout où `MachineDto` est rendu (liste, parc, fiche, périmètres).
+- **Filtres** : `acr` (`critique`, `elevee`, `moyenne`) et `aes` (`elevee`, `moyenne`) dans `RechercheMachines` **et**
+  `RechercheParc` (le parc garde « les mêmes filtres que la liste »). Filtre en SQL (`selonScores` de
+  `apps/api/src/vulnerabilites/failles.ts`) : une requête sur les machines lisibles (fragment `lisible` inchangé) dont la
+  valeur atteint le seuil ; ses identifiants filtrent la liste avant la pagination. Le rang reste calculé sur toutes les
+  machines lisibles, avant les filtres. Une requête de plus, seulement quand un de ces filtres est demandé. L'API accepte
+  ces filtres même sans instance Tenable (résultat vide).
+- **Présence d'une intégration Tenable** (point 4) : l'interface lit la route existante `GET
+  /api/vulnerabilites/synchronisation` (droit `vulnerabilites:lire`, déjà lue par « Failles détectées » et « Vue
+  d'ensemble », même clé du cache), qui rend un état par instance de type `tenable`, active ou non, et rien pour un
+  connecteur d'import Nessus. Au moins un état : colonnes, rubrique « Selon Tenable » de la fiche et filtres affichés ;
+  aucun (ou réponse absente) : rien, et les filtres d'ACR et d'AES ne sont pas envoyés. Aucun champ ni droit ajouté.
+- **Interface** : colonnes « Criticité (ACR, Tenable) » et « Exposition (AES, Tenable) » de la liste de l'écran « Machines »
+  (« 9 · Critique », « 700 · Élevée ») ; rubrique « Selon Tenable » de la fiche d'une machine, quel que soit l'écran qui
+  l'ouvre ; deux listes de choix dans les filtres de l'écran, liste et parc. Valeur absente : « — », lu « Non fournie par
+  Tenable » par un lecteur d'écran ; jamais 0.
+
+### Ce qui n'entre pas dans la priorité
+
+L'ACR et l'AES ne changent ni la priorité d'une faille (grille P1 à P4), ni le rang d'une machine, ni les marques, ni les
+alertes, ni ce que reçoit l'assistant (ses outils choisissent leurs champs : aucun des deux n'y figure). Ce sont des valeurs
+calculées par Tenable, affichées telles quelles.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **« Intégration configurée »** : une instance de type `tenable` existe, active ou non, clés enregistrées ou non (sinon des
+  valeurs déjà rangées disparaîtraient de l'écran le temps d'une désactivation).
+- **Filtres aussi sur le parc**, pour garder les mêmes filtres dans les deux présentations ; aucune valeur sur les tuiles.
+- **Filtres non repris de l'adresse** : l'écran « Machines » ne reprend de son adresse que le rôle et le périmètre (liens
+  de l'onglet « Périmètres ») ; un filtre caché par l'absence d'intégration Tenable ne peut ainsi pas rester actif.
+- **Valeur entre deux catégories** (ACR décimale ou inférieure à 1, que Tenable ne publie pas en principe) : la catégorie
+  inférieure.
+- **Écran « Failles détectées », vue « Par machine »** : inchangé (sans colonnes ACR ni AES).
+
+### Non vérifié
+
+Le champ `assetExposureScore` n'a été vu que dans des exemples anonymisés transmis par le RSSI ; sa forme (texte de chiffres,
+vide quand Tenable ne le calcule pas) n'a pas été relevée sur une instance dans cette session, et aucune synchronisation
+réelle n'a été faite. Les parcours Playwright adaptés n'ont pas été exécutés (CI seulement).
+
+
+## Addendum du 22/11/2026 — lot CPE-1 : saisie assistée d'un produit surveillé par le dictionnaire CPE de la NVD
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`101`, huit routes nouvelles, cinq commandes de la CLI de l'exécutant, aucune dépendance, aucune extension de PostgreSQL,
+aucune destination nouvelle (même hôte que la veille NVD, sous le flux « veille-vulnerabilites »), rien chez l'assistant.
+`scripts/exploitation-worker.py` modifié avec l'accord de la session Coeur (mode court et file dédiée, sur le modèle de
+`VEILLE_FILES`, ADR 0110) ; `scripts/update-worker.py`, `docker-compose.yml` et `docker/*` inchangés par ce lot (la partie
+du poller est dans la PR #360 de la session Coeur, [ADR 0097, addendum du 22/11/2026](0097-flux-sortants-pilotes-par-les-modules.md)).
+
+### Décisions du RSSI (22/11/2026)
+
+1. **Liste des produits en local** : seulement les produits distincts du dictionnaire CPE 2.3 de la NVD (partie a/o/h,
+   éditeur, produit, intitulé anglais sans la version si possible), entrées obsolètes exclues. Mesure du RSSI sur le vrai
+   dictionnaire : 1 880 953 entrées, 151 497 produits distincts, 39 Mo en base avec un index trigramme, environ 2,7 Mo par
+   sauvegarde compressée, recherche « glpi » en 4 ms. Source : `GET /rest/json/cpes/2.0?resultsPerPage=10000&startIndex=N`
+   (champs `cpe.cpeName`, `cpe.deprecated`, `cpe.titles[lang=en]`, `totalResults`) ; nouveautés par `lastModStartDate` et
+   `lastModEndDate` (120 jours au plus). Chargement **par lots** sur plusieurs passages de l'exécutant (condition de la session
+   Coeur), curseur rangé côté API, une page toutes les 6,5 s au plus (débit sans clé : 5 demandes par 30 s) ; seul le
+   dédoublonné est rangé. Source activable comme les autres (désactivée au départ), fréquence quotidienne par défaut, état
+   (chargement n / N, dernière mise à jour, erreur), réglage par le droit d'administrer le module.
+2. **Autocomplétion** dans le formulaire d'un produit surveillé : deux caractères au moins, temporisation d'environ 250 ms,
+   produits de la liste locale (éditeur, produit, intitulé), sans casse ni accent, 20 résultats, correspondance exacte du
+   produit d'abord puis longueur ; aucun appel extérieur pendant la frappe ; sans liste chargée, le formulaire est inchangé
+   (« Chercher un identifiant dans la veille » reste).
+3. **Versions du produit choisi** : demande rangée dans une file dédiée, interrogée par l'interface ; champ de la version
+   libre pendant l'attente, versions connues proposées à l'arrivée (menu), avec « toutes versions » (*). Réponse :
+   `cpeMatchString=cpe:2.3:<partie>:<éditeur>:<produit>`, 2 000 versions au plus, obsolètes exclues, de la plus récente à la
+   plus ancienne. Cache durable par produit (actualisé au plus une fois par jour, à la demande) ; une même demande en cours
+   n'est pas dupliquée ; limite par personne (30 par heure) ; demandes purgées après 7 jours. Versions déjà vues dans les CVE
+   de la veille proposées aussitôt, marquées.
+4. **CPE 2.3 construit** à partir de la partie, de l'éditeur, du produit et de la version (échappements corrects, `*` pour
+   une version non précisée) et **lu dans l'autre sens** (un CPE collé remplit éditeur, produit et version, sans appel).
+5. **Copie complète facultative** (« Copier le dictionnaire complet », droit d'administrer le module), avec le texte du
+   RSSI (environ 1,9 million d'entrées, 270 Mo dans la base, 17 Mo de plus par sauvegarde, une à deux heures la première
+   fois ; durée recalculée ensuite, voir « Choix de réalisation ») ; « Supprimer la copie complète » libère la place ; avec la copie, les versions viennent de la base locale.
+
+**Exception assumée au point 3 de la décision initiale** (« jamais par produit : les requêtes ne révèlent pas le parc ») :
+la demande des versions d'un produit choisi, décidée par le RSSI, fait connaître à la NVD l'éditeur et le produit que la
+personne saisit. Le texte « Ce qui sort » du flux « veille-vulnerabilites » le dit désormais ; la copie complète l'évite.
+Rien d'autre ne part : ni machine, ni version déclarée, ni personne.
+
+### Réalisation
+
+- **Fonctions pures** (`packages/shared/src/dictionnaire-cpe.ts`) : `construireCpe23`, `analyserCpe23`,
+  `echapperComposanteCpe` (chaîne formatée du CPE 2.3, NISTIR 7695 § 6.2 : lettres, chiffres, `_`, `-` et `.` tels quels,
+  tout autre caractère précédé de `\`, dont `\:`, `\\`, `\*`), `comparerVersionsCpe` et `trierVersionsCpe`,
+  `normaliserRechercheCpe`, `intituleSansVersion` ; schémas des routes et de la CLI (`IdentiteProduitCpe`,
+  `RechercheProduitsCpe`, `ReglageDictionnaireCpe`, `LotDictionnaireCpe`, `RapportDictionnaireCpe`, `RapportVersionsCpe`) ;
+  `SOURCE_DICTIONNAIRE_CPE` et `CPE_BORNES`, recopiés dans le script et l'exécutant et comparés par
+  `apps/api/test/veille-architecture.test.ts`.
+- **Tri des versions** (« tri raisonnable, documenté ») : la version est découpée en suites de chiffres et suites de
+  lettres, les autres caractères séparent ; comparaison morceau par morceau, nombres comme des nombres (« 10 » après « 9 »),
+  lettres dans l'ordre alphabétique, un nombre l'emporte sur des lettres ; un morceau de plus en chiffres rend la version
+  plus récente (« 1.0.1 » après « 1.0 »), en lettres plus ancienne (« 1.0 » après « 1.0-rc1 ») ; à égalité, ordre des
+  textes. Même règle dans le script (`comparer_versions`).
+- **Script isolé** (`scripts/veille-vulnerabilites.py`, source `nvd-cpe`, liste fermée `SOURCES_CPE`) : opération
+  « dictionnaire » (une page à partir de l'indice reçu, sans attente, ou les entrées modifiées pendant la fenêtre
+  reçue ; produits distincts avec le premier intitulé, versions distinctes si la copie complète est demandée,
+  obsolètes écartées et comptées ; page vide avant la fin annoncée : erreur) et opération « versions » (une page de
+  10 000 entrées pour l'éditeur et le produit reçus, entrées de ce seul produit, obsolètes écartées, triées, 2 000 au plus,
+  « tronqué » signalé). Le script ne reçoit que ces paramètres ; l'intitulé est nettoyé (`texte()`), borné à 300
+  caractères et privé de la version en mot entier. Encodage d'URL écrit à la main (le script n'importe toujours aucun
+  module de requêtes de haut niveau).
+- **API** (`apps/api/src/vulnerabilites/dictionnaire-cpe.ts`) :
+  - `POST /api/vulnerabilites/cpe/saisie` (`modifier`) : note la saisie en cours, rend `{ listeChargee, versionsDistantes,
+    copieComplete }` ;
+  - `GET /api/vulnerabilites/cpe/produits?q=` (`modifier`, 2 à 100 caractères) : `cle LIKE '%terme%'` sur la forme
+    normalisée, tri `cle_produit = terme`, puis `cle_produit LIKE 'terme%'`, puis longueur du produit, 20 au plus ;
+  - `POST /api/vulnerabilites/cpe/versions` (`modifier`) : copie complète faite, sinon cache frais (moins d'un jour), sinon
+    demande en file (une par produit, index unique partiel ; 30 nouvelles demandes par heure et par personne, 429 au-delà) ;
+    `GET` du même chemin : état seulement (interrogation de l'interface). Produit absent de la liste locale : 404. Source
+    désactivée ou flux fermé : « indisponible », rien n'est inscrit ;
+  - `GET /api/vulnerabilites/cpe/dictionnaire` (`lire`, ETag), `PATCH` du même chemin (`administrer`, If-Match ; `activee`,
+    `frequenceHeures` 24 ou 168 ; journal `vulnerabilites.cpe.reglage`), `POST` et `DELETE
+    /api/vulnerabilites/cpe/dictionnaire/copie` (`administrer`, If-Match ; journal `vulnerabilites.cpe.copie.demandee` et
+    `.supprimee`) ; fin et échec d'un chargement : `vulnerabilites.cpe.chargement.termine` et `.echec`.
+- **Chargement par tranches** : une tranche (identifiant, indice, nombre de pages, versions ou non, fenêtre) est remise à
+  la fois ; reprise après dix minutes si elle n'est pas close, nouvel essai quinze minutes après un échec. Ordre : copie
+  complète demandée et pas chargée (rechargement complet avec les versions), chargement en cours, premier chargement, puis
+  nouveautés à la fréquence réglée (référence consommée comme au lot F1 ; plus de 120 jours depuis la dernière mise à jour :
+  rechargement complet). Fin d'un chargement complet : `complet_le`, liste à jour à la date du début du chargement ; fin des
+  nouveautés : à jour à la fin de la fenêtre.
+- **Exécutant** (`scripts/exploitation-worker.py`) : `MODES_COURTS = ("cpe-versions",)` ; passage court
+  (`EXPLOITATION_SEULEMENT=cpe-versions`, branché dans `main()` après les contrôles et le verrou `backup-worker.lock`) : flux
+  voulu ouvert **et** appliqué (dernier rapport de `flux.json`), sinon rien n'est réclamé et le témoin est retiré ; débit
+  de la NVD attendu avant la réclamation ; au plus une demande (`cpe-versions-claim`, script isolé sous le compte 65534,
+  10 s au plus, `cpe-versions-finish`) ; budget de 27 s (chaque commande de la CLI et le script en restent dans ce budget, et
+  rien n'est réclamé s'il ne reste pas le temps du script et de la clôture) ; toute erreur avalée. Passage complet, **sans
+  aucune attente** : une demande de versions au plus, et seulement si le débit est écoulé (sinon elle attend le passage
+  suivant), témoin mis à jour, puis une tranche d'**une page** du chargement (script borné à 60 s ; un échec ne bloque
+  rien, la tranche reprend au curseur au passage suivant ; lots de 5 000 produits et 5 000 versions). Le débit de 6,5 s
+  ne s'applique qu'aux demandes de versions, compté depuis la dernière demande à la NVD (page du dictionnaire comprise) ;
+  le passage complet ne dort jamais à cause du dictionnaire (ajustement demandé par la session Coeur le 22/11/2026).
+
+### Contrat avec le poller (session Coeur)
+
+- **Saisie en cours** : notée en base par l'API (`vulnerabilites_cpe_dictionnaire.saisie_le`, une seule ligne, aucune
+  personne désignée) à l'ouverture du formulaire, pendant la frappe (au plus une fois par minute) et à chaque demande de
+  versions (POST et GET) ; valable deux minutes.
+- **`suivi cpe-versions-claim`** rend toujours un objet JSON `{ "actif": true|false, "demande": null | { "id", "partie",
+  "editeur", "produit", "mandataire"? } }` ; `actif` vaut vrai si la saisie a moins de deux minutes ou si une demande reste
+  en file ; faux si le module est désactivé, le flux fermé, la source désactivée ou le mandataire illisible (les demandes en
+  file sont alors closes). **`suivi cpe-versions-finish <id>`** reçoit `{ ok, erreur, versions, tronque }`.
+- **Chargement** : `suivi cpe-dictionnaire-claim` (rien, ou `{ id, parametres: { operation: "dictionnaire", debut, pages,
+  versions, depuis?, jusqua? }, mandataire? }`), `suivi cpe-dictionnaire-lot <id>` (`{ produits, versions }`), `suivi
+  cpe-dictionnaire-finish <id>` (`{ ok, erreur, bilan: { total, suivant, entrees, obsoletes, ecartes } }`).
+- **Témoin** `DATA_DIR/reprise-exploitation/cpe-chaud` : fichier vide, 0600, posé par remplacement atomique (un lien posé à
+  sa place est remplacé, jamais suivi) quand `actif` est vrai, retiré sinon, par le passage court et par le passage complet
+  (retiré aussi quand le flux est fermé). Mémoire du débit : `reprise-exploitation/cpe-debit.json` (`{ "le": horodatage }`).
+- **Délais de la veille active : à mesurer** par la session Coeur sur une pile, après la fusion (ouverture du formulaire
+  jusqu'au témoin vu par le poller ; choix d'un produit jusqu'aux versions affichées).
+
+### Tables (migration `101`)
+
+`vulnerabilites_cpe_produits` (clé partie, éditeur, produit ; intitulé ; `cle` et `cle_produit` normalisées par l'API ;
+index `text_pattern_ops` sur `cle_produit`), `vulnerabilites_cpe_dictionnaire` (une ligne : activation, fréquence, curseur,
+tranche, mode, fenêtre, dates, erreur, copie, saisie, version), `vulnerabilites_cpe_demandes` (file, index unique partiel
+par produit en file ou en cours), `vulnerabilites_cpe_versions` (cache, 2 000 versions au plus), `vulnerabilites_cpe_copie`
+(une ligne par version distincte). Toutes rangées « avec le travail » dans la remise à vide (décision de la session Coeur :
+effacées, à recharger ; la source revient désactivée).
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Pas d'index trigramme** : l'extension `pg_trgm` n'a pas été ajoutée (la restauration d'une sauvegarde se fait sous le
+  rôle applicatif avec `--exit-on-error`, chemin qui n'a pas pu être vérifié avec une extension). La recherche lit la forme
+  normalisée (`LIKE '%terme%'`, sans index) : 24 ms environ sur 151 497 produits fictifs (PostgreSQL 16 du poste de
+  développement), au lieu de 4 ms mesurées par le RSSI avec l'index ; 62 Mo pour ces lignes fictives aux textes plus longs
+  que les vrais. À remesurer sur le vrai dictionnaire.
+- **Produit tenu à la liste locale** : une demande de versions n'est acceptée que pour un produit de la liste (404 sinon) ;
+  un CPE collé ne déclenche aucune demande.
+- **Versions demandées seulement si la source est activée** (et le flux ouvert) : activer la source vaut accord pour ces
+  demandes ; sinon le formulaire propose les seules versions de la veille.
+- **Éditeur et nom remplis avec les valeurs du CPE** (« glpi-project », « glpi »), modifiables ensuite ; la version saisie
+  est reprise dans le CPE construit.
+- **Fréquences** 24 h (par défaut) ou 168 h ; **une page par passage complet** (1 880 953 entrées, soit environ
+  190 pages de 10 000 : environ une heure au rythme d'un passage toutes les 15 à 20 s, davantage si les passages sont plus
+  espacés). La liste des produits et la copie complète lisent **les mêmes pages** : la copie ne coûte aucune page de plus
+  si elle est demandée dès l'activation ; demandée après, elle relance un chargement complet (environ une heure de plus).
+  Le texte du RSSI sur la copie (« une à deux heures ») est remplacé par ce calcul ; versions bornées à une page de 10 000 entrées par produit (au-delà : « tronqué ») ; demande
+  non réclamée expirée après dix minutes, demande en cours sans fin close après deux minutes.
+- **Mise à jour sans suppression** : un produit n'est jamais retiré de la liste par les nouveautés ; une version devenue
+  obsolète après la copie complète reste proposée jusqu'au rechargement complet suivant.
+- **Interface** : interrogation toutes les 2 s, une minute au plus, puis message « saisissez la version vous-même » ;
+  menu des versions par groupes (toutes versions, NVD ou copie, veille) dans le champ de la version (Autocomplete), qui
+  reste libre.
+
+### Non vérifié
+
+Aucun appel réel à la NVD : le script est vérifié sur des réponses fictives écrites à la main ; la forme réelle de
+`cpeMatchString` (correspondance du début du nom, filtrée de nouveau par le script) et la stabilité de la pagination par
+`startIndex` pendant un chargement d'une heure ne sont pas vérifiées. Tailles et durées : celles du RSSI, non remesurées
+ici. Pile Docker, Node 26, CSP du serveur de production et parcours de bout en bout : non vérifiés (aucune spec Playwright
+écrite). Délais du déclenchement rapide : dépendent de la PR #360, à mesurer.
+
+### Ce qui n'est pas fait
+
+Spec Playwright du formulaire et de la source ; suppression des produits disparus du dictionnaire ; obsolescence des
+versions de la copie complète au fil des nouveautés ; clé d'API de la NVD (débit plus élevé) ; proposition d'un produit du
+dictionnaire à partir d'une technologie de la surface externe ou d'un produit vu par Tenable.
+
+## Addendum du 22/11/2026 — lot QF-TEN : correctifs regroupés de Tenable dans « Quoi faire »
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`102`. Aucune dépendance, **aucun point d'accès nouveau** (liste fermée de Tenable inchangée : la vue est demandée par
+`POST /rest/analysis`, déjà permis), aucune route nouvelle, aucun rôle ni droit nouveau ; `scripts/exploitation-worker.py`,
+`scripts/update-worker.py`, `docker*` et `apps/*/src/assistant/*` non touchés. Réalise la question 3 de l'addendum « lot S3 »
+pour la fiche et l'assistant.
+
+### Demande du RSSI (22/11/2026)
+
+Lire la vue `sumremediation` (qui répond chez lui : 1 191 correctifs, identifiants de forme « SC-33850 ») et la mettre dans
+« Quoi faire » : rubrique « Correctif recommandé par Tenable » dans la fiche d'une faille, vue « Correctifs », outil
+`evaluer_cve` de l'assistant. Ni priorité ni alerte ne changent ; l'import `.nessus` n'a pas cette vue.
+
+### Réalisation
+
+- **Script du connecteur** (`scripts/integration-http.py`, `lire_correctifs`) : après les failles, même appel et même corps
+  que `vulndetails` (`sourceType` `cumulative`, filtre `severity` de l'instance), `tool: "sumremediation"`, paginé par
+  `pageAnalyse` (200). Liste blanche `CHAMPS_CORRECTIF` : `solutionID`, `solution`, `pluginID`, `hostTotal`, `cveTotal`,
+  `total`, `vprScore`, `cvssV3BaseScore`, `epssScore`. **Écartés dès la lecture** : `remediationList` (contenu non documenté,
+  qui peut nommer des machines ou des adresses : dans le doute, non lu), `cpe`, `score`, `scorePctg`, `totalPctg`,
+  `msbulletinTotal`, `cvssV4BaseScore` et tout autre champ. `pluginID` accepté en chaîne séparée par des virgules (forme
+  probable), en liste ou en nombre ; numéros valides seulement, sans doublon. Texte nettoyé comme un constat (2 000
+  caractères), EPSS converti du pourcentage (forme supposée, comme `vulndetails`). Bornes (`TENABLE_BORNES`, recopiées dans
+  `BORNES_SYNCHRO`) : 5 000 correctifs, 25 pages, 1 000 contrôles par correctif, identifiant de 64 caractères. **Une lecture
+  incomplète (borne, durée) ou refusée ne rapporte aucun correctif** ; elle ne fait pas échouer la synchronisation des failles
+  et n'entre pas dans son bilan (un résultat écarté est compté à part, `resultat.correctifs`, que l'exécutant, non modifié, ne
+  transmet pas). Les correctifs sont rapportés en dernier, après l'inventaire.
+- **API** : élément `correctif` (`ElementCorrectifTenable`, strict) revalidé par zod ; rangé par (instance, identifiant)
+  dans `vulnerabilites_tenable_correctifs` ; contrôles rattachés aux constats **déjà rangés** de la même instance
+  (`vulnerabilites_tenable_correctif_constats` ; un numéro inconnu n'est pas gardé), remplacés à chaque synchronisation qui
+  rapporte le correctif. À la fin acceptée (bilan cohérent), `vulnerabilites_tenable_etat.correctifs_numero` désigne la
+  synchronisation dont les correctifs sont montrés ; une synchronisation sans correctif garde les précédents. **Rien n'est
+  supprimé** : un correctif non rapporté reste rangé, mais n'est plus montré. Les deux tables sont vidées par la remise à vide
+  du travail, comme les autres tables de Tenable.
+- **Fiche d'une faille** (constat ou CVE) : `recommandations.tenableRegroupes`, une lecture de plus (fixe) : correctifs de la
+  dernière synchronisation reçue en entier qui couvrent le constat, ou un constat qui cite la CVE, du plus large au plus
+  étroit (5 au plus) : identifiant, texte, nombre de contrôles et de CVE corrigées (`cveTotal`), **machines que la personne
+  lit** qui portent un de ces contrôles (détection présente), drapeau sans nombre pour les autres. Le nombre de machines de
+  Tenable (`hostTotal`, sur tout le parc analysé) est rangé mais **n'est pas rendu**. Rubrique « Correctif recommandé par
+  Tenable » avec la source nommée, **absente** sans correctif ; aucune pour une faille déclarée ou une alerte.
+- **Assistant** (`evaluer_cve`, `quoiFaire.tenable.correctifsRegroupes`) : source nommée, puis par correctif l'identifiant,
+  le texte (600 caractères), les numéros des contrôles **lisibles** qui portent la CVE et les CVE corrigées ; aucun nom de
+  machine, adresse, périmètre ni nombre de machines. Un correctif regroupé compte comme correctif pour la mention « aucun
+  correctif publié par les sources lues ». `elements` inchangé (la rubrique `tenable` reste une rubrique).
+
+### Choix de réalisation, à confirmer par le RSSI
+
+1. **`remediationList` non lue** (contenu inconnu ; peut-être des machines). À lire seulement si un exemple anonymisé montre
+   qu'il ne contient ni nom ni adresse.
+2. **Nombre de machines selon les droits**, pas celui de Tenable (`hostTotal`), pour ne pas révéler le parc hors des
+   périmètres d'une personne ; l'assistant n'en reçoit aucun.
+3. **Lecture tout ou rien** : une lecture partielle ne remplace pas la précédente.
+4. **Texte et identifiant montrés à quiconque lit la fiche** (comme les noms de contrôles, lot PC1).
+5. **Vue « Correctifs » non modifiée dans ce lot** (gel de la version du 22/11/2026) : elle garde le regroupement par texte ;
+   brancher les correctifs regroupés (avec la source de chaque regroupement à l'écran) reste à faire.
+
+### Non vérifié
+
+Forme réelle de la réponse de `sumremediation` (seuls les noms de champs sont connus) : forme de `pluginID`, unité de
+`epssScore`, pagination de cette vue par `startOffset`/`endOffset`, temps de réponse. Spec Playwright : aucune ajoutée ni
+jouée. Node 26 (essais sous Node 24).
+
+### Points ouverts (hors lot)
+
+1. Vue « Correctifs » alimentée par les correctifs regroupés, regroupement par texte gardé pour le reste et pour les imports
+   `.nessus`, source dite à l'écran.
+2. Les choix ci-dessus.

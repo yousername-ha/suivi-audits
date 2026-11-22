@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lot V5) : écran « Failles détectées ». Bascule par faille (un constat par contrôle de
    Tenable) ou par machine (constats présents par gravité), recherche (identifiant CVE, numéro ou nom du contrôle), filtres
    (gravité, exploitée, exploitable, non maintenu), fiche d'un constat (CVE, vecteur CVSS tel quel, correctif en anglais tel
@@ -28,6 +29,7 @@ import {
   Text,
   TextInput,
   Title,
+  VisuallyHidden,
 } from '@mantine/core';
 import {
   type DelaiFailleDto,
@@ -45,16 +47,19 @@ import {
   type GraviteTenable,
   NIVEAUX_PRIORITE,
   type NiveauPriorite,
+  type OrigineConnecteurDto,
   type PageFailles,
   type PageMachines,
   type Priorite,
+  SOURCE_MACHINE_LIBELLES,
   STATUT_RAPPROCHEMENT_LIBELLES,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router';
 import { ouvertureConstat } from './recherche';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { get } from '../api';
 import { fmtDate } from '../components/common';
 import { EtatIntegration } from '../integrations/EtatIntegration';
@@ -72,9 +77,11 @@ import {
   groupesParRole,
   libelleEpssTenable,
   libelleGravite,
+  faitsListe,
   libelleMachine,
   lienVoirAussi,
   marquesConstat,
+  raisonPriorite,
   resumeCves,
   urlConstats,
   urlDeclarees,
@@ -87,7 +94,7 @@ import { FicheFaille } from './FicheFaille';
 import { MachinesTable } from './Machines';
 import { MarquesSources, SourcesFaille } from './SourcesFaille';
 import { MarquesSuivi, SuiviFaille } from './SuiviFaille';
-import { SourceConnecteur } from './SourceConnecteur';
+import { PictoSource } from './PictoSource';
 import { OPTIONS_FILTRE_SUIVI } from './suivi';
 
 const CLE = ['vulnerabilites', 'failles'] as const;
@@ -139,6 +146,53 @@ export function DelaiFaille({ d, maintenant = new Date() }: { d: DelaiFailleDto;
   );
 }
 
+/** Ligne allégée (choix du RSSI du 22/11/2026) : priorité et raison courte ; les autres faits sont dans la fiche. */
+export function PrioriteCourte({ p }: { p: Priorite }) {
+  const raison = raisonPriorite(p);
+  return (
+    <Stack gap="2xs">
+      <StatusChip etat={ETAT_PRIORITE[p.niveau]}>{p.niveau}</StatusChip>
+      {raison && <Text className="vu-raison">{raison}</Text>}
+    </Stack>
+  );
+}
+
+/** Ligne allégée : état du délai, puis l'échéance et l'âge sur une ligne (la règle du délai est dans la fiche). */
+export function DelaiCourt({ d, maintenant = new Date() }: { d: DelaiFailleDto; maintenant?: Date }) {
+  const l = lignesDelai(d, maintenant);
+  const age = l.age.replace(/^Âge : /, '');
+  return (
+    <Stack gap="2xs">
+      <StatusChip etat={ETAT_DELAI_PUCE[d.etat]}>{libelleEtatDelai(d.etat)}</StatusChip>
+      <Text size="xs" c="dimmed" className="vu-une-ligne">
+        {l.echeance ? (
+          <>
+            <VisuallyHidden>Échéance : </VisuallyHidden>
+            <span className="horodatage">{l.echeance}</span> · <VisuallyHidden>âge : </VisuallyHidden>
+            {age}
+          </>
+        ) : (
+          l.age
+        )}
+      </Text>
+    </Stack>
+  );
+}
+
+/** Ligne allégée : pastille de la source et nom de l'instance ; le type de source reste lu par les lecteurs d'écran. */
+export function SourceCourte({ origine }: { origine: OrigineConnecteurDto }) {
+  return (
+    <span className="ps-source-connecteur vu-source" data-source-connecteur={origine.type}>
+      <PictoSource source="tenable" decoratif infobulle={false} />
+      <Text size="xs" c="dimmed" span>
+        <VisuallyHidden>Source : </VisuallyHidden>
+        {origine.nom}
+        <VisuallyHidden> ({SOURCE_MACHINE_LIBELLES[origine.type]})</VisuallyHidden>
+      </Text>
+    </span>
+  );
+}
+
 /** Liste des constats (sans état) : rendu testable hors navigateur. */
 export function ConstatsTable({
   constats,
@@ -166,7 +220,7 @@ export function ConstatsTable({
           {constats.map((c) => (
             <Table.Tr key={c.id}>
               <Table.Td>
-                <PrioriteFaits p={c.priorite} />
+                <PrioriteCourte p={c.priorite} />
               </Table.Td>
               <Table.Td>
                 <Anchor
@@ -178,26 +232,28 @@ export function ConstatsTable({
                 >
                   {c.nom}
                 </Anchor>
-                <Text size="xs" c="dimmed">
-                  Contrôle n° {c.plugin}
-                  {c.famille ? ` · ${c.famille}` : ''}
+                <Text size="xs" c="dimmed" className="vu-meta">
+                  <span>
+                    Contrôle n° {c.plugin}
+                    {c.famille ? ` · ${c.famille}` : ''}
+                  </span>
+                  <SourceCourte origine={c.integration} />
                 </Text>
-                <Group gap="2xs">
-                  <StatusChip etat="info">Détecté par Tenable</StatusChip>
-                  {marquesConstat(c).map((m) => (
-                    <StatusChip key={m.libelle} etat={m.etat}>
-                      {m.libelle}
-                    </StatusChip>
-                  ))}
-                </Group>
-                <MarquesSources s={c.sources} />
-                <SourceConnecteur origine={c.integration} />
+                {faitsListe(c).length > 0 && (
+                  <Group gap="2xs">
+                    {faitsListe(c).map((m) => (
+                      <StatusChip key={m.libelle} etat={m.etat}>
+                        {m.libelle}
+                      </StatusChip>
+                    ))}
+                  </Group>
+                )}
               </Table.Td>
               <Table.Td>
                 <MarquesSuivi s={c.suivi} present={c.present} source="Tenable" />
               </Table.Td>
               <Table.Td>
-                <DelaiFaille d={c.delai} />
+                <DelaiCourt d={c.delai} />
               </Table.Td>
               <Table.Td>
                 <StatusChip etat={GRAVITE_TENABLE_ETAT[c.gravite]}>{libelleGravite(c.gravite)}</StatusChip>
@@ -651,7 +707,7 @@ export function FaillesDetecteesPage() {
   const pages = donnees ? nombrePages(donnees.total, donnees.parPage) : 1;
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Failles détectées"
         description="Failles rapportées par Tenable Security Center, ou importées d’un scan Nessus (carte « Intégrations » de la page Plateforme), sur les machines que vous pouvez lire (périmètre de chaque machine), puis failles déclarées : CVE rattachées à un produit surveillé relié à ces machines. Un constat par contrôle de Tenable ; « exploitation avérée » : une source le signale pour une de ses CVE (catalogue KEV, alerte du CERT-FR, fiche du CERT Santé) ; « exploitable » : selon Tenable ou la fiche du CERT Santé ; « non maintenu » : constat sans CVE. La priorité est calculée par la plateforme, avec les faits qui la fondent. Par défaut, seules les failles encore à traiter sont listées : le filtre « Suivi » montre les autres états et les failles à clore. Textes de Tenable en anglais, tels quels."
         actions={
@@ -670,105 +726,109 @@ export function FaillesDetecteesPage() {
           />
         )}
         {!!imports.data?.length && <EtatImports etats={imports.data} peutConfigurer={peutConfigurerIntegration(can)} />}
-        <SegmentedControl
-          value={vue}
-          onChange={(v) => setVue(v as 'failles' | 'machines' | 'correctifs')}
-          data={[
-            { value: 'failles', label: 'Par faille' },
-            { value: 'machines', label: 'Par machine' },
-            { value: 'correctifs', label: 'Par correctif' },
-          ]}
-          aria-label="Vue"
-        />
+
+        <form onSubmit={chercher} role="search">
+          <BarreFiltres label="Failles détectées">
+            <SegmentedControl
+              value={vue}
+              onChange={(v) => setVue(v as 'failles' | 'machines' | 'correctifs')}
+              data={[
+                { value: 'failles', label: 'Par faille' },
+                { value: 'machines', label: 'Par machine' },
+                { value: 'correctifs', label: 'Par correctif' },
+              ]}
+              aria-label="Vue"
+            />
+            {vue !== 'correctifs' && (
+              <>
+                <TextInput
+                  label="Rechercher"
+                  description={
+                    vue === 'failles' ? 'Identifiant CVE, numéro ou nom du contrôle de Tenable.' : 'Nom de la machine.'
+                  }
+                  placeholder={vue === 'failles' ? 'CVE-2026-…, 900001, OpenSSL' : 'srv-…'}
+                  maxLength={100}
+                  value={saisie}
+                  onChange={(e) => setSaisie(e.currentTarget.value)}
+                />
+                <Button type="submit" variant="default">
+                  Rechercher
+                </Button>
+              </>
+            )}
+            {vue === 'failles' && (
+              <>
+                <Select
+                  label="Suivi"
+                  placeholder="À traiter (nouvelles, à traiter, en cours)"
+                  clearable
+                  value={filtres.etat || null}
+                  onChange={(v) => changer({ etat: (v ?? '') as FiltreSuivi | '' })}
+                  data={OPTIONS_FILTRE_SUIVI}
+                  comboboxProps={{ withinPortal: false }}
+                />
+                <Select
+                  label="Priorité"
+                  placeholder="Toutes"
+                  clearable
+                  value={filtres.priorite || null}
+                  onChange={(v) => changer({ priorite: (v ?? '') as NiveauPriorite | '' })}
+                  data={NIVEAUX_PRIORITE.map((p) => ({ value: p, label: p }))}
+                  comboboxProps={{ withinPortal: false }}
+                />
+                <Select
+                  label="Gravité"
+                  placeholder="Toutes"
+                  clearable
+                  value={filtres.gravite || null}
+                  onChange={(v) => changer({ gravite: (v ?? '') as GraviteTenable | '' })}
+                  data={GRAVITES_TENABLE.map((g) => ({ value: g, label: GRAVITE_TENABLE_LIBELLES[g] }))}
+                  comboboxProps={{ withinPortal: false }}
+                />
+                <Select
+                  label="Délai"
+                  placeholder="Tous"
+                  clearable
+                  value={filtres.delai || null}
+                  onChange={(v) => changer({ delai: (v ?? '') as EtatDelai | '' })}
+                  data={OPTIONS_FILTRE_DELAI}
+                  comboboxProps={{ withinPortal: false }}
+                />
+                <Select
+                  label="Trier par"
+                  allowDeselect={false}
+                  value={filtres.tri || 'priorite'}
+                  onChange={(v) => changer({ tri: v === 'echeance' ? 'echeance' : ('' as TriFailles | '') })}
+                  data={OPTIONS_TRI}
+                  comboboxProps={{ withinPortal: false }}
+                />
+                <Checkbox
+                  label="Exploitation avérée"
+                  checked={filtres.exploite}
+                  onChange={(e) => changer({ exploite: e.currentTarget.checked })}
+                />
+                <Checkbox
+                  label="Exploitables"
+                  checked={filtres.exploitable}
+                  onChange={(e) => changer({ exploitable: e.currentTarget.checked })}
+                />
+                <Checkbox
+                  label="Non maintenus"
+                  checked={filtres.nonMaintenu}
+                  onChange={(e) => changer({ nonMaintenu: e.currentTarget.checked })}
+                />
+                <Checkbox
+                  label="Fin de support"
+                  description="Plus de correctif de sécurité de l’éditeur"
+                  checked={filtres.finSupport}
+                  onChange={(e) => changer({ finSupport: e.currentTarget.checked })}
+                />
+              </>
+            )}
+          </BarreFiltres>
+        </form>
         {vue === 'correctifs' && <CorrectifsVue onOuvrirConstat={setOuvert} />}
-        {vue !== 'correctifs' && (
-          <form onSubmit={chercher} role="search">
-            <Group align="flex-end">
-              <TextInput
-                label="Rechercher"
-                description={
-                  vue === 'failles' ? 'Identifiant CVE, numéro ou nom du contrôle de Tenable.' : 'Nom de la machine.'
-                }
-                placeholder={vue === 'failles' ? 'CVE-2026-…, 900001, OpenSSL' : 'srv-…'}
-                maxLength={100}
-                value={saisie}
-                onChange={(e) => setSaisie(e.currentTarget.value)}
-              />
-              <Button type="submit" variant="default">
-                Rechercher
-              </Button>
-            </Group>
-          </form>
-        )}
-        {vue === 'failles' && (
-          <Group align="flex-end">
-            <Select
-              label="Suivi"
-              placeholder="À traiter (nouvelles, à traiter, en cours)"
-              clearable
-              value={filtres.etat || null}
-              onChange={(v) => changer({ etat: (v ?? '') as FiltreSuivi | '' })}
-              data={OPTIONS_FILTRE_SUIVI}
-              comboboxProps={{ withinPortal: false }}
-            />
-            <Select
-              label="Priorité"
-              placeholder="Toutes"
-              clearable
-              value={filtres.priorite || null}
-              onChange={(v) => changer({ priorite: (v ?? '') as NiveauPriorite | '' })}
-              data={NIVEAUX_PRIORITE.map((p) => ({ value: p, label: p }))}
-              comboboxProps={{ withinPortal: false }}
-            />
-            <Select
-              label="Gravité"
-              placeholder="Toutes"
-              clearable
-              value={filtres.gravite || null}
-              onChange={(v) => changer({ gravite: (v ?? '') as GraviteTenable | '' })}
-              data={GRAVITES_TENABLE.map((g) => ({ value: g, label: GRAVITE_TENABLE_LIBELLES[g] }))}
-              comboboxProps={{ withinPortal: false }}
-            />
-            <Select
-              label="Délai"
-              placeholder="Tous"
-              clearable
-              value={filtres.delai || null}
-              onChange={(v) => changer({ delai: (v ?? '') as EtatDelai | '' })}
-              data={OPTIONS_FILTRE_DELAI}
-              comboboxProps={{ withinPortal: false }}
-            />
-            <Select
-              label="Trier par"
-              allowDeselect={false}
-              value={filtres.tri || 'priorite'}
-              onChange={(v) => changer({ tri: v === 'echeance' ? 'echeance' : ('' as TriFailles | '') })}
-              data={OPTIONS_TRI}
-              comboboxProps={{ withinPortal: false }}
-            />
-            <Checkbox
-              label="Exploitation avérée"
-              checked={filtres.exploite}
-              onChange={(e) => changer({ exploite: e.currentTarget.checked })}
-            />
-            <Checkbox
-              label="Exploitables"
-              checked={filtres.exploitable}
-              onChange={(e) => changer({ exploitable: e.currentTarget.checked })}
-            />
-            <Checkbox
-              label="Non maintenus"
-              checked={filtres.nonMaintenu}
-              onChange={(e) => changer({ nonMaintenu: e.currentTarget.checked })}
-            />
-            <Checkbox
-              label="Fin de support"
-              description="Plus de correctif de sécurité de l’éditeur"
-              checked={filtres.finSupport}
-              onChange={(e) => changer({ finSupport: e.currentTarget.checked })}
-            />
-          </Group>
-        )}
+
         {vue !== 'correctifs' && <ErrorAlert error={vue === 'failles' ? constats.error : machines.error} />}
         {vue === 'failles' && constats.data && <ConstatsTable constats={constats.data.elements} onOuvrir={setOuvert} />}
         {vue === 'machines' && machines.data && <MachinesTable machines={machines.data.elements} />}

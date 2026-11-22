@@ -1,6 +1,71 @@
 # Reprendre Suivi des audits
 
-> **Reprise la plus récente : [20/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-20.md)** (module Vulnérabilités,
+> **22/11/2026 — version 7.6.0 (session Coeur)** : préparée le soir du 22/11 à la demande du RSSI (« tout dans main ce
+> soir »). Contenu : fiches sobres et refonte Neon compacte (PR 363 et 358, **validées par le RSSI le 22/11/2026** :
+> habillage, captures de référence et tests modifiés), aspect graphique du module Vulnérabilités (PR 366), ACR et AES de
+> Tenable (PR 359, migration `100`), recherche CPE (PR 362, migration `101`) et veille active du service de mise à jour
+> (PR 360), correctifs regroupés de Tenable (PR 365, migration `102`), jeu de démonstration du module Vulnérabilités
+> (PR 364), performance du socle (PR 361). L'étiquette `v7.6.0` est posée par le RSSI. Reportés : alerte précoce sur les
+> CVE inconnues, veille réglementaire tranche 2. Reste à faire côté socle : mesurer les délais réels de la veille active
+> de la recherche CPE ; rendre visible un acquittement (`--acquitter`) refusé parce qu'un passage de l'exécutant tient
+> le verrou ; décider si le jeu de démonstration doit laisser ses alertes critiques en attente.
+>
+> **22/11/2026 — fiches sobres et harmonisation de l'interface Neon (session Coeur)** : branche `claude/fiches-sobres`
+> (elle contient `claude/refonte-neon-compacte`), **validée par le RSSI et fusionnée le 22/11/2026 (PR 363), livrée en
+> 7.6.0**. [Résumé technique](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md),
+> [recette](docs/refonte-neon/integration-fiches-sobres-2026-11-22/RECETTE.md) et
+> [captures](docs/refonte-neon/integration-fiches-sobres-2026-11-22/captures/README.md). Habillage sobre validé par le
+> RSSI et aides contextuelles repris de la livraison Codex `0ac9992d` ; moteur des fiches terminé (élargissement sur
+> écran de bureau, parties nommées par leur premier champ, « Sécurité » découpée, journaux et longs tableaux en
+> défilement). Validation du RSSI donnée le 22/11/2026.
+> La suite graphique revient à la session Neon.
+>
+> **22/11/2026 — refonte Neon compacte intégrée et recettée sur pile réelle (session Coeur)** : branche
+> `claude/refonte-neon-compacte`, PR de travail vers `claude-suivi-smsi`, **sans fusion ni déploiement**.
+> [Résumé technique](docs/refonte-neon/integration-2026-11-22/README.md) et [recette](docs/refonte-neon/integration-2026-11-22/RECETTE.md).
+> Le dossier Codex est repris ; le moteur des fiches en parties est réécrit (hauteur au contenu, parties nommées, pied
+> réservé, accrochage natif, repli sur le défilement habituel quand le découpage n'est pas sûr) et trois défauts de la
+> barre d'outils sont corrigés. **Attendu du RSSI** : valider les 68 captures de référence régénérées et les tests de
+> bout en bout modifiés, puis décider de la fusion. La suite de l'apparence revient à la session Neon. À lire avant
+> toute reprise de ce lot.
+>
+
+> **22/11/2026 — dossier d’implémentation pour l’IA** : [point d’entrée](docs/refonte-neon/implementation-interface-2026-11-21/README.md),
+> [prompt complet](docs/refonte-neon/implementation-interface-2026-11-21/PROMPT-IA.md) et résumé technique avec neuf captures natives.
+> Sources, règles et limites regroupées pour comparer l’existant avant report. Proportions `2742e16`, commandes bleu/cyan
+> en contour et prototype de mini-menu sans défilement vertical. Ce prototype reste à finaliser : limites de partie,
+> sections trop vides, titres et pieds atypiques. 1 221 tests web/UI réussis, contrôles du code et 11 cas client / 27 ouvertures
+> de 7 variantes ; API simulée. Validation humaine et recette Docker/API réelle non exécutées. Aucune fusion ou publication.
+>
+
+> **21/11/2026 — proportions et alignements des fenêtres** : [complément documenté](docs/refonte-neon/proportions-fenetres-2026-11-21/README.md).
+> Largeurs différenciées pour codes, dates, états et responsables ; aides sous les saisies et alignement à gauche.
+> Fiches lg/xl ramenées à 736/864 px à 100 %, grandes présentations graphiques conservées. Inventaire de 302 sélecteurs,
+> sans prétendre les avoir tous ouverts individuellement. Validation des images et recette Docker réelle à effectuer.
+>
+
+> **21/11/2026 — harmonisation transversale de l’interface** : le [dossier et les images](docs/refonte-neon/harmonisation-plateforme-2026-11-21/README.md)
+> décrivent le complément au lot de densité : 58 points d’intégration dans 50 fichiers consommateurs pour les vues,
+> recherches et filtres ; cadre commun des fenêtres, formulaires courts en colonnes, aides repliées et icônes centrées.
+> **1 214 tests web/UI réussis**, TypeScript web/UI/E2E, lint, format et build verts ; 72 cas de pages et 56 ouvertures de
+> 7 variantes de fenêtres, API simulée et données fictives. Les 127 déclarations de fenêtres sont inventoriées, sans
+> prétendre avoir testé chaque formulaire. Prochaine action : validation des images puis recette Docker/API réelle,
+> non exécutée ici. Aucune fusion de PR, publication de version ou mise en production.
+> Code du complément : `e29d6f6` ; raccordement de la 7.5.1 (`01130ce`), métadonnées seulement. Les changements UI restent non publiés.
+>
+
+> **21/11/2026 — refonte de densité contrôlée localement** : le [dossier de reprise et de recette](docs/refonte-neon/densite-2026-11-21/README.md)
+> décrit le lot parti de `15dc5a6748f6105b6a1367fa7e3a3c944521efd5` (7.5.0), après analyse d’une vidéo privée non publiée.
+> Le nouveau normal est resserré au-delà de l’ancien compact ; le nouveau compact resserre encore le cadre et les commandes.
+> Sont inclus : planning SVG à l’échelle 1:1, aides Vulnérabilités repliées, correction de collision du cache des périmètres,
+> retrait visuel de la signature d’organisation et du badge Live, thème en icônes et onglets/actions d’ajout en verre transparent.
+> Authentification, API, base et sources de cartographie/génération SMSI inchangées. **352 tests ciblés réussis**, TypeScript/lint/format/build verts ; 60 rendus finaux et 24 cas
+> d’interaction client sans erreur (API interceptée, données fictives). Captures et mesures dans le dossier. Prochaine action :
+> validation visuelle et recette Docker/API réelle, non exécutée ici ; aucune fusion ou mise en production effectuée.
+>
+> **Dernière reprise générale : [22/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-22.md)** (module Vulnérabilités : versions 7.5.0
+> et 7.5.1, ACR et AES de Tenable, migration `100`, dictionnaire CPE de la NVD, migration `101`, veille active de l'exécutant ;
+> décisions du RSSI des 21 et 22/11/2026 et file de la 7.6.0). Précédente : **[20/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-20.md)** (module Vulnérabilités,
 > [ADR 0100](docs/adr/0100-module-vulnerabilites.md) : recherche du module, intégrations dans la page Plateforme, fréquences de
 > synchronisation, imports Nessus et Silène, surface externe à deux sources en page entière, migrations `090`, `093`, `094` et
 > `095` ; correctifs de performance PERF-01 à PERF-04 en PR ; décisions du RSSI prises et en attente, ordre de la file).

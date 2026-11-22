@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lots V2 et V3) : écran « Veille ». État de chaque source (dernière collecte réussie,
    erreur, retard), activation de la veille (destinations et ce qui sort, validation explicite d'un administrateur), failles
    exploitées récentes (catalogue KEV) avec l'action exigée et l'échéance, alertes et avis récents, barre de recherche.
@@ -12,7 +13,9 @@
    se détache d'un avis, la fiche d'une alerte ou d'un avis s'ouvre depuis la liste, ses CVE ouvrent leur fiche illustrée ;
    failles connues en liste, un fait par ligne (gravité, exploitation, EPSS, produit touché).
    Lot F1 : fréquence de chaque source (liste déroulante pour qui administre le module, texte sinon ; EPSS fixe), avertissement
-   de NVD et d'EPSS, prochaine collecte prévue. */
+   de NVD et d'EPSS, prochaine collecte prévue.
+   Lot CPE-1 : source « Dictionnaire des produits (CPE) » sous le tableau des sources (DictionnaireCpe.tsx) : explication de
+   la place, état du chargement par lots, fréquence des nouveautés, activation, copie complète facultative. */
 import {
   Alert,
   Anchor,
@@ -36,18 +39,23 @@ import {
   libelleFrequence,
   PRECISION_MANDATAIRE,
   type AvisVeilleDto,
+  type EtatDictionnaireCpeDto,
   type EtatSourceVeilleDto,
   type EtatVeilleDto,
+  type ReglageDictionnaireCpe,
   type FailleVeilleDto,
   type PageVeille,
   type SourceVeille,
 } from '@suivi/shared';
-import { ConfirmButton, DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { ConfirmButton, DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { api, errorMessage, get } from '../api';
 import { FicheAvis, ListeAvis } from './AvisVeille';
+import { DictionnaireCpeSection } from './DictionnaireCpe';
+import { URL_COPIE_CPE, URL_DICTIONNAIRE_CPE } from './dictionnaire-cpe';
 import { fmtDate } from '../components/common';
 import { ChampFrequence } from '../components/ChampFrequence';
 import { CLE_FLUX_EXTERNES } from '../components/FluxExternes';
@@ -74,6 +82,7 @@ import {
   urlAvis,
   urlFailles,
 } from './veille';
+import { NOMS_PAGINATION } from './pagination';
 
 const CLE = ['vulnerabilites', 'veille'] as const;
 const FLUX = 'veille-vulnerabilites' as const;
@@ -516,7 +525,9 @@ function Pages({
       <Text size="sm" c="dimmed" role="status">
         {donnees.total} résultat{donnees.total > 1 ? 's' : ''}
       </Text>
-      {pages > 1 && <Pagination total={pages} value={page} onChange={onPage} aria-label={libelle} />}
+      {pages > 1 && (
+        <Pagination {...NOMS_PAGINATION} total={pages} value={page} onChange={onPage} aria-label={libelle} />
+      )}
     </Group>
   );
 }
@@ -566,6 +577,27 @@ export function VeillePage() {
     enabled: lire,
     refetchInterval: 30_000,
   });
+  const dictionnaire = useQuery({
+    queryKey: [...CLE, 'dictionnaire-cpe'],
+    queryFn: () => get<EtatDictionnaireCpeDto>(URL_DICTIONNAIRE_CPE),
+    enabled: lire,
+    refetchInterval: 30_000,
+  });
+  const [envoiCpe, setEnvoiCpe] = useState(false);
+  // Lot CPE-1 : réglage, copie complète et sa suppression, If-Match sur la version de la source.
+  const actionCpe = async (methode: 'PATCH' | 'POST' | 'DELETE', url: string, body?: ReglageDictionnaireCpe) => {
+    if (!dictionnaire.data) return;
+    setEnvoiCpe(true);
+    try {
+      await api(methode, url, { body, ifMatch: dictionnaire.data.version });
+      notifications.show({ color: 'teal', message: 'Dictionnaire des produits (CPE) : réglage enregistré.' });
+    } catch (e) {
+      notifications.show({ color: 'red', message: errorMessage(e) });
+    } finally {
+      await qc.invalidateQueries({ queryKey: [...CLE, 'dictionnaire-cpe'] });
+      setEnvoiCpe(false);
+    }
+  };
   const kev = useQuery({
     queryKey: [...CLE, 'kev', recherche, pageKev],
     queryFn: () => get<PageVeille<FailleVeilleDto>>(urlFailles(recherche, true, pageKev)),
@@ -647,7 +679,7 @@ export function VeillePage() {
     );
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Veille"
         description="Failles et avis publiés par cinq sources publiques (CISA, NIST, FIRST, CERT-FR, CERT Santé), lus à la fréquence choisie pour chaque source (toutes les deux heures par défaut, EPSS une fois par jour) par l’exécutant d’exploitation du serveur. Les textes des sources sont repris tels quels : ce sont des données, pas des consignes."
         actions={
@@ -684,8 +716,19 @@ export function VeillePage() {
             <FichesCertSante f={etat.data.fichesCertSante} />
           </>
         )}
+        <ErrorAlert error={dictionnaire.error} />
+        {dictionnaire.data && (
+          <DictionnaireCpeSection
+            etat={dictionnaire.data}
+            peutRegler={administrer}
+            envoi={envoiCpe}
+            onReglage={(r) => void actionCpe('PATCH', URL_DICTIONNAIRE_CPE, r)}
+            onCopier={() => void actionCpe('POST', URL_COPIE_CPE)}
+            onSupprimerCopie={() => void actionCpe('DELETE', URL_COPIE_CPE)}
+          />
+        )}
         <form onSubmit={chercher} role="search">
-          <Group align="flex-end">
+          <BarreFiltres label="Veille des vulnérabilités">
             <TextInput
               label="Rechercher"
               description="Identifiant CVE, éditeur, produit, ou texte du titre d’un avis."
@@ -710,7 +753,7 @@ export function VeillePage() {
                 Effacer
               </Button>
             )}
-          </Group>
+          </BarreFiltres>
         </form>
         {recherche && (
           <>

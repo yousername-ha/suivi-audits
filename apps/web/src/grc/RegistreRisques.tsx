@@ -2,7 +2,7 @@
    traitement, état d'acceptation (décision formelle), prochaine revue ; filtres appliqués par le serveur. Boîte d'outils
    commune (7.3.0) : recherche et filtres avancés ; Démarche, Étude, Option et Acceptation se filtrent aussi sur le titre
    de leur colonne ; l'ajout d'un risque se place au bout de la ligne. */
-import { Button, Checkbox, Group, Select, Table, Text } from '@mantine/core';
+import { Checkbox, Select, Table, Text } from '@mantine/core';
 import { ETATS_ACCEPTATION, type EcartMatrice, type EtatAcceptation, type GrcObject } from '@suivi/shared';
 import { DataTable, StatusChip, type Etat } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
@@ -12,6 +12,7 @@ import { BoiteOutils, FiltreColonne, PastillesCriteres, type CritereActif } from
 import { ErrorAlert } from '../components/common';
 import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
+import { CommandesRisque } from './CommandesRisque';
 import { PlanTraitementRisque } from './PlanTraitementRisque';
 
 interface Ligne {
@@ -289,30 +290,18 @@ export function RegistreRisques({
                     )}
                   </Table.Td>
                   <Table.Td>
-                    <Group gap="xs" wrap="nowrap">
-                      <Button size="xs" variant="default" onClick={() => void objet(r.id).then(onOpen)}>
-                        Ouvrir
-                      </Button>
-                      <Button
-                        size="xs"
-                        variant="default"
-                        aria-label={`Plan d’action de ${r.name}`}
-                        onClick={() => setPlan({ id: r.id, name: r.name })}
-                      >
-                        Plan d’action
-                      </Button>
-                      <Button size="xs" variant="default" onClick={() => onRelation('object:' + r.id)}>
-                        Liens et preuves
-                      </Button>
-                      <Button size="xs" variant="light" onClick={() => void objet(r.id).then(onEvaluation)}>
-                        Apprécier / réévaluer
-                      </Button>
-                      {can('pilotage', 'administrer') && r.strategie === 'accept' && (
-                        <Button size="xs" variant="light" onClick={() => void objet(r.id).then(onAcceptation)}>
-                          Décider de l’acceptation
-                        </Button>
-                      )}
-                    </Group>
+                    <CommandesRisque
+                      nom={r.name}
+                      onOpen={() => void objet(r.id).then(onOpen)}
+                      onPlan={() => setPlan({ id: r.id, name: r.name })}
+                      onRelation={() => onRelation('object:' + r.id)}
+                      onEvaluation={() => void objet(r.id).then(onEvaluation)}
+                      onAcceptation={
+                        can('pilotage', 'administrer') && r.strategie === 'accept'
+                          ? () => void objet(r.id).then(onAcceptation)
+                          : undefined
+                      }
+                    />
                   </Table.Td>
                 </Table.Tr>
               ))}

@@ -49,6 +49,20 @@ FLUX_RAPPORT_PERIODE = 1800
 # à jour, réglage changé) ; Compose ne recrée un conteneur que si sa configuration a changé.
 FLUX_CONVERGENCE_PERIODE = 3600
 FLUX_REESSAI = 600
+# Cadence du poller : attente entre deux passages complets (flux, exécutant d'exploitation, demandes de mise à jour).
+PASSAGE_PERIODE = 15
+# Recherche CPE du module Vulnérabilités (ADR 0100, addendum « recherche CPE » ; décision du RSSI du 22/11/2026) : veille active.
+# L'application ne peut ni lancer l'exécutant ni écrire sur l'hôte (conteneur en lecture seule). C'est l'exécutant d'exploitation
+# qui, à chaque passage, pose ou retire ce témoin dans son dossier privé selon ce que l'application lui répond (« une saisie de
+# produit est en cours »). Tant que le témoin est récent, le poller intercale entre deux passages complets des passages courts
+# de l'exécutant, limités à la file des versions CPE (EXPLOITATION_SEULEMENT) : une demande de versions part en quelques secondes
+# au lieu d'attendre le passage suivant. Sans témoin : aucun appel de plus, cadence inchangée.
+CPE_TEMOIN = "reprise-exploitation/cpe-chaud"
+CPE_TEMOIN_VALIDITE = 120
+CPE_COURT_PERIODE = 3
+CPE_COURT_DELAI = 30
+CPE_COURT_MODE = "cpe-versions"
+CPE_FLUX = "veille-vulnerabilites"
 # Reprise de l'existant (précision du RSSI du 16/11/2026 : une mise à jour ne referme pas un flux en service). Avant toute
 # fermeture, l'exécutant déclare à l'application (« suivi flux-reprise ») les modules qu'il porte et qui sont réellement en
 # service, avec le motif constaté ; un module jamais décidé est alors enregistré ouvert, un module décidé n'est jamais touché.
@@ -431,8 +445,9 @@ class Worker:
         if result.strip() != "ok":
             raise Failure("Le frontal applicatif n'est pas prêt")
 
-    def exploitation(self):
+    def exploitation(self, seulement=None):
         # Réutiliser l'exécutant existant, séquentiellement : pas de cron ni de service supplémentaire.
+        # « seulement » : passage court limité à une file (veille active de la recherche CPE), au délai borné.
         config = self.env()
         if config.get("EXPLOITATION_AUTO", "1") != "1" or self.state["maintenance"]:
             return
@@ -451,7 +466,52 @@ class Worker:
             "EXPLOITATION_TLS_HOST": "gateway",
             "EXPLOITATION_TLS_PORT": "8443",
         }
-        self.run(["python3", str(self.repo / "scripts/exploitation-worker.py")], timeout=4000, extra_env=settings)
+        if seulement:
+            settings["EXPLOITATION_SEULEMENT"] = seulement
+        self.run(["python3", str(self.repo / "scripts/exploitation-worker.py")],
+                 timeout=CPE_COURT_DELAI if seulement else 4000, extra_env=settings)
+
+    def cpe_chaud(self):
+        """Témoin de saisie CPE posé par l'exécutant d'exploitation : fichier ordinaire (jamais un lien), du compte du poller,
+        récent. Une horloge reculée ou un témoin oublié ne tiennent pas la veille active au-delà de sa validité."""
+        try:
+            etat = os.lstat(self.data / CPE_TEMOIN)
+        except OSError:
+            return False
+        age = time.time() - etat.st_mtime
+        return stat.S_ISREG(etat.st_mode) and etat.st_uid == os.geteuid() and 0 <= age < CPE_TEMOIN_VALIDITE
+
+    def cpe_court_permis(self):
+        """Passage court autorisé : témoin récent, flux « veille-vulnerabilites » voulu ouvert au dernier passage complet (l'exécutant
+        le revérifie avant toute sortie), ni maintenance, ni intervention, ni mise à jour en cours. Une sauvegarde, une
+        restauration ou une mise à jour demandée dans l'application s'exécute dans le fil du poller : aucun passage court ne peut
+        tourner en même temps."""
+        if not self.cpe_chaud():
+            return False
+        if self.state["maintenance"] or self.state["status"] == "intervention" or self.job:
+            return False
+        if self.flux_voulus is None or CPE_FLUX not in self.flux_voulus:
+            return False
+        return self.env().get("EXPLOITATION_AUTO", "1") == "1"
+
+    def attendre(self):
+        """Attente entre deux passages complets. En veille active, des passages courts sont intercalés toutes les
+        CPE_COURT_PERIODE secondes ; leur échec est sans effet (la demande retombe sur le passage complet), et le dernier
+        s'efface devant le passage complet qui arrive."""
+        fin = time.monotonic() + PASSAGE_PERIODE
+        while not self.stop.is_set():
+            reste = fin - time.monotonic()
+            if reste <= 0:
+                return
+            if not self.cpe_court_permis():
+                self.stop.wait(reste)
+                return
+            if self.stop.wait(min(CPE_COURT_PERIODE, reste)):
+                return
+            if fin - time.monotonic() < CPE_COURT_PERIODE / 2:
+                return
+            with contextlib.suppress(Failure, OSError, ValueError):
+                self.exploitation(seulement=CPE_COURT_MODE)
 
     def reconcile(self):
         # Les reçus survivent au rollback/restauration ; des demandes restaurées ne sont jamais rejouées.
@@ -1484,7 +1544,7 @@ class Worker:
                 except Exception:
                     # Pas de sortie du daemon à la première indisponibilité de l'API.
                     pass
-                self.stop.wait(15)
+                self.attendre()
             # Attend sa recréation. Le vieux daemon ne réouvre jamais le service prématurément.
             self.stop.wait()
             while True:

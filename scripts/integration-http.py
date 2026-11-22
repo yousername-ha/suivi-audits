@@ -8,8 +8,8 @@ Bibliothèque standard seule.
 Entrée : un objet JSON sur l'entrée standard (type, opération, configuration, secrets, mandataire facultatif) ; ni argument ni variable
 d'environnement ne porte de secret. Sortie : un objet JSON {ok, resultat, erreur} sur la sortie standard, normalisé et
 borné ; il ne contient jamais de secret, et l'erreur tient sur une ligne. « synchroniser » ajoute `elements` : les machines,
-constats, détections et machines d'inventaire, réduits aux seuls champs listés (CHAMPS_ANALYSE, CHAMPS_DEPOT pour le dépôt
-d'une machine, CHAMPS_HOTE), que l'exécutant rapporte par lots bornés.
+constats, détections, machines d'inventaire et correctifs regroupés, réduits aux seuls champs listés (CHAMPS_ANALYSE,
+CHAMPS_DEPOT pour le dépôt d'une machine, CHAMPS_HOTE, CHAMPS_CORRECTIF), que l'exécutant rapporte par lots bornés.
 
 Règles :
 - HTTPS seulement, sur le port réglé (443 par défaut), certificat toujours vérifié (autorité fournie, sinon magasin du système), TLS 1.2 au minimum ;
@@ -60,7 +60,7 @@ OPERATIONS = {"tenable": ["tester", "synchroniser"], "algolighthouse": ["tester"
 # paquet partagé) ; tout autre type le refuse.
 TYPES_MANDATAIRE = ["algolighthouse"]
 BORNES_ALH = {"reponseListe": 16777216, "reponseDetail": 2097152, "reponseCourte": 65536, "perimetres": 500, "alertes": 5000, "hotes": 10000, "domaines": 10000, "technologies": 2000, "details": 300, "versionsParTechnologie": 50, "actifsParVersion": 200, "cvesParVersion": 200, "cvesParAlerte": 200, "liensTechnologies": 20000, "cvesTechnologies": 20000, "dureeSecondes": 480, "titre": 300, "nomPerimetre": 200, "valeurCible": 300, "domaine": 253, "fai": 200, "nomTechnologie": 200, "editeur": 100, "produit": 100, "version": 100, "cleTechnologie": 410, "titreCve": 300, "severite": 20, "defautsParAlerte": 20, "resolutionsParDefaut": 10, "nomDefaut": 300, "descriptionDefaut": 4000, "niveauResolution": 60, "servicesParAlerte": 50, "portsParComposant": 20, "nomService": 100, "cpe": 300, "lot": 500, "lots": 200}
-BORNES_SYNCHRO = {"pageAnalyse": 200, "pagesAnalyse": 100, "detections": 20000, "pageMachines": 500, "pagesMachines": 20, "dureeSecondes": 480, "reponseAnalyse": 8388608, "reponseMachines": 4194304, "cvesParConstat": 500, "nomControle": 300, "famille": 100, "synopsis": 1000, "correctif": 2000, "libelleExploit": 100, "voirAussi": 500, "nomMachine": 255, "systeme": 200, "exposition": 40, "nomDepot": 200, "lot": 500, "lots": 200}
+BORNES_SYNCHRO = {"pageAnalyse": 200, "pagesAnalyse": 100, "detections": 20000, "pageMachines": 500, "pagesMachines": 20, "dureeSecondes": 480, "reponseAnalyse": 8388608, "reponseMachines": 4194304, "cvesParConstat": 500, "nomControle": 300, "famille": 100, "synopsis": 1000, "correctif": 2000, "libelleExploit": 100, "voirAussi": 500, "nomMachine": 255, "systeme": 200, "exposition": 40, "nomDepot": 200, "correctifs": 5000, "pagesCorrectifs": 25, "controlesParCorrectif": 1000, "identifiantCorrectif": 64, "lot": 500, "lots": 200}
 ENTREE_MAX = 65536
 REPONSE_MAX = 1024 * 1024
 ERREUR_MAX = 300
@@ -407,12 +407,13 @@ def tenable_tester(client):
 
 # ------------------------------------------------------------------ Tenable : synchronisation des failles et des machines
 # Champs lus dans un résultat de l'analyse `vulndetails` (cadrage, §5 bis) : tout autre champ, `pluginText` d'abord, est
-# écarté dès la lecture et ne sort jamais du script.
+# écarté dès la lecture et ne sort jamais du script. Lot TEN-SCORES (décision du RSSI du 22/11/2026) : `assetExposureScore`
+# (AES, score d'exposition de l'actif selon Tenable), seul champ ajouté.
 CHAMPS_ANALYSE = ("pluginID", "pluginName", "severity", "family", "synopsis", "solution", "cvssV3Vector", "cvssV3BaseScore",
                   "vprScore", "epssScore", "exploitAvailable", "exploitEase", "exploitFrameworks", "vulnPubDate",
                   "patchPubDate", "seolDate",
-                  "seeAlso", "cve", "ip", "dnsName", "netbiosName", "operatingSystem", "hostUUID", "acrScore", "keyDrivers",
-                  "firstSeen", "lastSeen", "port", "protocol", "hasBeenMitigated", "acceptRisk", "recastRisk", "repository")
+                  "seeAlso", "cve", "ip", "dnsName", "netbiosName", "operatingSystem", "hostUUID", "acrScore",
+                  "assetExposureScore", "keyDrivers", "firstSeen", "lastSeen", "port", "protocol", "hasBeenMitigated", "acceptRisk", "recastRisk", "repository")
 # Lot PRIO-1 : kits d'exploitation que Tenable nomme (« Exploitable with ») dans la CHAÎNE `exploitFrameworks` (pas une liste).
 # Seuls ces trois noms sont retenus, comme KITS_EXPLOITATION du paquet partagé ; le reste de la chaîne ne sort jamais.
 KITS_EXPLOITATION = (("metasploit", re.compile(r"\bmetasploit\b")), ("core_impact", re.compile(r"\bcore\s+impact\b")),
@@ -492,6 +493,23 @@ def decimal(v, minimum, maximum, diviseur=1):
 
 def oui(v):
     return isinstance(v, str) and v.strip() in ("1", "Yes", "true")
+
+
+AES = re.compile(r"^\d{1,4}$")
+
+
+def score_exposition(v):
+    """AES (`assetExposureScore`, lot TEN-SCORES) : entier de 0 à 1000, en texte ou en nombre entier. Vide (Tenable ne le
+    calcule pas, par exemple pour un actif non licencié), absent, hors bornes, décimal ou non numérique : None."""
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, int):
+        n = v
+    elif isinstance(v, str) and AES.fullmatch(v.strip()):
+        n = int(v.strip())
+    else:
+        return None
+    return n if 0 <= n <= 1000 else None
 
 
 def adresse_ip(v):
@@ -598,12 +616,13 @@ def lire_resultat(brut, sortie, bilan):
     d = depot(r.get("repository"))
     m = sortie["machines"].get(cle)
     if m is None:
+        # ACR et AES (lot TEN-SCORES) : ceux du premier résultat lu pour la machine dans la synchronisation.
         acr = decimal(r.get("acrScore"), 0, 10)
         m = sortie["machines"][cle] = {
             "type": "machine", "cle": cle, "uuid": uuid, "nom": nom_m, "adresse": adresse,
             "systeme": texte(r.get("operatingSystem"), BORNES_SYNCHRO["systeme"]),
             "premiere": premiere, "derniere": derniere, "exposition": exposition(r.get("keyDrivers")), "acr": acr,
-            "depot": d,
+            "aes": score_exposition(r.get("assetExposureScore")), "depot": d,
         }
     else:
         if premiere and (not m["premiere"] or premiere < m["premiere"]):
@@ -692,6 +711,93 @@ def lire_hotes(client, debut, sortie, bilan, horloge=time.monotonic):
     raise Refus("Inventaire : nombre maximal de pages atteint (inventaire partiel).")
 
 
+# Lot QF-TEN (demande du RSSI du 22/11/2026) : correctifs regroupés de Tenable, lus par la vue `sumremediation` de la même
+# analyse (`POST /rest/analysis`, mêmes filtres que les failles). Champs lus : tout autre champ est écarté dès la lecture, en
+# particulier `remediationList` (contenu non documenté, qui peut nommer des machines ou des adresses), `cpe`, `score`,
+# `totalPctg`, `scorePctg`, `msbulletinTotal` et `cvssV4BaseScore`.
+CHAMPS_CORRECTIF = ("solutionID", "solution", "pluginID", "hostTotal", "cveTotal", "total", "vprScore", "cvssV3BaseScore",
+                    "epssScore")
+IDENTIFIANT_CORRECTIF = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$")
+COMPTE_MAX = 100000000
+
+
+def plugins_corriges(v):
+    """`pluginID` d'un correctif : chaîne de numéros séparés par des virgules (forme probable, non vérifiée), liste de numéros
+    ou numéro seul. Numéros valides seulement, sans doublon, bornés à BORNES_SYNCHRO["controlesParCorrectif"]."""
+    if isinstance(v, bool):
+        return []
+    if isinstance(v, int):
+        morceaux = [str(v)]
+    elif isinstance(v, str):
+        morceaux = re.split(r"[,;\s]+", v)
+    elif isinstance(v, list):
+        morceaux = [str(x) if isinstance(x, int) and not isinstance(x, bool) else x for x in v]
+    else:
+        return []
+    vus = []
+    for m in morceaux:
+        m = m.strip() if isinstance(m, str) else ""
+        if PLUGIN_ID.fullmatch(m) and m not in vus:
+            vus.append(m)
+            if len(vus) >= BORNES_SYNCHRO["controlesParCorrectif"]:
+                break
+    return vus
+
+
+def compte_tenable(v):
+    n = entier(v)
+    return n if n is not None and 0 <= n <= COMPTE_MAX else None
+
+
+def lire_correctif(brut):
+    """Un résultat de `sumremediation` réduit à CHAMPS_CORRECTIF ; None s'il n'a ni identifiant, ni texte, ni contrôle."""
+    if not isinstance(brut, dict):
+        return None
+    r = {k: brut[k] for k in CHAMPS_CORRECTIF if k in brut}
+    ident = r.get("solutionID").strip() if isinstance(r.get("solutionID"), str) else ""
+    solution = texte(r.get("solution"), BORNES_SYNCHRO["correctif"])
+    plugins = plugins_corriges(r.get("pluginID"))
+    if not IDENTIFIANT_CORRECTIF.fullmatch(ident) or not solution or not plugins:
+        return None
+    return {"type": "correctif", "identifiant": ident, "solution": solution, "plugins": plugins,
+            "machines": compte_tenable(r.get("hostTotal")), "cves": compte_tenable(r.get("cveTotal")),
+            "detections": compte_tenable(r.get("total")), "vpr": decimal(r.get("vprScore"), 0, 10),
+            "cvss3Score": decimal(r.get("cvssV3BaseScore"), 0, 10),
+            # Rendu en pourcentage par Tenable, comme dans `vulndetails` (forme supposée) : rangé entre 0 et 1.
+            "epss": decimal(r.get("epssScore"), 0, 100, diviseur=100)}
+
+
+def lire_correctifs(client, filtre, debut, etat, horloge=time.monotonic):
+    """Correctifs regroupés (`sumremediation`), paginés comme les failles. Rendus seulement si la lecture est complète (toutes
+    les pages, sans borne atteinte) : une lecture partielle ne rapporte rien et l'application garde ceux qu'elle a. Une
+    erreur est propagée à l'appelant, qui ne fait pas échouer la synchronisation des failles. Un résultat écarté est compté
+    dans `etat` (pas dans le bilan des failles)."""
+    pas, offset, lus = BORNES_SYNCHRO["pageAnalyse"], 0, {}
+    for _ in range(BORNES_SYNCHRO["pagesCorrectifs"]):
+        if horloge() - debut > BORNES_SYNCHRO["dureeSecondes"]:
+            raise Refus("Durée maximale atteinte : correctifs regroupés non lus.")
+        corps = {"type": "vuln", "sourceType": "cumulative", "startOffset": offset, "endOffset": offset + pas,
+                 "query": {"type": "vuln", "tool": "sumremediation",
+                           "filters": [{"filterName": "severity", "operator": "=", "value": filtre}]}}
+        reponse = reponse_tenable(client.requete("POST", "/rest/analysis", corps, maximum=BORNES_SYNCHRO["reponseAnalyse"]))
+        resultats = reponse.get("results")
+        if not isinstance(resultats, list) or len(resultats) > pas:
+            raise Refus("Réponse de la vue des correctifs illisible.")
+        total = entier(reponse.get("totalRecords"))
+        for brut in resultats:
+            c = lire_correctif(brut)
+            if c is None:
+                etat["ecartes"] += 1
+                continue
+            lus[c["identifiant"]] = c
+            if len(lus) > BORNES_SYNCHRO["correctifs"]:
+                raise Refus("Nombre maximal de correctifs regroupés atteint : correctifs non rapportés.")
+        offset += len(resultats)
+        if len(resultats) < pas or (total is not None and offset >= total):
+            return list(lus.values())
+    raise Refus("Nombre maximal de pages de correctifs atteint : correctifs non rapportés.")
+
+
 def tenable_synchroniser(client, configuration, horloge=time.monotonic):
     """Failles par l'analyse `vulndetails` (source cumulative, filtre de gravité de l'instance), paginée par pages modestes,
     regroupées par contrôle ; puis inventaire des machines. Bornes : pages, détections, durée. L'inventaire peut échouer sans
@@ -723,16 +829,25 @@ def tenable_synchroniser(client, configuration, horloge=time.monotonic):
         # Fin : page courte ou vide, ou total annoncé atteint (sans total, on lit jusqu'à une page courte).
         if bilan["tronque"] or len(resultats) < pas or (total is not None and offset >= total):
             break
+    # Lot QF-TEN : correctifs regroupés, après les failles ; leur échec est rapporté, pas propagé (aucun n'est rapporté).
+    correctifs, etat_correctifs = [], {"ok": True, "erreur": None, "ecartes": 0}
+    try:
+        correctifs = lire_correctifs(client, filtre, debut, etat_correctifs, horloge)
+    except Exception as erreur:  # noqa: BLE001 - la recommandation de Tenable est facultative (ADR 0100, point 19)
+        etat_correctifs.update(ok=False, erreur=une_ligne("Correctifs regroupés indisponibles : " + explication(erreur)))
     inventaire = {"ok": True, "erreur": None}
     try:
         lire_hotes(client, debut, sortie, bilan, horloge)
     except Exception as erreur:  # noqa: BLE001 - l'inventaire est expérimental : son échec est rapporté, pas propagé
         inventaire = {"ok": False, "erreur": une_ligne("Inventaire des machines indisponible : " + explication(erreur))}
     elements = (list(sortie["machines"].values()) + list(sortie["constats"].values())
-                + list(sortie["detections"].values()) + list(sortie["hotes"].values()))
+                + list(sortie["detections"].values()) + list(sortie["hotes"].values()) + correctifs)
+    # `correctifs` (état de la lecture et nombre rapporté) : propre au script ; l'exécutant ne transmet que les comptes connus
+    # de son type (SYNCHRO_COMPTES), l'API n'en dépend pas.
     resultat = {"pages": bilan["pages"], "constats": len(sortie["constats"]), "detections": len(sortie["detections"]),
                 "machines": len(sortie["machines"]), "hotes": len(sortie["hotes"]), "ecartes": bilan["ecartes"],
-                "tronque": bilan["tronque"], "inventaire": inventaire}
+                "tronque": bilan["tronque"], "inventaire": inventaire,
+                "correctifs": dict(etat_correctifs, nombre=len(correctifs))}
     return resultat, elements
 
 

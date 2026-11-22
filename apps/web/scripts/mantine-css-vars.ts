@@ -7,7 +7,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { convertCssVariables, DEFAULT_THEME, mergeMantineTheme } from '@mantine/core';
 import { cssVariablesResolver, theme as charte } from '@suivi/ui/theme';
-import { CARTE, TABLEAU_DE_BORD, variablesCarte, variablesTableauDeBord } from '@suivi/ui/tokens';
+import {
+  CARTE,
+  DENSITES,
+  TABLEAU_DE_BORD,
+  variablesCarte,
+  variablesDensite,
+  variablesTableauDeBord,
+} from '@suivi/ui/tokens';
 
 const theme = mergeMantineTheme(DEFAULT_THEME, charte);
 const declarations = (v: Record<string, string>) =>
@@ -45,7 +52,12 @@ const css =
     .join(';')}}\n` +
   // Tableau de bord « verre et relief » de l'accueil (ADR 0069), clair puis sombre.
   `:root{${declarations(variablesTableauDeBord(TABLEAU_DE_BORD.clair))}}\n` +
-  `[data-mantine-color-scheme='dark']{${declarations(variablesTableauDeBord(TABLEAU_DE_BORD.sombre))}}\n`;
+  `[data-mantine-color-scheme='dark']{${declarations(variablesTableauDeBord(TABLEAU_DE_BORD.sombre))}}\n` +
+  // Préférences de densité : aucun style en ligne, aucune dépendance au thème clair/sombre.
+  `html:not([data-densite]){${declarations(variablesDensite('normale'))}}\n` +
+  (Object.keys(DENSITES) as (keyof typeof DENSITES)[])
+    .map((densite) => `html[data-densite='${densite}']{${declarations(variablesDensite(densite))}}\n`)
+    .join('');
 const out = path.join(path.dirname(fileURLToPath(import.meta.url)), '../src/generated/mantine-vars.css');
 mkdirSync(path.dirname(out), { recursive: true });
 writeFileSync(out, css);

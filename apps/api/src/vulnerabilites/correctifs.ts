@@ -2,8 +2,8 @@
    (texte de la solution de Tenable, en anglais, tel quel), avec les failles qu'il corrige, les machines concernées que la
    personne lit, la priorité la plus haute, les marques, l'état de délai le plus défavorable et l'état du correctif.
    - Origine du regroupement : le texte `solution` de chaque constat (vulndetails, déjà lu et rangé `correctif`). La vue
-     `sumremediation` n'est pas lue par le connecteur (aucun appel nouveau dans ce lot) ; elle donnerait `solutionID` et la
-     liste des contrôles d'un correctif. Limite : deux libellés différents pour la même mise à jour ne sont pas fusionnés.
+     `sumremediation`, lue et rangée depuis le lot QF-TEN (fiche et assistant), n'est pas encore utilisée ici. Limite : deux
+     libellés différents pour la même mise à jour ne sont pas fusionnés.
    - Failles regroupées : les constats de Tenable présents (vus par la dernière synchronisation complète) et encore à traiter
      (nouvelle, à traiter, en cours ; hors proposition « corrigée » à confirmer), comme la liste par défaut. Les failles
      déclarées (produits surveillés) et les CVE de la surface externe n'y figurent pas : aucune source rangée ne leur donne

@@ -2,10 +2,27 @@
    coupe des libellés, mise en page du schéma SVG). Le décodage du vecteur, sa traduction, la règle des sources et les étapes
    du schéma viennent du paquet partagé (fiche-faille-vulnerabilites.ts) ; ici, seulement des positions en unités de la
    viewBox (attributs SVG, aucun style en ligne, ADR 0006). */
-import type { EtapeSchema, IconeMetrique, NatureFicheFaille, SchemaVecteur } from '@suivi/shared';
+import type {
+  CorrectifRegroupeFicheDto,
+  EtapeSchema,
+  IconeMetrique,
+  NatureFicheFaille,
+  SchemaVecteur,
+} from '@suivi/shared';
 
 export const urlFicheFaille = (nature: NatureFicheFaille, id: string) =>
   `/api/vulnerabilites/fiches/${encodeURIComponent(nature)}/${encodeURIComponent(id)}`;
+
+/** Lot QF-TEN : faits d'un correctif regroupé de Tenable, en une ligne : machines que la personne lit (et le drapeau des
+    autres, sans nombre), CVE corrigées selon Tenable, contrôles corrigés. */
+export function faitsCorrectifRegroupe(c: CorrectifRegroupeFicheDto): string {
+  const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+  const machines =
+    `${pluriel(c.machinesLues, 'machine')} que vous lisez` +
+    (c.machinesHorsLecture ? ' (et d’autres hors de vos périmètres)' : '');
+  const cves = c.cves === null ? 'CVE corrigées : non communiqué' : `${c.cves} CVE corrigée${c.cves > 1 ? 's' : ''}`;
+  return `${machines} · ${cves} · ${pluriel(c.controles, 'contrôle')} corrigé${c.controles > 1 ? 's' : ''}`;
+}
 
 /** Date du jour « AAAA-MM-JJ » (ou instant ISO) en « JJ/MM/AAAA », sans fuseau (dates publiées par les sources). */
 export function fmtJour(d: string | null | undefined): string {

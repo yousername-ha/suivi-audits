@@ -2,8 +2,31 @@
 
 ## Jeu court à lire d'abord (18/10/2026)
 
-0. [Reprise du 20/11/2026](01_REPRISE_IA/REPRISE-2026-11-20.md) : état le plus récent (module Vulnérabilités, décisions du RSSI
-   en attente) ; les reprises précédentes sont listées dans [HANDOVER](../HANDOVER.md), dont celle du
+0. [Fiches sobres et harmonisation — intégration du 22/11/2026](refonte-neon/integration-fiches-sobres-2026-11-22/README.md) :
+   comparaison avec la livraison Codex `0ac9992d`, habillage sobre et aides contextuelles, fiches élargies puis
+   découpées, recette sur pile réelle (134 fenêtres balayées), captures natives et points à valider par le RSSI.
+
+0. [Refonte Neon compacte — intégration et recette du 22/11/2026](refonte-neon/integration-2026-11-22/README.md) :
+   comparaison avec la 7.5.1, moteur des fiches en parties, défauts corrigés, recette de bout en bout sur pile réelle,
+   captures natives et liste de ce que le RSSI doit valider avant fusion.
+
+0. [Dossier d’implémentation pour l’IA — remis le 22/11/2026](refonte-neon/implementation-interface-2026-11-21/README.md) :
+   point d’entrée, prompt prêt à copier, sources, captures natives et règles récentes. Mini-menus sans défilement et
+   boutons en contour : prototype à finaliser dans la version actuelle, limites et recette clairement distinguées.
+
+0. [Proportions et alignements du 21/11/2026](refonte-neon/proportions-fenetres-2026-11-21/README.md) : complément à
+   l’harmonisation, champs courts différenciés, aides sous les saisies, menus et fenêtres resserrés ; recette et images.
+
+0. [Harmonisation de la plateforme du 21/11/2026](refonte-neon/harmonisation-plateforme-2026-11-21/README.md) :
+   barres communes de vues/recherche/filtres, fenêtres et formulaires compacts, icônes centrées ; inventaire,
+   résultats vérifiés, limites, outils de reproduction et images de validation.
+
+0. [Refonte de densité du 21/11/2026](refonte-neon/densite-2026-11-21/README.md) : reprise du lot d’interface fondé sur
+   la 7.5.0, changements et invariants, contrôles finaux, mesures et captures après la finition verre. Vidéo privée analysée, non publiée ;
+   preuves de présentation sur données fictives, sans validation du serveur ou du déploiement.
+
+0. [Reprise du 22/11/2026](01_REPRISE_IA/REPRISE-2026-11-22.md) : reprise générale la plus récente (module Vulnérabilités,
+   file de la 7.6.0), après celle du [20/11/2026](01_REPRISE_IA/REPRISE-2026-11-20.md) (règles de sécurité du module) ; les reprises précédentes sont listées dans [HANDOVER](../HANDOVER.md), dont celle du
    [29/10/2026](01_REPRISE_IA/REPRISE-2026-10-29.md) (version 6.0.0 préparée) et celle du
    [27/10/2026](01_REPRISE_IA/REPRISE-2026-10-27.md) (règles de fusion et de travail).
 

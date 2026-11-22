@@ -17,15 +17,17 @@
 import path from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 const FIXTURES = path.resolve(import.meta.dirname, '../../fixtures/nessus');
 const SCAN1 = path.join(FIXTURES, 'scan-fictif-1.nessus');
 const SCAN2 = path.join(FIXTURES, 'scan-fictif-2.nessus');
 
 const LIBELLE_SUPPRESSION = 'Supprimer ce connecteur et tout ce qu’il a importé';
-// Lot PRIO-1 : libellé court des listes (le terme officiel de Tenable, « Exploited by malware », est dans la fiche).
-const MALWARE = 'Logiciel malveillant (Tenable)';
+// Ligne allégée de « Failles détectées » (choix du RSSI du 22/11/2026) : un seul fait « Exploitation avérée » dans la liste,
+// la source (terme officiel de Tenable, « Exploited by malware ») dans la fiche.
+const AVEREE = 'Exploitation avérée';
+const MALWARE_FICHE = 'Exploitée par un logiciel malveillant selon Tenable';
 const LIMITE = 'Trop d’imports de fichiers commencés (30 par heure). Réessayez dans une heure.';
 
 /** Fenêtre d'alerte critique (lot N2 : ouverte par le contrôle exploité par un logiciel malveillant) : écartée pour la
@@ -162,14 +164,22 @@ for (const [mode, scheme, largeur] of [
       await expect(lignes).toHaveCount(3);
       const web = lignes.filter({ hasText: 'Fictional Web Server < 9.9 Remote Flaw' });
       await expect(web).toContainText('2');
-      // Lot N2 : exploitation avérée selon Tenable, marque et priorité ; seule cette faille sort du filtre.
-      await expect(web).toContainText(MALWARE);
+      // Lot N2 : exploitation avérée selon Tenable, marque et priorité ; seule cette faille sort du filtre. Ligne allégée
+      // (choix du RSSI du 22/11/2026) : la liste dit « Exploitation avérée », la fiche en donne la source (Tenable).
+      await expect(web).toContainText(AVEREE);
       await expect(web).toContainText('P1');
-      await expect(lignes.filter({ hasText: 'Fictional SSH Daemon Weak Setting' })).not.toContainText(MALWARE);
+      await expect(lignes.filter({ hasText: 'Fictional SSH Daemon Weak Setting' })).not.toContainText(AVEREE);
+      await web.getByRole('button', { name: 'Fictional Web Server < 9.9 Remote Flaw', exact: true }).click();
+      const ficheWeb = page.getByRole('dialog', { name: 'Fictional Web Server < 9.9 Remote Flaw', exact: true });
+      await expect(ficheWeb).toContainText(MALWARE_FICHE);
+      await ficheWeb.getByRole('button', { name: 'Fermer la fenêtre', exact: true }).click();
+      await expect(ficheWeb).toBeHidden();
+      await ouvrirFiltres(page, 'Exploitation avérée');
       await page.getByRole('checkbox', { name: 'Exploitation avérée', exact: true }).check();
       await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(1);
-      await expect(page.getByRole('row').filter({ hasText: source })).toContainText(MALWARE);
+      await expect(page.getByRole('row').filter({ hasText: source })).toContainText(AVEREE);
       await axe(page);
+      await ouvrirFiltres(page, 'Exploitation avérée');
       await page.getByRole('checkbox', { name: 'Exploitation avérée', exact: true }).uncheck();
       await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(3);
       await page.goto('/vulnerabilites/machines');
@@ -179,6 +189,32 @@ for (const [mode, scheme, largeur] of [
       await expect(machines.filter({ hasText: 'srv-fictif-01.example.org' })).toBeVisible();
       await expect(machines.filter({ hasText: '203.0.113.23' })).toBeVisible();
       await axe(page);
+      // Lot TEN-SCORES : criticité (ACR) et exposition (AES), colonnes et filtres, seulement si une intégration Tenable
+      // Security Center existe (état des synchronisations) ; une machine importée n'en porte pas (« — », non fournie).
+      const tenable =
+        ((await (await page.request.get('/api/vulnerabilites/synchronisation')).json()) as unknown[]).length > 0;
+      const scores = /^(Criticité \(ACR, Tenable\)|Exposition \(AES, Tenable\))$/;
+      // En-têtes lus par leur texte : la version de Playwright de la CI (1.56) range ces <th> parmi les cellules (« cell »),
+      // pas parmi les en-têtes de colonne ; un sélecteur par rôle n'en trouverait aucun.
+      const colonnesScores = page.locator('thead th').filter({ hasText: scores });
+      const filtresScores = page.getByRole('combobox', { name: scores });
+      if (tenable) {
+        await expect(colonnesScores).toHaveCount(2);
+        // Les filtres sont repliés dans le panneau de la boîte d'outils (refonte du 22/11/2026).
+        await ouvrirFiltres(page, 'Criticité (ACR, Tenable)');
+        await expect(filtresScores).toHaveCount(2);
+        for (const ligne of await machines.all()) await expect(ligne).toContainText('Non fournie par Tenable');
+        // Filtre actif : aucune machine sans valeur n'y répond.
+        await page.getByRole('combobox', { name: 'Criticité (ACR, Tenable)', exact: true }).click();
+        await page.getByRole('option', { name: 'Moyenne ou plus', exact: true }).click();
+        await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(0);
+        await axe(page);
+        await page.goto('/vulnerabilites/machines');
+        await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(3);
+      } else {
+        await expect(colonnesScores).toHaveCount(0);
+        await expect(filtresScores).toHaveCount(0);
+      }
 
       // Second scan : 919102 a disparu de srv-fictif-01, 203.0.113.23 est absente du fichier (inchangée).
       await page.goto('/plateforme/integrations');

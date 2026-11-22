@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Administration : utilisateurs, groupes, rôles, sessions, journal d'audit, instantanés, import legacy, système.
    Chaque onglet n'apparaît qu'avec la permission correspondante (le serveur contrôle chaque appel). */
 import { Alert, Badge, Button, Card, Group, Stack, Table, Tabs, Text, TextInput, Title } from '@mantine/core';
@@ -202,7 +203,7 @@ export function Audit() {
           setFiltres(saisie);
         }}
       >
-        <Group align="flex-end">
+        <BarreFiltres label="Journal d’audit">
           <TextInput
             label="Rechercher"
             placeholder="compte, action, cible, IP"
@@ -239,7 +240,7 @@ export function Audit() {
           >
             Réinitialiser
           </Button>
-        </Group>
+        </BarreFiltres>
       </form>
       {can('administration', 'exporter') && (
         <Group>

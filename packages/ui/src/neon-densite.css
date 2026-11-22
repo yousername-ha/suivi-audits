@@ -1,0 +1,353 @@
+/* Densité transversale de travail — 21/11/2026.
+   Chargée après les styles métiers : mêmes proportions dans les deux thèmes, depuis les profils DENSITES.
+   La police et l'échelle choisies restent intactes ; aucun transform/zoom global. Les graphiques/canevas SMSI ne
+   sont pas redessinés. La page peut grandir avec les textes : pas de hauteur forcée qui masquerait une information. */
+
+/* Commandes : la densité agit sur la hauteur réelle, pas seulement sur les gaps. */
+.mantine-Input-wrapper {
+  --input-height-xs: var(--suivi-petit-controle-h);
+  --input-height-sm: var(--suivi-controle-h);
+  --input-height-md: calc(var(--suivi-controle-h) + 0.25rem);
+  --input-height-lg: calc(var(--suivi-controle-h) + 0.5rem);
+  --input-height-xl: calc(var(--suivi-controle-h) + 0.75rem);
+  --input-height: var(--suivi-controle-h);
+  --input-fz: var(--mantine-font-size-sm);
+}
+.mantine-Input-input {
+  font-weight: 400;
+}
+.mantine-InputWrapper-label {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 500;
+  line-height: 1.4;
+}
+.mantine-InputWrapper-description {
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.4;
+}
+.mantine-Button-root {
+  --button-height-xs: var(--suivi-petit-controle-h);
+  --button-height-sm: var(--suivi-controle-h);
+  --button-height-md: calc(var(--suivi-controle-h) + 0.25rem);
+  --button-height-lg: calc(var(--suivi-controle-h) + 0.5rem);
+  --button-height-xl: calc(var(--suivi-controle-h) + 0.75rem);
+  --button-height: var(--suivi-controle-h);
+  --button-padding-x: var(--suivi-controle-px);
+  --button-fz: var(--mantine-font-size-sm);
+  font-weight: 500;
+}
+.mantine-ActionIcon-root {
+  --ai-size-xs: var(--suivi-petit-controle-h);
+  --ai-size-sm: var(--suivi-petit-controle-h);
+  --ai-size-md: var(--suivi-controle-h);
+  --ai-size-lg: var(--suivi-controle-h);
+  --ai-size-xl: calc(var(--suivi-controle-h) + 0.5rem);
+  --ai-size-input-xs: var(--suivi-petit-controle-h);
+  --ai-size-input-sm: var(--suivi-controle-h);
+  --ai-size: var(--suivi-controle-h);
+}
+.mantine-ActionIcon-root svg {
+  max-inline-size: 70%;
+  max-block-size: 70%;
+}
+.data-table .mantine-Button-root,
+.risque-action-explicite,
+.risque-commande {
+  --button-height: var(--suivi-petit-controle-h);
+  --ai-size: var(--suivi-petit-controle-h);
+  --button-fz: var(--mantine-font-size-xs);
+}
+
+/* Cadre commun. La marge de contenu ne reste pas figée à la hauteur de l'ancien bandeau. */
+.shell-main {
+  padding-top: var(--mantine-spacing-sm);
+}
+.shell-header > .mantine-Group-root {
+  gap: var(--mantine-spacing-sm);
+  padding-inline: var(--suivi-carte-padding);
+}
+.app-main .page {
+  gap: var(--suivi-section-gap);
+}
+.app-main .page-header {
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  padding-block: var(--mantine-spacing-2xs);
+}
+.app-main .page h1.mantine-Title-root,
+.app-main .page-header h1 {
+  margin: 0;
+  font-size: var(--suivi-titre-page);
+  font-weight: 600;
+  line-height: 1.25;
+}
+.app-main .page h2.mantine-Title-root {
+  font-size: var(--suivi-titre-section);
+  line-height: 1.35;
+}
+.app-main .page-header__titre .lecture {
+  margin-block-start: var(--mantine-spacing-2xs);
+}
+.app-main .a-propos {
+  margin: 0;
+}
+.app-main .a-propos > summary {
+  padding-block: var(--mantine-spacing-2xs);
+  font-weight: 500;
+}
+.app-main .a-propos__texte {
+  margin-block-start: var(--mantine-spacing-xs);
+}
+.app-main .selecteur-perimetre .mantine-Input-wrapper {
+  inline-size: clamp(12rem, 20vw, 21rem);
+  max-inline-size: 100%;
+}
+
+/* Menu : couleurs, icônes et animations validées sont conservées ; lignes et marque moins hautes. */
+.nav-neon .nav-marque {
+  gap: var(--mantine-spacing-sm);
+  padding-block-end: var(--suivi-carte-padding);
+  margin-block-end: var(--mantine-spacing-sm);
+}
+.nav-neon .nav-marque__texte > strong {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+}
+.nav-neon .nav-caption {
+  padding-block: var(--mantine-spacing-xs);
+  letter-spacing: 0.1em;
+}
+.nav-neon .mantine-NavLink-root,
+.nav-neon .nav-famille,
+.nav-neon [data-identite='dashboard'] {
+  min-block-size: var(--suivi-nav-ligne-h);
+  min-height: var(--suivi-nav-ligne-h);
+  padding-block: var(--mantine-spacing-xs);
+  padding-inline: var(--mantine-spacing-sm);
+}
+.nav-neon .nav-destination,
+.nav-neon .nav-administration .mantine-NavLink-root {
+  min-block-size: var(--suivi-nav-enfant-h);
+  min-height: var(--suivi-nav-enfant-h);
+}
+.nav-neon .mantine-NavLink-label,
+.nav-neon .mantine-NavLink-root[data-active] .mantine-NavLink-label {
+  font-weight: 500;
+  line-height: 1.35;
+}
+.nav-neon .nav-icone.nav-icone--neon {
+  inline-size: 1.375rem;
+  block-size: 1.375rem;
+}
+.nav-neon .nav-footer {
+  padding-block-start: var(--mantine-spacing-sm);
+}
+@media (min-width: 64em) {
+  .shell-nav .nav-neon {
+    padding-block: var(--suivi-carte-padding);
+    padding-inline: var(--mantine-spacing-sm);
+  }
+}
+
+/* Onglets : ligne mesurée, libellé actif et concepts ambigus lisibles ; les icônes ne perdent pas leur nom accessible. */
+.app-main .onglets-rubriques,
+.app-main .mantine-Tabs-list:not([data-orientation='vertical']) {
+  gap: var(--mantine-spacing-2xs);
+  padding: var(--mantine-spacing-2xs);
+  max-inline-size: 100%;
+}
+.app-main .onglets-rubriques a,
+.app-main .mantine-Tabs-tab {
+  min-block-size: var(--suivi-controle-h);
+  padding: var(--mantine-spacing-xs) var(--suivi-controle-px);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  line-height: 1.3;
+}
+/* Les deux formes d'onglets possèdent déjà une spécificité forte dans neon-ergonomie.css.
+   Reprendre leur sélecteur maintient les deux préférences et évite un !important ou une hauteur figée. */
+html:is([data-onglets='barre'], [data-onglets='pastilles'])
+  :is(.app-main .onglets-rubriques, .mantine-Tabs-list:not([data-orientation='vertical']), .retex-onglets, .as-tabs) {
+  gap: var(--mantine-spacing-2xs);
+  padding: var(--mantine-spacing-2xs);
+}
+html:is([data-onglets='barre'], [data-onglets='pastilles'])
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ) {
+  min-block-size: var(--suivi-controle-h);
+  padding: var(--mantine-spacing-xs) var(--suivi-controle-px);
+  line-height: 1.3;
+}
+.app-main .onglets-rubriques--icones {
+  flex-wrap: wrap;
+  overflow: visible;
+  inline-size: fit-content;
+}
+.app-main .onglets-rubriques--icones .onglet-rubrique {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mantine-spacing-xs);
+  min-inline-size: var(--suivi-controle-h);
+}
+.onglet-rubrique__icone {
+  flex: none;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+.risques-commandes {
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-2xs);
+}
+.risque-commande svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+/* Tableaux : lignes fines, texte principal conservé, retour à la ligne autorisé. Le scroll appartient toujours à la liste. */
+.app-main .data-table table {
+  font-size: var(--mantine-font-size-sm);
+}
+.app-main .data-table :is(th, td) {
+  padding-block: var(--suivi-cellule-py);
+  padding-inline: var(--mantine-spacing-sm);
+  line-height: 1.4;
+  vertical-align: middle;
+}
+.app-main .data-table th {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.app-main .data-table tbody tr {
+  height: var(--suivi-ligne-h);
+}
+.app-main .data-table tbody td > strong {
+  font-weight: 500;
+}
+.app-main .data-table .mantine-Badge-root {
+  min-height: var(--suivi-statut-h);
+  padding-block: 0;
+  font-weight: 500;
+}
+.app-main .barre-boite,
+.app-main :is(.fs-views, .pr-views, .pi-views) {
+  padding: var(--mantine-spacing-2xs);
+}
+.app-main .barre-boite__recherche .mantine-Input-input {
+  inline-size: clamp(10rem, 14vw, 15rem);
+}
+.app-main :is(.fs-tool, .pr-tool, .pi-tool) {
+  inline-size: var(--suivi-controle-h);
+  block-size: var(--suivi-controle-h);
+  padding: var(--mantine-spacing-xs);
+}
+
+/* Dalles des registres : même rythme dans les vues existantes, détails et états toujours disponibles. */
+.app-main :is(.fournisseurs-studio, .processus-studio, .parties-studio, .objectifs-studio) {
+  gap: var(--suivi-section-gap);
+}
+.app-main :is(.fs-summary, .pr-summary, .pi-summary) {
+  gap: var(--mantine-spacing-md);
+}
+.app-main :is(.fs-stat, .pr-stat, .pi-stat) {
+  padding: var(--suivi-carte-padding);
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-sm);
+}
+.app-main :is(.fs-stat, .pr-stat, .pi-stat) > strong {
+  font-size: var(--suivi-chiffre);
+  font-weight: 600;
+}
+.app-main .fs-stat .fs-icon {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+}
+.app-main :is(.fs-workspace, .pr-workspace, .pi-workspace, .bb-workspace) {
+  padding: var(--suivi-carte-padding);
+}
+.app-main .fournisseurs-studio .fs-table {
+  border-spacing: 0 var(--mantine-spacing-xs);
+}
+.app-main .fournisseurs-studio .data-table thead th,
+.app-main .fournisseurs-studio .data-table thead th:first-child,
+.app-main .fournisseurs-studio tr.fs-row > td {
+  padding-block: var(--suivi-cellule-py);
+  padding-inline: var(--mantine-spacing-sm);
+}
+.app-main .fs-identity strong {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+}
+.app-main .fs-chip {
+  min-height: var(--suivi-statut-h);
+  padding-block: var(--mantine-spacing-2xs);
+  font-weight: 500;
+}
+.app-main :is(.fs-cell, .fs-pair) {
+  gap: var(--mantine-spacing-xs);
+}
+.app-main .neon-analytics {
+  --na-hauteur: var(--suivi-graphique-h);
+}
+
+/* Poste vulnérabilités : le radar ne grossit plus jusqu'à remplir toute la hauteur d'un écran 4K. */
+.app-main .poste {
+  padding: var(--suivi-carte-padding);
+}
+.app-main .pc-radar-cadre {
+  /* Au moins la largeur lisible du dessin (42rem dans neon-commandement.css) : un plafond trop bas imposerait
+     un défilement horizontal inutile et couperait les libellés sur PC. */
+  max-inline-size: 52.5rem;
+  margin-inline: auto;
+}
+.app-main .pc-niveau__gros b {
+  font-size: calc(var(--suivi-chiffre) * 1.5);
+}
+.app-main .pc-etiquette {
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+.app-main .poste__note,
+.app-main .pc-niveau__explication {
+  line-height: 1.45;
+}
+@media (min-width: 75em) {
+  .app-main .poste__grille {
+    grid-template-columns: minmax(16rem, 0.8fr) minmax(0, 1.65fr);
+  }
+}
+
+/* Le planning utilise une largeur SVG mesurée ; ses attributs fixent un rapport 1:1, sans étirer les fontes. */
+.plan-planning .plan-svg {
+  inline-size: auto;
+  min-inline-size: 0;
+  max-inline-size: none;
+  block-size: auto;
+}
+
+/* Fenêtres : bordures/lecture conservées, espacement intérieur lié à la densité ; textes longs encore défilables. */
+.mantine-Modal-header,
+.mantine-Modal-body,
+.mantine-Drawer-header,
+.mantine-Drawer-body {
+  padding: var(--suivi-padding-dialogue);
+}
+.mantine-Modal-title,
+.mantine-Drawer-title {
+  font-size: var(--suivi-titre-section);
+  font-weight: 600;
+}
+
+@media (max-width: 48em) {
+  .app-main .selecteur-perimetre {
+    flex-wrap: wrap;
+    max-inline-size: 100%;
+  }
+  .app-main .selecteur-perimetre .mantine-Input-wrapper {
+    inline-size: min(100%, 20rem);
+  }
+}

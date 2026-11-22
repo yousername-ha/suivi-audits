@@ -204,7 +204,7 @@ export function FicheProcessus({
           {modifiable && peutSupprimer ? (
             <ConfirmButton
               size="xs"
-              variant="default"
+              variant="light"
               message={`Supprimer le processus ${id} ? Il est retiré des objectifs et des indicateurs qui le citent.`}
               onConfirm={async () => {
                 if ((await ecrire('DELETE', `processes/${encodeURIComponent(id)}?confirm=SUPPRIMER`)) !== null)
@@ -373,7 +373,7 @@ export function FicheObjectif({
           {modifiable && peutSupprimer ? (
             <ConfirmButton
               size="xs"
-              variant="default"
+              variant="light"
               message={`Supprimer l’objectif ${id} et ses ${siens.length} indicateur(s) ?`}
               onConfirm={async () => {
                 if ((await ecrire('DELETE', `objectives/${encodeURIComponent(id)}?confirm=SUPPRIMER`)) !== null)
@@ -704,7 +704,7 @@ export function FicheIndicateur({
           {modifiable && peutSupprimer ? (
             <ConfirmButton
               size="xs"
-              variant="default"
+              variant="light"
               message={`Supprimer l’indicateur ${id} ?`}
               onConfirm={async () => {
                 if ((await ecrire('DELETE', `indicators/${encodeURIComponent(id)}?confirm=SUPPRIMER`)) !== null)

@@ -1,5 +1,5 @@
 /* Services partagés par les routes (injectés : chaque test construit les siens avec sa propre base). */
-import { NESSUS_BORNES } from '@suivi/shared';
+import { CPE_BORNES, NESSUS_BORNES } from '@suivi/shared';
 import type { Logger } from 'pino';
 import { Auth } from './auth.js';
 import { Backups } from './backups.js';
@@ -46,6 +46,7 @@ import { RelaisModele, type TransportModele } from './assistant/modele.js';
 import { FluxExternes } from './flux-externes.js';
 import { ProduitsSurveilles } from './vulnerabilites/produits.js';
 import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
+import { DictionnaireCpe } from './vulnerabilites/dictionnaire-cpe.js';
 import { VeilleReglementaire } from './veille-reglementaire.js';
 import { PurgeJournaux } from './vulnerabilites/purge-journaux.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
@@ -236,6 +237,9 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     vulnerabilites: {
       produits: produitsSurveilles,
       veille,
+      /** Lot CPE-1 : liste locale des produits du dictionnaire CPE de la NVD (chargée par tranches par l'exécutant),
+          versions d'un produit (file dédiée, cache, copie complète facultative), saisie en cours. */
+      dictionnaireCpe: new DictionnaireCpe(db, flux, mandataire),
       tenable,
       /** Lot N1 : import de scans Nessus (connecteur « nessus-fichier »), lancé depuis la carte « Intégrations ». */
       importNessus,
@@ -322,6 +326,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       importNessusLot: limiter(600, 10 * 60e3),
       /** « Collecter maintenant » de la veille : quatre demandes par heure et par personne (les sources sont publiques). */
       veilleCollecte: limiter(4, 60 * 60e3),
+      /** Lot CPE-1 : demandes de versions à la NVD (nouvelles demandes seulement, pas les réponses du cache). */
+      cpeVersions: limiter(CPE_BORNES.demandesParHeure, 60 * 60e3),
       loginByIp: limiter(20, 15 * 60e3),
       loginByUser: limiter(10, 15 * 60e3),
       mfaBySession: limiter(8, 10 * 60e3),

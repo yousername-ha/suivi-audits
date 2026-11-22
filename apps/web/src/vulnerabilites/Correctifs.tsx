@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lot S3 ; décision du RSSI du 18/11/2026) : vue « Correctifs » de l'écran « Failles
    détectées ». En tête, « n mises à jour à faire pour m failles » ; une ligne par correctif (texte de la solution de Tenable,
    en anglais, tel quel), triée par gain, avec ses failles, ses CVE, les machines lues, la priorité la plus haute, les marques
@@ -344,7 +345,7 @@ export function CorrectifsVue({ onOuvrirConstat }: { onOuvrirConstat: (id: strin
       <ErrorAlert error={liste.error} />
       {liste.data && <EnteteCorrectifs d={liste.data} />}
       <form onSubmit={chercher} role="search">
-        <Group align="flex-end">
+        <BarreFiltres label="Correctifs">
           <TextInput
             label="Rechercher un correctif"
             description="Mot du texte de la solution (en anglais)."
@@ -364,7 +365,7 @@ export function CorrectifsVue({ onOuvrirConstat }: { onOuvrirConstat: (id: strin
             data={NIVEAUX_PRIORITE.map((p) => ({ value: p, label: p }))}
             comboboxProps={{ withinPortal: false }}
           />
-        </Group>
+        </BarreFiltres>
       </form>
       {liste.data && <CorrectifsTable groupes={liste.data.groupes} onOuvrir={setOuvert} />}
       {liste.data?.tronquee && (

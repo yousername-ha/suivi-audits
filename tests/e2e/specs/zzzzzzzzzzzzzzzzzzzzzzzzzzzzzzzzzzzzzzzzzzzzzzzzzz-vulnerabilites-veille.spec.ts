@@ -106,6 +106,8 @@ const FICHE_CVE = {
   vecteurs: [],
   recommandations: {
     tenable: null,
+    // Lot QF-TEN : champ rendu par l'API pour toute fiche (aucun correctif regroupé de Tenable ici).
+    tenableRegroupes: [],
     kev: [],
     kevTronque: false,
     versionsNvd: [],

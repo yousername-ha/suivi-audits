@@ -15,6 +15,9 @@
    `seolDate` de Tenable pour un constat ; service exposé `version_status = eol` d'AlgoLightHouse pour une alerte). Pour une
    faille déclarée, une CVE ou une alerte, Tenable parle s'il cite la CVE dans un contrôle qui porte une date de correctif
    (une lecture de plus, fixe).
+   Lot QF-TEN : rubrique « Correctif recommandé par Tenable » d'un constat ou d'une CVE : les correctifs regroupés de Tenable
+   (vue `sumremediation`, dernière synchronisation reçue en entier) qui couvrent le constat, ou un constat qui cite la CVE ;
+   machines comptées selon les droits (une lecture de plus, fixe ; aucune pour une faille déclarée ou une alerte).
    Nombre de lectures fixe (aucune par CVE ni par élément). */
 import {
   etatCorrectif,
@@ -23,6 +26,7 @@ import {
   situationExploitation,
   calculerPriorite,
   type AvisFicheDto,
+  type CorrectifRegroupeFicheDto,
   FICHE_FAILLE_BORNES,
   type FicheFailleDto,
   faitsDepuisSources,
@@ -82,6 +86,8 @@ interface Entree {
       citent les CVE de la faille. */
   correctifTenableLe?: string | null;
   finSupport?: FicheFailleDto['finSupport'];
+  /** Lot QF-TEN : constat dont on cherche les correctifs regroupés de Tenable (nature `constat`). */
+  constatId?: string;
 }
 
 export class FichesFailles {
@@ -117,6 +123,7 @@ export class FichesFailles {
     );
     return {
       nature: 'constat',
+      constatId: c.id,
       cves,
       priorite: c.priorite,
       sources: c.sources,
@@ -345,6 +352,7 @@ export class FichesFailles {
       correctifTenableLe = t[0]?.le?.toISOString() ?? null;
     }
     const correctif = etatCorrectif({ tenablePublieLe: correctifTenableLe, certSante: certSante?.correctif ?? null });
+    const tenableRegroupes = await this.correctifsRegroupes(user, e);
     return {
       nature: e.nature,
       cves: e.cves.slice(0, B.cvesAffichees),
@@ -366,6 +374,7 @@ export class FichesFailles {
       finSupport: e.finSupport ?? null,
       recommandations: {
         tenable: e.tenable ? { correctif: e.tenable.correctif, publieLe: e.tenable.publieLe } : null,
+        tenableRegroupes,
         kev: kev.slice(0, B.kev),
         kevTronque: kev.length > B.kev,
         versionsNvd: versions.slice(0, B.versionsNvd).map((v): VersionsNvdDto => ({
@@ -393,5 +402,50 @@ export class FichesFailles {
         alhTronquees: e.alh ? false : exposition.alertesTronquees,
       },
     };
+  }
+
+  /** Lot QF-TEN : correctifs regroupés de Tenable qui couvrent un constat (nature `constat`) ou un constat qui cite la CVE
+      (nature `cve`), parmi ceux de la dernière synchronisation reçue en entier de chaque instance ; une seule lecture. Les
+      machines sont comptées selon les droits ; aucun nom ni aucune adresse n'est rendu. */
+  private async correctifsRegroupes(user: SessionUser, e: Entree): Promise<CorrectifRegroupeFicheDto[]> {
+    const couverts =
+      e.nature === 'constat' && e.constatId
+        ? sql`SELECT ${e.constatId}::uuid AS id`
+        : e.nature === 'cve' && e.cves[0]
+          ? sql`SELECT constat_id AS id FROM vulnerabilites_constat_cves WHERE cve = ${e.cves[0]}`
+          : null;
+    if (!couverts) return [];
+    const { rows } = await sql<{
+      identifiant: string;
+      solution: string;
+      cves: number | null;
+      controles: number;
+      lues: number;
+      hors: boolean;
+    }>`
+      WITH t AS (
+        SELECT DISTINCT tc.id, tc.solution_id, tc.solution, tc.cves FROM vulnerabilites_tenable_correctifs tc
+        JOIN vulnerabilites_tenable_etat te ON te.integration_id = tc.integration_id AND te.correctifs_numero = tc.vu_numero
+        JOIN vulnerabilites_tenable_correctif_constats l ON l.correctif_id = tc.id
+        WHERE l.constat_id IN (${couverts})),
+      x AS (
+        SELECT l.correctif_id, d.machine_id, ${lisible(user)} AS lu FROM vulnerabilites_tenable_correctif_constats l
+        JOIN vulnerabilites_detections d ON d.constat_id = l.constat_id
+        JOIN vulnerabilites_machines m ON m.id = d.machine_id
+        LEFT JOIN vulnerabilites_tenable_etat e ON e.integration_id = m.integration_id
+        WHERE l.correctif_id IN (SELECT id FROM t) AND ${present})
+      SELECT t.solution_id AS identifiant, t.solution, t.cves,
+        (SELECT count(*)::int FROM vulnerabilites_tenable_correctif_constats l WHERE l.correctif_id = t.id) AS controles,
+        (SELECT count(DISTINCT x.machine_id)::int FROM x WHERE x.correctif_id = t.id AND x.lu) AS lues,
+        EXISTS (SELECT 1 FROM x WHERE x.correctif_id = t.id AND NOT x.lu) AS hors
+      FROM t ORDER BY controles DESC, t.solution_id LIMIT ${B.correctifsRegroupes}`.execute(this.db.k);
+    return rows.map((r) => ({
+      identifiant: r.identifiant,
+      solution: r.solution,
+      controles: r.controles,
+      cves: r.cves,
+      machinesLues: r.lues,
+      machinesHorsLecture: r.hors,
+    }));
   }
 }

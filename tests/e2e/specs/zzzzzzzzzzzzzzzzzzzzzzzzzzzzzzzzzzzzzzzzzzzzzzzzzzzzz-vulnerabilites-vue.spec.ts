@@ -6,7 +6,7 @@
    redirection, route de lecture, tuiles, tableau, capteurs, accessibilité en clair et en sombre, CSP. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 for (const [mode, scheme] of [
   ['clair', 'light'],
@@ -84,6 +84,7 @@ for (const [mode, scheme] of [
       // Tuile vers « Failles détectées » : la liste s'ouvre déjà filtrée sur la priorité.
       await tuiles.getByRole('link', { name: 'P1 : 0', exact: true }).click();
       await expect(page.getByRole('heading', { name: 'Failles détectées', level: 1 })).toBeVisible();
+      await ouvrirFiltres(page, 'Priorité');
       await expect(page.getByRole('combobox', { name: 'Priorité', exact: true })).toHaveValue('P1');
       expect(problems).toEqual([]);
     } finally {

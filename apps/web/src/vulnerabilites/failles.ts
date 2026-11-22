@@ -8,6 +8,17 @@
    et filtre « Fin de support » (constats et machines), repris de l'adresse (`finSupport=oui`). Lot N1 : source d'une
    machine ou d'un constat (instance Security Center ou import Nessus), marquée dans les listes. */
 import {
+  CATEGORIE_ACR_LIBELLES,
+  CATEGORIE_AES_LIBELLES,
+  categorieAcr,
+  categorieAes,
+  type EtatSynchronisationDto,
+  FILTRE_ACR_LIBELLES,
+  FILTRE_AES_LIBELLES,
+  FILTRES_ACR,
+  FILTRES_AES,
+  type FiltreAcr,
+  type FiltreAes,
   type ConstatDto,
   type ConstatResumeDto,
   FIN_SUPPORT_LIBELLE,
@@ -146,20 +157,64 @@ export interface FiltresMachines {
   perimetre: string;
   /** Lot S3 : machines en fin de support seulement (facultatif). */
   finSupport?: boolean;
+  /** Lot TEN-SCORES : catégorie minimale de criticité (ACR) et d'exposition (AES) selon Tenable (facultatif ; vide : tous). */
+  acr?: FiltreAcr | '';
+  aes?: FiltreAes | '';
 }
 export const FILTRES_MACHINES_VIDES: FiltresMachines = { q: '', role: '', perimetre: '' };
 
-/** Adresse de la liste des machines (recherche par nom, rôle, périmètre, page). */
-export function urlMachines(f: FiltresMachines, page = 1): string {
+/** Paramètres communs de la liste et du parc des machines. */
+export function parametresMachines(f: FiltresMachines): URLSearchParams {
   const p = new URLSearchParams();
   if (f.q.trim()) p.set('q', f.q.trim());
   if (f.role) p.set('role', f.role);
   if (f.perimetre) p.set('perimetre', f.perimetre);
   if (f.finSupport) p.set('finSupport', 'oui');
+  if (f.acr) p.set('acr', f.acr);
+  if (f.aes) p.set('aes', f.aes);
+  return p;
+}
+
+/** Adresse de la liste des machines (recherche par nom, rôle, périmètre, fin de support, ACR, AES, page). */
+export function urlMachines(f: FiltresMachines, page = 1): string {
+  const p = parametresMachines(f);
   if (page > 1) p.set('page', String(page));
   const s = p.toString();
   return `/api/vulnerabilites/machines${s ? `?${s}` : ''}`;
 }
+
+/* ------------------------------------------------------------------ Lot TEN-SCORES : ACR et AES selon Tenable */
+/** Clé de l'état des synchronisations de Tenable (`/api/vulnerabilites/synchronisation`), la même que celle des écrans
+    « Failles détectées » et « Vue d'ensemble » (même réponse, même forme). */
+export const CLE_ETAT_TENABLE = ['vulnerabilites', 'failles', 'etat'] as const;
+export const URL_ETAT_TENABLE = '/api/vulnerabilites/synchronisation';
+/** Une intégration Tenable Security Center existe (au moins une instance de type `tenable`, active ou non ; un connecteur
+    d'import Nessus ne compte pas) : l'ACR et l'AES, leurs colonnes et leurs filtres ne sont montrés qu'à cette condition.
+    Réponse absente (chargement, erreur) : non. */
+export const tenableConfigure = (etats: readonly EtatSynchronisationDto[] | undefined) => !!etats?.length;
+/** Filtres réellement envoyés : sans intégration Tenable, ceux de l'ACR et de l'AES (masqués) ne s'appliquent pas. */
+export const filtresAvecScores = (f: FiltresMachines, tenable: boolean): FiltresMachines =>
+  tenable ? f : { ...f, acr: '', aes: '' };
+
+/** Valeur seule, en chiffres français sans séparateur de milliers, comme Tenable (« 1000 » ; ACR décimale possible :
+    « 8,5 »). */
+const chiffre = (v: number) => v.toLocaleString('fr-FR', { maximumFractionDigits: 1, useGrouping: false });
+/** Texte affiché quand Tenable ne fournit pas la valeur (jamais 0). */
+export const SCORE_ABSENT = '—';
+export const SCORE_ABSENT_EXPLICATION = 'Non fournie par Tenable';
+/** ACR en clair : « 9 · Critique » ; valeur absente : « — ». */
+export function libelleAcr(v: number | null): string {
+  const c = categorieAcr(v);
+  return v === null || !c ? SCORE_ABSENT : `${chiffre(v)} · ${CATEGORIE_ACR_LIBELLES[c]}`;
+}
+/** AES en clair : « 700 · Élevée » ; valeur absente : « — ». */
+export function libelleAes(v: number | null): string {
+  const c = categorieAes(v);
+  return v === null || !c ? SCORE_ABSENT : `${chiffre(v)} · ${CATEGORIE_AES_LIBELLES[c]}`;
+}
+/** Choix des filtres (catégorie minimale). */
+export const OPTIONS_FILTRE_ACR = FILTRES_ACR.map((v) => ({ value: v, label: FILTRE_ACR_LIBELLES[v] }));
+export const OPTIONS_FILTRE_AES = FILTRES_AES.map((v) => ({ value: v, label: FILTRE_AES_LIBELLES[v] }));
 
 export const GRAVITE_TENABLE_ETAT: Record<GraviteTenable, Etat> = {
   critique: 'erreur',
@@ -207,6 +262,37 @@ export function marquesConstat(
   if (c.nonMaintenu) out.push({ libelle: 'Non maintenu', etat: 'neutre' });
   return out;
 }
+
+/** Ligne allégée de « Failles détectées » (choix du RSSI du 22/11/2026) : faits d'une faille, sans doublon ni détail de
+    source (la fiche les donne, section « Ce que disent les sources ») : exploitation avérée (quelle qu'en soit la source),
+    rançongiciels, exploitable (kits compris), fin de support, non maintenu. */
+export function faitsListe(
+  c: Pick<
+    ConstatResumeDto,
+    | 'exploite'
+    | 'exploiteMalware'
+    | 'exploitable'
+    | 'kitsExploitation'
+    | 'finDeSupport'
+    | 'surMachineFinSupport'
+    | 'nonMaintenu'
+    | 'sources'
+  >,
+): { libelle: string; etat: Etat }[] {
+  const out: { libelle: string; etat: Etat }[] = [];
+  if (c.exploite || c.exploiteMalware || c.sources.exploitation.length)
+    out.push({ libelle: 'Exploitation avérée', etat: 'erreur' });
+  if (c.sources.rancongiciel) out.push({ libelle: MARQUE_RANCONGICIEL, etat: 'erreur' });
+  if (c.exploitable || c.kitsExploitation.length || c.sources.exploitable.length)
+    out.push({ libelle: 'Exploitable', etat: 'attention' });
+  if (c.finDeSupport) out.push({ libelle: FIN_SUPPORT_LIBELLE, etat: 'attention' });
+  else if (c.surMachineFinSupport) out.push({ libelle: MARQUE_MACHINE_FIN_SUPPORT, etat: 'attention' });
+  if (c.nonMaintenu) out.push({ libelle: 'Non maintenu', etat: 'neutre' });
+  return out;
+}
+
+/** Raison courte d'une priorité dans la liste : premier fait, sans sa précision entre parenthèses (la fiche la donne). */
+export const raisonPriorite = (p: Priorite) => (faitsPriorite(p)[0] ?? '').replace(/\s*\(.*$/, '');
 
 /** Lot PRIO-1 : marques courtes des listes. */
 export const MARQUE_RANCONGICIEL = 'Rançongiciels (KEV)';

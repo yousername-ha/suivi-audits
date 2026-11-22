@@ -68,6 +68,10 @@ import {
   kitsRanges,
   prioriteRancongiciel,
   FAILLES_PAR_PAGE,
+  type FiltreAcr,
+  type FiltreAes,
+  SEUILS_ACR,
+  SEUILS_AES,
   GRAVITES_TENABLE,
   type GraviteTenable,
   type MachineDetectionDto,
@@ -215,6 +219,8 @@ interface LigneMachine {
   depot_perimetre_nom: string | null;
   exposition: string | null;
   acr: string | null;
+  /** Lot TEN-SCORES : score d'exposition de l'actif selon Tenable (0 à 1000). */
+  aes: number | null;
   premiere_detection: Date | null;
   derniere_detection: Date | null;
   integration_id: string;
@@ -423,6 +429,7 @@ const versMachine = (l: LigneMachine, declarees: DeclareeMachine[]): Omit<Machin
         : null,
     exposition: l.exposition,
     acr: nombre(l.acr),
+    aes: nombre(l.aes),
     premiere: iso(l.premiere_detection),
     derniere: iso(l.derniere_detection),
     source: l.source,
@@ -787,7 +794,7 @@ export class FaillesDetectees {
              -- Périmètre du dépôt : montré seulement s'il est visible de la personne (son nom ne fuit pas autrement).
              CASE WHEN td.perimetre_id = ANY(${perimetresVisibles(user)}) THEN td.perimetre_id END AS depot_perimetre_id,
              CASE WHEN td.perimetre_id = ANY(${perimetresVisibles(user)}) THEN sd.name END AS depot_perimetre_nom,
-             m.exposition, m.acr,
+             m.exposition, m.acr, m.aes,
              m.premiere_detection, m.derniere_detection, m.integration_id, i.nom AS integration_nom, m.source, m.version,
              coalesce(k.critique, 0) AS critique, coalesce(k.elevee, 0) AS elevee, coalesce(k.moyenne, 0) AS moyenne,
              coalesce(k.faible, 0) AS faible, coalesce(k.exploites, 0) AS exploites,
@@ -833,16 +840,19 @@ export class FaillesDetectees {
 
   /** Machines lisibles, de la plus critique à la moins critique ; recherche par nom ou système (partiels, casse ignorée) ou
       par adresse IP (préfixe), règle commune avec la barre de recherche (lot R1) ; filtres par rôle et périmètre. Le rang
-      est calculé sur toutes les machines lisibles, avant les filtres. */
+      est calculé sur toutes les machines lisibles, avant les filtres. Lot TEN-SCORES : filtres par catégorie minimale d'ACR
+      et d'AES, en SQL (selonScores), avant la pagination. */
   async machines(user: SessionUser, q: RechercheMachines): Promise<PageMachines> {
     const toutes = await this.machinesRangees(user);
+    const scores = await this.selonScores(user, q);
     const texte = q.q?.trim();
     const filtrees = toutes.filter(
       (m) =>
         (!texte || machineCorrespond(m, texte)) &&
         (q.role === 'aucun' ? m.role === null : !q.role || m.role === q.role) &&
         (q.perimetre === 'aucun' ? m.perimetreId === null : !q.perimetre || m.perimetreId === q.perimetre) &&
-        (!q.finSupport || m.finDeSupport),
+        (!q.finSupport || m.finDeSupport) &&
+        (!scores || scores.has(m.id)),
     );
     const debut = (q.page - 1) * FAILLES_PAR_PAGE;
     return {
@@ -852,6 +862,20 @@ export class FaillesDetectees {
       elements: await this.marquer(filtrees.slice(debut, debut + FAILLES_PAR_PAGE)),
       sansRole: toutes.filter((m) => m.role === null).length,
     };
+  }
+
+  /** Lot TEN-SCORES : identifiants des machines lisibles (même règle `lisible` que la liste) dont la criticité (ACR) et
+      l'exposition (AES) selon Tenable atteignent la catégorie minimale demandée ; une machine sans valeur ne répond à aucun
+      filtre actif. `null` : aucun filtre demandé (aucune requête). Une requête de plus, seulement avec un filtre. Le rang
+      reste calculé sur toutes les machines lisibles ; ni priorité ni rang ne dépendent de ces valeurs. */
+  private async selonScores(user: SessionUser, q: { acr?: FiltreAcr; aes?: FiltreAes }): Promise<Set<string> | null> {
+    if (!q.acr && !q.aes) return null;
+    const conditions: RawBuilder<boolean>[] = [lisible(user)];
+    if (q.acr) conditions.push(sql<boolean>`m.acr >= ${SEUILS_ACR[q.acr]}`);
+    if (q.aes) conditions.push(sql<boolean>`m.aes >= ${SEUILS_AES[q.aes]}`);
+    const { rows } = await sql<{ id: string }>`
+      SELECT m.id FROM vulnerabilites_machines m WHERE ${sql.join(conditions, sql` AND `)}`.execute(this.db.k);
+    return new Set(rows.map((r) => r.id));
   }
 
   /** Marques des machines rendues (lot PC2) : priorité la plus haute, zero-day, exploitable. */
@@ -867,16 +891,19 @@ export class FaillesDetectees {
   /** Parc des machines lisibles (lot PC2), par zone de rôle, dans l'ordre du rang : mêmes filtres que la liste, au plus
       PARC_PAR_ZONE machines par zone (les plus prioritaires), totaux de chaque zone toujours rendus. Seules les machines que
       la personne lit sont listées ou comptées. Lecture seule. Nombre de requêtes fixe, aucune par machine : machines et
-      leurs compteurs 2, réglage 1, marques 9 (faillesDesMachines) ; 12 au plus. */
+      leurs compteurs 2, réglage 1, marques 9 (faillesDesMachines) ; 12 au plus, 13 avec un filtre d'ACR ou d'AES (lot
+      TEN-SCORES). */
   async parc(user: SessionUser, q: RechercheParc): Promise<ParcMachinesDto> {
     const toutes = await this.machinesRangees(user);
+    const scores = await this.selonScores(user, q);
     const texte = q.q?.trim();
     const filtrees = toutes.filter(
       (m) =>
         (!texte || machineCorrespond(m, texte)) &&
         (q.role === 'aucun' ? m.role === null : !q.role || m.role === q.role) &&
         (q.perimetre === 'aucun' ? m.perimetreId === null : !q.perimetre || m.perimetreId === q.perimetre) &&
-        (!q.finSupport || m.finDeSupport),
+        (!q.finSupport || m.finDeSupport) &&
+        (!scores || scores.has(m.id)),
     );
     // Marques de toutes les machines filtrées (mêmes requêtes, quel que soit leur nombre) : le nombre de machines marquées
     // « zero-day » d'une zone compte aussi celles au-delà de la borne.

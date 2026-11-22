@@ -11,6 +11,7 @@ import { type DelaiFailleDto, EtatDelaiFiltre, TriFailles } from './delais-vulne
 import { FiltreSuivi, type SuiviResumeDto } from './suivi-vulnerabilites.js';
 import { CVE_ID, texteExterneValide } from './veille-vulnerabilites.js';
 import type { EtatCorrectifDto } from './correctifs-vulnerabilites.js';
+import { FiltreAcr, FiltreAes } from './scores-tenable.js';
 
 /* ------------------------------------------------------------------ Gravités */
 /** Gravités retenues (identifiants stables : base, filtre de l'instance). La gravité « info » de Tenable n'est jamais lue. */
@@ -73,6 +74,12 @@ export const TENABLE_BORNES = {
   exposition: 40,
   /** Nom d'un dépôt de Tenable (`repository.name`, lot V4d). */
   nomDepot: 200,
+  /** Lot QF-TEN : correctifs regroupés (`sumremediation`) lus au plus, pages de cette vue au plus (par `pageAnalyse`),
+      contrôles gardés par correctif, longueur de l'identifiant (`solutionID`). Le texte est borné par `correctif`. */
+  correctifs: 5000,
+  pagesCorrectifs: 25,
+  controlesParCorrectif: 1000,
+  identifiantCorrectif: 64,
   /** Éléments par lot rapporté par l'exécutant, et lots par synchronisation. */
   lot: 500,
   lots: 200,
@@ -124,7 +131,8 @@ export const DepotElementTenable = z
 export type DepotElementTenable = z.infer<typeof DepotElementTenable>;
 
 /** Machine vue par l'analyse : identifiant, nom, adresse, système, dates, indice d'exposition, criticité de l'actif, dépôt
-    (lot V4d ; absent : inconnu, la machine garde son dépôt rangé). */
+    (lot V4d ; absent : inconnu, la machine garde son dépôt rangé), score d'exposition de l'actif (AES, lot TEN-SCORES :
+    entier de 0 à 1000 ; facultatif pour rester compatible avec un script plus ancien ; absent ou null : non fourni). */
 export const ElementMachineTenable = z
   .object({
     type: z.literal('machine'),
@@ -137,6 +145,7 @@ export const ElementMachineTenable = z
     derniere: instant,
     exposition: z.string().max(TENABLE_BORNES.exposition).regex(EXPOSITION).nullable(),
     acr: score10,
+    aes: z.number().int().min(0).max(1000).nullable().optional(),
     depot: DepotElementTenable.nullable().optional(),
   })
   .strict()
@@ -251,11 +260,40 @@ export const ElementHoteTenable = z
   .strict();
 export type ElementHoteTenable = z.infer<typeof ElementHoteTenable>;
 
+/** Identifiant d'un correctif regroupé de Tenable (`solutionID`, par exemple « SC-33850 ») : forme prudente, seul exemple connu. */
+export const IDENTIFIANT_CORRECTIF_TENABLE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/;
+const compteTenable = z.number().int().min(0).max(100_000_000).nullable();
+
+/** Lot QF-TEN : correctif regroupé de Tenable (vue `sumremediation` de l'analyse, liste blanche du script) : identifiant,
+    texte de la solution (anglais, nettoyé), contrôles corrigés (`pluginID`), nombres de Tenable (machines `hostTotal`, CVE
+    `cveTotal`, détections `total`, sur tout ce qu'il analyse) et scores. Jamais `remediationList` ni aucune machine. */
+export const ElementCorrectifTenable = z
+  .object({
+    type: z.literal('correctif'),
+    identifiant: z.string().max(TENABLE_BORNES.identifiantCorrectif).regex(IDENTIFIANT_CORRECTIF_TENABLE),
+    solution: texteTenable(TENABLE_BORNES.correctif),
+    plugins: z
+      .array(z.string().regex(PLUGIN_ID))
+      .min(1)
+      .max(TENABLE_BORNES.controlesParCorrectif)
+      .refine((l) => new Set(l).size === l.length, 'Contrôle cité deux fois.'),
+    machines: compteTenable,
+    cves: compteTenable,
+    detections: compteTenable,
+    vpr: score10,
+    cvss3Score: score10,
+    /** Probabilité EPSS entre 0 et 1 (rendue en pourcentage par Tenable, convertie par le script, comme pour un constat). */
+    epss: z.number().min(0).max(1).nullable(),
+  })
+  .strict();
+export type ElementCorrectifTenable = z.infer<typeof ElementCorrectifTenable>;
+
 export const ElementSynchronisation = z.union([
   ElementMachineTenable,
   ElementConstatTenable,
   ElementDetectionTenable,
   ElementHoteTenable,
+  ElementCorrectifTenable,
 ]);
 export type ElementSynchronisation = z.infer<typeof ElementSynchronisation>;
 
@@ -353,6 +391,10 @@ export const RechercheMachines = z
     perimetre: z.union([z.uuid(), z.literal('aucun')]).optional(),
     /** Lot S3 : machines en fin de support (au moins un constat présent dont la fin de support est passée). */
     finSupport: oui,
+    /** Lot TEN-SCORES : catégorie minimale de criticité (ACR) et d'exposition (AES) selon Tenable ; une machine sans valeur
+        ne répond à aucun filtre actif. */
+    acr: FiltreAcr.optional(),
+    aes: FiltreAes.optional(),
     page,
   })
   .strict();
@@ -481,7 +523,11 @@ export interface MachineDto {
   /** Dépôt de Tenable où la machine a été vue (lot V4d), et le périmètre auquel il est relié. */
   depot: { id: string; nom: string; perimetreId: string | null; perimetreNom: string | null } | null;
   exposition: string | null;
+  /** Lot TEN-SCORES : criticité (ACR, 0 à 10) et exposition (AES, 0 à 1000) de l'actif selon Tenable Security Center ; null :
+      non fournie (import Nessus, valeur absente). Affichées seulement : ni la priorité, ni le rang, ni les alertes n'en
+      dépendent. */
   acr: number | null;
+  aes: number | null;
   premiere: string | null;
   derniere: string | null;
   /** Lot N1 : source de la machine (type de son instance) et instance. Une machine vue par Security Center et par un import

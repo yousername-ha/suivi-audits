@@ -20,18 +20,24 @@ D/J/I/F restent exclus, OIDC et exports bureautiques serveur de la feuille de
 route ne sont pas déclarés livrés. L’étude L n’est pas réalisée. Aucun abandon
 de fonctionnalité historique n’est présumé.
 
-## Module Vulnérabilités (mise à jour du 20/11/2026, Europe/Paris)
+## Module Vulnérabilités (mise à jour du 22/11/2026, Europe/Paris)
 
-Session « Module surveillance vulnérabilités SMSI ». Détail, décisions et limites : [reprise du 20/11/2026](REPRISE-2026-11-20.md)
+Session « Module surveillance vulnérabilités SMSI ». Détail, décisions et limites : [reprise du 22/11/2026](REPRISE-2026-11-22.md), [reprise du 20/11/2026](REPRISE-2026-11-20.md)
 et addenda de l'[ADR 0100](../adr/0100-module-vulnerabilites.md). Ordre de la file décidé par le RSSI :
 
-1. Terminer la PR #339 (correctifs de performance PERF-01 à PERF-04), puis rejouer le banc de performance.
-2. Veille réglementaire (ADR 0110 et migration `098` réservées) : CNIL, CEPD, EUR-Lex, ANS, ANSSI, Journal officiel par
-   l'open data de la DILA ; qualification par le rôle RSSI et un rôle DPO.
-3. Règles de priorité et marques décidées les 19 et 20/11/2026 (kit d'exploitation, zero-day, libellé « logiciel malveillant
-   (Tenable) », fin de support, P1 sous exception).
-4. CVE inconnue de la veille : cve.org et NVD sur clic, lien « Voir chez Tenable ».
-5. Produits vus par Silène rapprochés des CVE « à confirmer ».
+Livrés en 7.5.0 et 7.5.1 : correctifs PERF-01 à PERF-04 et PERF-13, outils de l'assistant (ASSISTANT-V1), règles de
+priorité (PRIO-1), import du rapport AD (AD-1), veille réglementaire première tranche (VR-1, ADR 0110). Le RSSI fait ses
+essais sur la 7.5.1 avant la suite ; la session Coeur rejoue le banc.
+
+1. CVE inconnue de la veille : cve.org et NVD sur clic, lien « Voir chez Tenable », évaluation SSVC de la CISA, Security
+   Center sans clic (recherche de contrôles par CVE vérifiée chez le RSSI le 20/11), préavis Cloudflare Radar toutes les
+   15 minutes (produits surveillés et critiques, remplacé à l'arrivée de la fiche NVD), tldrcve en source facultative avec
+   cartes « Est-ce grave ? / Êtes-vous concerné ? / Que faire ? » construites par la plateforme.
+2. « Quoi faire » enrichi des correctifs regroupés de Tenable (`sumremediation`, qui répond chez le RSSI).
+3. Produits vus par Silène rapprochés des CVE « à confirmer » ; actifs vus par Silène seul remis à l'assistant.
+4. Veille réglementaire, tranche suivante (ADR 0110, décision du 22/11/2026) : CERT Santé actualités, Journal officiel par
+   les données ouvertes de la DILA et par l'API PISTE ; rattachement d'une publication aux exigences, actions et documents
+   (contrat à convenir avec la session Coeur).
 6. Rapport d'analyse de l'Active Directory importé par fichier JSON lu dans le navigateur.
 
 Lot ASSISTANT-V1 (outils de l'assistant alignés sur la vue d'ensemble, actifs exposés dans « Machines prioritaires »,

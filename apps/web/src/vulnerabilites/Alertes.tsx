@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lots V6 et V6b) : onglet « Alertes ». Alertes décidées par la plateforme, par règle :
    critique (P1, faille exploitée présente chez nous), simple (P2 exploitable sur un actif exposé directement sur Internet).
    Liste (niveau, faille, priorité et ses faits, présence en nombres que la personne lit, état : ouverte, prise en compte ou
@@ -21,10 +22,11 @@ import {
   type NiveauAlerte,
   type PageAlertesVulnerabilites,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { api, ApiError, get } from '../api';
 import { useCan } from '../session';
 import {
@@ -47,6 +49,7 @@ import { PrioriteFaits } from './FaillesDetectees';
 import { PictosSources } from './PictoSource';
 import { pictosExploitation } from './pictos-sources';
 import { nombrePages } from './veille';
+import { NOMS_PAGINATION } from './pagination';
 
 /** Liste des alertes (sans état) : rendu testable hors navigateur. */
 export function AlertesTable({
@@ -274,13 +277,13 @@ export function AlertesPage() {
   const pages = liste.data ? nombrePages(liste.data.total, liste.data.parPage) : 1;
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Alertes"
         description="Alertes décidées par la plateforme, par règle, jamais par l’assistant : critique quand une faille exploitée est présente chez nous (priorité P1 : détectée par Tenable, déclarée par un produit surveillé ou exposée sur Internet) ; simple quand une faille en P2 est exploitable (code d’exploitation ou preuve de concept connus) et exposée directement sur Internet (actif vu par AlgoLightHouse). Une alerte par faille ; elle se met à jour sans se rejouer et se clôt d’elle-même quand la faille n’est plus présente, est traitée ou passe sous le seuil. Seul le RSSI peut prendre en compte une alerte. Les nombres ne comptent que ce que vous pouvez lire."
       />
       <Stack>
         <ErrorAlert error={liste.error} />
-        <Group align="flex-end">
+        <BarreFiltres label="Alertes">
           <Select
             label="État"
             data={OPTIONS_ETAT}
@@ -301,14 +304,22 @@ export function AlertesPage() {
               setPage(1);
             }}
           />
-        </Group>
+        </BarreFiltres>
         {liste.data && (
           <>
             <Text size="sm" c="dimmed">
               {liste.data.total} alerte{liste.data.total > 1 ? 's' : ''}
             </Text>
             <AlertesTable alertes={liste.data.elements} onOuvrir={(id) => setParams({ alerte: id })} />
-            {pages > 1 && <Pagination value={page} onChange={setPage} total={pages} aria-label="Pages des alertes" />}
+            {pages > 1 && (
+              <Pagination
+                {...NOMS_PAGINATION}
+                value={page}
+                onChange={setPage}
+                total={pages}
+                aria-label="Pages des alertes"
+              />
+            )}
           </>
         )}
       </Stack>

@@ -3,7 +3,7 @@
    famille, modification, suppression, accessibilité, CSP. Données fictives. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 test('Vulnérabilités : produits surveillés ajoutés, filtrés, modifiés puis supprimés', async ({ browser }) => {
   const ctx = await browser.newContext({
@@ -41,7 +41,8 @@ test('Vulnérabilités : produits surveillés ajoutés, filtrés, modifiés puis
     await choisir('Criticité', 'Élevée', ajout);
     await ajout.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await expect(ajout.getByRole('alert')).toContainText('version');
-    await ajout.getByRole('textbox', { name: 'Version', exact: true }).fill('1.0');
+    // Lot CPE-1 : le champ de la version est un champ libre qui propose les versions connues (rôle « combobox »).
+    await ajout.getByRole('combobox', { name: 'Version', exact: true }).fill('1.0');
     await ajout.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await expect(ajout).toBeHidden();
     const ligne = page.getByRole('row', { name: new RegExp(nom) });
@@ -58,9 +59,11 @@ test('Vulnérabilités : produits surveillés ajoutés, filtrés, modifiés puis
     await page.keyboard.press('Escape');
     await expect(fiche).toBeHidden();
 
-    // Filtre par famille, appliqué par le serveur.
+    // Filtre par famille, appliqué par le serveur (replié dans le panneau de filtres depuis la refonte du 22/11/2026).
+    await ouvrirFiltres(page, 'Famille');
     await choisir('Famille', 'Réseau');
     await expect(ligne).toHaveCount(0);
+    await ouvrirFiltres(page, 'Famille');
     await choisir('Famille', 'Web');
     await expect(ligne).toBeVisible();
 

@@ -334,6 +334,32 @@ export class Grc {
       createdBy: r.createdBy,
     };
   }
+  /** Accès du compte à plusieurs périmètres en une requête, même règle qu'`access()` (sans verrou, sans exception) :
+      `lecture` vaut ce que `access(id, user)` accepterait, `ecriture` ce que `access(id, user, true)` accepterait. Un
+      périmètre inexistant est absent de la table rendue (`access()` le refuse aussi, administrateur compris). */
+  async accesPerimetres(
+    ids: readonly string[],
+    user: SessionUser,
+    admin: boolean,
+    c?: Client,
+  ): Promise<Map<string, { lecture: boolean; ecriture: boolean }>> {
+    const out = new Map<string, { lecture: boolean; ecriture: boolean }>();
+    if (!ids.length) return out;
+    const r = await (c ? surConnexion(c) : this.db.k)
+      .selectFrom('grc_smsis as s')
+      .select([
+        's.id',
+        accesPerimetre(sql.ref('s.id'), user.id).as('acces'),
+        smsiVisible(sql.ref('s.id'), user.id).as('visible'),
+      ])
+      .where('s.id', 'in', [...new Set(ids)])
+      .execute();
+    for (const p of r) {
+      const lecture = admin || !!p.visible;
+      out.set(p.id, { lecture, ecriture: lecture && (admin || p.acces === true) });
+    }
+    return out;
+  }
   async visible(user: SessionUser, scope: string, module?: Module) {
     try {
       if (module && !user.rights.can(module, 'lire')) return false;

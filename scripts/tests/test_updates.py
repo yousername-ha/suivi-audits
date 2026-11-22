@@ -576,6 +576,116 @@ class Updates(Isolement, unittest.TestCase):
             self.w.finish('success','Vérification terminée.')
         self.assertFalse((self.data/'etat/recus-mises-a-jour').exists())
 
+    # Veille active de la recherche CPE (ADR 0100, addendum « recherche CPE ») : passages courts intercalés par le poller.
+    def temoin_cpe(self, age=0):
+        """Témoin posé par l'exécutant d'exploitation dans son dossier privé, vieux de « age » secondes."""
+        temoin = self.data/m.CPE_TEMOIN
+        temoin.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        temoin.touch()
+        instant = temoin.stat().st_mtime - age
+        os.utime(temoin, (instant, instant))
+        self.w.flux_voulus = {m.CPE_FLUX}
+        return temoin
+
+    def attendre_simule(self, duree_passage=0.0, echec_au_premier=False):
+        """Joue attendre() sur une horloge simulée ; rend les instants des passages courts et la durée totale de l'attente."""
+        horloge = {'t': 1000.0}
+        passages = []
+
+        class Arret:
+            def is_set(self):
+                return False
+
+            def wait(self, delai=None):
+                horloge['t'] += delai or 0
+                return False
+
+        def exploitation(seulement=None):
+            passages.append((round(horloge['t'] - 1000.0, 1), seulement))
+            horloge['t'] += duree_passage
+            if echec_au_premier and len(passages) == 1:
+                raise m.Failure('application injoignable')
+
+        with patch.object(self.w, 'stop', Arret()), patch.object(self.w, 'exploitation', exploitation), \
+                patch.object(m.time, 'monotonic', lambda: horloge['t']):
+            self.w.attendre()
+        return passages, round(horloge['t'] - 1000.0, 1)
+
+    def test_sans_temoin_cpe_la_cadence_du_poller_est_inchangee(self):
+        self.w.flux_voulus = {m.CPE_FLUX}
+        passages, duree = self.attendre_simule()
+        self.assertEqual(passages, [])
+        self.assertEqual(duree, m.PASSAGE_PERIODE)
+
+    def test_veille_active_intercale_des_passages_courts_de_la_seule_file_cpe(self):
+        self.temoin_cpe()
+        passages, duree = self.attendre_simule()
+        self.assertEqual(passages, [(3.0, 'cpe-versions'), (6.0, 'cpe-versions'), (9.0, 'cpe-versions'), (12.0, 'cpe-versions')])
+        self.assertEqual(duree, m.PASSAGE_PERIODE)
+
+    def test_passage_court_limite_par_l_environnement_et_au_delai_borne(self):
+        with patch.object(self.w, 'run') as run:
+            self.w.exploitation(seulement=m.CPE_COURT_MODE)
+            court = run.call_args
+            self.w.exploitation()
+            complet = run.call_args
+        self.assertEqual(court.args[0], ['python3', str(self.root/'scripts/exploitation-worker.py')])
+        self.assertEqual(court.kwargs['extra_env']['EXPLOITATION_SEULEMENT'], 'cpe-versions')
+        self.assertEqual(court.kwargs['timeout'], m.CPE_COURT_DELAI)
+        self.assertLessEqual(m.CPE_COURT_DELAI, 30)
+        self.assertNotIn('EXPLOITATION_SEULEMENT', complet.kwargs['extra_env'])
+        self.assertEqual(complet.kwargs['timeout'], 4000)
+
+    def test_veille_active_refusee_hors_des_conditions(self):
+        temoin = self.temoin_cpe()
+        self.assertTrue(self.w.cpe_court_permis())
+        # Témoin périmé, daté dans le futur (horloge reculée) ou remplacé par un lien : pas de veille active.
+        for age in (m.CPE_TEMOIN_VALIDITE + 1, -60):
+            self.temoin_cpe(age)
+            self.assertFalse(self.w.cpe_court_permis(), age)
+        temoin.unlink()
+        cible = self.root/'ailleurs'
+        cible.touch()
+        temoin.symlink_to(cible)
+        self.assertFalse(self.w.cpe_court_permis())
+        temoin.unlink()
+        self.temoin_cpe()
+        # Flux fermé ou illisible au dernier passage complet.
+        for voulus in (set(), {'mises-a-jour'}, None):
+            self.w.flux_voulus = voulus
+            self.assertFalse(self.w.cpe_court_permis(), voulus)
+        self.w.flux_voulus = {m.CPE_FLUX}
+        # Maintenance, intervention, mise à jour en cours, exécutant automatique désactivé.
+        self.w.state['maintenance'] = True
+        self.assertFalse(self.w.cpe_court_permis())
+        self.w.state['maintenance'] = False
+        etat = self.w.state['status']
+        self.w.state['status'] = 'intervention'
+        self.assertFalse(self.w.cpe_court_permis())
+        self.w.state['status'] = etat
+        self.w.job = {'id': self.id, 'kind': 'install', 'target': '3.1.0'}
+        self.assertFalse(self.w.cpe_court_permis())
+        self.w.job = None
+        (self.root/'.env').write_text('APP_VERSION=3.0.0\nEXPLOITATION_AUTO=0\n')
+        self.assertFalse(self.w.cpe_court_permis())
+        (self.root/'.env').write_text('APP_VERSION=3.0.0\n')
+        self.assertTrue(self.w.cpe_court_permis())
+        passages, _ = self.attendre_simule()
+        self.assertEqual(len(passages), 4)
+
+    def test_passage_court_en_echec_ne_coupe_pas_la_veille(self):
+        self.temoin_cpe()
+        passages, duree = self.attendre_simule(echec_au_premier=True)
+        self.assertEqual([instant for instant, _ in passages], [3.0, 6.0, 9.0, 12.0])
+        self.assertEqual(duree, m.PASSAGE_PERIODE)
+
+    def test_passage_court_long_s_efface_devant_le_passage_complet(self):
+        self.temoin_cpe()
+        passages, duree = self.attendre_simule(duree_passage=8.0)
+        # Un passage de 8 s commencé à 3 s finit à 11 s ; à 14 s le passage complet est trop proche : aucun autre court.
+        self.assertEqual([instant for instant, _ in passages], [3.0])
+        self.assertLessEqual(duree, m.PASSAGE_PERIODE)
+
 
 class FrontalALaDemande(unittest.TestCase):
     """Frontal mis à jour à la demande (ADR 0103, qui remplace l'exception ponctuelle de la 7.2.2) : à la fin d'une mise à jour

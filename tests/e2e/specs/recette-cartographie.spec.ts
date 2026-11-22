@@ -255,7 +255,7 @@ async function objets(s: Session) {
 }
 /** Flux temps réel connecté (sinon un changement fait juste après l'ouverture de la page serait manqué). */
 async function enLigne(p: Page) {
-  await expect(p.locator('.live-badge')).toHaveText('En direct');
+  await expect(p.locator('.shell-header')).toHaveAttribute('data-temps-reel', 'connecte');
   await expect(p.locator('g.noeud').first()).toBeAttached();
 }
 async function editer(p: Page) {
@@ -474,7 +474,7 @@ test('12. versions : « Revue de direction », modification, restauration exacte
   await dlg.getByLabel('Nouvelle version').fill('Revue de direction');
   await dlg.getByRole('button', { name: 'Enregistrer une version' }).click();
   await expect(p.getByText('Version enregistrée.')).toBeVisible();
-  await dlg.getByRole('button', { name: 'Fermer' }).click();
+  await dlg.getByRole('button', { name: 'Fermer', exact: true }).click();
   await editer(p);
   await glisser(p, 'isms', 80, 0);
   await enregistrer(p);
@@ -860,7 +860,9 @@ test('23. clic droit sur le fond > Créer ici > Fournisseur : créé et placé s
   // La fiche de l'objet créé au parcours 22 est ouverte en haut à droite : Échap la ferme.
   await p.keyboard.press('Escape');
   await expect(p.locator('.carte-inspecteur')).toHaveCount(0);
-  const cible = await pointCanevas(p, 0.82, 0.5);
+  // Point libre de la carte : avec la densité du 22/11/2026 le canevas est plus large et le milieu de sa hauteur, à
+  // droite, est occupé par la boîte du SMSI (l'objet créé y serait décalé pour ne rien chevaucher).
+  const cible = await pointCanevas(p, 0.82, 0.78);
   const m = await menuSur(p, cible);
   await m.getByRole('menuitem', { name: 'Fournisseur' }).click();
   const d = await creer(p, 'Créer : Fournisseur', 'Hébergeur fictif');

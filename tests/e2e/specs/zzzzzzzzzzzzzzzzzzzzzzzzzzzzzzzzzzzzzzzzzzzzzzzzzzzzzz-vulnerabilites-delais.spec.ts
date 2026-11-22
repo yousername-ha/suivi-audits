@@ -8,7 +8,7 @@
    sombre, CSP. Calculs, expiration, rappels et notifications : tests du paquet partagé et de l'API. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 for (const [mode, scheme] of [
   ['clair', 'light'],
@@ -63,9 +63,12 @@ for (const [mode, scheme] of [
       // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
       await page.waitForTimeout(400);
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
+      await ouvrirFiltres(page, 'Période');
       await page.getByRole('combobox', { name: 'Période', exact: true }).click();
       await page.getByRole('option', { name: '12 derniers mois', exact: true }).click();
+      await ouvrirFiltres(page, 'Période');
       await expect(page.getByRole('combobox', { name: 'Période', exact: true })).toHaveValue('12 derniers mois');
+      await ouvrirFiltres(page, 'Statut de l’exception');
       await page.getByRole('combobox', { name: 'Statut de l’exception', exact: true }).click();
       await page.getByRole('option', { name: 'Sans échéance, à compléter', exact: true }).click();
       await expect(page.getByText('Aucune exception, parmi les failles que vous pouvez lire.')).toBeVisible();
@@ -73,7 +76,9 @@ for (const [mode, scheme] of [
       // Failles détectées : filtres « Délai » et tri repris de l'adresse (lien de la tuile et du résumé notifié).
       await page.goto('/vulnerabilites/failles?delai=en_depassement&tri=echeance');
       await expect(page.getByRole('heading', { name: 'Failles détectées', level: 1 })).toBeVisible();
+      await ouvrirFiltres(page, 'Délai');
       await expect(page.getByRole('combobox', { name: 'Délai', exact: true })).toHaveValue('En dépassement');
+      await ouvrirFiltres(page, 'Trier par');
       await expect(page.getByRole('combobox', { name: 'Trier par', exact: true })).toHaveValue(
         'Échéance de correction',
       );
