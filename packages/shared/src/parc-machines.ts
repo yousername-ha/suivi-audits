@@ -18,6 +18,7 @@ import {
   ROLES_MACHINE,
   type RoleMachine,
 } from './failles-tenable.js';
+import { FiltreAcr, FiltreAes } from './scores-tenable.js';
 
 /* ------------------------------------------------------------------ Affichage mémorisé (préférences de la personne) */
 /** Présentation de l'écran « Machines » : la liste existante ou le parc en tuiles. */
@@ -100,6 +101,9 @@ export const RechercheParc = z
     perimetre: z.union([z.uuid(), z.literal('aucun')]).optional(),
     /** Lot S3 : machines en fin de support seulement. */
     finSupport: z.enum(['oui']).optional(),
+    /** Lot TEN-SCORES : catégorie minimale de criticité (ACR) et d'exposition (AES) selon Tenable, comme la liste. */
+    acr: FiltreAcr.optional(),
+    aes: FiltreAes.optional(),
   })
   .strict();
 export type RechercheParc = z.infer<typeof RechercheParc>;

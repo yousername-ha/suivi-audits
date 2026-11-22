@@ -3755,3 +3755,86 @@ de référence indépendante, cas d'une seule CVE compris). Sur le code d'avant,
 
 **Non traité ici** : les autres défauts du banc (PERF-01, 02, 04, 05, 16), à remesurer après ce correctif ; la lecture des
 CVE d'AlgoLightHouse de la même fonction (`c.cve = ANY(liste)`, sans recouvrement de tableaux), non mesurée lente.
+
+## Addendum du 22/11/2026 — lot TEN-SCORES : criticité (ACR) et exposition (AES) des machines selon Tenable
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`100`, aucune route nouvelle, aucune dépendance, aucun flux nouveau, rien chez l'assistant ; `scripts/exploitation-worker.py`
+et `docker-compose.yml` inchangés.
+
+### Décision du RSSI (22/11/2026)
+
+1. **Afficher l'ACR** (Asset Criticality Rating), déjà lue (`acrScore`, lot V5), rangée (`vulnerabilites_machines.acr`) et
+   rendue (`MachineDto.acr`) mais affichée nulle part : colonne de la liste des machines et fiche d'une machine.
+2. **Lire et afficher l'AES** (Asset Exposure Score, 0 à 1000) : champ `assetExposureScore` du résultat `vulndetails`.
+3. **Filtres** de la liste des machines par catégorie minimale d'ACR et d'AES ; une machine sans valeur ne répond à aucun
+   filtre actif.
+4. Colonnes, valeurs de la fiche et filtres **seulement si une intégration Tenable Security Center existe** (pas un import
+   Nessus seul).
+5. **Informations affichées seulement** (décision antérieure du RSSI, rappelée) : ni la priorité, ni le rang, ni les alertes
+   ne dépendent de l'ACR ou de l'AES.
+
+### Catégories officielles
+
+Source : documentation de l'éditeur, docs.tenable.com, page « Tenable Exposure Management Metrics » (relevé transmis par la
+session principale le 22/11/2026, non relu dans cette session) :
+
+| Mesure | Critique | Élevée | Moyenne | Faible |
+| --- | --- | --- | --- | --- |
+| ACR (0 à 10) | 9 à 10 | 7 à 8 | 4 à 6 | 1 à 3 |
+| AES (0 à 1000) | — | 650 à 1000 | 350 à 649 | 0 à 349 |
+
+Les catégories se lisent comme des seuils (`SEUILS_ACR`, `SEUILS_AES` de `packages/shared/src/scores-tenable.ts`) : une
+valeur au moins égale au bas d'une catégorie y entre. Filtres : ACR « Critique » (9 ou plus), « Élevée ou plus » (7 ou
+plus), « Moyenne ou plus » (4 ou plus) ; AES « Élevée » (650 ou plus), « Moyenne ou plus » (350 ou plus).
+
+### Réalisation
+
+- **Script** (`scripts/integration-http.py`) : `assetExposureScore` ajouté à `CHAMPS_ANALYSE`, seul champ de plus ; lu par
+  `score_exposition` comme entier de 0 à 1000 (nombre entier ou chiffres) ; vide (Tenable ne le calcule pas, par exemple un
+  actif non licencié), absent, hors bornes, décimal ou non numérique : `null`, sans écarter le résultat. Une machine vue
+  plusieurs fois dans une synchronisation garde l'ACR et l'AES de son **premier** résultat, la règle déjà suivie par l'ACR.
+- **Schéma** (`ElementMachineTenable`) : `aes` entier de 0 à 1000, nul permis, **facultatif** (un script plus ancien reste
+  accepté) ; l'élément reste strict (tout autre champ refusé, le lot entier avec lui).
+- **Rangement** (migration `100`) : colonne `vulnerabilites_machines.aes smallint`, contrainte 0 à 1000, NULL permis. Même
+  règle que l'ACR à la synchronisation suivante : une valeur non fournie garde la valeur rangée (`coalesce`), une valeur
+  nouvelle la remplace. Import `.nessus` : ni ACR ni AES (`null`), son schéma inchangé (un champ `aes` y est refusé).
+- **Rendu** : `MachineDto.aes: number | null`, partout où `MachineDto` est rendu (liste, parc, fiche, périmètres).
+- **Filtres** : `acr` (`critique`, `elevee`, `moyenne`) et `aes` (`elevee`, `moyenne`) dans `RechercheMachines` **et**
+  `RechercheParc` (le parc garde « les mêmes filtres que la liste »). Filtre en SQL (`selonScores` de
+  `apps/api/src/vulnerabilites/failles.ts`) : une requête sur les machines lisibles (fragment `lisible` inchangé) dont la
+  valeur atteint le seuil ; ses identifiants filtrent la liste avant la pagination. Le rang reste calculé sur toutes les
+  machines lisibles, avant les filtres. Une requête de plus, seulement quand un de ces filtres est demandé. L'API accepte
+  ces filtres même sans instance Tenable (résultat vide).
+- **Présence d'une intégration Tenable** (point 4) : l'interface lit la route existante `GET
+  /api/vulnerabilites/synchronisation` (droit `vulnerabilites:lire`, déjà lue par « Failles détectées » et « Vue
+  d'ensemble », même clé du cache), qui rend un état par instance de type `tenable`, active ou non, et rien pour un
+  connecteur d'import Nessus. Au moins un état : colonnes, rubrique « Selon Tenable » de la fiche et filtres affichés ;
+  aucun (ou réponse absente) : rien, et les filtres d'ACR et d'AES ne sont pas envoyés. Aucun champ ni droit ajouté.
+- **Interface** : colonnes « Criticité (ACR, Tenable) » et « Exposition (AES, Tenable) » de la liste de l'écran « Machines »
+  (« 9 · Critique », « 700 · Élevée ») ; rubrique « Selon Tenable » de la fiche d'une machine, quel que soit l'écran qui
+  l'ouvre ; deux listes de choix dans les filtres de l'écran, liste et parc. Valeur absente : « — », lu « Non fournie par
+  Tenable » par un lecteur d'écran ; jamais 0.
+
+### Ce qui n'entre pas dans la priorité
+
+L'ACR et l'AES ne changent ni la priorité d'une faille (grille P1 à P4), ni le rang d'une machine, ni les marques, ni les
+alertes, ni ce que reçoit l'assistant (ses outils choisissent leurs champs : aucun des deux n'y figure). Ce sont des valeurs
+calculées par Tenable, affichées telles quelles.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **« Intégration configurée »** : une instance de type `tenable` existe, active ou non, clés enregistrées ou non (sinon des
+  valeurs déjà rangées disparaîtraient de l'écran le temps d'une désactivation).
+- **Filtres aussi sur le parc**, pour garder les mêmes filtres dans les deux présentations ; aucune valeur sur les tuiles.
+- **Filtres non repris de l'adresse** : l'écran « Machines » ne reprend de son adresse que le rôle et le périmètre (liens
+  de l'onglet « Périmètres ») ; un filtre caché par l'absence d'intégration Tenable ne peut ainsi pas rester actif.
+- **Valeur entre deux catégories** (ACR décimale ou inférieure à 1, que Tenable ne publie pas en principe) : la catégorie
+  inférieure.
+- **Écran « Failles détectées », vue « Par machine »** : inchangé (sans colonnes ACR ni AES).
+
+### Non vérifié
+
+Le champ `assetExposureScore` n'a été vu que dans des exemples anonymisés transmis par le RSSI ; sa forme (texte de chiffres,
+vide quand Tenable ne le calcule pas) n'a pas été relevée sur une instance dans cette session, et aucune synchronisation
+réelle n'a été faite. Les parcours Playwright adaptés n'ont pas été exécutés (CI seulement).

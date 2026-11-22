@@ -12,18 +12,13 @@ import {
   type ZoneParc,
   zoneParc,
 } from '@suivi/shared';
-import { type FiltresMachines, libelleMachine } from './failles';
+import { type FiltresMachines, libelleMachine, parametresMachines } from './failles';
 
 export const CLE_PARC = ['vulnerabilites', 'machines', 'parc'] as const;
 
-/** Adresse du parc (mêmes filtres que la liste, sans page). */
+/** Adresse du parc (mêmes filtres que la liste, ACR et AES compris, sans page). */
 export function urlParc(f: FiltresMachines): string {
-  const p = new URLSearchParams();
-  if (f.q.trim()) p.set('q', f.q.trim());
-  if (f.role) p.set('role', f.role);
-  if (f.perimetre) p.set('perimetre', f.perimetre);
-  if (f.finSupport) p.set('finSupport', 'oui');
-  const s = p.toString();
+  const s = parametresMachines(f).toString();
   return `/api/vulnerabilites/machines/parc${s ? `?${s}` : ''}`;
 }
 

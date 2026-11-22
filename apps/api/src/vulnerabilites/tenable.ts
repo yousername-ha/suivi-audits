@@ -295,6 +295,8 @@ export class SynchronisationTenable implements OperationEnLots {
           derniere_detection: m.derniere,
           exposition: m.exposition,
           acr: m.acr === null ? null : String(m.acr),
+          // Lot TEN-SCORES : absent (script plus ancien) comme null, non fourni.
+          aes: m.aes ?? null,
           depot_id: m.depot ? (depots.get(m.depot.id) ?? null) : null,
           vu_numero: numero,
         })),
@@ -310,6 +312,8 @@ export class SynchronisationTenable implements OperationEnLots {
           derniere_detection: sql`greatest(vulnerabilites_machines.derniere_detection, excluded.derniere_detection)`,
           exposition: sql`coalesce(excluded.exposition, vulnerabilites_machines.exposition)`,
           acr: sql`coalesce(excluded.acr, vulnerabilites_machines.acr)`,
+          // Même règle que l'ACR : une valeur non fournie garde la valeur rangée.
+          aes: sql`coalesce(excluded.aes, vulnerabilites_machines.aes)`,
           depot_id: sql`coalesce(excluded.depot_id, vulnerabilites_machines.depot_id)`,
           vu_numero: sql`greatest(vulnerabilites_machines.vu_numero, excluded.vu_numero)`,
           maj_le: sql`now()`,
@@ -481,6 +485,7 @@ export class SynchronisationTenable implements OperationEnLots {
           derniere: h.derniere,
           exposition: null,
           acr: null,
+          aes: null,
         });
     }
     await this.rangerMachines(k, integration, numero, nouvelles);
