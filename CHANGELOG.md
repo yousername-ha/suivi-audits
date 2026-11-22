@@ -20,6 +20,8 @@ Autres changements de cette version :
   de données : aucune commande sur le serveur, aucune action dans l'application. L'exposition des machines selon Tenable
   (AES) apparaît après la prochaine synchronisation de Tenable Security Center ; la criticité (ACR), déjà lue, s'affiche
   dès la mise à jour.
+- Service de mise à jour préparé pour la recherche CPE du module Vulnérabilités : sans effet tant que cette recherche
+  n'est pas livrée.
 
 ### Ajouté
 
@@ -35,6 +37,13 @@ Autres changements de cette version :
   et filtres n'apparaissent pas ; un import Nessus ne porte ni l'une ni l'autre valeur. Ces valeurs sont affichées
   seulement : ni la priorité, ni le rang, ni les alertes ne changent
   (session « Module surveillance vulnérabilités SMSI »).
+- **Service de mise à jour : veille active pour la recherche CPE** (décision du RSSI du 22/11/2026,
+  [ADR 0097, addendum](docs/adr/0097-flux-sortants-pilotes-par-les-modules.md)). Quand une saisie de produit est en cours
+  dans le module Vulnérabilités, le service intercale entre ses passages habituels (toutes les 15 secondes) des passages
+  courts toutes les 3 secondes, limités à la demande de versions CPE et bornés à 30 secondes. Aucun appel de plus hors de
+  ces moments, rien pendant une maintenance, une intervention ou une mise à jour, rien si le flux « veille-vulnerabilites »
+  est fermé. L'application ne lance toujours pas l'exécutant et n'écrit rien sur le serveur. Sans effet avant la livraison
+  de la recherche CPE par le module Vulnérabilités.
 
 ### Changé
 
