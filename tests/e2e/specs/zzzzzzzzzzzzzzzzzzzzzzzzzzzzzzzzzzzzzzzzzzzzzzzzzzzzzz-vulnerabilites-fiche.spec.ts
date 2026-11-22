@@ -50,6 +50,7 @@ const FICHE = {
   vecteurs: [{ source: 'nvd', cve: CVE, brut: FAILLE.cvss31.vecteur, score: 9.8 }],
   recommandations: {
     tenable: null,
+    tenableRegroupes: [],
     kev: [],
     kevTronque: false,
     versionsNvd: [

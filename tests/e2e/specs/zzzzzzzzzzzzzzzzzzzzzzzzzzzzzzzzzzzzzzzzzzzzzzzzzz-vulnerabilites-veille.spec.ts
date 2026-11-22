@@ -106,6 +106,7 @@ const FICHE_CVE = {
   vecteurs: [],
   recommandations: {
     tenable: null,
+    tenableRegroupes: [],
     kev: [],
     kevTronque: false,
     versionsNvd: [],
