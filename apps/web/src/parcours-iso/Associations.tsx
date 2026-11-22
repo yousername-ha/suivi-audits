@@ -125,6 +125,7 @@ export function AssociationsSousAction({ smsi, sousAction }: { smsi: string; sou
                 <TextInput
                   label="Motif du retrait"
                   description="5 caractères au moins ; l’historique est conservé."
+                  descriptionProps={{ 'data-aide-permanente': true }}
                   value={retrait.motif}
                   onChange={(e) => setRetrait({ ref: a.ref, motif: e.currentTarget.value })}
                 />

@@ -111,6 +111,8 @@ export function RechercheProduitCpe({
       <Select
         label="Rechercher dans le dictionnaire CPE (NVD)"
         description="Deux caractères au moins : éditeur, produit ou intitulé, sans tenir compte de la casse ni des accents. La recherche se fait dans la liste copiée sur le serveur, sans appel extérieur."
+        // Contrainte de saisie : jamais repliée derrière le bouton d'aide des fiches.
+        descriptionProps={{ 'data-aide-permanente': true }}
         placeholder="Par exemple : nom du produit"
         searchable
         clearable

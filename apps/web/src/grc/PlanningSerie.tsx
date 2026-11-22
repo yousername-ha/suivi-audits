@@ -157,6 +157,7 @@ export function PlanningSerie({
       <TagsInput
         label="Dates exclues (AAAA-MM-JJ)"
         description="Saisissez une date puis Entrée."
+        descriptionProps={{ 'data-aide-permanente': true }}
         value={jours}
         disabled={readonly}
         onChange={(v) => onChange({ ...recurrence, excludedDays: [...new Set(v.filter(validDate))].sort() })}

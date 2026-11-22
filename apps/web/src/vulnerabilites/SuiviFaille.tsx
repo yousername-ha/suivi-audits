@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Suivi d'une faille (ADR 0100, point 10 ; lot V4b), dans la fiche d'un constat de Tenable ou d'une faille déclarée : état
    et marques, proposition « corrigée » à confirmer ou à refuser, changement d'état avec note (obligatoire pour « risque
    accepté » et « non concernée ») et date de revue, historique, actions liées (détail des seules actions lisibles),
@@ -528,19 +529,21 @@ export function SuiviFaille({ nature, id, source }: { nature: NatureSuivi; id: s
               data={(perimetresLecture.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
               comboboxProps={{ withinPortal: false }}
             />
-            <TextInput
-              label="Rechercher une action"
-              maxLength={200}
-              value={lien.saisie}
-              onChange={(e) => setLien({ ...lien, saisie: e.currentTarget.value })}
-            />
-            <Button
-              variant="default"
-              disabled={!lien.perimetre}
-              onClick={() => setLien({ ...lien, recherche: lien.saisie.trim(), action: null })}
-            >
-              Rechercher
-            </Button>
+            <BarreFiltres label="Rechercher une action">
+              <TextInput
+                label="Rechercher une action"
+                maxLength={200}
+                value={lien.saisie}
+                onChange={(e) => setLien({ ...lien, saisie: e.currentTarget.value })}
+              />
+              <Button
+                variant="default"
+                disabled={!lien.perimetre}
+                onClick={() => setLien({ ...lien, recherche: lien.saisie.trim(), action: null })}
+              >
+                Rechercher
+              </Button>
+            </BarreFiltres>
           </Group>
           <Select
             allowDeselect={false}

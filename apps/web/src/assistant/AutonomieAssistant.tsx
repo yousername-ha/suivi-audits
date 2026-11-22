@@ -524,6 +524,7 @@ export function MethodesAssistant({ profils }: { profils: Profils }) {
         <Textarea
           label="Texte de la nouvelle fiche"
           description="Ce texte part chez le fournisseur du modèle : n’y écrivez aucune donnée personnelle."
+          descriptionProps={{ 'data-aide-permanente': true }}
           value={contenu}
           onChange={(e) => setContenu(e.currentTarget.value)}
           maxLength={METHODE_CONTENU_MAX}

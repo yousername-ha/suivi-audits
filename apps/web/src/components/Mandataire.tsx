@@ -100,6 +100,7 @@ export function MandatairePanel({ onDirty }: { onDirty?: (modifie: boolean) => v
         <TextInput
           label="Adresse du mandataire"
           description="http://hôte:port : nom ou adresse IP (IPv6 entre crochets), port obligatoire. Ni identifiant, ni chemin."
+          descriptionProps={{ 'data-aide-permanente': true }}
           placeholder="http://mandataire.exemple:3128"
           value={v.adresse}
           onChange={(e) => set('adresse', e.currentTarget.value)}

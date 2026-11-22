@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lot V5) : écran « Machines ». Machines lues dans Tenable Security Center (ou importées
    d'un scan Nessus, lot N1 : marquées de leur source, une machine vue par les deux apparaît deux fois), visibles à
    travers les droits du périmètre de chacune (une machine sans périmètre n'est visible qu'avec le droit d'administrer le
@@ -58,10 +59,11 @@ import {
   type VueMachines,
   type ZoneParc,
 } from '@suivi/shared';
-import { DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { useCan, usePreferences } from '../session';
@@ -143,6 +145,8 @@ export function FiltresScoresTenable({
   acr: FiltreAcr | '';
   aes: FiltreAes | '';
   onChange: (f: { acr?: FiltreAcr | ''; aes?: FiltreAes | '' }) => void;
+  /** Nombre de ces filtres renseignés, lu par la boîte d'outils pour sa pastille « filtres actifs ». */
+  filtresActifs?: number;
 }) {
   return (
     <>
@@ -789,15 +793,6 @@ function OngletMachines() {
     <>
       <Stack>
         <Group align="center" gap="md">
-          <SegmentedControl
-            value={vue}
-            onChange={(v) => regler({ vue: v as VueMachines })}
-            data={[
-              { value: 'liste', label: 'Liste' },
-              { value: 'parc', label: 'Parc' },
-            ]}
-            aria-label="Présentation des machines"
-          />
           {vue === 'parc' && (
             <SegmentedControl
               value={echelle}
@@ -819,7 +814,16 @@ function OngletMachines() {
         </Group>
         {vue === 'liste' && machines.data && <BandeauSansRole n={machines.data.sansRole} />}
         <form onSubmit={chercher} role="search">
-          <Group align="flex-end">
+          <BarreFiltres label="Machines">
+            <SegmentedControl
+              value={vue}
+              onChange={(v) => regler({ vue: v as VueMachines })}
+              data={[
+                { value: 'liste', label: 'Liste' },
+                { value: 'parc', label: 'Parc' },
+              ]}
+              aria-label="Présentation des machines"
+            />
             <TextInput
               label="Rechercher"
               description="Nom, adresse IP (début ou adresse exacte) ou système."
@@ -864,9 +868,14 @@ function OngletMachines() {
               onChange={(e) => changer({ finSupport: e.currentTarget.checked })}
             />
             {tenable && (
-              <FiltresScoresTenable acr={filtres.acr ?? ''} aes={filtres.aes ?? ''} onChange={(f) => changer(f)} />
+              <FiltresScoresTenable
+                acr={filtres.acr ?? ''}
+                aes={filtres.aes ?? ''}
+                onChange={(f) => changer(f)}
+                filtresActifs={Number(!!filtres.acr) + Number(!!filtres.aes)}
+              />
             )}
-          </Group>
+          </BarreFiltres>
         </form>
         {vue === 'liste' && modifier && (
           <Group align="flex-end" role="group" aria-label="Affectation des machines choisies">
@@ -978,7 +987,7 @@ export function MachinesPage() {
     );
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Machines"
         description="Machines lues dans Tenable Security Center ou importées d’un scan Nessus, chacune marquée de sa source (une machine vue par les deux apparaît deux fois), de la plus critique à la moins critique : exploitation avérée d’abord, puis rôle (front, back applicatif, base de données), puis nombre de failles critiques et élevées. Vous voyez celles des périmètres que vous pouvez lire ; une machine sans périmètre n’est visible qu’avec le droit d’administrer le module. Le périmètre d’une machine vient de son dépôt Tenable relié (onglet « Dépôts Tenable »), sauf s’il est indiqué à la main, ce qui prime ; une machine importée d’un scan Nessus n’a pas de dépôt : son périmètre s’indique ici. Le rôle et le périmètre sont indiqués ici, une machine à la fois ou en masse ; la fiche d’une machine relie ses produits surveillés."
       />

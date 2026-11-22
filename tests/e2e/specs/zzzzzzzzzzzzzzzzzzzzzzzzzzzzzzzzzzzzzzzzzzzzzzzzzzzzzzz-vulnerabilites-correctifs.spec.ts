@@ -8,7 +8,7 @@
    requêtes sur des données rangées : apps/api/test/vulnerabilites-correctifs.test.ts. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 const CLE = '0123456789abcdef';
 const SOLUTION = 'Upgrade to Exemple Web 2.0 or later (fictif).';
@@ -115,6 +115,7 @@ for (const [mode, scheme] of [
       await expect(page.getByText('14 machines lues, et d’autres que vous ne lisez pas')).toBeVisible();
       await expect(page.getByText('3 à exploitation avérée, dont 1 sans correctif connu')).toBeVisible();
       await page.getByRole('textbox', { name: 'Rechercher un correctif', exact: true }).fill('upgrade');
+      await ouvrirFiltres(page, 'Priorité du correctif');
       await expect(page.getByRole('combobox', { name: 'Priorité du correctif', exact: true })).toBeVisible();
       await axe();
       const ouvrir = page.getByRole('button', { name: SOLUTION, exact: true });
@@ -133,6 +134,7 @@ for (const [mode, scheme] of [
 
       // Filtre « Fin de support » des failles, repris de l'adresse (lien de la tuile).
       await page.goto('/vulnerabilites/failles?finSupport=oui');
+      await ouvrirFiltres(page, /^Fin de support/);
       await expect(page.getByRole('checkbox', { name: /^Fin de support/ })).toBeChecked();
       await expect(page.getByText('Aucune faille détectée ne correspond')).toBeVisible();
       await axe();

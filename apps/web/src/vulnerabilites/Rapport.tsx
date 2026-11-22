@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lot S2) : rapport de pilotage pour la direction et l'audit. La plateforme ne produit
    aucun PDF côté serveur et le lot n'ajoute aucune dépendance : le rapport est une page imprimable (A4, feuille
    d'impression de packages/ui/src/neon-tendances.css : ni menu ni bouton à l'impression, lisible en noir et blanc), que le
@@ -14,9 +15,10 @@ import {
   tableauxRapport,
   type TendancesDto,
 } from '@suivi/shared';
-import { ErrorAlert, Page, PageHeader } from '@suivi/ui';
+import { ErrorAlert, Page } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useId, useState } from 'react';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { download, get } from '../api';
 import { useCan } from '../session';
 import {
@@ -148,7 +150,7 @@ export function RapportPage() {
   return (
     <Page>
       <div className="rapport-ecran">
-        <PageHeader
+        <EnteteVulnerabilites
           title="Rapport de pilotage"
           description="Rapport mensuel (ou d’une période libre) pour la direction et l’audit : niveau d’alerte et son évolution, failles critiques, délais de correction, dépassements, exceptions, tendances, alertes critiques et état des sources. Le navigateur l’enregistre en PDF par « Imprimer » ; ses tableaux s’exportent en CSV. Chaque production est tracée au journal."
         />
@@ -162,7 +164,7 @@ export function RapportPage() {
               { value: 'libre', label: 'Période libre' },
             ]}
           />
-          <Group align="flex-end">
+          <BarreFiltres label="Affichage et filtres">
             {mode === 'mois' ? (
               <Select
                 label="Mois"
@@ -205,7 +207,7 @@ export function RapportPage() {
             <Button onClick={() => setDemande(urlRapport(q, 'json'))} loading={rapport.isFetching}>
               Produire le rapport
             </Button>
-          </Group>
+          </BarreFiltres>
           <Text size="xs" c="dimmed">
             Le rapport ne contient aucun nom de machine, de domaine ni d’adresse. Le détail des machines n’est pas
             proposé. Toute personne qui lit le module peut le produire, pour ce qu’elle lit (règle à confirmer par le

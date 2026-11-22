@@ -6,7 +6,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune action, ni sur le serveur ni dans l'application.
+**En bref.** Refonte d'apparence (« Neon compacte ») : aucune migration, aucune dépendance nouvelle, aucun changement du
+contrat de l'API, aucune commande sur le serveur. À la mise à jour, l'interface est reconstruite avec l'image.
+Les préférences explicites de taille et le mode mural sont conservés. L'essai « boîte d'outils claire ou bleu nuit » de
+« Mon compte » disparaît : la boîte est bleu nuit dans les deux thèmes.
+Dossiers : [fiches sobres et harmonisation du 22/11/2026](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md),
+[intégration et recette sur pile réelle du 22/11/2026](docs/refonte-neon/integration-2026-11-22/README.md),
+[dossier préparé par la session « Codex »](docs/refonte-neon/implementation-interface-2026-11-21/README.md).
+
+Autres changements de cette version :
 
 - Correctif de l'interface du module Vulnérabilités (page « Machines ») : sans migration.
 - Migration automatique additive `100` (colonne `aes` des machines du module Vulnérabilités, vide au départ), sans reprise
@@ -82,8 +90,61 @@ Aucune action, ni sur le serveur ni dans l'application.
   sont journalisés. La demande des versions d'un produit choisi fait connaître ce produit à la NVD (texte du flux mis à
   jour) ; la copie complète l'évite (session « Module surveillance vulnérabilités SMSI »).
 
+### Changé
+
+- **Fiches sobres** (direction validée par le RSSI le 22/11/2026, habillage de la session « Codex », intégration et
+  recette sur pile réelle par la session Coeur — [détails](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md)) :
+  fenêtres à fond blanc opaque, champs rectangulaires compacts, séparateurs discrets, validation en contour bleu pétrole,
+  « Annuler » et « Fermer » neutres dans toutes les fenêtres, suppressions en rouge ; même composition en sombre.
+  L'explication d'un champ se replie derrière un bouton « Aide sur ce champ » (Échap la referme, le lecteur d'écran la
+  lit toujours) ; un avertissement, un effet irréversible ou un format de saisie restent affichés, comme les erreurs.
+- **Fiches longues sur écran de bureau** : une fenêtre de formulaire trop haute s'élargit d'abord et range ses champs
+  sur plusieurs colonnes (un code, une date ou un état n'occupent que leur place) ; elle n'est découpée en parties que
+  si cela ne suffit pas. En 1920 × 1080, la création d'un risque tient en une seule vue (quatre parties en 1280 × 720
+  avant, deux maintenant). Une partie sans titre porte le libellé de son premier champ (« Échéance… ») au lieu de
+  « Informations (suite 2) ». La fenêtre « Sécurité » se découpe au lieu de défiler. Un journal ou un long tableau garde
+  son défilement dans sa fenêtre, pour conserver ses en-têtes de colonnes.
+- **Fiches longues en parties** : une fiche trop haute pour l'écran se lit en parties nommées, sans défilement
+  vertical de la fenêtre, avec ses boutons toujours visibles en bas ; les champs restent montés dans leur formulaire
+  (valeurs, contraintes et enregistrement inchangés). La fenêtre prend la hauteur de son contenu et les parties sont
+  équilibrées ; les intitulés viennent des sections de la fiche (« Informations », « Analyse », « Liens et preuves »
+  pour un risque), jamais « Suite 2 ». Un champ d'une autre partie atteint au clavier ou par son libellé affiche sa
+  partie. Une fenêtre dont le contenu ne peut pas être découpé sans risque (document intégré, bloc plus haut qu'une
+  partie) garde son défilement habituel. Prototype de la session « Codex », moteur repris et recetté sur pile réelle
+  par la session Coeur ([détails](docs/refonte-neon/integration-2026-11-22/README.md)).
+- **Commandes en contour** : boutons transparents à contour bleu/cyan, « Annuler » discret, couleurs métier (rouge de
+  suppression, états) conservées. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **Proportions des formulaires** : codes, dates, états et responsables reçoivent des largeurs adaptées. Les aides passent
+  sous les saisies pour aligner les champs voisins ; les listes longues se replient dans un menu borné. Les fiches lg/xl
+  deviennent moins larges, avec des colonnes adaptées à leur espace réel. Les grands graphiques et tableaux gardent leur
+  place utile. [Détails et recette](docs/refonte-neon/proportions-fenetres-2026-11-21/README.md) ; aucune migration,
+  dépendance ou modification du contrat API.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **Harmonisation des outils et fenêtres** : vues en icônes, recherche et filtres réunis dans la même boîte de verre
+  bleu nuit sur les deux thèmes. Les écrans existants conservent leurs champs, callbacks et soumissions ; les filtres
+  fermés restent dans leur formulaire. Fenêtres centrées et moins volumineuses, champs courts en colonnes, aides et
+  historique repliés, actions maintenues en bas et pictogrammes centrés. Détails, captures fictives et contrôles dans le
+  [dossier de reprise](docs/refonte-neon/harmonisation-plateforme-2026-11-21/README.md). Aucune migration ou dépendance ;
+  recette Docker/API réelle et validation des images à effectuer.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **Densité de travail** : le normal devient plus resserré que l’ancien compact, et le compact resserre encore le cadre,
+  les commandes et les listes. Les profils partagent une source de jetons et du CSS statique compatible avec la CSP.
+  L’agrandissement automatique des grands écrans est réservé au mode mural ; les tailles choisies manuellement restent
+  disponibles. Le planning adapte sa largeur sans étirer textes et lignes, les explications des pages Vulnérabilités se
+  replient dans une aide contextuelle, et les raccourcis en pictogrammes gardent leurs noms accessibles et leurs droits.
+  Lot fondé sur la version 7.5.0 après analyse d’une vidéo privée, absente du dépôt et des preuves publiques.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **En-tête et apparence** : signature d’organisation et pastille « En direct » retirées, bascule de thème en icônes
+  dans l’en-tête et le pied de menu, onglets et actions principales d’ajout en verre transparent. Les couleurs métier
+  restent conservées. Le flux temps réel continue de fonctionner ; s'il est coupé plus de huit secondes, l'en-tête
+  affiche « Hors ligne » (ajout de la session Coeur : la coupure n'était plus visible).
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+
 ### Corrigé
 
+- **Barres d'outils** : une barre qui ne contient qu'une recherche ne porte plus le même nom accessible que son champ
+  (dix écrans : guide, fournisseurs, registres, cartographie…). Les lecteurs d'écran n'annoncent plus deux éléments
+  du même nom.
 - **Pages plus rapides pour une personne qui n'est pas administrateur** (défauts PERF-06, PERF-11 et PERF-15 du banc de
   performance du 21/11/2026). La liste des registres, appelée par toutes les pages, vérifiait les droits et décrivait
   chaque registre l'un après l'autre : environ 2 000 lectures de la base et 2 secondes d'attente par page pour un RSSI ou

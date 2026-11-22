@@ -7,7 +7,7 @@
    il ne peut prendre aucune alerte en compte (lot V6b, décision B du 18/11/2026). */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 test('Vulnérabilités : onglet « Alertes », aucune fenêtre d’alerte critique sur une pile sans faille', async ({
   browser,
@@ -44,6 +44,8 @@ test('Vulnérabilités : onglet « Alertes », aucune fenêtre d’alerte critiq
     await expect(page.locator('th', { hasText: /^Présence$/ })).toBeVisible();
     await expect(page.locator('th', { hasText: /^État$/ })).toBeVisible();
     await expect(page.getByText('Aucune alerte ne correspond.')).toBeVisible();
+    // L'explication de la page est repliée dans son aide depuis la refonte du 22/11/2026.
+    await page.getByText('À propos de cette page', { exact: true }).click();
     await expect(page.getByText(/Seul le RSSI peut prendre en compte une alerte\./)).toBeVisible();
     // Aucun rappel d'alerte critique dans l'en-tête du module, aucune fenêtre.
     await expect(page.getByText(/alertes? critiques? en cours/)).toHaveCount(0);
@@ -53,8 +55,10 @@ test('Vulnérabilités : onglet « Alertes », aucune fenêtre d’alerte critiq
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
 
     // Filtres : état et niveau.
+    await ouvrirFiltres(page, 'État');
     await page.getByRole('combobox', { name: 'État', exact: true }).click();
     await page.getByRole('option', { name: 'Toutes', exact: true }).click();
+    await ouvrirFiltres(page, 'Niveau');
     await page.getByRole('combobox', { name: 'Niveau', exact: true }).click();
     await page.getByRole('option', { name: 'Alerte critique', exact: true }).click();
     await expect(page.getByText('Aucune alerte ne correspond.')).toBeVisible();
@@ -63,7 +67,9 @@ test('Vulnérabilités : onglet « Alertes », aucune fenêtre d’alerte critiq
     // Lien du résumé des notifications : onglet filtré sur les alertes simples ouvertes.
     await page.goto('/vulnerabilites/alertes?niveau=simple&etat=ouverte');
     await expect(page.getByRole('heading', { name: 'Alertes', level: 1 })).toBeVisible();
+    await ouvrirFiltres(page, 'État');
     await expect(page.getByRole('combobox', { name: 'État', exact: true })).toHaveValue('Ouvertes');
+    await ouvrirFiltres(page, 'Niveau');
     await expect(page.getByRole('combobox', { name: 'Niveau', exact: true })).toHaveValue('Alerte');
     await expect(page.getByText('Aucune alerte ne correspond.')).toBeVisible();
 

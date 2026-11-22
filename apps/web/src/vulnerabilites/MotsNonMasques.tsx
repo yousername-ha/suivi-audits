@@ -14,9 +14,10 @@ import {
   type ReglageMasqueOut,
   refusMotNonMasque,
 } from '@suivi/shared';
-import { ErrorAlert, Page, PageHeader } from '@suivi/ui';
+import { ErrorAlert, Page } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { EnteteVulnerabilites } from './EnteteVulnerabilites';
 import { api, errorMessage, get } from '../api';
 import { useCan } from '../session';
 
@@ -108,7 +109,7 @@ export function MotsNonMasquesPage() {
     );
   return (
     <Page>
-      <PageHeader
+      <EnteteVulnerabilites
         title="Mots à ne pas masquer"
         description="Avant tout envoi au fournisseur du modèle de l’assistant, la plateforme remplace tout nom, adresse ou identifiant de machine de l’inventaire par un repère (« M-001 ») ou par « [machine] ». Quand une machine porte le nom d’une application, ce mot est masqué partout : la personne lit alors un nom de serveur là où elle parlait de l’application."
       />

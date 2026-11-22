@@ -471,6 +471,7 @@ export function ReglagesAssistantPanel({
                   <Textarea
                     label="Contexte de l’organisation"
                     description="Relu par l’assistant à chaque ronde et à chaque conversation : périmètre de certification, vocabulaire, priorités de l’année. Ce texte part chez le fournisseur du modèle : n’y écrivez aucune donnée personnelle."
+                    descriptionProps={{ 'data-aide-permanente': true }}
                     value={saisie.contexte}
                     onChange={(e) => changer({ contexte: e.currentTarget.value })}
                     maxLength={CONTEXTE_ASSISTANT_MAX}

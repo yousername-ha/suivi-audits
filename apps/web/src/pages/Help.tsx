@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 import { Anchor, Card, Stack, Text, TextInput, Title } from '@mantine/core';
 import { Page, PageHeader } from '@suivi/ui';
 import { useState } from 'react';
@@ -23,7 +24,13 @@ export function HelpPage() {
         description={`Documentation ${HELP_VERSION} · Application ${me.version}`}
       />
       <Stack>
-        <TextInput label="Rechercher dans le guide" value={search} onChange={(e) => setSearch(e.currentTarget.value)} />
+        <BarreFiltres label="Rechercher dans le guide">
+          <TextInput
+            label="Rechercher dans le guide"
+            value={search}
+            onChange={(e) => setSearch(e.currentTarget.value)}
+          />
+        </BarreFiltres>
         <Text size="sm" c="dimmed">
           Les fonctions disponibles dépendent de vos droits. Ce guide décrit les écrans livrés, pas une attestation de
           conformité.
