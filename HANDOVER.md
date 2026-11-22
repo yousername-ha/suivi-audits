@@ -1,5 +1,14 @@
 # Reprendre Suivi des audits
 
+> **22/11/2026 — refonte Neon compacte intégrée et recettée sur pile réelle (session Coeur)** : branche
+> `claude/refonte-neon-compacte`, PR de travail vers `claude-suivi-smsi`, **sans fusion ni déploiement**.
+> [Résumé technique](docs/refonte-neon/integration-2026-11-22/README.md) et [recette](docs/refonte-neon/integration-2026-11-22/RECETTE.md).
+> Le dossier Codex est repris ; le moteur des fiches en parties est réécrit (hauteur au contenu, parties nommées, pied
+> réservé, accrochage natif, repli sur le défilement habituel quand le découpage n'est pas sûr) et trois défauts de la
+> barre d'outils sont corrigés. **Attendu du RSSI** : valider les 68 captures de référence régénérées et les tests de
+> bout en bout modifiés, puis décider de la fusion. À lire avant toute reprise de ce lot.
+>
+
 > **22/11/2026 — dossier d’implémentation pour l’IA** : [point d’entrée](docs/refonte-neon/implementation-interface-2026-11-21/README.md),
 > [prompt complet](docs/refonte-neon/implementation-interface-2026-11-21/PROMPT-IA.md) et résumé technique avec neuf captures natives.
 > Sources, règles et limites regroupées pour comparer l’existant avant report. Proportions `2742e16`, commandes bleu/cyan

@@ -6,18 +6,25 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-Aucune migration, nouvelle dépendance ou modification du contrat API. Reconstruire le frontend lors de l’intégration du code.
-Les préférences explicites de taille et le mode mural sont conservés. Contrôles locaux, captures, mesures et limites dans le
-[dossier du lot](docs/refonte-neon/densite-2026-11-21/README.md) ; recette Docker/API réelle à effectuer avant livraison. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+**En bref.** Refonte d'apparence (« Neon compacte ») : aucune migration, aucune dépendance nouvelle, aucun changement du
+contrat de l'API, aucune commande sur le serveur. À la mise à jour, l'interface est reconstruite avec l'image.
+Les préférences explicites de taille et le mode mural sont conservés. L'essai « boîte d'outils claire ou bleu nuit » de
+« Mon compte » disparaît : la boîte est bleu nuit dans les deux thèmes.
+Dossiers : [intégration et recette sur pile réelle du 22/11/2026](docs/refonte-neon/integration-2026-11-22/README.md),
+[dossier préparé par la session « Codex »](docs/refonte-neon/implementation-interface-2026-11-21/README.md).
 
 ### Changé
 
-- **Fiches longues et commandes — préparation d’intégration** : prototype de mini-menu conservant les champs montés et
-  leur formulaire, avec actions en bas ; commandes transparentes en contour bleu/cyan. Le découpage, les sections peu
-  remplies et les pieds atypiques restent à recetter avant intégration finale. [Dossier pour l’IA, prompt, neuf captures
-  et résumé technique](docs/refonte-neon/implementation-interface-2026-11-21/README.md), remis le 22/11/2026 ; aucune migration,
-  dépendance ou modification API. Aucune validation humaine, fusion ou publication de version.
-  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **Fiches longues en parties** : une fiche trop haute pour l'écran se lit en parties nommées, sans défilement
+  vertical de la fenêtre, avec ses boutons toujours visibles en bas ; les champs restent montés dans leur formulaire
+  (valeurs, contraintes et enregistrement inchangés). La fenêtre prend la hauteur de son contenu et les parties sont
+  équilibrées ; les intitulés viennent des sections de la fiche (« Informations », « Analyse », « Liens et preuves »
+  pour un risque), jamais « Suite 2 ». Un champ d'une autre partie atteint au clavier ou par son libellé affiche sa
+  partie. Une fenêtre dont le contenu ne peut pas être découpé sans risque (document intégré, bloc plus haut qu'une
+  partie) garde son défilement habituel. Prototype de la session « Codex », moteur repris et recetté sur pile réelle
+  par la session Coeur ([détails](docs/refonte-neon/integration-2026-11-22/README.md)).
+- **Commandes en contour** : boutons transparents à contour bleu/cyan, « Annuler » discret, couleurs métier (rouge de
+  suppression, états) conservées. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
 - **Proportions des formulaires** : codes, dates, états et responsables reçoivent des largeurs adaptées. Les aides passent
   sous les saisies pour aligner les champs voisins ; les listes longues se replient dans un menu borné. Les fiches lg/xl
   deviennent moins larges, avec des colonnes adaptées à leur espace réel. Les grands graphiques et tableaux gardent leur
@@ -38,13 +45,17 @@ Les préférences explicites de taille et le mode mural sont conservés. Contrô
   replient dans une aide contextuelle, et les raccourcis en pictogrammes gardent leurs noms accessibles et leurs droits.
   Lot fondé sur la version 7.5.0 après analyse d’une vidéo privée, absente du dépôt et des preuves publiques.
   _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
-- **En-tête et apparence** : signature d’organisation et badge Live retirés visuellement, bascule de thème en icônes dans
-  l’en-tête et le pied de menu, onglets et actions principales d’ajout en verre transparent. Les couleurs métier restent
-  conservées. Le flux temps réel continue de fonctionner ; les parcours concernés attendent toujours sa connexion via
-  l’attribut `data-temps-reel`. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **En-tête et apparence** : signature d’organisation et pastille « En direct » retirées, bascule de thème en icônes
+  dans l’en-tête et le pied de menu, onglets et actions principales d’ajout en verre transparent. Les couleurs métier
+  restent conservées. Le flux temps réel continue de fonctionner ; s'il est coupé plus de huit secondes, l'en-tête
+  affiche « Hors ligne » (ajout de la session Coeur : la coupure n'était plus visible).
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
 
 ### Corrigé
 
+- **Barres d'outils** : une barre qui ne contient qu'une recherche ne porte plus le même nom accessible que son champ
+  (dix écrans : guide, fournisseurs, registres, cartographie…). Les lecteurs d'écran n'annoncent plus deux éléments
+  du même nom.
 - **Vulnérabilités, Machines → Périmètres** : le bilan par périmètre et les options d’affectation utilisent des clés de
   cache distinctes. Leur collision pouvait fournir un tableau à la place de l’objet du bilan et provoquer
   `e.perimetres is not iterable`. Les sélecteurs de Machines et de Surface externe partagent désormais la clé propre aux

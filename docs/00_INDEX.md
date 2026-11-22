@@ -2,6 +2,10 @@
 
 ## Jeu court à lire d'abord (18/10/2026)
 
+0. [Refonte Neon compacte — intégration et recette du 22/11/2026](refonte-neon/integration-2026-11-22/README.md) :
+   comparaison avec la 7.5.1, moteur des fiches en parties, défauts corrigés, recette de bout en bout sur pile réelle,
+   captures natives et liste de ce que le RSSI doit valider avant fusion.
+
 0. [Dossier d’implémentation pour l’IA — remis le 22/11/2026](refonte-neon/implementation-interface-2026-11-21/README.md) :
    point d’entrée, prompt prêt à copier, sources, captures natives et règles récentes. Mini-menus sans défilement et
    boutons en contour : prototype à finaliser dans la version actuelle, limites et recette clairement distinguées.
