@@ -313,6 +313,7 @@ export function CriteresFournisseurs() {
             <Textarea
               label="Motif"
               description="5 caractères au moins ; conservé dans l’historique du critère."
+              descriptionProps={{ 'data-aide-permanente': true }}
               value={formulaire.reason}
               onChange={(e) => champ('reason', e.currentTarget.value)}
             />
@@ -360,6 +361,7 @@ export function CriteresFournisseurs() {
             <Textarea
               label="Motif"
               description="5 caractères au moins."
+              descriptionProps={{ 'data-aide-permanente': true }}
               value={retrait.motif}
               onChange={(e) => setRetrait({ ...retrait, motif: e.currentTarget.value })}
             />

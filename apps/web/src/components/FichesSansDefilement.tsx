@@ -4,8 +4,10 @@
      remplies de façon équilibrée et la fenêtre ne s'étire pas sur toute la hauteur de l'écran.
    - Intitulés : une section déclarée par le formulaire (attribut data-fiche-section, sur le titre qui l'ouvre) commence
      une partie et la nomme ; sinon le titre placé en tête de partie, sinon « … (suite) » (voir fiches-parties.ts).
+   - Élargissement : une fenêtre de formulaire trop haute s'élargit d'abord sur un écran de bureau (data-fiche-etendue).
    - Repli : si le découpage n'est pas sûr (document intégré, bloc plus haut qu'une partie, attribut
-     data-fiche-defilement posé par l'écran), la fenêtre garde son défilement vertical habituel. */
+     data-fiche-defilement ou classe fiche-defilement posés par l'écran pour une fenêtre de consultation), la fenêtre
+     garde son défilement vertical habituel. Il en va de même d'une fenêtre faite surtout d'un long tableau. */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { nommerParties, titreCourt, trouverPied, type RepereDePartie } from './fiches-parties';
@@ -17,6 +19,10 @@ interface Pagination {
 
 /** Contenus que la fragmentation ne sait pas découper : la fiche qui en contient un garde son défilement. */
 const INDIVISIBLES = 'iframe, object, embed, canvas, video, [data-fiche-defilement]';
+/** Fenêtre de consultation déclarée par l'écran (classe du cadre) : journal ou long tableau, jamais découpé. */
+const CONSULTATION = '.fiche-defilement';
+/** Un tableau qui occupe plus de cette part de la hauteur du contenu fait garder son défilement à la fenêtre. */
+const PART_TABLEAU = 0.6;
 /** Un texte en gras ne vaut titre de section que hors des tableaux, commandes, libellés et messages. */
 const HORS_TITRE = 'td, th, li, button, a, label, summary, [role="alert"], .mantine-Alert-root, .mantine-Badge-root';
 const TITRE_MAX = 80;
@@ -113,7 +119,7 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
       modifiees.clear();
     };
     /** Repli sur le défilement habituel ; la raison est posée sur le cadre (data-fiche-repli) pour la recette. */
-    const defilementClassique = (raison?: 'indivisible' | 'tronque' | 'chevauchement', detail?: string) => {
+    const defilementClassique = (raison?: 'indivisible' | 'tableau' | 'tronque' | 'chevauchement', detail?: string) => {
       retablir();
       if (raison) cadre.setAttribute('data-fiche-repli', detail ? `${raison} (${detail})` : raison);
       total = 0;
@@ -150,8 +156,16 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
           return;
         }
       }
-      if (corps.querySelector(INDIVISIBLES)) {
+      if (cadre.matches(CONSULTATION) || corps.querySelector(INDIVISIBLES)) {
         defilementClassique('indivisible');
+        return;
+      }
+      // Un long tableau n'est pas une fiche : découpé, il perdrait ses en-têtes de colonnes d'une partie à l'autre.
+      const hauteurContenu = corps.scrollHeight;
+      if (
+        [...corps.querySelectorAll<HTMLElement>('table')].some((t) => t.offsetHeight > hauteurContenu * PART_TABLEAU)
+      ) {
+        defilementClassique('tableau');
         return;
       }
       // Un encadré reste entier s'il est petit devant une partie ; plus grand, il doit pouvoir se poursuivre sur la

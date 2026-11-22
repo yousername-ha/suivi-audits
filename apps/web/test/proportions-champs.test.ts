@@ -64,6 +64,22 @@ describe('proportions des champs et ordre de lecture', () => {
     expect(html).not.toContain('hidden=""');
   });
 
+  it('garde affichée une information indispensable : pas de bouton d’aide, même association accessible', () => {
+    const html = rendu(
+      createElement(TextInput, {
+        id: 'motif-recette',
+        label: 'Motif',
+        description: '5 caractères au moins.',
+        descriptionProps: { 'data-aide-permanente': true },
+      }),
+    );
+    expect(html).not.toContain('champ-aide-bouton');
+    expect(html).toMatch(/data-aide-permanente="(true)?"/);
+    expect(html).toContain('id="motif-recette-description"');
+    expect(html).toContain('aria-describedby="motif-recette-description"');
+    expect(html).toContain('5 caractères au moins.');
+  });
+
   it('respecte un ordre explicite quand un écran place une précision avant son champ', () => {
     const html = rendu(
       createElement(TextInput, {

@@ -1,9 +1,12 @@
-/* Fiches longues en parties (refonte Neon compacte, 22/11/2026) : une fiche trop haute pour l'écran se lit en parties
-   nommées, sans défilement vertical ; le formulaire, ses valeurs et ses boutons restent ceux de l'écran métier.
-   Cas vérifiés sur la pile réelle : fiche de risque (sections déclarées), intitulés ni génériques ni répétés, aucun
-   champ tronqué ou recouvert, bouton d'enregistrement visible dans chaque partie, champ d'une autre partie atteint
-   directement, valeurs conservées, clavier, redimensionnement, et repli sur le défilement habituel d'une fenêtre dont
-   un bloc ne peut pas être découpé. Aucune donnée créée : la fiche n'est pas enregistrée. */
+/* Fiches longues en parties (refonte Neon compacte et fiches sobres, 22/11/2026) : une fiche trop haute pour l'écran
+   s'élargit d'abord (écran de bureau), puis se lit en parties nommées, sans défilement vertical ; le formulaire, ses
+   valeurs et ses boutons restent ceux de l'écran métier.
+   Cas vérifiés sur la pile réelle : fiche de risque (élargie, sections déclarées), intitulés ni génériques ni répétés,
+   aucun champ tronqué ou recouvert, bouton d'enregistrement visible dans chaque partie, champ d'une autre partie
+   atteint directement, valeurs conservées, clavier, redimensionnement (une seule vue sur un grand écran), fenêtre
+   « Sécurité » sans champ tronqué, aide contextuelle d'un champ (repliée, associée au champ, ouverte, refermée par
+   Échap sans fermer la fenêtre) et liste dynamique de la fiche d'un fournisseur. Aucune donnée créée : rien n'est
+   enregistré. */
 import { expect, test, type Page } from '@playwright/test';
 import { sessionAdmin, watchPage } from '../helpers';
 
@@ -53,6 +56,9 @@ async function etatFenetre(page: Page) {
         .replace(/^\d+/, '')
         .trim(),
       hauteur: Math.round(rc.height),
+      largeur: Math.round(rc.width),
+      etendue: cadre.hasAttribute('data-fiche-etendue'),
+      repli: cadre.getAttribute('data-fiche-repli'),
       dansEcran: rc.top >= 0 && rc.bottom <= innerHeight + 1,
       defileVerticalement: corps.scrollHeight > corps.clientHeight + 2,
       alignee: decoupee
@@ -67,7 +73,9 @@ async function etatFenetre(page: Page) {
   });
 }
 
-test('Fiches en parties : risque découpé, nommé, navigable, sans champ tronqué ; repli sûr', async ({ browser }) => {
+test('Fiches en parties : risque élargi, découpé, nommé, navigable ; aide d’un champ ; liste dynamique', async ({
+  browser,
+}) => {
   const ctx = await browser.newContext({
     ignoreHTTPSErrors: true,
     locale: 'fr-FR',
@@ -86,6 +94,9 @@ test('Fiches en parties : risque découpé, nommé, navigable, sans champ tronqu
     // Intitulés : la première partie, la section déclarée « Analyse », rien de générique ni de répété.
     const depart = await etatFenetre(page);
     expect(depart.decoupee).toBe(true);
+    // Écran de bureau : la fenêtre du formulaire s'est élargie avant d'être découpée.
+    expect(depart.etendue).toBe(true);
+    expect(depart.largeur).toBeGreaterThan(1000);
     expect(depart.parties.length).toBeGreaterThanOrEqual(2);
     expect(depart.parties[0]).toBe('Informations');
     expect(depart.parties).toContain('Analyse');
@@ -106,8 +117,8 @@ test('Fiches en parties : risque découpé, nommé, navigable, sans champ tronqu
       expect(etat.defauts, `partie « ${nom} »`).toEqual([]);
       await expect(enregistrer).toBeInViewport({ ratio: 1 });
     }
-    // La fenêtre ne s'étire pas sur toute la hauteur disponible : sa hauteur suit le contenu.
-    expect(depart.hauteur).toBeLessThan(Math.round(720 * 0.9));
+    // La fenêtre reste dans la hauteur disponible (90 % de l'écran) : sa hauteur suit le contenu.
+    expect(depart.hauteur).toBeLessThanOrEqual(Math.round(720 * 0.9));
 
     // Un champ d'une autre partie est atteint directement par son libellé : la fenêtre s'aligne sur sa partie.
     await menu.getByRole('button').first().click();
@@ -139,12 +150,12 @@ test('Fiches en parties : risque découpé, nommé, navigable, sans champ tronqu
     await page.keyboard.press('Home');
     await expect(menu.getByRole('button').first()).toHaveAttribute('aria-current', 'page');
 
-    // Redimensionnement : sur un grand écran, moins de parties, toujours sans défaut, valeurs conservées.
+    // Redimensionnement : sur un grand écran, la fiche tient en une seule vue, sans menu de parties ni défilement,
+    // toujours sans défaut, valeurs conservées.
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await expect
-      .poll(async () => (await etatFenetre(page)).parties.length)
-      .toBeLessThanOrEqual(depart.parties.length - 1);
+    await expect.poll(async () => (await etatFenetre(page)).parties.length).toBe(0);
     const grand = await etatFenetre(page);
+    expect(grand.decoupee).toBe(false);
     expect(grand.dansEcran).toBe(true);
     expect(grand.defileVerticalement).toBe(false);
     expect(grand.defauts).toEqual([]);
@@ -161,18 +172,69 @@ test('Fiches en parties : risque découpé, nommé, navigable, sans champ tronqu
     await expect(fiche.getByLabel('Nom de la fiche', { exact: true })).toHaveValue('');
     await fiche.getByRole('button', { name: 'Fermer la fiche de l’élément', exact: true }).click();
 
-    // Repli : la fenêtre « Sécurité » contient des cartes qui ne se découpent pas. Qu'elle soit découpée ou non selon
-    // la place, aucun champ n'y est tronqué ou recouvert et la case du poivre répond au clic.
+    // Fenêtre « Sécurité » : de grandes cartes, qui se poursuivent d'une partie à l'autre. Aucun champ n'y est tronqué
+    // ou recouvert, la fenêtre ne retombe pas sur le défilement et la case du poivre répond au clic.
     await page.goto('/systeme/securite');
     const securite = page.getByRole('dialog', { name: 'Sécurité' });
     await expect(securite.getByRole('heading', { name: 'Poivre des mots de passe' })).toBeAttached();
     const etatSecurite = await etatFenetre(page);
     expect(etatSecurite.defauts).toEqual([]);
-    expect(etatSecurite.decoupee || etatSecurite.defileVerticalement).toBe(true);
+    expect(etatSecurite.repli).toBeNull();
+    expect(etatSecurite.decoupee).toBe(true);
+    expect(etatSecurite.defileVerticalement).toBe(false);
     const coffre = securite.getByLabel('J’ai enregistré ce poivre dans le coffre-fort de l’organisation');
     await coffre.check();
     await expect(coffre).toBeChecked();
     await coffre.uncheck();
+
+    // Aide contextuelle d'un champ : repliée dans une fiche, mais toujours associée au champ pour les lecteurs
+    // d'écran ; le bouton l'ouvre sous le champ, Échap la referme sans fermer la fenêtre, la saisie est conservée.
+    const fin = securite.getByLabel('Les 8 derniers caractères du poivre');
+    const texteAide = securite.getByText('Recopiez-les depuis le coffre-fort pour prouver l’enregistrement.');
+    await expect(texteAide).toBeHidden();
+    await expect(fin).toHaveAccessibleDescription(/Recopiez-les depuis le coffre-fort/);
+    await fin.fill('ABCD-EFGH');
+    const aide = securite
+      .locator('.mantine-InputWrapper-root', { has: fin })
+      .getByRole('button', { name: 'Aide sur ce champ' });
+    await expect(aide).toHaveAttribute('aria-expanded', 'false');
+    await aide.focus();
+    await page.keyboard.press('Enter');
+    await expect(aide).toHaveAttribute('aria-expanded', 'true');
+    await expect(texteAide).toBeVisible();
+    await expect(fin).toHaveAccessibleDescription(/Recopiez-les depuis le coffre-fort/);
+    expect((await etatFenetre(page)).defauts).toEqual([]);
+    await page.keyboard.press('Escape');
+    await expect(texteAide).toBeHidden();
+    await expect(aide).toHaveAttribute('aria-expanded', 'false');
+    await expect(securite).toBeVisible();
+    await expect(fin).toHaveValue('ABCD-EFGH');
+    // L'erreur du champ, elle, reste affichée sans action.
+    await expect(securite.getByText('Ne correspond pas à la fin du poivre.')).toBeVisible();
+    await fin.fill('');
+
+    // Liste dynamique : dans la fiche d'un fournisseur (créé par le parcours Pilotage), un certificat et trois
+    // contrôles ajoutés s'affichent dans leur partie, sans champ tronqué ni recouvert ; rien n'est enregistré.
+    await page.goto('/pilotage/fournisseurs');
+    const ouvrir = page.getByRole('button', { name: /^Fiche du fournisseur / }).first();
+    await expect(ouvrir, 'un fournisseur créé par le parcours Pilotage').toBeVisible();
+    await ouvrir.click();
+    const fournisseur = page.getByRole('dialog');
+    await expect(fournisseur.getByText('Certificats', { exact: true })).toBeAttached();
+    const avant = await fournisseur.locator('.mantine-InputWrapper-root').count();
+    await fournisseur.getByRole('button', { name: 'Ajouter un certificat' }).click();
+    for (let i = 0; i < 3; i++) await fournisseur.getByRole('button', { name: /Ajouter un contrôle/ }).click();
+    await expect.poll(() => fournisseur.locator('.mantine-InputWrapper-root').count()).toBeGreaterThan(avant);
+    const etatFournisseur = await etatFenetre(page);
+    expect(etatFournisseur.repli).toBeNull();
+    expect(etatFournisseur.dansEcran).toBe(true);
+    for (let i = 0; i < Math.max(1, etatFournisseur.parties.length); i++) {
+      if (etatFournisseur.parties.length) await fournisseur.locator('.fiche-mini-menu button').nth(i).click();
+      const partie = await etatFenetre(page);
+      expect(partie.defileVerticalement, `fournisseur, partie ${i + 1}`).toBe(false);
+      expect(partie.defauts, `fournisseur, partie ${i + 1}`).toEqual([]);
+    }
+    await page.keyboard.press('Escape');
 
     expect(problems).toEqual([]);
   } finally {
