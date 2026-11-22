@@ -94,7 +94,7 @@ affichées) ; les fenêtres concernées sont couvertes par les fiches ciblées c
 
 - la fenêtre d'un formulaire long s'élargit (jusqu'à 76 rem) et passe sur plusieurs colonnes ;
 - « Annuler » et « Fermer » sont neutres et sans contour dans **toutes** les fenêtres ;
-- dix-sept aides restent affichées sous leur champ (avertissements et formats de saisie) ;
+- dix-huit aides restent affichées sous leur champ (avertissements et formats de saisie) ;
 - les journaux et les longs tableaux défilent dans leur fenêtre.
 
 ### 6.2 Captures de référence

@@ -47,10 +47,10 @@ Les commits de la branche Codex ne sont pas fusionnés : leur contenu est repris
   garde sa description accessible (`aria-describedby`), aide ouverte ou non. Échap referme l'aide sans fermer la
   fenêtre. Hors fenêtre, rien ne change.
 - **Informations indispensables** : une description qui porte un avertissement, un effet irréversible ou un format de
-  saisie reste affichée, sans bouton (`descriptionProps={{ 'data-aide-permanente': true }}`). Dix-sept champs sont marqués
+  saisie reste affichée, sans bouton (`descriptionProps={{ 'data-aide-permanente': true }}`). Dix-huit champs sont marqués
   (texte envoyé au fournisseur du modèle, périmètre d'un registre, identifiant et libellés d'une échelle, motifs de
   « 5 caractères au moins », format du poivre, saisies validées par Entrée, adresses du mandataire et du site, durée d'un
-  écran mural, avertissement de fréquence d'un connecteur). Les erreurs de champ ne sont jamais repliées.
+  écran mural, avertissement de fréquence d’un connecteur, recherche dans le dictionnaire CPE). Les erreurs de champ ne sont jamais repliées.
 - Pied de fenêtre : la validation garde le contour bleu pétrole ; « Annuler » et « Fermer » (variante `default`) sont
   neutres et sans contour, dans toutes les fenêtres ; la suppression d'un processus, d'un objectif ou d'un indicateur
   passe en rouge comme les autres suppressions.
