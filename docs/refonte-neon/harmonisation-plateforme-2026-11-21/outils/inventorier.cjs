@@ -3,7 +3,9 @@
 const fs = require('fs'),
   path = require('path');
 const root = path.resolve(process.argv[2] || process.cwd()),
-  destination = path.resolve(process.argv[3] || '/tmp/couverture-neon.json');
+  // Destination choisie par l'appelant : aucun fichier par défaut dans le dossier temporaire commun (nom prévisible,
+  // qu'un autre compte de la machine pourrait créer avant le script).
+  destination = process.argv[3] ? path.resolve(process.argv[3]) : null;
 const ts = require(path.join(root, 'node_modules/typescript')),
   sources = path.join(root, 'apps/web/src');
 let fenetres = [],
@@ -73,7 +75,8 @@ let rapport = {
   outils,
   recherchesRestantes,
 };
-fs.writeFileSync(destination, JSON.stringify(rapport, null, 2) + '\n');
+if (destination) fs.writeFileSync(destination, JSON.stringify(rapport, null, 2) + '\n');
+else console.error('Aucune destination donnée : seul le résumé est affiché.');
 console.log(
   JSON.stringify(
     {

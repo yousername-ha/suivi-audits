@@ -190,7 +190,7 @@ confondre `pnpm test` à la racine, qui peut lancer l’API, avec les deux suite
 Pour vérifier la couverture statique sur un autre état du dépôt, avec TypeScript déjà installé :
 
 ```bash
-node docs/refonte-neon/harmonisation-plateforme-2026-11-21/outils/inventorier.cjs . /tmp/couverture-neon.json
+node docs/refonte-neon/harmonisation-plateforme-2026-11-21/outils/inventorier.cjs . couverture-neon.json
 ```
 
 Le harnais autonome est fourni dans [outils](outils/) avec ses fixtures entièrement fictives. Il nécessite Python,
