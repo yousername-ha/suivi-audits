@@ -1079,3 +1079,14 @@ Détection : 12 et 13/11/2026, session « Campagne multi-agent RSSI virtuel » (
 | Tests de la correction | `apps/api/test/historique-evals-fournisseurs.test.ts` ; `CAMP-R12-01` à rejouer par la recette |
 | Commit | 02aed39 |
 
+
+## BUG-078 — Synthèse du mur en erreur si les données d'un écart ne sont pas un objet
+
+| Champ | Constat |
+| --- | --- |
+| Fonction, gravité, priorité | État historique (écarts natifs), synthèse du mur ; MINEURE ; P3 |
+| Statut | OUVERT (repéré à la relecture du lot performance du 22/11/2026, PR #361 ; non corrigé dans ce lot) |
+| Observé | Un écart (`grc_objects`, `kind='nonconformity'`) dont la colonne `data` vaut `null` ou n'est pas un objet JSON fait échouer `ecartNatifVersFinding` (`apps/api/src/historique/ecarts-natifs.ts`, lecture de `d.classification`) ; la relecture de l'état historique échoue, donc la synthèse quand le module des incidents est lisible. |
+| Attendu | Une ligne mal formée est ignorée ou lue avec des valeurs vides ; aucune réponse 5xx. |
+| Cause / niveau | CONSTATÉ dans le code, NON REPRODUIT par l'application : l'API valide `data` à l'écriture, le cas suppose une écriture directe en base ou une reprise ancienne. |
+| Non-régression | À écrire avec le correctif (écart à `data` non objet dans le jeu de `tableau-de-bord-echeances.test.ts`, qui ne place aujourd'hui ces lignes que sur des actions). |
