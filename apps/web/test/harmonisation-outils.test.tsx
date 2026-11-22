@@ -204,6 +204,12 @@ describe('contrats des outils de registre', () => {
     expect(enfants((filtre.props.ajout as Element).props.children)[0]?.type).toBe(SegmentedControl);
   });
 
+  it('compte les critères annoncés par un composant qui en regroupe plusieurs', () => {
+    const Groupe = (_: { filtresActifs?: number }) => null;
+    expect(compterFiltres([<Groupe key="a" filtresActifs={2} />, <Groupe key="b" filtresActifs={0} />])).toBe(2);
+    expect(compterFiltres([<Groupe key="c" />])).toBe(0);
+  });
+
   it('compte les critères renseignés, y compris dans un groupe, sans compter Tous ni les cases décochées', () => {
     const controles = [
       createElement(Select, { value: null }),

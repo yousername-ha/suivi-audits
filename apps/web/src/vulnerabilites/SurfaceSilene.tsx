@@ -65,6 +65,7 @@ import {
   urlLierSilene,
 } from './surface-silene';
 import { nombrePages } from './veille';
+import { NOMS_PAGINATION } from './pagination';
 
 const CLE = ['vulnerabilites', 'surface', 'silene'] as const;
 
@@ -438,7 +439,15 @@ function Pages({
       <Text size="sm" c="dimmed" role="status">
         {donnees.total} résultat{donnees.total > 1 ? 's' : ''}
       </Text>
-      {pages > 1 && <Pagination total={pages} value={page} onChange={onPage} aria-label="Pages des constats Silène" />}
+      {pages > 1 && (
+        <Pagination
+          {...NOMS_PAGINATION}
+          total={pages}
+          value={page}
+          onChange={onPage}
+          aria-label="Pages des constats Silène"
+        />
+      )}
     </Group>
   );
 }

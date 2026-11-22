@@ -49,6 +49,7 @@ import { PrioriteFaits } from './FaillesDetectees';
 import { PictosSources } from './PictoSource';
 import { pictosExploitation } from './pictos-sources';
 import { nombrePages } from './veille';
+import { NOMS_PAGINATION } from './pagination';
 
 /** Liste des alertes (sans état) : rendu testable hors navigateur. */
 export function AlertesTable({
@@ -310,7 +311,15 @@ export function AlertesPage() {
               {liste.data.total} alerte{liste.data.total > 1 ? 's' : ''}
             </Text>
             <AlertesTable alertes={liste.data.elements} onOuvrir={(id) => setParams({ alerte: id })} />
-            {pages > 1 && <Pagination value={page} onChange={setPage} total={pages} aria-label="Pages des alertes" />}
+            {pages > 1 && (
+              <Pagination
+                {...NOMS_PAGINATION}
+                value={page}
+                onChange={setPage}
+                total={pages}
+                aria-label="Pages des alertes"
+              />
+            )}
           </>
         )}
       </Stack>

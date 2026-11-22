@@ -16,6 +16,7 @@ import { BoiteOutils, IconeLoupe, type VueBoite } from './BarreOutils';
 type Champ = ReactElement<TextInputProps & { ref?: Ref<HTMLInputElement> }>;
 type Controle = ReactElement<{
   value?: unknown;
+  filtresActifs?: number;
   checked?: boolean;
   children?: ReactNode;
   type?: string;
@@ -93,6 +94,9 @@ export function compterFiltres(controles: readonly ReactNode[]): number {
   return controles.reduce<number>((total, n) => {
     if (!isValidElement(n)) return total;
     const p = (n as Controle).props;
+    // Composant qui regroupe plusieurs critères (par exemple les deux filtres de scores de Tenable) : il annonce lui-même
+    // combien sont renseignés, ses champs n'étant pas visibles d'ici.
+    if (typeof p.filtresActifs === 'number') return total + p.filtresActifs;
     if (typeof p.checked === 'boolean') return total + Number(p.checked);
     const v = p.value;
     if (Array.isArray(v)) return total + Number(v.length > 0);
