@@ -50,6 +50,8 @@ const FICHE = {
   vecteurs: [{ source: 'nvd', cve: CVE, brut: FAILLE.cvss31.vecteur, score: 9.8 }],
   recommandations: {
     tenable: null,
+    // Lot QF-TEN : champ rendu par l'API pour toute fiche (aucun correctif regroupé de Tenable ici).
+    tenableRegroupes: [],
     kev: [],
     kevTronque: false,
     versionsNvd: [
