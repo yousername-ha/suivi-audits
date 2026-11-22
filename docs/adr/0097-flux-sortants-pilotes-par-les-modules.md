@@ -234,6 +234,9 @@ arriver en quelques secondes, sans copie complète du dictionnaire CPE et sans n
   jour demandée dans l'application s'exécute dans le fil du poller : aucun passage court ne tourne en même temps. Un
   passage court ne prend aucun verrou de données et ne lit que sa file ; lancé pendant une opération faite à la main sur
   l'hôte, il échoue sans effet si l'application est arrêtée.
+- **Garde de l'exécutant.** `exploitation-worker.py` refuse, avant toute action, un mode court qu'il ne connaît pas
+  (`MODES_COURTS`, liste fermée, vide dans le socle) : un passage court, borné à 30 secondes, ne peut pas devenir un
+  passage complet tronqué. Le module qui livre une file courte y inscrit son mode avec son traitement.
 - **Effet attendu.** L'ouverture de la saisie réchauffe le poller en 15 secondes au plus ; une demande de versions part
   ensuite en 3 à 6 secondes. Pire cas (demande dans les premières secondes) : 15 à 20 secondes, le champ de version
   restant libre. Ces délais restent à mesurer sur une pile réelle avec la file du module Vulnérabilités.
@@ -241,7 +244,7 @@ arriver en quelques secondes, sans copie complète du dictionnaire CPE et sans n
   n'a aucun montage en écriture) ; relais permanent vers la NVD (composant et sortie de plus, gardé en réserve).
 
 Tests : `scripts/tests/test_updates.py` (cadence inchangée sans témoin, passages courts, conditions de refus, échec sans
-effet, effacement devant le passage complet). La file, le témoin et le mode court de l'exécutant sont livrés par le lot
+effet, effacement devant le passage complet) et `scripts/tests/test_exploitation.py` (mode court inconnu refusé). La file, le témoin et le mode court de l'exécutant sont livrés par le lot
 « recherche CPE » du module Vulnérabilités (ADR 0100).
 
 ## Conséquences
