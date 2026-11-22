@@ -1,0 +1,278 @@
+{
+  "parent": "919ffa8129143e42e536b6e8f6690906ed6c535c",
+  "nature": "Fichiers du lot UI contrôlé avant raccordement de la version amont 7.5.1 (métadonnées seulement).",
+  "fichiers": [
+    {
+      "fichier": "apps/web/src/carto/Construire.tsx",
+      "sha256": "deb8167d6db9cef2582cd8a8dad4c03c3ec73c9c2df5f1a1c94cd4ccdffd92c1"
+    },
+    {
+      "fichier": "apps/web/src/carto/Dialogues.tsx",
+      "sha256": "ebe181c396b9ea911bf2a57d3c6f5daaa3accbc53e1fb630771fbccf6758aed1"
+    },
+    {
+      "fichier": "apps/web/src/components/BarreFiltres.tsx",
+      "sha256": "3860a4e4f61095c1e817abe421ea1bfff619b2a8cf22672bac7df44f2e8df186"
+    },
+    {
+      "fichier": "apps/web/src/components/BarreOutils.tsx",
+      "sha256": "9a143eafa37cdfb9c7c8d7823cdc3048133eefe664fa9b91d11ea0b5194ea447"
+    },
+    {
+      "fichier": "apps/web/src/components/DispositionTableauDeBord.tsx",
+      "sha256": "4fb42f1ac63bf811cf2101ccc315b97c19c295b818b660d8454e39a854aed42b"
+    },
+    {
+      "fichier": "apps/web/src/components/Layout.tsx",
+      "sha256": "6e63f7de1e8885106209847d4fe3b65a107890767d1eb6d7df790cfb632c026a"
+    },
+    {
+      "fichier": "apps/web/src/components/TableauDeBord.tsx",
+      "sha256": "be0f63d6d1098fc5f9f330ba53312a0e75eb9d59c42b8c28fec2ceda40e40966"
+    },
+    {
+      "fichier": "apps/web/src/components/TableauxDeBord.tsx",
+      "sha256": "3990b02e274d6f1e11ceef15ac9fc4711990e41397430c6b06def300875b4229"
+    },
+    {
+      "fichier": "apps/web/src/config-grc/ConfigurationGrc.tsx",
+      "sha256": "803f6b60d1703188aeafc235e7bd3643f4bc14a6b4b76925ca661d7084a47fea"
+    },
+    {
+      "fichier": "apps/web/src/grc/ObjectEditor.tsx",
+      "sha256": "a8fded2872d4ce9a440fbec62f36213df923cd25d8888625833ad30dd6ae8a59"
+    },
+    {
+      "fichier": "apps/web/src/grc/Relations.tsx",
+      "sha256": "d9f28d1e84e1303f76584b556dca816bdd48f969256e00aa2faf588d5ea884fe"
+    },
+    {
+      "fichier": "apps/web/src/incidents/Incidents.tsx",
+      "sha256": "8a0ac4d07b324a2b1fe611ed3b0512f14e89809d348c2f8c75d6ce13f43c6e30"
+    },
+    {
+      "fichier": "apps/web/src/main.tsx",
+      "sha256": "46a56fa21e6f5ee297e66519770e1a6849e312647459fc32e01d785690f93b3a"
+    },
+    {
+      "fichier": "apps/web/src/pages/Account.tsx",
+      "sha256": "6f3d9857a07fef53df0181ca4eb158ebbff850f8c792cbd21ae0f526891a94c3"
+    },
+    {
+      "fichier": "apps/web/src/pages/Admin.tsx",
+      "sha256": "860add1fc75aee71a3bcc5de1ae98b9c4ec76612efd9b59e3b91257918cd2670"
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminJournauxTechniques.tsx",
+      "sha256": "fc8f9d11bcd5233eb8e3d1913d3067dd4a4e6cbfcfcd382404f4b523b7d686c1"
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminNotifications.tsx",
+      "sha256": "7d728e1639444739becc901c941108f4316e6c6a6f0204250a3fef769ffc74c3"
+    },
+    {
+      "fichier": "apps/web/src/pages/AdminOperations.tsx",
+      "sha256": "e36590af49c3c4a17d423cc0f504c4f3389922861803dfe781b09587cd0b84ac"
+    },
+    {
+      "fichier": "apps/web/src/pages/Cartographie.tsx",
+      "sha256": "331dc063c803f24829a6fbfc83a79d090684bb1f9513172429e0c6a2c74c6b27"
+    },
+    {
+      "fichier": "apps/web/src/pages/Grc.tsx",
+      "sha256": "5a778af8e6893d65498b0cc3d25918f69d74b14f8a1d7ac7c5f5ccedc8dbe5c0"
+    },
+    {
+      "fichier": "apps/web/src/pages/Help.tsx",
+      "sha256": "2f77cd3530140dc5920d9fb41fcb7cfc53a45a7d870d22f2a2caa5710931099c"
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Couverture.tsx",
+      "sha256": "27d85f31d3e0bb4f2b84d9ba2249c500a0a78df8bbfc907877c7c95ec9b6ee71"
+    },
+    {
+      "fichier": "apps/web/src/pilotage/CriteresFournisseurs.tsx",
+      "sha256": "7ca5df180bc3300e9cfdcce10f979d5780d2dc4d4ff65ae6fb04e5c28952f677"
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Decision.tsx",
+      "sha256": "451fba6692c4cf0c87be458eb765f16be8b261adf04d6ebef539df11147be9fd"
+    },
+    {
+      "fichier": "apps/web/src/pilotage/EvaluationsClausier.tsx",
+      "sha256": "269b4a60ecfdb361a288a53c95d311d00822cbaf76e19324c31062c156df8c04"
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Fields.tsx",
+      "sha256": "cc1863e2eddf43c68e1c407e73e064eb0ff50969d01928f18d941d40bc483761"
+    },
+    {
+      "fichier": "apps/web/src/pilotage/Plans.tsx",
+      "sha256": "3819031c9f7e979dcc2d927cdfc29625a4562f0fecd03686d91d2aac478c9e1e"
+    },
+    {
+      "fichier": "apps/web/src/pilotage/RecordEditor.tsx",
+      "sha256": "fee6cfd6e22bf1849c2b5080f9544c64c0a18ce1e192d659fbe840908b134074"
+    },
+    {
+      "fichier": "apps/web/src/processus/FicheCarteProcessus.tsx",
+      "sha256": "94b8232c2c4e768774c11e19ec635744388ecb5a50dbcf8a601f0f83b36b76ad"
+    },
+    {
+      "fichier": "apps/web/src/registres/AccesSujets.tsx",
+      "sha256": "dd951b68893583b6036fdd777ad2f5bb5f47344c8a1aee8c339246b52b1f9a37"
+    },
+    {
+      "fichier": "apps/web/src/veille-reglementaire/VeilleReglementaire.tsx",
+      "sha256": "0586439b16e69eed70d8f78a8353ad7c5a6c5f1db50a7646c2b6aeae7dfada8d"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Alertes.tsx",
+      "sha256": "5199daf66adf1430cb60c5a4b8b25e9077061bcea295855746689e4122fb4e17"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/CarteSurface.tsx",
+      "sha256": "2a6150d412a501cc3ea26e50b3bbe94e56924c620bbf4ff3173b840978fef6da"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Correctifs.tsx",
+      "sha256": "81962fe73225c99e77b57a74e890eeadd7da5ba04e8c5ca09f968164b8c07142"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/DelaisExceptions.tsx",
+      "sha256": "570eb00dd94281c77060adea7e2b3bfbae02702e144c8777791de1e00d37114d"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/FaillesDetectees.tsx",
+      "sha256": "a2ae3485bb56542d732b5ad6655c3349cd8ffb5cfb55a6cecc8b5613996a56ab"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Machines.tsx",
+      "sha256": "9a82867440b95e6c09765f8d1e013765a44714c5c307172e2f7915b684859dcb"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Perimetres.tsx",
+      "sha256": "5621f13219b5ce0d9ca650e95223dea3c8b62a60955051e198db3e15601ebc33"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/ProduitsSurveilles.tsx",
+      "sha256": "a748c653b7fb415e0420903461e39a37f49e2e9a3ff79c84a20af18a031ba521"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Rapport.tsx",
+      "sha256": "28277df149f1e78fda051673b00487d2aa5443e4c0818a80f9f094259ffe20c5"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/RechercheVulnerabilites.tsx",
+      "sha256": "c66fbfdd2391ccf985156e70732a933e755952775363f9851801362eb42fa423"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SuiviFaille.tsx",
+      "sha256": "96918656025797b7787555d0ddfede3227383886dc0c6eb5ffeb45b67066a085"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceExterne.tsx",
+      "sha256": "b9fd3b09c28a523155250942a2ae1d0f56942a4c5aba1f42460f61cf3a9b1875"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/SurfaceSilene.tsx",
+      "sha256": "449166e7d6fa62625c6c2d4d1bde6afa9c74fc9ea18f31f862cc9684a7fc9404"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Tendances.tsx",
+      "sha256": "f2b000c6c1c5d2ac077e029bc897751ae4e35bea627546f2cb6ccefbe6628f74"
+    },
+    {
+      "fichier": "apps/web/src/vulnerabilites/Veille.tsx",
+      "sha256": "e3821c06a7d94a6e6e538b894af775922e55f799806da0571e4f47dbe41d9033"
+    },
+    {
+      "fichier": "apps/web/test/harmonisation-outils.test.tsx",
+      "sha256": "e311043ec5ed6885183259b6218d39cba3007fc929351692b95835c09c0b59d2"
+    },
+    {
+      "fichier": "packages/ui/package.json",
+      "sha256": "0e2ce94a1362bca71281e5465240234af957e2268515e4e797d3b099ee1a3006"
+    },
+    {
+      "fichier": "packages/ui/src/components.tsx",
+      "sha256": "311ad64c6e4192f34cb4d0aaa396c2ce219dc6095661f6d500e8d29ae6b6245c"
+    },
+    {
+      "fichier": "packages/ui/src/neon-ergonomie.css",
+      "sha256": "f6ad26b6ea622dab337ba729978e93cb5deb7ce8e2a19e79f6da4c7c74d72381"
+    },
+    {
+      "fichier": "packages/ui/src/neon-fenetres.css",
+      "sha256": "23c9a7b8d810989df0e9f04f1f2ba87b2f3c14855f5f7cae42f68663bb375fbd"
+    },
+    {
+      "fichier": "packages/ui/src/neon-harmonisation.css",
+      "sha256": "2467063a7d4eb7989bd174607cf2c5ceeced727e216cc2174ade57d94c0308d9"
+    },
+    {
+      "fichier": "packages/ui/src/theme.ts",
+      "sha256": "1c5aaf2bb71bebc455bd393fad3ff4aa5e40c6c5fb26c6de1819371a69fc7a55"
+    },
+    {
+      "fichier": "tests/e2e/helpers.ts",
+      "sha256": "c8f418e455a75c8925d76d5f71b132da371eced04ef83263c1011aefb1c9368c"
+    },
+    {
+      "fichier": "tests/e2e/specs/recette-cartographie.spec.ts",
+      "sha256": "7277207c56fb2a693ff8e4555ca3b1e09dc05e7fb22c365d3a148ab8c47107f6"
+    },
+    {
+      "fichier": "tests/e2e/specs/zzzzzzzzz-plans.spec.ts",
+      "sha256": "44b4b5e3809ad1f865a6350ca3a0b6d85b60279a97054ef9501a6aff400a8a5d"
+    },
+    {
+      "fichier": "tests/e2e/specs/zzzzzzzzzz-audit-suivi.spec.ts",
+      "sha256": "378f75e12855d3d1cc9dd0569472f388ab34e7538e8333606a7300ed2e3a4a08"
+    },
+    {
+      "fichier": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-journal-audit.spec.ts",
+      "sha256": "a22355930c19d35d8b3d542c84a40efeec11712f50de1a6401cc76b6d55f16cf"
+    },
+    {
+      "fichier": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-failles.spec.ts",
+      "sha256": "f3c50005e51e54c0b65ca5b72cc53023d20c436d4873f03e4e8346cf29676480"
+    },
+    {
+      "fichier": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-surface.spec.ts",
+      "sha256": "8f53b5aacfd9c47db5b946b7a7513e9fe56b75cb62b3a515253813c8cb928d64"
+    },
+    {
+      "fichier": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-alertes.spec.ts",
+      "sha256": "32ccaed9e205de5f828c30da30940cd6a685882ddaeca77c27b3aa0b68cad3f7"
+    },
+    {
+      "fichier": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-perimetres.spec.ts",
+      "sha256": "fc495a82466223f8295e9483b6264e2c1a42614ab7c0ea2508bc3c15f00781a5"
+    },
+    {
+      "fichier": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-vue.spec.ts",
+      "sha256": "9bbc1a9f399aa86c2d32b7a183a131aa2140feedb4733f3c591aa6264126889b"
+    },
+    {
+      "fichier": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-delais.spec.ts",
+      "sha256": "cb6fb1f09dd8a27a68c5bef6d4756d4963c57023028b91f2bfe8d8792cbad64d"
+    },
+    {
+      "fichier": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-tendances.spec.ts",
+      "sha256": "108cbaa5574e7e5d2369e121efd9bc66700d2f582d4d304af9c96d9595d09837"
+    },
+    {
+      "fichier": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-correctifs.spec.ts",
+      "sha256": "dfffe95e49355fcdb083d863669d60d1cca1fcb87f804479bfe78a3fe79d033e"
+    },
+    {
+      "fichier": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-import-silene.spec.ts",
+      "sha256": "7230be38657c905a8c9fea33941db01065144f59016c6138a7b5aaa24712c0ec"
+    },
+    {
+      "fichier": "tests/e2e/specs/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz-vulnerabilites-import-nessus.spec.ts",
+      "sha256": "0811d10f00be4e098920d7a80ae3edcf8dcd59a4e00fcdf70cc13dc51e29628a"
+    }
+  ]
+}

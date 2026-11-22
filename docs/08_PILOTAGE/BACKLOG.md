@@ -2,6 +2,11 @@
 
 Référence applicative analysée : `c704fa6e6d6d516db75f963db8dd5d2049ab42c8`. Mise à jour : 2026-10-11T00:46:53+02:00 (Europe/Paris).
 
+**Complément UI du 21/11/2026** : harmonisation des barres et fenêtres implémentée sur la branche de refonte,
+1 214 tests web/UI réussis et captures sur données fictives. [Dossier, inventaire et limites](../refonte-neon/harmonisation-plateforme-2026-11-21/README.md).
+Prochaine action de TEST-041/TEST-042 : validation visuelle et recette sur Docker/API réelles ; leur état reste à faire.
+Ce complément ne recalcule pas les compteurs ni les validations historiques des registres.
+
 Source : [REGISTRES.json](REGISTRES.json). ID stables ; les actions TEST renvoient
 aux mêmes cas de recette. Priorités : sécurité, données, blocages/régressions,
 reprises essentielles, travaux partiels, dette, optimisations, secondaire.

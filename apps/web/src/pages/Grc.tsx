@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 import { Button, Card, Group, Select, Stack, Text, TextInput } from '@mantine/core';
 import { GRC_KINDS, GRC_LABELS, GRC_MODULES, type GrcKind, type GrcObject } from '@suivi/shared';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -57,11 +58,13 @@ export function Registry({
           )}
         </Group>
       )}
-      <TextInput
-        label="Rechercher dans le registre"
-        value={search}
-        onChange={(e) => setSearch(e.currentTarget.value)}
-      />
+      <BarreFiltres label="Rechercher dans le registre">
+        <TextInput
+          label="Rechercher dans le registre"
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+        />
+      </BarreFiltres>
       <ErrorAlert error={list.error} />
       <Text size="sm">{list.data?.pages[0]?.total ?? 0} fiches</Text>
       {list.data?.pages

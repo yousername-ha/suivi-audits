@@ -17,7 +17,7 @@
 import path from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 const FIXTURES = path.resolve(import.meta.dirname, '../../fixtures/nessus');
 const SCAN1 = path.join(FIXTURES, 'scan-fictif-1.nessus');
@@ -166,10 +166,12 @@ for (const [mode, scheme, largeur] of [
       await expect(web).toContainText(MALWARE);
       await expect(web).toContainText('P1');
       await expect(lignes.filter({ hasText: 'Fictional SSH Daemon Weak Setting' })).not.toContainText(MALWARE);
+      await ouvrirFiltres(page, 'Exploitation avérée');
       await page.getByRole('checkbox', { name: 'Exploitation avérée', exact: true }).check();
       await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(1);
       await expect(page.getByRole('row').filter({ hasText: source })).toContainText(MALWARE);
       await axe(page);
+      await ouvrirFiltres(page, 'Exploitation avérée');
       await page.getByRole('checkbox', { name: 'Exploitation avérée', exact: true }).uncheck();
       await expect(page.getByRole('row').filter({ hasText: source })).toHaveCount(3);
       await page.goto('/vulnerabilites/machines');

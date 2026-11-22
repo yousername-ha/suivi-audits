@@ -1,5 +1,38 @@
 # État synthétique du projet
 
+> **22/11/2026 — dossier d’implémentation pour l’IA** : [point d’entrée](docs/refonte-neon/implementation-interface-2026-11-21/README.md),
+> [prompt complet](docs/refonte-neon/implementation-interface-2026-11-21/PROMPT-IA.md) et résumé technique avec neuf captures natives.
+> Sources, règles et limites regroupées pour comparer l’existant avant report. Proportions `2742e16`, commandes bleu/cyan
+> en contour et prototype de mini-menu sans défilement vertical. Ce prototype reste à finaliser : limites de partie,
+> sections trop vides, titres et pieds atypiques. 1 221 tests web/UI réussis, contrôles du code et 11 cas client / 27 ouvertures
+> de 7 variantes ; API simulée. Validation humaine et recette Docker/API réelle non exécutées. Aucune fusion ou publication.
+>
+
+> **21/11/2026 — proportions et alignements des fenêtres** : [complément documenté](docs/refonte-neon/proportions-fenetres-2026-11-21/README.md).
+> Largeurs différenciées pour codes, dates, états et responsables ; aides sous les saisies et alignement à gauche.
+> Fiches lg/xl ramenées à 736/864 px à 100 %, grandes présentations graphiques conservées. Inventaire de 302 sélecteurs,
+> sans prétendre les avoir tous ouverts individuellement. Validation des images et recette Docker réelle à effectuer.
+>
+
+> **21/11/2026 — harmonisation transversale de l’interface** : le [dossier et les images](docs/refonte-neon/harmonisation-plateforme-2026-11-21/README.md)
+> décrivent le complément au lot de densité : 58 points d’intégration dans 50 fichiers consommateurs pour les vues,
+> recherches et filtres ; cadre commun des fenêtres, formulaires courts en colonnes, aides repliées et icônes centrées.
+> **1 214 tests web/UI réussis**, TypeScript web/UI/E2E, lint, format et build verts ; 72 cas de pages et 56 ouvertures de
+> 7 variantes de fenêtres, API simulée et données fictives. Les 127 déclarations de fenêtres sont inventoriées, sans
+> prétendre avoir testé chaque formulaire. Prochaine action : validation des images puis recette Docker/API réelle,
+> non exécutée ici. Aucune fusion de PR, publication de version ou mise en production.
+> Code du complément : `e29d6f6` ; raccordement de la 7.5.1 (`01130ce`), métadonnées seulement. Les changements UI restent non publiés.
+>
+
+> **21/11/2026 — refonte de densité, branche dédiée** : lot local fondé sur `15dc5a6` (7.5.0), après analyse d’une vidéo privée
+> conservée hors dépôt. Le normal devient plus dense que l’ancien compact et le compact resserre encore l’affichage ;
+> planning SVG sans agrandissement des textes, aides contextuelles des Vulnérabilités repliées, cache bilan/affectation des
+> périmètres séparé. Dernier retour intégré : signature d’organisation et badge Live retirés visuellement, thème en icônes,
+> onglets et ajouts en verre transparent ; couleurs métier et attente de connexion SSE conservées.
+> **Contrôles finaux locaux** : 352 tests ciblés, TypeScript/lint/format/build réussis ; 60 rendus et 24 cas d’interaction
+> avec frontend réel, API interceptée et données fictives, sans erreur. Recette Docker/API réelle et validation humaine
+> à faire ; aucune fusion ni mise en production. Détail, invariants et commandes : [dossier du lot](docs/refonte-neon/densite-2026-11-21/README.md).
+>
 > **20/11/2026** : module Vulnérabilités ([ADR 0100](docs/adr/0100-module-vulnerabilites.md)) sur `claude-suivi-smsi` depuis
 > la 7.4.0 : recherche du module, alertes de la veille en cartes, intégrations dans la page Plateforme, fréquences de
 > synchronisation (migration `090`, PR #326), imports `.nessus` et exploitation par logiciel malveillant (migrations `093` et

@@ -13,7 +13,7 @@ import {
   type MapView,
   type RelationType,
 } from '@suivi/shared/carto';
-import { ErrorAlert } from '@suivi/ui';
+import { ErrorAlert, APropos } from '@suivi/ui';
 import { useEffect, useMemo, useState } from 'react';
 
 const compte = (objs: CartoObject[], t: string) => objs.filter((o) => o.type === t).length;
@@ -61,11 +61,13 @@ export function Assistant({
       <Stack>
         {view === 'context' ? (
           <>
-            <Text size="sm" c="dimmed">
-              La carte est construite à partir des objets déjà saisis dans la plateforme puis disposée automatiquement :
-              périmètre et SMSI au centre, parties intéressées à gauche, fournisseurs à droite, enjeux externes en haut
-              et internes en bas.
-            </Text>
+            <APropos label="Aide et précisions">
+              <Text size="sm" c="dimmed">
+                La carte est construite à partir des objets déjà saisis dans la plateforme puis disposée automatiquement
+                : périmètre et SMSI au centre, parties intéressées à gauche, fournisseurs à droite, enjeux externes en
+                haut et internes en bas.
+              </Text>
+            </APropos>
             <Title order={4} size="h6">
               Types d’objets
             </Title>
@@ -109,10 +111,12 @@ export function Assistant({
           </>
         ) : (
           <>
-            <Text size="sm" c="dimmed">
-              Les processus sont répartis en bandes selon leur famille (pilotage, réalisation, support) ; les
-              sous-processus sont regroupés dans leur processus parent.
-            </Text>
+            <APropos label="Aide et précisions">
+              <Text size="sm" c="dimmed">
+                Les processus sont répartis en bandes selon leur famille (pilotage, réalisation, support) ; les
+                sous-processus sont regroupés dans leur processus parent.
+              </Text>
+            </APropos>
             <Group>
               {cb('process', 'Processus', compte(objs, 'process'))}
               {cb('subprocess', 'Sous-processus', compte(objs, 'subprocess'))}

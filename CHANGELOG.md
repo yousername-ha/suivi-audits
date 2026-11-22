@@ -2,6 +2,54 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+Aucune migration, nouvelle dépendance ou modification du contrat API. Reconstruire le frontend lors de l’intégration du code.
+Les préférences explicites de taille et le mode mural sont conservés. Contrôles locaux, captures, mesures et limites dans le
+[dossier du lot](docs/refonte-neon/densite-2026-11-21/README.md) ; recette Docker/API réelle à effectuer avant livraison. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+
+### Changé
+
+- **Fiches longues et commandes — préparation d’intégration** : prototype de mini-menu conservant les champs montés et
+  leur formulaire, avec actions en bas ; commandes transparentes en contour bleu/cyan. Le découpage, les sections peu
+  remplies et les pieds atypiques restent à recetter avant intégration finale. [Dossier pour l’IA, prompt, neuf captures
+  et résumé technique](docs/refonte-neon/implementation-interface-2026-11-21/README.md), remis le 22/11/2026 ; aucune migration,
+  dépendance ou modification API. Aucune validation humaine, fusion ou publication de version.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **Proportions des formulaires** : codes, dates, états et responsables reçoivent des largeurs adaptées. Les aides passent
+  sous les saisies pour aligner les champs voisins ; les listes longues se replient dans un menu borné. Les fiches lg/xl
+  deviennent moins larges, avec des colonnes adaptées à leur espace réel. Les grands graphiques et tableaux gardent leur
+  place utile. [Détails et recette](docs/refonte-neon/proportions-fenetres-2026-11-21/README.md) ; aucune migration,
+  dépendance ou modification du contrat API.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **Harmonisation des outils et fenêtres** : vues en icônes, recherche et filtres réunis dans la même boîte de verre
+  bleu nuit sur les deux thèmes. Les écrans existants conservent leurs champs, callbacks et soumissions ; les filtres
+  fermés restent dans leur formulaire. Fenêtres centrées et moins volumineuses, champs courts en colonnes, aides et
+  historique repliés, actions maintenues en bas et pictogrammes centrés. Détails, captures fictives et contrôles dans le
+  [dossier de reprise](docs/refonte-neon/harmonisation-plateforme-2026-11-21/README.md). Aucune migration ou dépendance ;
+  recette Docker/API réelle et validation des images à effectuer.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **Densité de travail** : le normal devient plus resserré que l’ancien compact, et le compact resserre encore le cadre,
+  les commandes et les listes. Les profils partagent une source de jetons et du CSS statique compatible avec la CSP.
+  L’agrandissement automatique des grands écrans est réservé au mode mural ; les tailles choisies manuellement restent
+  disponibles. Le planning adapte sa largeur sans étirer textes et lignes, les explications des pages Vulnérabilités se
+  replient dans une aide contextuelle, et les raccourcis en pictogrammes gardent leurs noms accessibles et leurs droits.
+  Lot fondé sur la version 7.5.0 après analyse d’une vidéo privée, absente du dépôt et des preuves publiques.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+- **En-tête et apparence** : signature d’organisation et badge Live retirés visuellement, bascule de thème en icônes dans
+  l’en-tête et le pied de menu, onglets et actions principales d’ajout en verre transparent. Les couleurs métier restent
+  conservées. Le flux temps réel continue de fonctionner ; les parcours concernés attendent toujours sa connexion via
+  l’attribut `data-temps-reel`. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+
+### Corrigé
+
+- **Vulnérabilités, Machines → Périmètres** : le bilan par périmètre et les options d’affectation utilisent des clés de
+  cache distinctes. Leur collision pouvait fournir un tableau à la place de l’objet du bilan et provoquer
+  `e.perimetres is not iterable`. Les sélecteurs de Machines et de Surface externe partagent désormais la clé propre aux
+  options, sans changement de contrat serveur. _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
+
 ## [7.5.1] — 2026-11-21
 
 ### Notes de mise à jour

@@ -255,7 +255,7 @@ async function objets(s: Session) {
 }
 /** Flux temps réel connecté (sinon un changement fait juste après l'ouverture de la page serait manqué). */
 async function enLigne(p: Page) {
-  await expect(p.locator('.live-badge')).toHaveText('En direct');
+  await expect(p.locator('.shell-header')).toHaveAttribute('data-temps-reel', 'connecte');
   await expect(p.locator('g.noeud').first()).toBeAttached();
 }
 async function editer(p: Page) {
@@ -474,7 +474,7 @@ test('12. versions : « Revue de direction », modification, restauration exacte
   await dlg.getByLabel('Nouvelle version').fill('Revue de direction');
   await dlg.getByRole('button', { name: 'Enregistrer une version' }).click();
   await expect(p.getByText('Version enregistrée.')).toBeVisible();
-  await dlg.getByRole('button', { name: 'Fermer' }).click();
+  await dlg.getByRole('button', { name: 'Fermer', exact: true }).click();
   await editer(p);
   await glisser(p, 'isms', 80, 0);
   await enregistrer(p);

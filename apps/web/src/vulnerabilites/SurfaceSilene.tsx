@@ -1,3 +1,4 @@
+import { BarreFiltres } from '../components/BarreFiltres';
 /* Module Vulnérabilités (ADR 0100, lot SI1) : surface externe importée de Silène (ANSSI) dans l'écran « Surface externe »,
    à côté d'AlgoLightHouse. Note Silène en tête (note, sous-note réseau, nombres par famille, date du rapport, évolution
    depuis l'import précédent), ports ouverts réunis avec les services d'AlgoLightHouse dans la liste des actifs (la source de
@@ -471,7 +472,7 @@ export function OngletConstatsSilene() {
           setPage(1);
         }}
       >
-        <Group align="flex-end">
+        <BarreFiltres label="Constats Silène">
           <TextInput
             label="Rechercher un constat"
             description="Contrôle, identifiant ou adresse IP d’un hôte concerné."
@@ -482,7 +483,7 @@ export function OngletConstatsSilene() {
           <Button type="submit" variant="default">
             Rechercher
           </Button>
-        </Group>
+        </BarreFiltres>
       </form>
       <ErrorAlert error={q.error} />
       {q.data && <ConstatsSileneTable constats={q.data.elements} onOuvrir={setOuvert} />}

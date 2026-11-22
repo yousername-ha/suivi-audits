@@ -82,8 +82,8 @@ for (const [mode, scheme] of [
 
       // « Vue globale » : toutes les machines ensemble ; l'adresse la garde, le rechargement aussi.
       await page
-        .getByRole('radiogroup', { name: 'Présentation du périmètre' })
-        .getByText('Vue globale', { exact: true })
+        .getByRole('group', { name: 'Présentation du périmètre' })
+        .getByRole('button', { name: 'Vue globale', exact: true })
         .click();
       await expect(page).toHaveURL(/presentation=global/);
       await expect(page.getByRole('heading', { name: 'Machines du périmètre', level: 3 })).toBeVisible();

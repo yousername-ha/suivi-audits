@@ -1,0 +1,1675 @@
+{
+  "comment": "Recette de présentation uniquement, 21/11/2026 : données fictives ; aucune session ni base réelle.",
+  "me": {
+    "stage": "ok",
+    "csrf": "apercu-ui-sans-session",
+    "user": {
+      "id": "00000000-0000-4000-8000-000000000099",
+      "username": "demo_ui",
+      "displayName": "Démonstration",
+      "totpEnabled": true,
+      "cles": 0,
+      "mustChangePassword": false,
+      "roles": [
+        "Administrateur"
+      ],
+      "expiresAt": null
+    },
+    "preferences": {
+      "taille": "100",
+      "densite": "normale",
+      "theme": "sombre",
+      "colonnes": {},
+      "cartographie": {},
+      "parcoursIso": {},
+      "onglets": "barre",
+      "boiteOutils": "claire"
+    },
+    "permissions": [
+      "audit:lire",
+      "audit:modifier",
+      "audit:supprimer",
+      "audit:exporter",
+      "audit:administrer",
+      "ecarts:lire",
+      "ecarts:modifier",
+      "ecarts:supprimer",
+      "ecarts:exporter",
+      "ecarts:administrer",
+      "plan_audit:lire",
+      "plan_audit:modifier",
+      "plan_audit:supprimer",
+      "plan_audit:exporter",
+      "plan_audit:administrer",
+      "pilotage:lire",
+      "pilotage:modifier",
+      "pilotage:supprimer",
+      "pilotage:exporter",
+      "pilotage:administrer",
+      "fournisseurs:lire",
+      "fournisseurs:modifier",
+      "fournisseurs:supprimer",
+      "fournisseurs:exporter",
+      "fournisseurs:administrer",
+      "conformite:lire",
+      "conformite:modifier",
+      "conformite:supprimer",
+      "conformite:exporter",
+      "conformite:administrer",
+      "incidents:lire",
+      "incidents:modifier",
+      "incidents:supprimer",
+      "incidents:exporter",
+      "incidents:administrer",
+      "cartographie:lire",
+      "cartographie:modifier",
+      "cartographie:supprimer",
+      "cartographie:exporter",
+      "cartographie:administrer",
+      "documents:lire",
+      "documents:modifier",
+      "documents:supprimer",
+      "documents:exporter",
+      "documents:administrer",
+      "import_export:lire",
+      "import_export:modifier",
+      "import_export:supprimer",
+      "import_export:exporter",
+      "import_export:administrer",
+      "administration:lire",
+      "administration:modifier",
+      "administration:supprimer",
+      "administration:exporter",
+      "administration:administrer",
+      "parametres:lire",
+      "parametres:modifier",
+      "parametres:supprimer",
+      "parametres:exporter",
+      "parametres:administrer",
+      "tableau_de_bord:lire",
+      "tableau_de_bord:modifier",
+      "tableau_de_bord:supprimer",
+      "tableau_de_bord:exporter",
+      "tableau_de_bord:administrer",
+      "vulnerabilites:lire",
+      "vulnerabilites:modifier",
+      "vulnerabilites:supprimer",
+      "vulnerabilites:exporter",
+      "vulnerabilites:administrer"
+    ],
+    "mfaRequired": true,
+    "webauthn": true,
+    "passwordMinLength": 12,
+    "appName": "Suivi des audits SMSI",
+    "orgName": "Organisation fictive",
+    "orgSite": "",
+    "appearance": {
+      "theme": "auto",
+      "densite": "normale",
+      "style": "sage",
+      "fenetres": "barre"
+    },
+    "version": "7.5.0 · recette visuelle"
+  },
+  "suppliers": [
+    {
+      "id": "SUP-001",
+      "name": "Hébergeur de données fictif",
+      "saas": true,
+      "rattachement": "Cloud",
+      "critical": "Oui",
+      "hds": "Oui",
+      "contact": "contact@exemple.invalid",
+      "notes": "Hébergement des dossiers (fictif).",
+      "sso": "Oui",
+      "mfa": "Oui",
+      "certs": [
+        {
+          "type": "HDS",
+          "scope": "Hébergement",
+          "location": "",
+          "received": "2026-09-11",
+          "validUntil": "2027-12-05"
+        }
+      ],
+      "controls": [
+        {
+          "t": "Vérifier l’activation de l’authentification multifacteur",
+          "id": "ctl-1",
+          "ref": "",
+          "freq": 12,
+          "last": "2026-07-23",
+          "result": "Conforme",
+          "comment": ""
+        },
+        {
+          "t": "Revue des accès",
+          "id": "ctl-2",
+          "ref": "",
+          "freq": 6,
+          "last": "2026-02-23",
+          "result": "Conforme",
+          "comment": ""
+        }
+      ],
+      "certificateState": [
+        "Valide",
+        "ok"
+      ],
+      "controlSummary": {
+        "enRetard": 1,
+        "aRealiser": 0,
+        "nonConformes": 0,
+        "total": 2,
+        "prochain": "2026-08-23"
+      },
+      "current": {
+        "id": "a3b8e436-a0ce-4221-967c-83d478ba6c40",
+        "supplierId": "SUP-001",
+        "evaluatedAt": "2026-10-11",
+        "evaluator": "rssi_demo",
+        "nextReviewAt": "2027-10-06",
+        "items": 3,
+        "meets": 2,
+        "notMeets": 0,
+        "notAssessed": 1
+      },
+      "toReview": false,
+      "scopes": [],
+      "criteria": []
+    },
+    {
+      "id": "SUP-003",
+      "name": "Logiciel de dossiers fictif",
+      "saas": true,
+      "rattachement": "Cloud",
+      "critical": "Oui",
+      "hds": "Oui",
+      "contact": "",
+      "notes": "MFA à activer.",
+      "sso": "Non",
+      "mfa": "Non",
+      "certs": [
+        {
+          "type": "ISO 27001",
+          "scope": "",
+          "location": "",
+          "received": "2025-09-26",
+          "validUntil": "2026-10-11"
+        }
+      ],
+      "controls": [],
+      "certificateState": [
+        "Expiré",
+        "bad"
+      ],
+      "controlSummary": {
+        "enRetard": 0,
+        "aRealiser": 0,
+        "nonConformes": 0,
+        "total": 0,
+        "prochain": null
+      },
+      "current": {
+        "id": "01a6a4df-d5ba-4132-8d23-4974a74aa1da",
+        "supplierId": "SUP-003",
+        "evaluatedAt": "2026-10-11",
+        "evaluator": "rssi_demo",
+        "nextReviewAt": "2026-10-26",
+        "items": 2,
+        "meets": 0,
+        "notMeets": 2,
+        "notAssessed": 0
+      },
+      "toReview": true,
+      "scopes": [],
+      "criteria": []
+    },
+    {
+      "id": "SUP-002",
+      "name": "Messagerie collaborative fictive",
+      "saas": true,
+      "rattachement": "",
+      "critical": "Non",
+      "hds": "Non",
+      "contact": "",
+      "notes": "",
+      "sso": "En cours",
+      "mfa": "Oui",
+      "certs": [],
+      "controls": [
+        {
+          "t": "Vérifier l’intégration au SSO",
+          "id": "ctl-3",
+          "ref": "",
+          "freq": 12,
+          "last": "",
+          "result": "",
+          "comment": ""
+        }
+      ],
+      "certificateState": [
+        "",
+        ""
+      ],
+      "controlSummary": {
+        "enRetard": 0,
+        "aRealiser": 1,
+        "nonConformes": 0,
+        "total": 1,
+        "prochain": null
+      },
+      "current": null,
+      "toReview": false,
+      "scopes": [],
+      "criteria": []
+    },
+    {
+      "id": "SUP-005",
+      "name": "Outil de visioconférence fictif",
+      "saas": true,
+      "rattachement": "",
+      "critical": "Non",
+      "hds": "Non",
+      "contact": "",
+      "notes": "",
+      "sso": "Oui",
+      "mfa": "Oui",
+      "certs": [],
+      "controls": [
+        {
+          "t": "Revue du service",
+          "id": "ctl-4",
+          "ref": "",
+          "freq": 12,
+          "last": "2025-09-26",
+          "result": "Non conforme",
+          "comment": ""
+        }
+      ],
+      "certificateState": [
+        "",
+        ""
+      ],
+      "controlSummary": {
+        "enRetard": 1,
+        "aRealiser": 0,
+        "nonConformes": 0,
+        "total": 1,
+        "prochain": "2026-09-26"
+      },
+      "current": null,
+      "toReview": false,
+      "scopes": [],
+      "criteria": []
+    },
+    {
+      "id": "SUP-004",
+      "name": "Prestataire de maintenance fictif",
+      "saas": false,
+      "rattachement": "",
+      "critical": "Non",
+      "hds": "Non",
+      "contact": "",
+      "notes": "",
+      "sso": "",
+      "mfa": "",
+      "certs": [],
+      "controls": [],
+      "certificateState": [
+        "",
+        ""
+      ],
+      "controlSummary": {
+        "enRetard": 0,
+        "aRealiser": 0,
+        "nonConformes": 0,
+        "total": 0,
+        "prochain": null
+      },
+      "current": null,
+      "toReview": false,
+      "scopes": [],
+      "criteria": []
+    },
+    {
+      "id": "FOURNISSEUR-DEMO-6",
+      "name": "Plateforme de collaboration fictive",
+      "saas": true,
+      "rattachement": "",
+      "critical": "Non",
+      "hds": "Non",
+      "contact": "",
+      "notes": "",
+      "sso": "",
+      "mfa": "",
+      "certs": [],
+      "controls": [],
+      "certificateState": [
+        "",
+        ""
+      ],
+      "controlSummary": {
+        "enRetard": 0,
+        "aRealiser": 0,
+        "nonConformes": 0,
+        "total": 0,
+        "prochain": null
+      },
+      "current": null,
+      "toReview": false,
+      "scopes": [],
+      "criteria": []
+    }
+  ],
+  "criteria": [
+    {
+      "id": "00cef85b-a755-41fc-8f0b-99dbcf0e382f",
+      "label": "Authentification multifacteur",
+      "description": "Critère fictif.",
+      "purposes": [
+        "evaluation",
+        "surveillance"
+      ],
+      "requirementRefs": [
+        "requirement:fde4c738-aeb9-4f60-896c-8a5b0b6af656:1:A-8.5"
+      ],
+      "version": 1,
+      "archived": false,
+      "createdBy": "rssi_demo",
+      "updatedBy": "rssi_demo",
+      "updatedAt": "2026-10-31T20:03:33.617Z"
+    },
+    {
+      "id": "8c77290a-e729-42fd-9b11-a88d65201672",
+      "label": "Certificat valide",
+      "description": "Critère fictif.",
+      "purposes": [
+        "selection",
+        "reevaluation"
+      ],
+      "requirementRefs": [
+        "requirement:fde4c738-aeb9-4f60-896c-8a5b0b6af656:1:A-5.22"
+      ],
+      "version": 1,
+      "archived": false,
+      "createdBy": "rssi_demo",
+      "updatedBy": "rssi_demo",
+      "updatedAt": "2026-10-31T20:03:33.625Z"
+    },
+    {
+      "id": "cb91be96-98ea-43ab-94b7-cf17a44f76d9",
+      "label": "Plan de continuité documenté",
+      "description": "Critère fictif.",
+      "purposes": [
+        "evaluation"
+      ],
+      "requirementRefs": [
+        "requirement:fde4c738-aeb9-4f60-896c-8a5b0b6af656:1:A-5.30"
+      ],
+      "version": 1,
+      "archived": false,
+      "createdBy": "rssi_demo",
+      "updatedBy": "rssi_demo",
+      "updatedAt": "2026-10-31T20:03:33.631Z"
+    }
+  ],
+  "scopes": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "name": "Pilotage de l’organisation fictive",
+      "scope": "Données historiques et nouvelles relations communes",
+      "nature": "",
+      "parentId": null,
+      "entityKind": "perimetre",
+      "inheritFrameworks": false,
+      "visibility": "instance",
+      "timezone": "Europe/Paris",
+      "businessVersion": 1,
+      "riskMethodId": null,
+      "riskMethodVersion": null,
+      "version": 1,
+      "createdBy": "système"
+    }
+  ],
+  "policy": {
+    "definition": {
+      "name": "Organisation — nomenclatures métier",
+      "statuses": [
+        {
+          "id": "todo",
+          "label": "À faire",
+          "terminal": false,
+          "color": "#718975"
+        },
+        {
+          "id": "progress",
+          "label": "En cours",
+          "terminal": false,
+          "color": "#637D90"
+        },
+        {
+          "id": "blocked",
+          "label": "Bloquée",
+          "terminal": false,
+          "color": "#A18A65"
+        },
+        {
+          "id": "done",
+          "label": "Terminée",
+          "terminal": true,
+          "color": "#527E63"
+        },
+        {
+          "id": "cancelled",
+          "label": "Annulée",
+          "terminal": true,
+          "color": "#858B85"
+        }
+      ],
+      "transitions": [
+        {
+          "from": "todo",
+          "to": "progress"
+        },
+        {
+          "from": "todo",
+          "to": "cancelled"
+        },
+        {
+          "from": "progress",
+          "to": "blocked"
+        },
+        {
+          "from": "progress",
+          "to": "done"
+        },
+        {
+          "from": "progress",
+          "to": "cancelled"
+        },
+        {
+          "from": "blocked",
+          "to": "progress"
+        },
+        {
+          "from": "done",
+          "to": "progress"
+        }
+      ],
+      "catalogues": {
+        "actionCategories": [
+          {
+            "id": "action",
+            "label": "Action SMSI"
+          }
+        ],
+        "measureCategories": [
+          {
+            "id": "security",
+            "label": "Sécurité"
+          }
+        ],
+        "proofCategories": [
+          {
+            "id": "document",
+            "label": "Document"
+          },
+          {
+            "id": "record",
+            "label": "Enregistrement"
+          }
+        ],
+        "controlTypes": [
+          {
+            "id": "review",
+            "label": "Revue"
+          },
+          {
+            "id": "test",
+            "label": "Test"
+          }
+        ],
+        "frequencies": [
+          {
+            "id": "monthly",
+            "label": "Mensuelle"
+          },
+          {
+            "id": "quarterly",
+            "label": "Trimestrielle"
+          },
+          {
+            "id": "yearly",
+            "label": "Annuelle"
+          }
+        ],
+        "riskDomains": [
+          {
+            "id": "information",
+            "label": "Sécurité de l’information"
+          }
+        ],
+        "pestelFactors": [
+          {
+            "id": "politique",
+            "label": "Politique"
+          },
+          {
+            "id": "economique",
+            "label": "Économique"
+          },
+          {
+            "id": "social",
+            "label": "Social"
+          },
+          {
+            "id": "technologique",
+            "label": "Technologique"
+          },
+          {
+            "id": "environnemental",
+            "label": "Environnemental"
+          },
+          {
+            "id": "legal",
+            "label": "Légal"
+          }
+        ]
+      },
+      "dashboard": {
+        "cards": [
+          "tasks",
+          "risks",
+          "frameworks",
+          "controls",
+          "evidence"
+        ],
+        "showOverdue": true,
+        "showUnvalidated": true
+      },
+      "notifications": {
+        "enabled": true,
+        "leadDays": 7,
+        "title": "Échéance SMSI",
+        "message": "Une action vous est attribuée. Consultez sa fiche pour connaître son échéance et ses liens."
+      },
+      "templates": [
+        {
+          "id": "review",
+          "label": "Revue périodique",
+          "category": "action",
+          "text": "Décrire le contrôle réalisé et joindre ses justificatifs."
+        }
+      ],
+      "display": {
+        "defaultTaskView": "list",
+        "weekStartsOn": 1,
+        "showClosed": false
+      }
+    }
+  },
+  "risks": [
+    {
+      "id": "00000000-0000-4000-8000-000000000100",
+      "name": "Compromission d’un compte de recette",
+      "code": "R01",
+      "demarche": "ebios_rm",
+      "strategie": "reduce",
+      "brut": "Modéré",
+      "residuel": "Modéré",
+      "acceptabilite": null,
+      "appreciationValidee": false,
+      "acceptation": "sans_objet",
+      "decisionAcceptation": null,
+      "prochaineRevue": "2027-05-13",
+      "enRetard": false,
+      "etude": null,
+      "ecartMatrice": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000101",
+      "name": "Indisponibilité de l’hébergement fictif",
+      "code": "R02",
+      "demarche": "ebios_rm",
+      "strategie": "reduce",
+      "brut": "Élevé",
+      "residuel": "Modéré",
+      "acceptabilite": null,
+      "appreciationValidee": false,
+      "acceptation": "sans_objet",
+      "decisionAcceptation": null,
+      "prochaineRevue": "2027-05-13",
+      "enRetard": false,
+      "etude": null,
+      "ecartMatrice": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000102",
+      "name": "Consultation abusive de dossiers de démonstration",
+      "code": "R03",
+      "demarche": "ebios_rm",
+      "strategie": "reduce",
+      "brut": "Modéré",
+      "residuel": "Modéré",
+      "acceptabilite": null,
+      "appreciationValidee": false,
+      "acceptation": "sans_objet",
+      "decisionAcceptation": null,
+      "prochaineRevue": "2027-05-13",
+      "enRetard": false,
+      "etude": "object:etude-fictive",
+      "ecartMatrice": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000103",
+      "name": "Perte de données de la plateforme fictive",
+      "code": "R04",
+      "demarche": "ebios_rm",
+      "strategie": "reduce",
+      "brut": "Modéré",
+      "residuel": "Modéré",
+      "acceptabilite": null,
+      "appreciationValidee": false,
+      "acceptation": "sans_objet",
+      "decisionAcceptation": null,
+      "prochaineRevue": "2027-05-13",
+      "enRetard": false,
+      "etude": "object:etude-fictive",
+      "ecartMatrice": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000104",
+      "name": "Exfiltration par une interface de démonstration",
+      "code": "R05",
+      "demarche": "ebios_rm",
+      "strategie": "reduce",
+      "brut": "Élevé",
+      "residuel": "Modéré",
+      "acceptabilite": null,
+      "appreciationValidee": false,
+      "acceptation": "sans_objet",
+      "decisionAcceptation": null,
+      "prochaineRevue": "2027-05-13",
+      "enRetard": false,
+      "etude": "object:etude-fictive",
+      "ecartMatrice": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000105",
+      "name": "Rançongiciel chez un prestataire fictif",
+      "code": "R06",
+      "demarche": "ebios_rm",
+      "strategie": "reduce",
+      "brut": "Modéré",
+      "residuel": "Modéré",
+      "acceptabilite": null,
+      "appreciationValidee": false,
+      "acceptation": "sans_objet",
+      "decisionAcceptation": null,
+      "prochaineRevue": "2027-05-13",
+      "enRetard": false,
+      "etude": "object:etude-fictive",
+      "ecartMatrice": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000106",
+      "name": "Interruption du site de secours de recette",
+      "code": "R07",
+      "demarche": "ebios_rm",
+      "strategie": "accept",
+      "brut": "Modéré",
+      "residuel": "Modéré",
+      "acceptabilite": null,
+      "appreciationValidee": false,
+      "acceptation": "acceptee",
+      "decisionAcceptation": {
+        "result": "Acceptée",
+        "until": "2027-10-23",
+        "date": "2026-10-23",
+        "by": "Démonstration"
+      },
+      "prochaineRevue": "2027-05-13",
+      "enRetard": false,
+      "etude": "object:etude-fictive",
+      "ecartMatrice": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000107",
+      "name": "Défaillance d’une sauvegarde de démonstration",
+      "code": "R08",
+      "demarche": "ebios_rm",
+      "strategie": "reduce",
+      "brut": "Élevé",
+      "residuel": "Modéré",
+      "acceptabilite": null,
+      "appreciationValidee": false,
+      "acceptation": "sans_objet",
+      "decisionAcceptation": null,
+      "prochaineRevue": "2027-05-13",
+      "enRetard": false,
+      "etude": "object:etude-fictive",
+      "ecartMatrice": null
+    }
+  ],
+  "objects": [
+    {
+      "id": "00000000-0000-4000-8000-000000000100",
+      "kind": "risk",
+      "name": "Compromission d’un compte de recette",
+      "data": {
+        "code": "R01"
+      },
+      "status": "draft",
+      "version": 1,
+      "createdAt": "2026-11-21T10:00:00Z",
+      "createdBy": "demo_ui"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000101",
+      "kind": "risk",
+      "name": "Indisponibilité de l’hébergement fictif",
+      "data": {
+        "code": "R02"
+      },
+      "status": "draft",
+      "version": 1,
+      "createdAt": "2026-11-21T10:00:00Z",
+      "createdBy": "demo_ui"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000102",
+      "kind": "risk",
+      "name": "Consultation abusive de dossiers de démonstration",
+      "data": {
+        "code": "R03"
+      },
+      "status": "draft",
+      "version": 1,
+      "createdAt": "2026-11-21T10:00:00Z",
+      "createdBy": "demo_ui"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000103",
+      "kind": "risk",
+      "name": "Perte de données de la plateforme fictive",
+      "data": {
+        "code": "R04"
+      },
+      "status": "draft",
+      "version": 1,
+      "createdAt": "2026-11-21T10:00:00Z",
+      "createdBy": "demo_ui"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000104",
+      "kind": "risk",
+      "name": "Exfiltration par une interface de démonstration",
+      "data": {
+        "code": "R05"
+      },
+      "status": "draft",
+      "version": 1,
+      "createdAt": "2026-11-21T10:00:00Z",
+      "createdBy": "demo_ui"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000105",
+      "kind": "risk",
+      "name": "Rançongiciel chez un prestataire fictif",
+      "data": {
+        "code": "R06"
+      },
+      "status": "draft",
+      "version": 1,
+      "createdAt": "2026-11-21T10:00:00Z",
+      "createdBy": "demo_ui"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000106",
+      "kind": "risk",
+      "name": "Interruption du site de secours de recette",
+      "data": {
+        "code": "R07"
+      },
+      "status": "draft",
+      "version": 1,
+      "createdAt": "2026-11-21T10:00:00Z",
+      "createdBy": "demo_ui"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000107",
+      "kind": "risk",
+      "name": "Défaillance d’une sauvegarde de démonstration",
+      "data": {
+        "code": "R08"
+      },
+      "status": "draft",
+      "version": 1,
+      "createdAt": "2026-11-21T10:00:00Z",
+      "createdBy": "demo_ui"
+    }
+  ],
+  "studies": [
+    {
+      "id": "etude-fictive",
+      "kind": "risk_study",
+      "name": "Étude EBIOS RM — système fictif",
+      "data": {},
+      "status": "draft",
+      "version": 1
+    }
+  ],
+  "plans": {
+    "version": 1,
+    "plans": [
+      {
+        "smsi": "00000000-0000-4000-8000-000000000001",
+        "title": "Formation des administrateurs de recette",
+        "kind": "",
+        "start": "2026-03-04",
+        "end": "2026-03-11",
+        "done": "2026-03-11",
+        "status": "Réalisé",
+        "owner": "Équipe de démonstration",
+        "provider": "",
+        "audience": "",
+        "notes": "",
+        "proof": "",
+        "planned": "",
+        "attended": "",
+        "duration": "",
+        "participation": "",
+        "success": "",
+        "indicator": "",
+        "scope": "",
+        "auditor": "",
+        "scenario": "",
+        "systems": "",
+        "objectives": "",
+        "result": "",
+        "retex": "",
+        "pushedAt": "",
+        "createdAt": "",
+        "id": "PL-FORMATION-01",
+        "type": "formation",
+        "items": [],
+        "findings": []
+      },
+      {
+        "smsi": "00000000-0000-4000-8000-000000000001",
+        "title": "Formation à la gestion des accès",
+        "kind": "",
+        "start": "2026-06-04",
+        "end": "2026-06-11",
+        "done": "",
+        "status": "Planifié",
+        "owner": "Équipe de démonstration",
+        "provider": "",
+        "audience": "",
+        "notes": "",
+        "proof": "",
+        "planned": "",
+        "attended": "",
+        "duration": "",
+        "participation": "",
+        "success": "",
+        "indicator": "",
+        "scope": "",
+        "auditor": "",
+        "scenario": "",
+        "systems": "",
+        "objectives": "",
+        "result": "",
+        "retex": "",
+        "pushedAt": "",
+        "createdAt": "",
+        "id": "PL-FORMATION-02",
+        "type": "formation",
+        "items": [],
+        "findings": []
+      },
+      {
+        "smsi": "00000000-0000-4000-8000-000000000001",
+        "title": "Formation au système fictif",
+        "kind": "",
+        "start": "2026-09-04",
+        "end": "2026-09-11",
+        "done": "",
+        "status": "Planifié",
+        "owner": "Équipe de démonstration",
+        "provider": "",
+        "audience": "",
+        "notes": "",
+        "proof": "",
+        "planned": "",
+        "attended": "",
+        "duration": "",
+        "participation": "",
+        "success": "",
+        "indicator": "",
+        "scope": "",
+        "auditor": "",
+        "scenario": "",
+        "systems": "",
+        "objectives": "",
+        "result": "",
+        "retex": "",
+        "pushedAt": "",
+        "createdAt": "",
+        "id": "PL-FORMATION-03",
+        "type": "formation",
+        "items": [],
+        "findings": []
+      },
+      {
+        "smsi": "00000000-0000-4000-8000-000000000001",
+        "title": "Campagne de sensibilisation à la messagerie",
+        "kind": "",
+        "start": "2026-03-04",
+        "end": "2026-03-11",
+        "done": "2026-03-11",
+        "status": "Réalisé",
+        "owner": "Équipe de démonstration",
+        "provider": "",
+        "audience": "",
+        "notes": "",
+        "proof": "",
+        "planned": "",
+        "attended": "",
+        "duration": "",
+        "participation": "",
+        "success": "",
+        "indicator": "",
+        "scope": "",
+        "auditor": "",
+        "scenario": "",
+        "systems": "",
+        "objectives": "",
+        "result": "",
+        "retex": "",
+        "pushedAt": "",
+        "createdAt": "",
+        "id": "PL-SENSI-01",
+        "type": "sensi",
+        "items": [],
+        "findings": []
+      },
+      {
+        "smsi": "00000000-0000-4000-8000-000000000001",
+        "title": "Sensibilisation aux mots de passe",
+        "kind": "",
+        "start": "2026-06-04",
+        "end": "2026-06-11",
+        "done": "",
+        "status": "Planifié",
+        "owner": "Équipe de démonstration",
+        "provider": "",
+        "audience": "",
+        "notes": "",
+        "proof": "",
+        "planned": "",
+        "attended": "",
+        "duration": "",
+        "participation": "",
+        "success": "",
+        "indicator": "",
+        "scope": "",
+        "auditor": "",
+        "scenario": "",
+        "systems": "",
+        "objectives": "",
+        "result": "",
+        "retex": "",
+        "pushedAt": "",
+        "createdAt": "",
+        "id": "PL-SENSI-02",
+        "type": "sensi",
+        "items": [],
+        "findings": []
+      },
+      {
+        "smsi": "00000000-0000-4000-8000-000000000001",
+        "title": "Audit interne du premier semestre",
+        "kind": "",
+        "start": "2026-03-04",
+        "end": "2026-03-11",
+        "done": "2026-03-11",
+        "status": "Réalisé",
+        "owner": "Équipe de démonstration",
+        "provider": "",
+        "audience": "",
+        "notes": "",
+        "proof": "",
+        "planned": "",
+        "attended": "",
+        "duration": "",
+        "participation": "",
+        "success": "",
+        "indicator": "",
+        "scope": "",
+        "auditor": "",
+        "scenario": "",
+        "systems": "",
+        "objectives": "",
+        "result": "",
+        "retex": "",
+        "pushedAt": "",
+        "createdAt": "",
+        "id": "PL-AUDIT-01",
+        "type": "audit",
+        "items": [],
+        "findings": []
+      },
+      {
+        "smsi": "00000000-0000-4000-8000-000000000001",
+        "title": "Audit du processus de démonstration",
+        "kind": "",
+        "start": "2026-06-04",
+        "end": "2026-06-11",
+        "done": "",
+        "status": "Planifié",
+        "owner": "Équipe de démonstration",
+        "provider": "",
+        "audience": "",
+        "notes": "",
+        "proof": "",
+        "planned": "",
+        "attended": "",
+        "duration": "",
+        "participation": "",
+        "success": "",
+        "indicator": "",
+        "scope": "",
+        "auditor": "",
+        "scenario": "",
+        "systems": "",
+        "objectives": "",
+        "result": "",
+        "retex": "",
+        "pushedAt": "",
+        "createdAt": "",
+        "id": "PL-AUDIT-02",
+        "type": "audit",
+        "items": [],
+        "findings": []
+      },
+      {
+        "smsi": "00000000-0000-4000-8000-000000000001",
+        "title": "Exercice de restauration fictive",
+        "kind": "",
+        "start": "2026-03-04",
+        "end": "2026-03-11",
+        "done": "2026-03-11",
+        "status": "Réalisé",
+        "owner": "Équipe de démonstration",
+        "provider": "",
+        "audience": "",
+        "notes": "",
+        "proof": "",
+        "planned": "",
+        "attended": "",
+        "duration": "",
+        "participation": "",
+        "success": "",
+        "indicator": "",
+        "scope": "",
+        "auditor": "",
+        "scenario": "",
+        "systems": "",
+        "objectives": "",
+        "result": "",
+        "retex": "",
+        "pushedAt": "",
+        "createdAt": "",
+        "id": "PL-EXO-01",
+        "type": "exo",
+        "items": [],
+        "findings": []
+      },
+      {
+        "smsi": "00000000-0000-4000-8000-000000000001",
+        "title": "Exercice de crise sur table",
+        "kind": "",
+        "start": "2026-06-04",
+        "end": "2026-06-11",
+        "done": "",
+        "status": "Planifié",
+        "owner": "Équipe de démonstration",
+        "provider": "",
+        "audience": "",
+        "notes": "",
+        "proof": "",
+        "planned": "",
+        "attended": "",
+        "duration": "",
+        "participation": "",
+        "success": "",
+        "indicator": "",
+        "scope": "",
+        "auditor": "",
+        "scenario": "",
+        "systems": "",
+        "objectives": "",
+        "result": "",
+        "retex": "",
+        "pushedAt": "",
+        "createdAt": "",
+        "id": "PL-EXO-02",
+        "type": "exo",
+        "items": [],
+        "findings": []
+      }
+    ],
+    "recurrences": [],
+    "annees": [
+      2026
+    ],
+    "indicateurs": [],
+    "mesures": []
+  },
+  "products": [
+    {
+      "id": "00000000-0000-4000-8000-000000000200",
+      "fournisseurId": null,
+      "editeur": "Éditeur fictif",
+      "nom": "Serveur de recette",
+      "versionProduit": "1.0",
+      "cpe": null,
+      "famille": "systemes",
+      "criticite": "elevee",
+      "responsable": null,
+      "responsableLibelle": null,
+      "origine": "saisie",
+      "suivi": {
+        "rattachees": 0,
+        "aDecider": 1
+      },
+      "version": 1,
+      "createdBy": "demo_ui",
+      "updatedBy": "demo_ui",
+      "createdAt": "2026-11-21T10:00:00Z",
+      "updatedAt": "2026-11-21T10:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000201",
+      "fournisseurId": null,
+      "editeur": "Éditeur fictif",
+      "nom": "Pare-feu de démonstration",
+      "versionProduit": "2.0",
+      "cpe": null,
+      "famille": "reseau",
+      "criticite": "moyenne",
+      "responsable": null,
+      "responsableLibelle": null,
+      "origine": "saisie",
+      "suivi": {
+        "rattachees": 1,
+        "aDecider": 0
+      },
+      "version": 1,
+      "createdBy": "demo_ui",
+      "updatedBy": "demo_ui",
+      "createdAt": "2026-11-21T10:00:00Z",
+      "updatedAt": "2026-11-21T10:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000202",
+      "fournisseurId": null,
+      "editeur": "Éditeur fictif",
+      "nom": "Messagerie fictive",
+      "versionProduit": "3.0",
+      "cpe": null,
+      "famille": "messagerie",
+      "criticite": "moyenne",
+      "responsable": null,
+      "responsableLibelle": null,
+      "origine": "saisie",
+      "suivi": {
+        "rattachees": 2,
+        "aDecider": 0
+      },
+      "version": 1,
+      "createdBy": "demo_ui",
+      "updatedBy": "demo_ui",
+      "createdAt": "2026-11-21T10:00:00Z",
+      "updatedAt": "2026-11-21T10:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000203",
+      "fournisseurId": null,
+      "editeur": "Éditeur fictif",
+      "nom": "Application métier fictive",
+      "versionProduit": "4.0",
+      "cpe": null,
+      "famille": "applications_metier",
+      "criticite": "elevee",
+      "responsable": null,
+      "responsableLibelle": null,
+      "origine": "saisie",
+      "suivi": {
+        "rattachees": 0,
+        "aDecider": 1
+      },
+      "version": 1,
+      "createdBy": "demo_ui",
+      "updatedBy": "demo_ui",
+      "createdAt": "2026-11-21T10:00:00Z",
+      "updatedAt": "2026-11-21T10:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000204",
+      "fournisseurId": null,
+      "editeur": "Éditeur fictif",
+      "nom": "Poste de recette",
+      "versionProduit": "5.0",
+      "cpe": null,
+      "famille": "postes_de_travail",
+      "criticite": "moyenne",
+      "responsable": null,
+      "responsableLibelle": null,
+      "origine": "saisie",
+      "suivi": {
+        "rattachees": 1,
+        "aDecider": 0
+      },
+      "version": 1,
+      "createdBy": "demo_ui",
+      "updatedBy": "demo_ui",
+      "createdAt": "2026-11-21T10:00:00Z",
+      "updatedAt": "2026-11-21T10:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000205",
+      "fournisseurId": null,
+      "editeur": "Éditeur fictif",
+      "nom": "Portail de démonstration",
+      "versionProduit": "6.0",
+      "cpe": null,
+      "famille": "web",
+      "criticite": "moyenne",
+      "responsable": null,
+      "responsableLibelle": null,
+      "origine": "saisie",
+      "suivi": {
+        "rattachees": 2,
+        "aDecider": 0
+      },
+      "version": 1,
+      "createdBy": "demo_ui",
+      "updatedBy": "demo_ui",
+      "createdAt": "2026-11-21T10:00:00Z",
+      "updatedAt": "2026-11-21T10:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000206",
+      "fournisseurId": null,
+      "editeur": "Éditeur fictif",
+      "nom": "Collecteur fictif",
+      "versionProduit": "7.0",
+      "cpe": null,
+      "famille": "systemes",
+      "criticite": "elevee",
+      "responsable": null,
+      "responsableLibelle": null,
+      "origine": "saisie",
+      "suivi": {
+        "rattachees": 0,
+        "aDecider": 1
+      },
+      "version": 1,
+      "createdBy": "demo_ui",
+      "updatedBy": "demo_ui",
+      "createdAt": "2026-11-21T10:00:00Z",
+      "updatedAt": "2026-11-21T10:00:00Z"
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000207",
+      "fournisseurId": null,
+      "editeur": "Éditeur fictif",
+      "nom": "Console de sauvegarde fictive",
+      "versionProduit": "8.0",
+      "cpe": null,
+      "famille": "reseau",
+      "criticite": "moyenne",
+      "responsable": null,
+      "responsableLibelle": null,
+      "origine": "saisie",
+      "suivi": {
+        "rattachees": 1,
+        "aDecider": 0
+      },
+      "version": 1,
+      "createdBy": "demo_ui",
+      "updatedBy": "demo_ui",
+      "createdAt": "2026-11-21T10:00:00Z",
+      "updatedAt": "2026-11-21T10:00:00Z"
+    }
+  ],
+  "vue": {
+    "niveau": {
+      "niveau": 4,
+      "libelle": "Maximale",
+      "explication": "Une faille de démonstration est présente en P1 : seuil d’alerte critique fictif.",
+      "faits": {
+        "critiques": 1,
+        "simples": 0,
+        "p2Presentes": 3,
+        "exploiteesAConfirmer": 0
+      }
+    },
+    "tuiles": {
+      "exploiteesPresentes": 1,
+      "aTraiter": {
+        "p1": 1,
+        "p2": 3
+      },
+      "aConfirmer": {
+        "failles": 2,
+        "produits": 2
+      },
+      "corrigeesCeMois": 4,
+      "enDepassement": 1,
+      "exploiteesSansCorrectif": 0,
+      "exploiteesCorrectifNonRenseigne": 0,
+      "finDeSupport": {
+        "constats": 0,
+        "machines": {
+          "lisibles": 0,
+          "horsLecture": false
+        },
+        "services": {
+          "lisibles": 0,
+          "horsLecture": false
+        }
+      }
+    },
+    "total": 7,
+    "parPriorite": {
+      "P1": 1,
+      "P2": 3,
+      "P3": 2,
+      "P4": 1
+    },
+    "cases": [
+      {
+        "secteur": "systemes",
+        "priorite": "P1",
+        "total": 1
+      },
+      {
+        "secteur": "reseau",
+        "priorite": "P2",
+        "total": 1
+      },
+      {
+        "secteur": "messagerie",
+        "priorite": "P2",
+        "total": 1
+      },
+      {
+        "secteur": "applications_metier",
+        "priorite": "P2",
+        "total": 1
+      },
+      {
+        "secteur": "postes_de_travail",
+        "priorite": "P3",
+        "total": 1
+      },
+      {
+        "secteur": "web",
+        "priorite": "P3",
+        "total": 1
+      },
+      {
+        "secteur": "systemes",
+        "priorite": "P4",
+        "total": 1
+      }
+    ],
+    "cibles": [
+      {
+        "cle": "CVE-2026-90001",
+        "cve": "CVE-2026-90001",
+        "titre": "Vulnérabilité fictive du produit de démonstration 1",
+        "produit": "Serveur de recette",
+        "secteur": "systemes",
+        "priorite": {
+          "niveau": "P1",
+          "faits": []
+        },
+        "presences": [
+          "detectee"
+        ],
+        "exploitee": true,
+        "exploitable": true,
+        "aConfirmer": false,
+        "gravite": "critique",
+        "epss": 0.86,
+        "etat": "a_traiter",
+        "machines": {
+          "lisibles": 1,
+          "horsLecture": false
+        },
+        "actifs": {
+          "lisibles": 0,
+          "horsLecture": false
+        },
+        "produitId": "00000000-0000-4000-8000-000000000200",
+        "fiche": null
+      },
+      {
+        "cle": "CVE-2026-90002",
+        "cve": "CVE-2026-90002",
+        "titre": "Vulnérabilité fictive du produit de démonstration 2",
+        "produit": "Pare-feu de démonstration",
+        "secteur": "reseau",
+        "priorite": {
+          "niveau": "P2",
+          "faits": []
+        },
+        "presences": [
+          "detectee"
+        ],
+        "exploitee": false,
+        "exploitable": true,
+        "aConfirmer": false,
+        "gravite": "elevee",
+        "epss": 0.76,
+        "etat": "a_traiter",
+        "machines": {
+          "lisibles": 2,
+          "horsLecture": false
+        },
+        "actifs": {
+          "lisibles": 0,
+          "horsLecture": false
+        },
+        "produitId": "00000000-0000-4000-8000-000000000201",
+        "fiche": null
+      },
+      {
+        "cle": "CVE-2026-90003",
+        "cve": "CVE-2026-90003",
+        "titre": "Vulnérabilité fictive du produit de démonstration 3",
+        "produit": "Messagerie fictive",
+        "secteur": "messagerie",
+        "priorite": {
+          "niveau": "P2",
+          "faits": []
+        },
+        "presences": [
+          "detectee"
+        ],
+        "exploitee": false,
+        "exploitable": true,
+        "aConfirmer": false,
+        "gravite": "elevee",
+        "epss": 0.66,
+        "etat": "a_traiter",
+        "machines": {
+          "lisibles": 3,
+          "horsLecture": false
+        },
+        "actifs": {
+          "lisibles": 0,
+          "horsLecture": false
+        },
+        "produitId": "00000000-0000-4000-8000-000000000202",
+        "fiche": null
+      },
+      {
+        "cle": "CVE-2026-90004",
+        "cve": "CVE-2026-90004",
+        "titre": "Vulnérabilité fictive du produit de démonstration 4",
+        "produit": "Application métier fictive",
+        "secteur": "applications_metier",
+        "priorite": {
+          "niveau": "P2",
+          "faits": []
+        },
+        "presences": [
+          "detectee"
+        ],
+        "exploitee": false,
+        "exploitable": false,
+        "aConfirmer": false,
+        "gravite": "elevee",
+        "epss": 0.56,
+        "etat": "a_traiter",
+        "machines": {
+          "lisibles": 4,
+          "horsLecture": false
+        },
+        "actifs": {
+          "lisibles": 0,
+          "horsLecture": false
+        },
+        "produitId": "00000000-0000-4000-8000-000000000203",
+        "fiche": null
+      },
+      {
+        "cle": "CVE-2026-90005",
+        "cve": "CVE-2026-90005",
+        "titre": "Vulnérabilité fictive du produit de démonstration 5",
+        "produit": "Poste de recette",
+        "secteur": "postes_de_travail",
+        "priorite": {
+          "niveau": "P3",
+          "faits": []
+        },
+        "presences": [
+          "detectee"
+        ],
+        "exploitee": false,
+        "exploitable": false,
+        "aConfirmer": false,
+        "gravite": "elevee",
+        "epss": 0.46,
+        "etat": "a_traiter",
+        "machines": {
+          "lisibles": 5,
+          "horsLecture": false
+        },
+        "actifs": {
+          "lisibles": 0,
+          "horsLecture": false
+        },
+        "produitId": "00000000-0000-4000-8000-000000000204",
+        "fiche": null
+      },
+      {
+        "cle": "CVE-2026-90006",
+        "cve": "CVE-2026-90006",
+        "titre": "Vulnérabilité fictive du produit de démonstration 6",
+        "produit": "Portail de démonstration",
+        "secteur": "web",
+        "priorite": {
+          "niveau": "P3",
+          "faits": []
+        },
+        "presences": [
+          "a_confirmer"
+        ],
+        "exploitee": false,
+        "exploitable": false,
+        "aConfirmer": true,
+        "gravite": "elevee",
+        "epss": 0.36,
+        "etat": "a_traiter",
+        "machines": {
+          "lisibles": 6,
+          "horsLecture": false
+        },
+        "actifs": {
+          "lisibles": 0,
+          "horsLecture": false
+        },
+        "produitId": "00000000-0000-4000-8000-000000000205",
+        "fiche": null
+      },
+      {
+        "cle": "CVE-2026-90007",
+        "cve": "CVE-2026-90007",
+        "titre": "Vulnérabilité fictive du produit de démonstration 7",
+        "produit": "Collecteur fictif",
+        "secteur": "systemes",
+        "priorite": {
+          "niveau": "P4",
+          "faits": []
+        },
+        "presences": [
+          "a_confirmer"
+        ],
+        "exploitee": false,
+        "exploitable": false,
+        "aConfirmer": true,
+        "gravite": "elevee",
+        "epss": 0.26,
+        "etat": "a_traiter",
+        "machines": {
+          "lisibles": 7,
+          "horsLecture": false
+        },
+        "actifs": {
+          "lisibles": 0,
+          "horsLecture": false
+        },
+        "produitId": "00000000-0000-4000-8000-000000000206",
+        "fiche": null
+      }
+    ],
+    "tronquee": false,
+    "journal": [
+      {
+        "nature": "collecte",
+        "le": "2026-11-21T09:40:00Z",
+        "source": "cert-fr",
+        "etat": "recu",
+        "elements": 7
+      }
+    ],
+    "variation": null,
+    "calculeLe": "2026-11-21T10:00:00Z"
+  },
+  "veille": {
+    "flux": {
+      "ouvert": true,
+      "applique": null
+    },
+    "executant": {
+      "disponible": true
+    },
+    "mandataire": {
+      "actif": false
+    },
+    "sources": [],
+    "fichesCertSante": {
+      "lues": 0,
+      "aLire": 0,
+      "derniereLecture": null,
+      "relectureJours": 7
+    }
+  }
+}
