@@ -2,6 +2,20 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+Aucune migration, aucune action : correctif de l'interface du module Vulnérabilités.
+
+### Corrigé
+
+- Vulnérabilités, **page « Machines » en erreur** en venant de l'onglet « Périmètres » (par exemple depuis la carte
+  « Sans périmètre ») : « Une erreur est survenue » avec le message technique « (perimetres.data ?? []).map is not a
+  function ». Les deux écrans rangeaient deux réponses différentes sous la même clé du cache de l'interface ; la liste des
+  périmètres a désormais sa propre clé. Un test vérifie qu'aucune clé du cache ne sert à deux adresses d'API différentes
+  (session « Module surveillance vulnérabilités SMSI »).
+
 ## [7.5.1] — 2026-11-21
 
 ### Notes de mise à jour

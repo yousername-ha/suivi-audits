@@ -187,9 +187,28 @@ chacune avec son débit par passage) et rapporte l'état appliqué du nouveau fl
 `scripts/tests/test_exploitation.py`, `apps/api/test/veille-reglementaire-architecture.test.ts`,
 `apps/api/test/architecture-flux.test.ts`.
 
+## Décision du RSSI du 22/11/2026 : sources de la tranche suivante
+
+Constat de la session principale (une lecture de chaque adresse, 22/11/2026) : le CERT Santé publie, en plus du flux des
+alertes lu par la veille des vulnérabilités, un flux RSS 2.0 de ses **actualités** (`https://cyberveille.esante.gouv.fr/actualites/rss.xml`,
+20 articles : menaces visant le secteur de la santé, quelques sujets réglementaires), non signalé en page d'accueil ; le flux
+des dossiers thématiques existe mais est vide. Aucune condition de réutilisation n'est publiée. Le site principal de l'ANS
+(`esante.gouv.fr`) n'a toujours aucun flux.
+
+Le RSSI retient pour la tranche suivante :
+
+1. **CERT Santé, actualités** : nouvelle source, titre, date et lien seulement (règle de l'ANSSI et de l'ANS), domaine
+   sécurité ; hôte déjà ouvert pour la veille des vulnérabilités.
+2. **Journal officiel par les données ouvertes de la DILA** (fichier quotidien, sans compte), filtré par mots-clés comme
+   EUR-Lex ; nouvel hôte en sortie.
+3. **Journal officiel par l'API Légifrance (plateforme PISTE)** : compte et clé créés par l'établissement, clé saisie dans
+   l'application seulement (jamais transmise ailleurs).
+
+Non retenu : lire les pages du site principal de l'ANS (fragile à chaque refonte). La ligne « ANS » reste « non disponible ».
+
 ## Ce qui n'est pas fait
 
-- ANS (aucun flux public connu), Légifrance (Journal officiel, open data de la DILA), purge des publications anciennes, temps réel (SSE), suites données à
+- ANS (aucun flux public connu), Légifrance (Journal officiel : données ouvertes de la DILA et API PISTE, retenues le 22/11/2026), CERT Santé actualités (retenu le 22/11/2026), purge des publications anciennes, temps réel (SSE), suites données à
   une publication « impactant », notification d'une publication nouvelle.
 - Aucune collecte réelle par la plateforme : le script est vérifié sur des flux fictifs écrits à la main ; seule la forme des
   flux a été relevée sur les adresses réelles (constats ci-dessus), pas le passage du filtre d'EUR-Lex sur ses vrais titres.
