@@ -73,6 +73,13 @@ dossier, tests modifiés et captures de référence à valider par le RSSI.
 
 ## 5. Ce qui reste à décider ou à faire
 
+- **Suite de l'apparence : session Neon.** Cette livraison s'arrête à l'intégration, aux corrections de fonctionnement
+  et à la recette. Les choix graphiques (teintes, contours, densité, forme du mini-menu, habillage des barres) sont
+  repris ensuite par la session Neon, propriétaire de la charte (`packages/ui`). À ne pas défaire sans rejouer la
+  recette : la réservation du pied, l'accrochage du défilement et le contrôle après découpage
+  (`neon-fiches-pages.css`, `FichesSansDefilement.tsx`), et la fermeture immédiate du panneau de filtres
+  (`BarreOutils.tsx`).
+
 - **Validation du RSSI** : captures de référence régénérées et tests de bout en bout modifiés (liste dans la recette).
 - Essai « boîte d'outils claire ou bleu nuit » : le lot retient le bleu nuit ; la préférence enregistrée n'a plus
   d'effet. À confirmer, puis retirer le champ du schéma des préférences.

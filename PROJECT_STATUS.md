@@ -6,7 +6,8 @@
 > Le dossier Codex est repris ; le moteur des fiches en parties est réécrit (hauteur au contenu, parties nommées, pied
 > réservé, accrochage natif, repli sur le défilement habituel quand le découpage n'est pas sûr) et trois défauts de la
 > barre d'outils sont corrigés. **Attendu du RSSI** : valider les 68 captures de référence régénérées et les tests de
-> bout en bout modifiés, puis décider de la fusion. À lire avant toute reprise de ce lot.
+> bout en bout modifiés, puis décider de la fusion. La suite de l'apparence revient à la session Neon. À lire avant
+> toute reprise de ce lot.
 >
 
 > **22/11/2026 — dossier d’implémentation pour l’IA** : [point d’entrée](docs/refonte-neon/implementation-interface-2026-11-21/README.md),
