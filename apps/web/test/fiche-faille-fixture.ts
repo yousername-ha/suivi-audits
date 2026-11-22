@@ -3,6 +3,7 @@ import type { FicheFailleDto, RecommandationsFicheDto } from '@suivi/shared';
 
 export const RECOMMANDATIONS_VIDES: RecommandationsFicheDto = {
   tenable: null,
+  tenableRegroupes: [],
   kev: [],
   kevTronque: false,
   versionsNvd: [],

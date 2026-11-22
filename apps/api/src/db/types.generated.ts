@@ -2300,6 +2300,26 @@ export interface VulnerabilitesSynchronisations {
   complete: Generated<boolean>;
 }
 
+export interface VulnerabilitesTenableCorrectifConstats {
+  correctif_id: string;
+  constat_id: string;
+}
+
+export interface VulnerabilitesTenableCorrectifs {
+  id: Generated<string>;
+  integration_id: string;
+  solution_id: string;
+  solution: string;
+  machines: number | null;
+  cves: number | null;
+  detections: number | null;
+  vpr_score: ColumnType<string | null, number | string | null, number | string | null>;
+  cvss3_score: ColumnType<string | null, number | string | null, number | string | null>;
+  epss_score: ColumnType<string | null, number | string | null, number | string | null>;
+  vu_numero: number;
+  vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface VulnerabilitesTenableDepots {
   id: Generated<string>;
   integration_id: string;
@@ -2323,6 +2343,7 @@ export interface VulnerabilitesTenableEtat {
   inventaire_erreur: string | null;
   inventaire_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
   planifiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  correctifs_numero: number | null;
 }
 
 export interface VulnerabilitesVeilleAvis {
@@ -2649,6 +2670,8 @@ export interface DB {
   vulnerabilites_suivi_historique: VulnerabilitesSuiviHistorique;
   vulnerabilites_suivis: VulnerabilitesSuivis;
   vulnerabilites_synchronisations: VulnerabilitesSynchronisations;
+  vulnerabilites_tenable_correctif_constats: VulnerabilitesTenableCorrectifConstats;
+  vulnerabilites_tenable_correctifs: VulnerabilitesTenableCorrectifs;
   vulnerabilites_tenable_depots: VulnerabilitesTenableDepots;
   vulnerabilites_tenable_etat: VulnerabilitesTenableEtat;
   vulnerabilites_veille_avis: VulnerabilitesVeilleAvis;

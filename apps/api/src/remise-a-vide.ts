@@ -204,6 +204,9 @@ export const TABLES_TRAVAIL = [
   'vulnerabilites_constats',
   'vulnerabilites_constat_cves',
   'vulnerabilites_detections',
+  // Correctifs regroupés de Tenable (ADR 0100, lot QF-TEN) : relus à la synchronisation suivante.
+  'vulnerabilites_tenable_correctifs',
+  'vulnerabilites_tenable_correctif_constats',
   // Rapprochement par version (ADR 0100, lot V4a) : produits touchés tirés de NVD (recalculables), liens produit-machine et
   // rapprochements décidés par les utilisateurs, effacés avec les produits, les machines et la veille.
   'vulnerabilites_veille_cve_produits',

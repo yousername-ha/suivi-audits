@@ -2072,7 +2072,7 @@ correctif », le vrai zero-day). Parc annoncé : 150 machines, 10 000 vulnérabi
 | --- | --- | --- | --- | --- |
 | Correctif | Tenable (`vulndetails`) | `solution` | `vulnerabilites_constats.correctif` (anglais, nettoyé, 2 000 caractères) | **Oui** : clé du regroupement |
 | Correctif | Tenable (`vulndetails`) | `patchPubDate` | `correctif_publie_le` | **Oui** : « correctif disponible » à cette date |
-| Correctif | Tenable (`sumremediation`) | — | **Non** : la vue est permise (même appel `POST /rest/analysis`) mais le connecteur ne la demande pas ; seul `scripts/dev/exemples-tenable.ps1` l'a lue le 16/11/2026 | Non (voir « Points ouverts ») |
+| Correctif | Tenable (`sumremediation`) | `solutionID`, `solution`, `pluginID`, `hostTotal`, `cveTotal`, `total`, `vprScore`, `cvssV3BaseScore`, `epssScore` (lot QF-TEN) | **Oui** depuis le lot QF-TEN (migration `102`, `vulnerabilites_tenable_correctifs`) ; avant : non lue | Non dans ce lot ; fiche et assistant depuis le lot QF-TEN, vue « Correctifs » pas encore (voir l'addendum « lot QF-TEN ») |
 | Correctif | CERT Santé (fiche) | mention « Un correctif existe : Oui / Non » | `vulnerabilites_veille_avis.fiche_correctif` (lot V4c) | **Oui** : « disponible » ou « aucun correctif connu » |
 | Correctif | CISA KEV | `requiredAction` | `kev_action` | Non pour l'état : une consigne (« appliquer les mesures de l'éditeur ou cesser l'usage »), pas la preuve d'un correctif ; reste affichée dans la fiche |
 | Correctif | NVD | bornes `versionEndExcluding` / `versionEndIncluding` | `vulnerabilites_veille_cve_produits` | Non pour l'état : une borne haute publiée suggère une version corrigée sans la prouver ; reste affichée dans la fiche (« n'est plus citée comme touchée ») |
@@ -2142,7 +2142,7 @@ correctif », le vrai zero-day). Parc annoncé : 150 machines, 10 000 vulnérabi
    marque reste « Zero-day : exploitation avérée » et la précision est ajoutée à côté ; alertes et priorité inchangées.
 2. **Priorité d'une machine en fin de support** : doit-elle monter d'un cran (ou la faille qu'elle porte) ? Aucun effet dans ce
    lot.
-3. **Lire `sumremediation`** dans la synchronisation (même appel `POST /rest/analysis`, champs `solutionID`, `solution`,
+3. **Réalisé par le lot QF-TEN (22/11/2026)**, sans `remediationList`, pour la fiche et l'assistant ; la vue « Correctifs » ne l'utilise pas encore. Question d'origine : **Lire `sumremediation`** dans la synchronisation (même appel `POST /rest/analysis`, champs `solutionID`, `solution`,
    `remediationList`, `pluginID`, en liste blanche) pour fusionner les libellés d'un même correctif ? Demanderait une page
    d'analyse de plus par synchronisation et une migration (table des correctifs).
 4. **Lire `latest_version`** d'AlgoLightHouse (exclu au lot ALH6) pour faire entrer les CVE exposées dans la vue par correctif
@@ -3999,3 +3999,72 @@ ici. Pile Docker, Node 26, CSP du serveur de production et parcours de bout en b
 Spec Playwright du formulaire et de la source ; suppression des produits disparus du dictionnaire ; obsolescence des
 versions de la copie complète au fil des nouveautés ; clé d'API de la NVD (débit plus élevé) ; proposition d'un produit du
 dictionnaire à partir d'une technologie de la surface externe ou d'un produit vu par Tenable.
+
+## Addendum du 22/11/2026 — lot QF-TEN : correctifs regroupés de Tenable dans « Quoi faire »
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive
+`102`. Aucune dépendance, **aucun point d'accès nouveau** (liste fermée de Tenable inchangée : la vue est demandée par
+`POST /rest/analysis`, déjà permis), aucune route nouvelle, aucun rôle ni droit nouveau ; `scripts/exploitation-worker.py`,
+`scripts/update-worker.py`, `docker*` et `apps/*/src/assistant/*` non touchés. Réalise la question 3 de l'addendum « lot S3 »
+pour la fiche et l'assistant.
+
+### Demande du RSSI (22/11/2026)
+
+Lire la vue `sumremediation` (qui répond chez lui : 1 191 correctifs, identifiants de forme « SC-33850 ») et la mettre dans
+« Quoi faire » : rubrique « Correctif recommandé par Tenable » dans la fiche d'une faille, vue « Correctifs », outil
+`evaluer_cve` de l'assistant. Ni priorité ni alerte ne changent ; l'import `.nessus` n'a pas cette vue.
+
+### Réalisation
+
+- **Script du connecteur** (`scripts/integration-http.py`, `lire_correctifs`) : après les failles, même appel et même corps
+  que `vulndetails` (`sourceType` `cumulative`, filtre `severity` de l'instance), `tool: "sumremediation"`, paginé par
+  `pageAnalyse` (200). Liste blanche `CHAMPS_CORRECTIF` : `solutionID`, `solution`, `pluginID`, `hostTotal`, `cveTotal`,
+  `total`, `vprScore`, `cvssV3BaseScore`, `epssScore`. **Écartés dès la lecture** : `remediationList` (contenu non documenté,
+  qui peut nommer des machines ou des adresses : dans le doute, non lu), `cpe`, `score`, `scorePctg`, `totalPctg`,
+  `msbulletinTotal`, `cvssV4BaseScore` et tout autre champ. `pluginID` accepté en chaîne séparée par des virgules (forme
+  probable), en liste ou en nombre ; numéros valides seulement, sans doublon. Texte nettoyé comme un constat (2 000
+  caractères), EPSS converti du pourcentage (forme supposée, comme `vulndetails`). Bornes (`TENABLE_BORNES`, recopiées dans
+  `BORNES_SYNCHRO`) : 5 000 correctifs, 25 pages, 1 000 contrôles par correctif, identifiant de 64 caractères. **Une lecture
+  incomplète (borne, durée) ou refusée ne rapporte aucun correctif** ; elle ne fait pas échouer la synchronisation des failles
+  et n'entre pas dans son bilan (un résultat écarté est compté à part, `resultat.correctifs`, que l'exécutant, non modifié, ne
+  transmet pas). Les correctifs sont rapportés en dernier, après l'inventaire.
+- **API** : élément `correctif` (`ElementCorrectifTenable`, strict) revalidé par zod ; rangé par (instance, identifiant)
+  dans `vulnerabilites_tenable_correctifs` ; contrôles rattachés aux constats **déjà rangés** de la même instance
+  (`vulnerabilites_tenable_correctif_constats` ; un numéro inconnu n'est pas gardé), remplacés à chaque synchronisation qui
+  rapporte le correctif. À la fin acceptée (bilan cohérent), `vulnerabilites_tenable_etat.correctifs_numero` désigne la
+  synchronisation dont les correctifs sont montrés ; une synchronisation sans correctif garde les précédents. **Rien n'est
+  supprimé** : un correctif non rapporté reste rangé, mais n'est plus montré. Les deux tables sont vidées par la remise à vide
+  du travail, comme les autres tables de Tenable.
+- **Fiche d'une faille** (constat ou CVE) : `recommandations.tenableRegroupes`, une lecture de plus (fixe) : correctifs de la
+  dernière synchronisation reçue en entier qui couvrent le constat, ou un constat qui cite la CVE, du plus large au plus
+  étroit (5 au plus) : identifiant, texte, nombre de contrôles et de CVE corrigées (`cveTotal`), **machines que la personne
+  lit** qui portent un de ces contrôles (détection présente), drapeau sans nombre pour les autres. Le nombre de machines de
+  Tenable (`hostTotal`, sur tout le parc analysé) est rangé mais **n'est pas rendu**. Rubrique « Correctif recommandé par
+  Tenable » avec la source nommée, **absente** sans correctif ; aucune pour une faille déclarée ou une alerte.
+- **Assistant** (`evaluer_cve`, `quoiFaire.tenable.correctifsRegroupes`) : source nommée, puis par correctif l'identifiant,
+  le texte (600 caractères), les numéros des contrôles **lisibles** qui portent la CVE et les CVE corrigées ; aucun nom de
+  machine, adresse, périmètre ni nombre de machines. Un correctif regroupé compte comme correctif pour la mention « aucun
+  correctif publié par les sources lues ». `elements` inchangé (la rubrique `tenable` reste une rubrique).
+
+### Choix de réalisation, à confirmer par le RSSI
+
+1. **`remediationList` non lue** (contenu inconnu ; peut-être des machines). À lire seulement si un exemple anonymisé montre
+   qu'il ne contient ni nom ni adresse.
+2. **Nombre de machines selon les droits**, pas celui de Tenable (`hostTotal`), pour ne pas révéler le parc hors des
+   périmètres d'une personne ; l'assistant n'en reçoit aucun.
+3. **Lecture tout ou rien** : une lecture partielle ne remplace pas la précédente.
+4. **Texte et identifiant montrés à quiconque lit la fiche** (comme les noms de contrôles, lot PC1).
+5. **Vue « Correctifs » non modifiée dans ce lot** (gel de la version du 22/11/2026) : elle garde le regroupement par texte ;
+   brancher les correctifs regroupés (avec la source de chaque regroupement à l'écran) reste à faire.
+
+### Non vérifié
+
+Forme réelle de la réponse de `sumremediation` (seuls les noms de champs sont connus) : forme de `pluginID`, unité de
+`epssScore`, pagination de cette vue par `startOffset`/`endOffset`, temps de réponse. Spec Playwright : aucune ajoutée ni
+jouée. Node 26 (essais sous Node 24).
+
+### Points ouverts (hors lot)
+
+1. Vue « Correctifs » alimentée par les correctifs regroupés, regroupement par texte gardé pour le reste et pour les imports
+   `.nessus`, source dite à l'écran.
+2. Les choix ci-dessus.

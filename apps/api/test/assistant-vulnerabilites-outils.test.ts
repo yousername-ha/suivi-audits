@@ -271,6 +271,19 @@ const detection = (plugin: string, n: number) => ({
   risqueAccepte: false,
   risqueRequalifie: false,
 });
+/** Lot QF-TEN : correctif regroupé de Tenable (vue sumremediation), fictif. */
+const CORRECTIF_REGROUPE = {
+  type: 'correctif',
+  identifiant: 'SC-97001',
+  solution: 'Apply the fictitious cumulative update EX-97.',
+  plugins: ['970005', '970009', '970777'],
+  machines: 2,
+  cves: 3,
+  detections: 4,
+  vpr: 6.1,
+  cvss3Score: 9.1,
+  epss: 0.12,
+};
 const parc = (): Record<string, unknown>[] => [
   machine(1),
   machine(2),
@@ -689,7 +702,8 @@ describe('avec un connecteur Tenable : machines et constats', () => {
       [tenable],
     );
     const job = (await t.svc.integrations.reclamer(true))!;
-    const elements = parc();
+    // Lot QF-TEN : un correctif regroupé de Tenable (sumremediation) qui couvre 970005 et 970009 ; 970777 n'est pas rangé.
+    const elements = [...parc(), CORRECTIF_REGROUPE];
     await t.svc.integrations.lot(job.id as string, elements);
     const compte = (x: string) => elements.filter((e) => e.type === x).length;
     await t.svc.integrations.terminer(job.id as string, {
@@ -736,6 +750,19 @@ describe('avec un connecteur Tenable : machines et constats', () => {
       tenable: {
         source: 'Tenable (correctif publié pour chaque contrôle)',
         correctifs: [{ controles: ['970005'], correctif: CORRECTIF_TENABLE, publieLe: '2026-10-05' }],
+        // Lot QF-TEN : le regroupement officiel de Tenable, identifiant et source ; seuls les contrôles lisibles qui portent
+        // la CVE ; aucune machine, ni nombre de machines de Tenable.
+        correctifsRegroupes: {
+          source: 'Tenable Security Center (correctifs regroupés, vue « sumremediation »)',
+          correctifs: [
+            {
+              identifiant: 'SC-97001',
+              correctif: CORRECTIF_REGROUPE.solution,
+              controles: ['970005'],
+              cvesCorrigees: 3,
+            },
+          ],
+        },
       },
     });
     expect(d.constats[0]).toMatchObject({ controle: { numero: '970005' }, correctifPublieLe: '2026-10-05' });
@@ -777,6 +804,14 @@ describe('avec un connecteur Tenable : machines et constats', () => {
           ),
         )),
       ] as const;
+      // Lot QF-TEN : le correctif regroupé part sans machine ni nombre de machines de Tenable.
+      const regroupe = JSON.stringify(
+        ((await o.evaluerCve(CVE_TENABLE)).donnees as { quoiFaire: { tenable?: { correctifsRegroupes?: unknown } } })
+          .quoiFaire.tenable?.correctifsRegroupes ?? null,
+      );
+      expect(regroupe, u.username).toContain('SC-97001');
+      expect(regroupe).not.toMatch(/machine|"machines"|hostTotal|"detections"/i);
+      sansIdentifiant(regroupe, `correctif regroupé, ${u.username}`);
       for (const [nom, s] of sorties) {
         sansIdentifiant(JSON.stringify(s), `${nom}, ${u.username}`);
         expect(JSON.stringify(s), `${nom}, ${u.username}`).not.toMatch(/"role"|Rôle|\bfront\b|\bbdd\b/);
