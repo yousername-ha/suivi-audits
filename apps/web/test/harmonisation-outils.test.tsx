@@ -3,7 +3,7 @@
 import { Button, Checkbox, SegmentedControl, Select, Text, TextInput } from '@mantine/core';
 import { Children, createElement, isValidElement, type ReactElement, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { BarreFiltres, compterFiltres } from '../src/components/BarreFiltres';
+import { BarreFiltres, compterFiltres, NOM_BARRE_NEUTRE } from '../src/components/BarreFiltres';
 import type { VueBoite } from '../src/components/BarreOutils';
 
 type Element = ReactElement<Record<string, unknown> & { children?: ReactNode }>;
@@ -22,6 +22,24 @@ describe('contrats des outils de registre', () => {
     });
     expect(boite.props.champRecherche).toBeUndefined();
     expect(boite.props.filtres?.actifs).toBe(2);
+  });
+  it('ne donne jamais à la barre le nom de son champ de recherche (un seul élément par nom accessible)', () => {
+    const memeNom = BarreFiltres({
+      label: 'Rechercher dans le guide',
+      children: <TextInput label="Rechercher dans le guide" value="" onChange={() => {}} />,
+    });
+    expect(memeNom.props.label).toBe(NOM_BARRE_NEUTRE);
+    expect(NOM_BARRE_NEUTRE.toLowerCase()).not.toContain('recherch');
+    const nomAria = BarreFiltres({
+      label: 'Rechercher une dalle',
+      children: <TextInput aria-label="rechercher une dalle" value="" onChange={() => {}} />,
+    });
+    expect(nomAria.props.label).toBe(NOM_BARRE_NEUTRE);
+    const nomsDistincts = BarreFiltres({
+      label: 'Journal d’audit',
+      children: <TextInput label="Rechercher" value="" onChange={() => {}} />,
+    });
+    expect(nomsDistincts.props.label).toBe('Journal d’audit');
   });
   it('garde les contraintes et le callback du champ existant, sans soumettre au rendu', () => {
     const modifier = vi.fn();

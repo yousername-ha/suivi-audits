@@ -95,6 +95,25 @@ function useAffichage() {
   return theme;
 }
 
+/** Délai avant de signaler une coupure du temps réel : une reconnexion brève (chargement, changement de réseau)
+    n'affiche rien. */
+const DELAI_COUPURE_MS = 8000;
+/** Vrai quand le flux temps réel est coupé depuis plus de quelques secondes. L'en-tête n'affiche plus de pastille
+    « En direct » permanente ; seule la coupure qui dure est signalée, pour que personne ne travaille sans le savoir sur
+    un écran qui ne se met plus à jour. */
+function useCoupureDurable(connecte: boolean) {
+  const [echue, setEchue] = useState(false);
+  useEffect(() => {
+    if (connecte) return;
+    const minuterie = setTimeout(() => setEchue(true), DELAI_COUPURE_MS);
+    return () => {
+      clearTimeout(minuterie);
+      setEchue(false);
+    };
+  }, [connecte]);
+  return !connecte && echue;
+}
+
 export function Layout({ children }: { children: ReactNode }) {
   const me = useMe();
   const [assistantPinned, setAssistantPinned] = useState(false);
@@ -103,6 +122,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const nav = useNavigate();
   const qc = useQueryClient();
   const live = useLive();
+  const coupure = useCoupureDurable(live.connected);
   const can = useCan();
   const { save } = usePreferences();
   const theme = useAffichage();
@@ -338,6 +358,13 @@ export function Layout({ children }: { children: ReactNode }) {
               </Anchor>
             </Group>
             <Group gap="xs" wrap="nowrap">
+              {coupure && (
+                <Tooltip label="Temps réel déconnecté : reconnexion en cours. Les changements des autres personnes n’apparaissent plus sans recharger la page.">
+                  <Badge color="orange" variant="dot" className="live-badge" role="status">
+                    Hors ligne
+                  </Badge>
+                </Tooltip>
+              )}
               <Tooltip
                 label={schema === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
                 events={{ hover: true, focus: true, touch: false }}

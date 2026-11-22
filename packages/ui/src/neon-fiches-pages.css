@@ -1,6 +1,9 @@
-/* Fiches longues : pages horizontales discrètes, sans défilement vertical de la fenêtre ni déplacement du formulaire. */
+/* Fiches longues : parties horizontales discrètes, sans défilement vertical de la fenêtre ni déplacement du formulaire.
+   Le composant FichesSansDefilement pose les attributs et deux mesures (--fiche-hauteur : plus petite hauteur qui garde
+   le nombre de parties ; --fiche-pied : hauteur du pied fixé). Sans ces mesures, la fenêtre occupe la hauteur
+   disponible. Une fiche dont le découpage n'est pas sûr ne reçoit aucun de ces attributs et défile comme avant. */
 [data-fiche-paginee] {
-  block-size: calc(100dvh - 2 * var(--modal-y-offset, 5dvh));
+  block-size: var(--fiche-hauteur, calc(100dvh - 2 * var(--modal-y-offset, 5dvh)));
 }
 [data-fiche-paginee][data-full-screen],
 .mantine-Drawer-content[data-fiche-paginee] {
@@ -9,28 +12,54 @@
 html:has([data-fiche-paginee]) {
   overflow: hidden;
 }
-[data-fiche-paginee] > :is(.mantine-Modal-body, .mantine-Drawer-body) {
+/* « html » et la classe du cadre donnent à ces règles le pas sur le retrait commun des fenêtres
+   (neon-harmonisation.css) : sans cela la place du pied n'est pas réservée et la dernière rangée passe dessous. */
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content)[data-fiche-paginee]
+  > :is(.mantine-Modal-body, .mantine-Drawer-body) {
   overflow: hidden;
   column-count: 1;
   column-fill: auto;
   column-gap: calc(2 * var(--suivi-padding-dialogue));
   overscroll-behavior: contain;
 }
-[data-fiche-paginee][data-fiche-pied] > :is(.mantine-Modal-body, .mantine-Drawer-body) {
-  padding-block-end: 4rem;
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))[data-fiche-paginee][data-fiche-pied]
+  > :is(.mantine-Modal-body, .mantine-Drawer-body) {
+  padding-block-end: calc(var(--fiche-pied, 2.5rem) + 2 * var(--suivi-padding-dialogue));
 }
-[data-fiche-paginee][data-fiche-pied='grand'] > :is(.mantine-Modal-body, .mantine-Drawer-body) {
-  padding-block-end: 6rem;
+/* Une section déclarée par le formulaire ouvre toujours une nouvelle partie. */
+[data-fiche-paginee] [data-fiche-section] {
+  break-before: column;
 }
-[data-fiche-paginee] :is(.mantine-InputWrapper-root, tr, .mantine-Group-root:has(> .mantine-InputWrapper-root)) {
+/* Groupes indivisibles : un champ et son libellé, une rangée de champs, une ligne de tableau ou de liste, un bloc replié
+   et une commande restent entiers dans leur partie. Les encadrés (message, groupe de champs, panneau) ne le sont que s'ils sont
+   petits devant une partie : le composant les marque alors data-fiche-entier ; plus grands, ils se poursuivent sur la
+   partie suivante. Une carte (bloc à débordement masqué) ne se découpe jamais : plus haute qu'une partie, elle fait
+   garder à la fenêtre son défilement habituel, ce que le composant vérifie après chaque découpage. */
+[data-fiche-paginee]
+  :is(
+    [data-fiche-entier],
+    .mantine-InputWrapper-root,
+    tr,
+    li,
+    details:not([open]),
+    summary,
+    .mantine-Group-root:has(> .mantine-InputWrapper-root),
+    .mantine-Group-root:has(> .mantine-Button-root),
+    .mantine-SimpleGrid-root:has(> .mantine-InputWrapper-root),
+    .mantine-Checkbox-root,
+    .mantine-Radio-root,
+    .mantine-Switch-root,
+    .mantine-Chip-root,
+    .mantine-Badge-root,
+    .mantine-Button-root
+  ) {
   break-inside: avoid;
 }
 [data-fiche-paginee] [data-fiche-titre] {
   break-inside: avoid;
   break-after: avoid;
-}
-[data-fiche-paginee] .mantine-Card-root {
-  break-inside: avoid;
 }
 [data-fiche-paginee] :is(.data-table, .table-wrap) {
   display: contents;
@@ -44,16 +73,40 @@ html:has([data-fiche-paginee]) {
 [data-fiche-paginee] :is(th, td) {
   overflow-wrap: anywhere;
 }
-[data-fiche-paginee] :is(.mantine-Checkbox-root, .mantine-Radio-root, .mantine-Switch-root) {
-  break-inside: avoid;
-}
 [data-fiche-paginee] textarea {
   max-block-size: 12rem;
   overflow: auto;
 }
+/* Accrochage : le corps est le bloc de référence du rail (un repère par partie, posé par le composant) ; le navigateur
+   arrête tout défilement horizontal sur un repère. Le pied, placé dans ce même bloc, est décalé de la position de
+   défilement (--fiche-defile) pour rester sous la partie affichée. */
+html
+  :is(.mantine-Modal-content, .mantine-Drawer-content)[data-fiche-paginee]
+  > :is(.mantine-Modal-body, .mantine-Drawer-body) {
+  position: relative;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: auto;
+}
+.fiche-rail {
+  display: none;
+}
+[data-fiche-paginee] .fiche-rail {
+  display: flex;
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  block-size: 0;
+  pointer-events: none;
+}
+.fiche-rail > i {
+  flex: 0 0 var(--fiche-pas, 100%);
+  block-size: 0;
+  scroll-snap-align: start;
+}
 [data-fiche-paginee] [data-fiche-actions-fixes] {
   position: absolute !important;
-  inset-inline: var(--suivi-padding-dialogue);
+  inset-inline-start: calc(var(--fiche-defile, 0px) + var(--suivi-padding-dialogue));
+  inline-size: calc(100% - 2 * var(--suivi-padding-dialogue));
   top: auto;
   bottom: var(--suivi-padding-dialogue);
   margin: 0;

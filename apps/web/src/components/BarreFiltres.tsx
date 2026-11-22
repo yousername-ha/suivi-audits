@@ -100,6 +100,9 @@ export function compterFiltres(controles: readonly ReactNode[]): number {
   }, 0);
 }
 
+/** Nom de la barre quand son libellé est déjà celui du champ de recherche qu'elle contient. */
+export const NOM_BARRE_NEUTRE = 'Barre d’outils';
+
 export function BarreFiltres({
   label,
   children,
@@ -157,9 +160,13 @@ export function BarreFiltres({
       icone: <IconeVue nom={nom} />,
     };
   });
+  // Une barre qui ne contient qu'une recherche porte souvent le nom de son champ : deux éléments auraient alors le même
+  // nom accessible (annonce en double, champ introuvable par son seul libellé). La barre prend dans ce cas un nom neutre.
+  const nomChamp = champ ? String(champ.props['aria-label'] ?? texte(champ.props.label)) : '';
+  const nomBarre = nomChamp && nomChamp.trim().toLowerCase() === label.trim().toLowerCase() ? NOM_BARRE_NEUTRE : label;
   return (
     <BoiteOutils
-      label={label}
+      label={nomBarre}
       champRecherche={champ}
       vues={vues ?? presentations}
       nomVues={choixVue?.props['aria-label']}
