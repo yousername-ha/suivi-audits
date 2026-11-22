@@ -20,7 +20,8 @@ commande sur le serveur.
   - Noms rangés dans l'ordre naturel des nombres (« exemple-2 » avant « exemple-10 »).
   - Deux regroupements de plus, une ligne par adresse avec les noms qui y résolvent : **Bloc d'adresses** (/24 en IPv4,
     /64 en IPv6) et **Hébergeur** (fournisseur, numéro de système autonome, pays, CDN). Une adresse sans hébergeur connu
-    va dans « Hébergeur inconnu » (session « Ergonomie et refonte Neon »).
+    va dans « Hébergeur inconnu ». La route de la carte rend pour cela le réseau de chaque hôte d'AlgoLightHouse, déjà
+    en base (aucune requête de plus, rien de nouveau vers l'assistant) (session « Ergonomie et refonte Neon »).
 
 ## [7.6.0] — 2026-11-22
 

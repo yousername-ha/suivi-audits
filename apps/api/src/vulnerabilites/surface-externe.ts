@@ -55,6 +55,7 @@ import {
   faitsDepuisSources,
   type FicheAlerteAlhDto,
   memeVersionDetectee,
+  PAYS_ALH,
   type Presence,
   type Priorite,
   prioriteLaPlusHaute,
@@ -82,6 +83,7 @@ import {
   LiaisonPerimetreAlh,
   LotSynchronisation,
   ALH_BORNES,
+  ASN_ALH,
   type PageSurface,
   type PerimetreAlhDto,
   type RechercheActifsAlh,
@@ -124,6 +126,22 @@ const nombre = (v: string | number | null) => (v === null ? null : Number(v));
 /** Motif ILIKE littéral : les jokers saisis sont échappés. */
 const litteral = (q: string) => q.replace(/[\\%_]/g, (c) => `\\${c}`);
 const OUVERTS = [...STATUTS_ALERTE_ALH_OUVERTS];
+
+/** Réseau d'un hôte pour la carte (7.6.1, regroupement « Hébergeur ») : colonnes déjà validées à l'import, revalidées
+    ici (ASN et pays par leur motif, fournisseur borné comme à l'import) ; rien n'en part vers l'assistant. */
+export function reseauCarte(x: {
+  asn: string | null;
+  fai: string | null;
+  pays: string | null;
+  cdn: boolean | null;
+}): NonNullable<ActifCarteDto['reseau']> {
+  return {
+    asn: x.asn && ASN_ALH.test(x.asn) ? x.asn : null,
+    fai: x.fai ? x.fai.slice(0, ALH_BORNES.fai) : null,
+    pays: x.pays && PAYS_ALH.test(x.pays) ? x.pays : null,
+    cdn: x.cdn,
+  };
+}
 
 /** Dernier élément de chaque clé (un même identifiant ne peut pas être mis à jour deux fois par la même requête). */
 function dernierParCle<T>(elements: T[], cle: (e: T) => string): T[] {
@@ -1328,10 +1346,14 @@ export class SurfaceExterneAlh implements OperationEnLots {
       liaisons_version: number;
       perimetre_alh_nom: string | null;
       perimetre_nom: string | null;
+      asn: string | null;
+      fai: string | null;
+      pays: string | null;
+      cdn: boolean | null;
       total: number;
     }>`
       SELECT x.id, x.type, x.valeur, x.adresse, x.niveau, x.parent_alh, x.alh_id, x.integration_id, x.liaisons_version,
-        lp.nom AS perimetre_alh_nom, sm.name AS perimetre_nom, count(*) OVER ()::int AS total
+        lp.nom AS perimetre_alh_nom, sm.name AS perimetre_nom, x.asn, x.fai, x.pays, x.cdn, count(*) OVER ()::int AS total
       FROM vulnerabilites_alh_actifs x
       LEFT JOIN vulnerabilites_alh_etat e ON e.integration_id = x.integration_id
       LEFT JOIN vulnerabilites_alh_perimetres lp ON lp.integration_id = x.integration_id AND lp.alh_id = x.perimetre_alh
@@ -1458,6 +1480,7 @@ export class SurfaceExterneAlh implements OperationEnLots {
             sources: s ? ['alh', 'silene'] : ['alh'],
             alhId: x.id,
             silene: s,
+            reseau: x.type === 'hote' ? reseauCarte(x) : null,
           };
         }),
         ...seuls.elements.map((x): ActifCarteDto => {
@@ -1480,6 +1503,7 @@ export class SurfaceExterneAlh implements OperationEnLots {
             sources: ['silene'],
             alhId: null,
             silene: s,
+            reseau: null,
           };
         }),
       ],
