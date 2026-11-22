@@ -170,7 +170,7 @@
 :is(.mantine-Modal-content:not(.retex-modal), .mantine-Drawer-content:not(.nav-tiroir))
   > :is(.mantine-Modal-body, .mantine-Drawer-body)
   .mantine-Button-root {
-  border-radius: 0.65rem;
+  border-radius: var(--mantine-radius-sm);
   font-size: 0.8125rem;
   font-weight: 500;
   letter-spacing: normal;

@@ -1,0 +1,20 @@
+{
+  "type": "dossier-implementation-ia",
+  "depot": "yousername-ha/suivi-audits",
+  "branche": "codex/refonte-densite-2026-11-21",
+  "baseIntegree": "01130ce47e0e2fa92fb4ef0efc233aff7d965126",
+  "dateRemise": "2026-11-22",
+  "fuseau": "Europe/Paris",
+  "pointEntree": "README.md",
+  "prompt": "PROMPT-IA.md",
+  "resumeTechnique": "RESUME-TECHNIQUE.md",
+  "regles": "REGLES-UI.md",
+  "integration": "INTEGRATION-ET-RECETTE.md",
+  "sources": "SOURCES.md",
+  "galerie": "captures/README.md",
+  "statutMiniMenus": "prototype-a-finaliser",
+  "validationHumaine": false,
+  "recetteDockerApiReelle": false,
+  "fusionPr": false,
+  "publicationVersion": false
+}

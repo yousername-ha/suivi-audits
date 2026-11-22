@@ -1,5 +1,13 @@
 # Reprendre Suivi des audits
 
+> **22/11/2026 — dossier d’implémentation pour l’IA** : [point d’entrée](docs/refonte-neon/implementation-interface-2026-11-21/README.md),
+> [prompt complet](docs/refonte-neon/implementation-interface-2026-11-21/PROMPT-IA.md) et résumé technique avec neuf captures natives.
+> Sources, règles et limites regroupées pour comparer l’existant avant report. Proportions `2742e16`, commandes bleu/cyan
+> en contour et prototype de mini-menu sans défilement vertical. Ce prototype reste à finaliser : limites de partie,
+> sections trop vides, titres et pieds atypiques. 1 221 tests web/UI réussis, contrôles du code et 11 cas client / 27 ouvertures
+> de 7 variantes ; API simulée. Validation humaine et recette Docker/API réelle non exécutées. Aucune fusion ou publication.
+>
+
 > **21/11/2026 — proportions et alignements des fenêtres** : [complément documenté](docs/refonte-neon/proportions-fenetres-2026-11-21/README.md).
 > Largeurs différenciées pour codes, dates, états et responsables ; aides sous les saisies et alignement à gauche.
 > Fiches lg/xl ramenées à 736/864 px à 100 %, grandes présentations graphiques conservées. Inventaire de 302 sélecteurs,

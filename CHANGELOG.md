@@ -12,6 +12,12 @@ Les préférences explicites de taille et le mode mural sont conservés. Contrô
 
 ### Changé
 
+- **Fiches longues et commandes — préparation d’intégration** : prototype de mini-menu conservant les champs montés et
+  leur formulaire, avec actions en bas ; commandes transparentes en contour bleu/cyan. Le découpage, les sections peu
+  remplies et les pieds atypiques restent à recetter avant intégration finale. [Dossier pour l’IA, prompt, neuf captures
+  et résumé technique](docs/refonte-neon/implementation-interface-2026-11-21/README.md), remis le 22/11/2026 ; aucune migration,
+  dépendance ou modification API. Aucune validation humaine, fusion ou publication de version.
+  _(session « Codex » (`01a193c1-316c-7677-831f-2f31592aa052`))_
 - **Proportions des formulaires** : codes, dates, états et responsables reçoivent des largeurs adaptées. Les aides passent
   sous les saisies pour aligner les champs voisins ; les listes longues se replient dans un menu borné. Les fiches lg/xl
   deviennent moins larges, avec des colonnes adaptées à leur espace réel. Les grands graphiques et tableaux gardent leur

@@ -43,7 +43,8 @@
     "./neon-veille.css": "./src/neon-veille.css",
     "./neon-densite.css": "./src/neon-densite.css",
     "./neon-verre.css": "./src/neon-verre.css",
-    "./neon-harmonisation.css": "./src/neon-harmonisation.css"
+    "./neon-harmonisation.css": "./src/neon-harmonisation.css",
+    "./neon-fiches-pages.css": "./src/neon-fiches-pages.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",

@@ -1,5 +1,5 @@
 /* Contrats de rendu du thème : les nouvelles proportions ne doivent masquer ni aide, ni erreur, ni valeur transmise. */
-import { MantineProvider, NativeSelect, NumberInput, Select, TextInput } from '@mantine/core';
+import { Button, MantineProvider, NativeSelect, NumberInput, Select, TextInput } from '@mantine/core';
 import { createElement, type ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
@@ -9,6 +9,19 @@ const rendu = (champ: ReactElement) =>
   renderToStaticMarkup(createElement(MantineProvider, { theme, withCssVariables: false }, champ));
 
 describe('proportions des champs et ordre de lecture', () => {
+  it('garde les commandes de formulaire en contour, sans changer leur soumission', () => {
+    const html = rendu(createElement(Button<'button'>, { type: 'submit', form: 'fiche-recette' }, 'Enregistrer'));
+    expect(html).toContain('commande-neon');
+    expect(html).toContain('data-variant="outline"');
+    expect(html).toContain('type="submit"');
+    expect(html).toContain('form="fiche-recette"');
+  });
+  it('conserve la couleur explicite et la désactivation d’une commande sensible', () => {
+    const html = rendu(createElement(Button<'button'>, { color: 'red', disabled: true }, 'Fermer l’écart'));
+    expect(html).toContain('commande-metier');
+    expect(html).toContain('data-variant="outline"');
+    expect(html).toContain('disabled=""');
+  });
   it('place l’aide après la saisie sans perdre association accessible, erreur, nom ou contrainte', () => {
     const html = rendu(
       createElement(TextInput, {

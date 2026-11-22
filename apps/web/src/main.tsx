@@ -29,6 +29,8 @@ import '@suivi/ui/neon-veille.css';
 import '@suivi/ui/neon-densite.css';
 import '@suivi/ui/neon-verre.css';
 import '@suivi/ui/neon-harmonisation.css';
+import '@suivi/ui/neon-fiches-pages.css';
+import { FichesSansDefilement } from './components/FichesSansDefilement';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -190,6 +192,7 @@ createRoot(document.getElementById('root')!).render(
     {/* Aucune balise <style> injectée (CSP stricte) : variables et classes dans src/generated/mantine-vars.css. */}
     <MantineProvider theme={theme} defaultColorScheme="auto" withCssVariables={false} withGlobalClasses={false}>
       <Notifications position="top-right" />
+      <FichesSansDefilement />
       <QueryClientProvider client={queryClient}>
         <SessionProvider fallback={loading}>
           <RouterProvider router={router} />

@@ -8,7 +8,8 @@ et des fenêtres moins larges lorsqu’elles n’ont pas besoin d’autant d’e
 
 **Étape intermédiaire** : ce lot vérifie les proportions et alignements. La consigne suivante du RSSI impose des fiches
 sans défilement vertical, avec un mini-menu quand le contenu dépasse. Cette évolution est traitée ensuite ; les captures
-présentes ici ne constituent pas sa validation.
+présentes ici ne constituent pas sa validation. La suite est rassemblée dans le
+[dossier d’implémentation et son prompt](../implementation-interface-2026-11-21/README.md), avec le prototype et ses limites.
 
 ## Modifications pour l’IA qui reprend le code
 

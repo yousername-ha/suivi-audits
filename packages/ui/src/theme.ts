@@ -95,7 +95,12 @@ export const theme = createTheme({
       },
     }),
     Card: Card.extend({ defaultProps: { radius: 'lg', withBorder: true } }),
-    Button: Button.extend({ defaultProps: { radius: 'md' } }),
+    Button: Button.extend({
+      defaultProps: { radius: 'md', variant: 'outline' },
+      classNames: (_theme, props) => ({
+        root: props.color && !['suivi', 'violet'].includes(props.color) ? 'commande-metier' : 'commande-neon',
+      }),
+    }),
     Badge: Badge.extend({ defaultProps: { radius: 'sm' } }),
     // Un lien ne doit pas se distinguer par la seule couleur (WCAG 1.4.1) : souligné en permanence.
     Anchor: Anchor.extend({ defaultProps: { underline: 'always' } }),
