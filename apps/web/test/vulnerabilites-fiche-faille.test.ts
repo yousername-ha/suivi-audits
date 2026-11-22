@@ -284,6 +284,43 @@ describe('lot PC4 : recommandations par source', () => {
     sansStyle(html);
   });
 
+  it('lot QF-TEN : « Correctif recommandé par Tenable », correctifs regroupés avec identifiant et source ; absent sans correctif', () => {
+    const html = fiche({
+      recommandations: {
+        tenableRegroupes: [
+          {
+            identifiant: 'SC-90001',
+            solution: 'Apply the cumulative update EX-1.',
+            controles: 3,
+            cves: 7,
+            machinesLues: 2,
+            machinesHorsLecture: true,
+          },
+          {
+            identifiant: 'SC-90002',
+            solution: 'Upgrade the example package.',
+            controles: 1,
+            cves: null,
+            machinesLues: 1,
+            machinesHorsLecture: false,
+          },
+        ],
+      },
+    });
+    sansStyle(html);
+    expect(html).toContain('Tenable · Correctif recommandé par Tenable');
+    expect(html).toContain('Apply the cumulative update EX-1.');
+    expect(html).toContain('SC-90001');
+    expect(html).toContain(
+      '2 machines que vous lisez (et d’autres hors de vos périmètres) · 7 CVE corrigées · 3 contrôles corrigés',
+    );
+    expect(html).toContain('1 machine que vous lisez · CVE corrigées : non communiqué · 1 contrôle corrigé');
+    expect(html).toContain('Tenable Security Center (correctifs regroupés, vue « sumremediation »)');
+    expect(html).not.toContain('Aucune recommandation connue');
+    // Sans correctif regroupé : aucune rubrique vide.
+    expect(fiche()).not.toContain('Correctif recommandé par Tenable');
+  });
+
   it('rien de connu : dit tel quel, sans conseil inventé', () => {
     const html = fiche();
     expect(html).toContain(

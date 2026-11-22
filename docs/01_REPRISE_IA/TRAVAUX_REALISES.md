@@ -21,9 +21,9 @@ Sources historiques détaillées conservées dans [diagnostics](../archive/diagn
 et [CHANGELOG](../../CHANGELOG.md). Un titre de commit ne suffit pas à
 prouver un correctif : voir [bugs et tests](../04_QUALITE/REGISTRE_BUGS.md).
 
-## Module Vulnérabilités (mise à jour du 20/11/2026, Europe/Paris)
+## Module Vulnérabilités (mise à jour du 22/11/2026, Europe/Paris)
 
-Session « Module surveillance vulnérabilités SMSI ». Voir la [reprise du 20/11/2026](REPRISE-2026-11-20.md) ; contrôles tirés
+Session « Module surveillance vulnérabilités SMSI ». Voir la [reprise du 22/11/2026](REPRISE-2026-11-22.md) et celle du [20/11/2026](REPRISE-2026-11-20.md) ; contrôles tirés
 des descriptions des PR, non rejoués pour cette mise à jour.
 
 | Travaux | Trace Git / source | Validation accessible |
@@ -31,3 +31,5 @@ des descriptions des PR, non rejoués pour cette mise à jour.
 | Lots R1, L1, I1 et F1 (recherche, pastilles de source, intégrations dans la page Plateforme, fréquences ; migration `090`) | PR #326 ; addenda de l'ADR 0100 | Tests unitaires et ciblés de l'API, parcours navigateur sur pile locale sans Docker ; CI de la PR. |
 | Lots N1 et N2 (import `.nessus`, logiciel malveillant, suppression d'un connecteur d'import, 30 imports par heure ; migrations `093` et `094`) | PR #331 ; addenda de l'ADR 0100 | Suite API complète verte (207 fichiers, 1 698 tests) avant la dernière reprise de la base ; format non vérifié sur un export réel. |
 | Lots SI1 et SI2 (import Silène, carte de la surface externe à deux sources en page entière ; migration `095`) | PR #333 ; addenda de l'ADR 0100 | Suite API complète verte après SI1 (209 fichiers, 1 712 tests) ; forme de l'export relevée sans valeurs. |
+| PERF-01 à PERF-04, ASSISTANT-V1, PRIO-1, AD-1, VR-1 (migrations `097` à `099`) ; PERF-13 | PR #342, #344, #346, #347, #353 ; versions 7.5.0 et 7.5.1 | CI de chaque PR verte avant fusion. |
+| Page « Machines » depuis « Périmètres », TEN-SCORES (migration `100`), CPE-1 (migration `101`) | PR #357, #359, #362 ; addenda de l'ADR 0100 ; [reprise du 22/11/2026](REPRISE-2026-11-22.md) | CI de chaque PR verte avant fusion ; durées du dictionnaire CPE calculées, non mesurées. |

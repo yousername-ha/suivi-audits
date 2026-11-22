@@ -53,7 +53,9 @@
 > d’interaction client sans erreur (API interceptée, données fictives). Captures et mesures dans le dossier. Prochaine action :
 > validation visuelle et recette Docker/API réelle, non exécutée ici ; aucune fusion ou mise en production effectuée.
 >
-> **Dernière reprise générale : [20/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-20.md)** (module Vulnérabilités,
+> **Dernière reprise générale : [22/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-22.md)** (module Vulnérabilités : versions 7.5.0
+> et 7.5.1, ACR et AES de Tenable, migration `100`, dictionnaire CPE de la NVD, migration `101`, veille active de l'exécutant ;
+> décisions du RSSI des 21 et 22/11/2026 et file de la 7.6.0). Précédente : **[20/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-20.md)** (module Vulnérabilités,
 > [ADR 0100](docs/adr/0100-module-vulnerabilites.md) : recherche du module, intégrations dans la page Plateforme, fréquences de
 > synchronisation, imports Nessus et Silène, surface externe à deux sources en page entière, migrations `090`, `093`, `094` et
 > `095` ; correctifs de performance PERF-01 à PERF-04 en PR ; décisions du RSSI prises et en attente, ordre de la file).

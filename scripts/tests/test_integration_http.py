@@ -96,6 +96,8 @@ class Faux(http.server.BaseHTTPRequestHandler):
     corps = []
     # Synchronisation : résultats de l'analyse servis par pages (startOffset, endOffset), machines de l'inventaire.
     analyse = []
+    # Correctifs regroupés (`sumremediation`, lot QF-TEN) ; None : la vue répond par un refus.
+    correctifs = []
     hotes = []
     mode_hotes = "normal"
 
@@ -121,9 +123,13 @@ class Faux(http.server.BaseHTTPRequestHandler):
             if Faux.mode == "analyse-erreur":
                 return self.repondre(200, json.dumps({"type": "regular", "response": {}, "error_code": 74, "error_msg": "détail " + FAUX_CODE}).encode())
             debut, fin = corps["startOffset"], corps["endOffset"]
-            page = Faux.analyse[debut:fin]
+            # Lot QF-TEN : la vue des correctifs regroupés (`sumremediation`) est servie à part.
+            source = Faux.correctifs if corps["query"]["tool"] == "sumremediation" else Faux.analyse
+            if source is None:
+                return self.repondre(403, b'{"error_code": 403}')
+            page = source[debut:fin]
             return self.repondre(200, json.dumps({"type": "regular", "response": {
-                "totalRecords": str(len(Faux.analyse)), "returnedRecords": len(page), "startOffset": str(debut),
+                "totalRecords": str(len(source)), "returnedRecords": len(page), "startOffset": str(debut),
                 "endOffset": str(fin), "matchingDataElementCount": "-1", "results": page},
                 "error_code": 0, "error_msg": "", "warnings": [], "timestamp": 1794830225}).encode())
         if self.path.startswith("/rest/hosts") and Faux.mode == "synchro":
@@ -202,6 +208,7 @@ class IntegrationHttp(unittest.TestCase):
         Faux.recues = []
         Faux.corps = []
         Faux.analyse = []
+        Faux.correctifs = []
         Faux.hotes = []
 
     def demande(self, ca=None, **extra):
@@ -335,7 +342,9 @@ class IntegrationHttp(unittest.TestCase):
         el = sortie["elements"]
         self.assertEqual([e["type"] for e in el], ["machine"] * 3 + ["constat"] * 2 + ["detection"] * 4 + ["hote"] * 2)
         self.assertEqual(sortie["resultat"], {"pages": 1, "constats": 2, "detections": 4, "machines": 3, "hotes": 2,
-                                              "ecartes": 1, "tronque": False, "inventaire": {"ok": True, "erreur": None}})
+                                              "ecartes": 1, "tronque": False, "inventaire": {"ok": True, "erreur": None},
+                                              # Lot QF-TEN : vue des correctifs lue, vide ici.
+                                              "correctifs": {"ok": True, "erreur": None, "ecartes": 0, "nombre": 0}})
         c1, c2 = [e for e in el if e["type"] == "constat"]
         self.assertEqual(c1, {
             "type": "constat", "plugin": "900001", "nom": "Exemple Linux : noyau (EX-2026-0001)", "gravite": "critique",
@@ -365,9 +374,10 @@ class IntegrationHttp(unittest.TestCase):
         # Sans hostUUID, la machine est identifiée par son adresse et son nom (ici NetBIOS).
         self.assertEqual(m[2]["cle"], "ip:192.0.2.12|poste-02")
         self.assertEqual(el[-1]["nom"], "poste-02.exemple.invalid")
-        # Appels : analyse vulndetails cumulative filtrée par gravité (critiques et élevées par défaut), puis inventaire.
+        # Appels : analyse vulndetails cumulative filtrée par gravité (critiques et élevées par défaut), puis correctifs
+        # regroupés (sumremediation, même appel et même filtre ; lot QF-TEN), puis inventaire.
         self.assertEqual([(r["methode"], r["chemin"]) for r in Faux.recues],
-                         [("POST", "/rest/analysis"), ("GET", "/rest/hosts?limit=500&offset=0")])
+                         [("POST", "/rest/analysis"), ("POST", "/rest/analysis"), ("GET", "/rest/hosts?limit=500&offset=0")])
         self.assertEqual(Faux.corps[0], {"type": "vuln", "sourceType": "cumulative", "startOffset": 0, "endOffset": 200,
                                          "query": {"type": "vuln", "tool": "vulndetails", "filters": [
                                              {"filterName": "severity", "operator": "=", "value": "4,3"}]}})
@@ -405,9 +415,9 @@ class IntegrationHttp(unittest.TestCase):
         self.assertEqual(depots["a7"]["id"], "8")
         self.assertEqual(len(depots["a7"]["nom"]), h.BORNES_SYNCHRO["nomDepot"])
         self.assertEqual(sortie["resultat"]["ecartes"], 0)
-        # Aucun appel nouveau : l'analyse, puis l'inventaire, comme avant.
+        # Aucun appel nouveau : l'analyse (failles, puis correctifs regroupés du lot QF-TEN), puis l'inventaire.
         self.assertEqual([(r["methode"], r["chemin"].split("?")[0]) for r in Faux.recues],
-                         [("POST", "/rest/analysis"), ("GET", "/rest/hosts")])
+                         [("POST", "/rest/analysis"), ("POST", "/rest/analysis"), ("GET", "/rest/hosts")])
         self.assertEqual(h.depot({"id": "7", "name": "<b>Dépôt</b> fictif B"}), {"id": "7", "nom": "Dépôt fictif B"})
 
     def test_synchronisation_reads_the_asset_exposure_score_as_a_bounded_integer(self):
@@ -448,12 +458,86 @@ class IntegrationHttp(unittest.TestCase):
         # Machine sans valeur : la clé est là, à None (jamais 0).
         self.assertTrue(all("aes" in e for e in sortie["elements"] if e["type"] == "machine"))
         self.assertEqual([(r["methode"], r["chemin"].split("?")[0]) for r in Faux.recues],
-                         [("POST", "/rest/analysis"), ("GET", "/rest/hosts")])
+                         [("POST", "/rest/analysis"), ("POST", "/rest/analysis"), ("GET", "/rest/hosts")])
         self.assertIn("assetExposureScore", h.CHAMPS_ANALYSE)
         for v, attendu in (("207", 207), (207, 207), ("0", 0), ("1000", 1000), ("", None), (None, None), ("1001", None),
                            (1001, None), (-1, None), ("12.5", None), (12.5, None), ("1e3", None), (False, None)):
             with self.subTest(v=v):
                 self.assertEqual(h.score_exposition(v), attendu)
+
+    def test_synchronisation_reads_grouped_remediations_in_a_strict_whitelist(self):
+        """Lot QF-TEN : la vue `sumremediation` est demandée par le même appel et le même filtre que les failles ; seuls les
+        champs listés sortent (jamais `remediationList`, `cpe`, `score`, pourcentages) ; résultat sans identifiant, sans texte
+        ou sans contrôle écarté (compté à part) ; bornes (texte, contrôles, nombre de correctifs, pages) ; une lecture
+        incomplète ou refusée ne rapporte aucun correctif et ne fait pas échouer la synchronisation."""
+        Faux.mode = "synchro"
+        Faux.analyse = [resultat_fictif(1)]
+        Faux.hotes = []
+        correctif = {
+            "solutionID": "SC-90001", "cpe": "cpe:/o:exemple:systeme", "solution": "<p>Apply the cumulative update</p> EX-1.",
+            "remediationList": "poste-77.exemple.invalid 198.51.100.77 " + CHAMP_INCONNU, "total": "12", "totalPctg": "3.1",
+            "score": "48", "scorePctg": "2.2", "hostTotal": "5", "msbulletinTotal": "0", "cveTotal": "7",
+            "vprScore": "6.7", "cvssV3BaseScore": "8.8", "cvssV4BaseScore": "9.3", "epssScore": "12.5",
+            "pluginID": "900001, 900002,abc,900001,0", "champInconnu": CHAMP_INCONNU}
+        Faux.correctifs = [
+            correctif,
+            dict(correctif, solutionID="SC-90002", pluginID=["900003", 900004, True, None], vprScore="", epssScore="",
+                 hostTotal="", cveTotal="x", solution="x" * 5000),
+            dict(correctif, solutionID="", pluginID="900005"),
+            dict(correctif, solutionID="SC 90003; DROP"),
+            dict(correctif, solutionID="SC-90004", solution=""),
+            dict(correctif, solutionID="SC-90005", pluginID=""),
+            "pas un objet",
+        ]
+        sortie = self.synchro()
+        self.assertTrue(sortie["ok"], sortie.get("erreur"))
+        texte = json.dumps(sortie)
+        for interdit in ("remediationList", "poste-77", "198.51.100.77", CHAMP_INCONNU, "cpe:/o", "totalPctg", "scorePctg",
+                         "msbulletinTotal", "cvssV4BaseScore", "<p>"):
+            self.assertNotIn(interdit, texte)
+        c = [e for e in sortie["elements"] if e["type"] == "correctif"]
+        self.assertEqual(c[0], {"type": "correctif", "identifiant": "SC-90001",
+                                "solution": "Apply the cumulative update EX-1.", "plugins": ["900001", "900002"],
+                                "machines": 5, "cves": 7, "detections": 12, "vpr": 6.7, "cvss3Score": 8.8,
+                                # 12,5 % rendu par Tenable : 0,125 rangé, comme un constat.
+                                "epss": 0.125})
+        self.assertEqual((c[1]["plugins"], c[1]["vpr"], c[1]["epss"], c[1]["machines"], c[1]["cves"]),
+                         (["900003", "900004"], None, None, None, None))
+        self.assertEqual(len(c[1]["solution"]), h.BORNES_SYNCHRO["correctif"])
+        self.assertEqual(len(c), 2)
+        # Les correctifs viennent après tout le reste ; leurs rejets ne touchent pas le bilan des failles.
+        self.assertEqual(sortie["elements"][-2:], c)
+        self.assertEqual(sortie["resultat"]["ecartes"], 0)
+        self.assertEqual(sortie["resultat"]["correctifs"], {"ok": True, "erreur": None, "ecartes": 5, "nombre": 2})
+        corps = [x for x in Faux.corps if x and x["query"]["tool"] == "sumremediation"]
+        self.assertEqual(corps, [{"type": "vuln", "sourceType": "cumulative", "startOffset": 0, "endOffset": 200,
+                                  "query": {"type": "vuln", "tool": "sumremediation", "filters": [
+                                      {"filterName": "severity", "operator": "=", "value": "4,3"}]}}])
+        self.assertEqual(h.CHAMPS_CORRECTIF, ("solutionID", "solution", "pluginID", "hostTotal", "cveTotal", "total",
+                                              "vprScore", "cvssV3BaseScore", "epssScore"))
+        # Bornes : contrôles par correctif ; nombre de correctifs, pages, refus de la vue : aucun correctif rapporté.
+        with patch.dict(h.BORNES_SYNCHRO, {"controlesParCorrectif": 1}):
+            self.assertEqual(h.plugins_corriges("900001,900002"), ["900001"])
+        Faux.correctifs = [dict(correctif, solutionID="SC-9%04d" % i) for i in range(5)]
+        for bornes, attendu in (({"correctifs": 3}, "Nombre maximal de correctifs"),
+                                ({"pageAnalyse": 2, "pagesCorrectifs": 2}, "Nombre maximal de pages")):
+            with self.subTest(bornes=bornes), patch.dict(h.BORNES_SYNCHRO, bornes):
+                sortie = self.synchro()
+                self.assertTrue(sortie["ok"])
+                self.assertFalse(any(e["type"] == "correctif" for e in sortie["elements"]))
+                self.assertFalse(sortie["resultat"]["correctifs"]["ok"])
+                self.assertIn(attendu, sortie["resultat"]["correctifs"]["erreur"])
+                self.assertEqual(sortie["resultat"]["constats"], 1)
+        with patch.dict(h.BORNES_SYNCHRO, {"pageAnalyse": 2}):
+            sortie = self.synchro()
+        self.assertEqual(sortie["resultat"]["correctifs"]["nombre"], 5)
+        Faux.correctifs = None
+        sortie = self.synchro()
+        self.assertTrue(sortie["ok"])
+        self.assertEqual(sortie["resultat"]["constats"], 1)
+        self.assertFalse(sortie["resultat"]["correctifs"]["ok"])
+        self.assertIn("Correctifs regroupés indisponibles", sortie["resultat"]["correctifs"]["erreur"])
+        self.sans_secret(sortie)
 
     def test_synchronisation_paginates_and_stops_at_its_bounds(self):
         Faux.mode = "synchro"
@@ -461,7 +545,8 @@ class IntegrationHttp(unittest.TestCase):
         with patch.dict(h.BORNES_SYNCHRO, {"pageAnalyse": 4}):
             sortie = self.synchro()
         self.assertEqual((sortie["resultat"]["pages"], sortie["resultat"]["detections"], sortie["resultat"]["tronque"]), (3, 10, False))
-        self.assertEqual([c["startOffset"] for c in Faux.corps if c], [0, 4, 8])
+        self.assertEqual([c["startOffset"] for c in Faux.corps if c and c["query"]["tool"] == "vulndetails"], [0, 4, 8])
+        self.assertEqual([c["startOffset"] for c in Faux.corps if c and c["query"]["tool"] == "sumremediation"], [0])
         # Bornes : pages, détections, durée. La synchronisation réussit et se dit tronquée.
         for bornes, attendu in (({"pageAnalyse": 2, "pagesAnalyse": 3}, (3, 6)), ({"pageAnalyse": 4, "detections": 5}, (2, 5))):
             with self.subTest(bornes=bornes), patch.dict(h.BORNES_SYNCHRO, bornes):

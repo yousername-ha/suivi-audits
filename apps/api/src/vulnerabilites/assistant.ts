@@ -71,6 +71,7 @@ import {
   CRITICITE_ALH_LIBELLES,
   STATUT_ALERTE_ALH_LIBELLES,
   TYPE_ALERTE_ALH_LIBELLES,
+  SOURCE_CORRECTIFS_REGROUPES,
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
@@ -499,6 +500,9 @@ export class AssistantVulnerabilites {
     kev: { action: string | null; echeance: string | null } | null;
     certSante: SourcesFailleDto['certSante'];
     constats: readonly ConstatDto[];
+    /** Lot QF-TEN : correctifs regroupés de Tenable qui couvrent les constats lisibles (identifiant, texte, contrôles lisibles,
+        CVE corrigées selon Tenable) ; aucune machine. */
+    regroupes: readonly { identifiant: string; correctif: string; controles: string[]; cvesCorrigees: number | null }[];
     recommandationsAlh: readonly {
       alerte: string | null;
       defauts: { resolutions: unknown[] }[];
@@ -534,14 +538,32 @@ export class AssistantVulnerabilites {
       const le = jour(c.correctifLe);
       if (le && (!x.publieLe || le < x.publieLe)) x.publieLe = le;
     }
-    if (parTexte.size)
+    if (parTexte.size || e.regroupes.length)
       out.tenable = {
         source: 'Tenable (correctif publié pour chaque contrôle)',
-        correctifs: [...parTexte.values()].map((x) => ({
-          controles: x.controles,
-          correctif: x.correctif,
-          ...(x.publieLe ? { publieLe: x.publieLe } : {}),
-        })),
+        ...(parTexte.size
+          ? {
+              correctifs: [...parTexte.values()].map((x) => ({
+                controles: x.controles,
+                correctif: x.correctif,
+                ...(x.publieLe ? { publieLe: x.publieLe } : {}),
+              })),
+            }
+          : {}),
+        // Lot QF-TEN : regroupement officiel de Tenable (un texte de solution qui corrige plusieurs contrôles).
+        ...(e.regroupes.length
+          ? {
+              correctifsRegroupes: {
+                source: SOURCE_CORRECTIFS_REGROUPES,
+                correctifs: e.regroupes.map((x) => ({
+                  identifiant: x.identifiant,
+                  correctif: coupe(x.correctif, 600),
+                  controles: x.controles,
+                  ...(x.cvesCorrigees !== null ? { cvesCorrigees: x.cvesCorrigees } : {}),
+                })),
+              },
+            }
+          : {}),
       };
     if (e.recommandationsAlh.length)
       out.algoLightHouse = {
@@ -552,6 +574,7 @@ export class AssistantVulnerabilites {
       !!kevAction ||
       cs?.correctif === 'oui' ||
       parTexte.size > 0 ||
+      e.regroupes.length > 0 ||
       e.recommandationsAlh.some((a) => a.defauts.some((d) => d.resolutions.length > 0));
     if (!correctif) out.correctif = QUOI_FAIRE_SANS_CORRECTIF;
     return out;
@@ -724,10 +747,30 @@ export class AssistantVulnerabilites {
        WHERE cves @> ARRAY[${cve}]::text[] ORDER BY le DESC, identifiant LIMIT ${BORNES_ASSISTANT_VULN.avis + 1}`.execute(
       k,
     );
+    // Lot QF-TEN : correctifs regroupés de Tenable (dernière synchronisation reçue en entier) qui couvrent les constats que la
+    // personne lit ; seuls les numéros de ces contrôles lisibles sont rendus, aucune machine ni aucun nombre de machines.
+    const { rows: regroupes } = constats.length
+      ? await sql<{ identifiant: string; correctif: string; cves: number | null; controles: number[] }>`
+          SELECT tc.solution_id AS identifiant, tc.solution AS correctif, tc.cves,
+            array_agg(DISTINCT c.plugin_id ORDER BY c.plugin_id) AS controles
+          FROM vulnerabilites_tenable_correctifs tc
+          JOIN vulnerabilites_tenable_etat te ON te.integration_id = tc.integration_id AND te.correctifs_numero = tc.vu_numero
+          JOIN vulnerabilites_tenable_correctif_constats l ON l.correctif_id = tc.id
+          JOIN vulnerabilites_constats c ON c.id = l.constat_id
+          WHERE l.constat_id = ANY(${constats.map((c) => c.id)}::uuid[])
+          GROUP BY tc.id ORDER BY count(*) DESC, tc.solution_id
+          LIMIT ${BORNES_ASSISTANT_VULN.constats}`.execute(k)
+      : { rows: [] };
     const quoiFaire = AssistantVulnerabilites.quoiFaire({
       kev: v ? { action: v.kev_action, echeance: v.kev_echeance } : null,
       certSante: sources?.certSante ?? null,
       constats,
+      regroupes: regroupes.map((r) => ({
+        identifiant: r.identifiant,
+        correctif: r.correctif,
+        controles: r.controles.slice(0, BORNES_ASSISTANT_VULN.constats).map(String),
+        cvesCorrigees: r.cves,
+      })),
       recommandationsAlh,
     });
     const avisRendus = avis.slice(0, BORNES_ASSISTANT_VULN.avis);

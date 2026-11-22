@@ -51,6 +51,25 @@ Autres changements de cette version :
   l'organisation et à ses deux sites fictifs. Aucun appel ne part vers Tenable : l'intégration reste inactive, le flux
   reste fermé, rien n'est planifié. Si le module Vulnérabilités ou Intégrations est désactivé, cette partie est
   simplement sautée (session « Projet audit_suivi Coeur »).
+- Migration automatique additive `102` (deux tables des correctifs regroupés de Tenable et une colonne de l'état de la
+  synchronisation, vides au départ), sans reprise de données : aucune commande sur le serveur, aucune action dans
+  l'application. Les correctifs regroupés sont lus à la prochaine synchronisation de Tenable Security Center (une ou
+  quelques pages de plus de la même analyse, en lecture seule) ; rien ne change pour l'import d'un fichier `.nessus`.
+
+### Ajouté
+
+- Vulnérabilités, **correctifs regroupés de Tenable dans « Quoi faire »** (lot QF-TEN, demande du RSSI du 22/11/2026,
+  [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : la synchronisation de Tenable Security Center lit aussi la vue
+  `sumremediation` de l'analyse (même appel `POST /rest/analysis`, mêmes filtres que les failles), en liste blanche stricte
+  (identifiant `SC-…`, texte de la solution, contrôles corrigés, nombres de CVE, de machines et de détections, scores ; jamais
+  `remediationList`), bornée (5 000 correctifs, 25 pages, 1 000 contrôles par correctif, 2 000 caractères de texte) et
+  revalidée par l'API ; une lecture incomplète ou refusée ne rapporte rien et ne fait pas échouer la synchronisation des
+  failles. La fiche d'une faille détectée ou d'une CVE a une rubrique « Correctif recommandé par Tenable » (texte, identifiant,
+  machines que vous lisez, CVE et contrôles corrigés, source nommée), absente sans correctif ; l'outil `evaluer_cve` de
+  l'assistant les reprend dans `quoiFaire.tenable` (identifiant, texte, contrôles lisibles, CVE corrigées, source), sans nom de
+  machine, adresse, périmètre ni nombre de machines. Ni priorité ni alerte ne changent. La vue « Correctifs » garde son
+  regroupement par texte : elle n'utilise pas encore ces correctifs (session « Module surveillance vulnérabilités SMSI »)
+
 - Vulnérabilités, **criticité (ACR) et exposition (AES) des machines selon Tenable** (lot TEN-SCORES, décision du RSSI du
   22/11/2026, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : quand une intégration Tenable Security Center est
   configurée, la liste de l'écran « Machines » a deux colonnes, « Criticité (ACR, Tenable) » et « Exposition (AES,

@@ -1,5 +1,10 @@
 # État synthétique du projet
 
+> **22/11/2026** : versions 7.5.0 et 7.5.1 publiées (module Vulnérabilités : PERF, outils de l'assistant, règles de priorité,
+> rapport de l'Active Directory, veille réglementaire première tranche). Sur `claude-suivi-smsi`, non publiés : ACR et AES de
+> Tenable (migration `100`), dictionnaire CPE de la NVD (migration `101`), correctif de la page « Machines », pagination
+> nommée. 7.6.0 en préparation avec les fiches sobres. Détail et file : [reprise du 22/11/2026](docs/01_REPRISE_IA/REPRISE-2026-11-22.md).
+>
 > **22/11/2026 — fiches sobres et harmonisation de l'interface Neon (session Coeur)** : branche `claude/fiches-sobres`
 > (elle contient `claude/refonte-neon-compacte`), PR de travail vers `claude-suivi-smsi`, **sans fusion, publication ni
 > mise en production**. [Résumé technique](docs/refonte-neon/integration-fiches-sobres-2026-11-22/README.md),

@@ -74,6 +74,12 @@ export const TENABLE_BORNES = {
   exposition: 40,
   /** Nom d'un dépôt de Tenable (`repository.name`, lot V4d). */
   nomDepot: 200,
+  /** Lot QF-TEN : correctifs regroupés (`sumremediation`) lus au plus, pages de cette vue au plus (par `pageAnalyse`),
+      contrôles gardés par correctif, longueur de l'identifiant (`solutionID`). Le texte est borné par `correctif`. */
+  correctifs: 5000,
+  pagesCorrectifs: 25,
+  controlesParCorrectif: 1000,
+  identifiantCorrectif: 64,
   /** Éléments par lot rapporté par l'exécutant, et lots par synchronisation. */
   lot: 500,
   lots: 200,
@@ -254,11 +260,40 @@ export const ElementHoteTenable = z
   .strict();
 export type ElementHoteTenable = z.infer<typeof ElementHoteTenable>;
 
+/** Identifiant d'un correctif regroupé de Tenable (`solutionID`, par exemple « SC-33850 ») : forme prudente, seul exemple connu. */
+export const IDENTIFIANT_CORRECTIF_TENABLE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/;
+const compteTenable = z.number().int().min(0).max(100_000_000).nullable();
+
+/** Lot QF-TEN : correctif regroupé de Tenable (vue `sumremediation` de l'analyse, liste blanche du script) : identifiant,
+    texte de la solution (anglais, nettoyé), contrôles corrigés (`pluginID`), nombres de Tenable (machines `hostTotal`, CVE
+    `cveTotal`, détections `total`, sur tout ce qu'il analyse) et scores. Jamais `remediationList` ni aucune machine. */
+export const ElementCorrectifTenable = z
+  .object({
+    type: z.literal('correctif'),
+    identifiant: z.string().max(TENABLE_BORNES.identifiantCorrectif).regex(IDENTIFIANT_CORRECTIF_TENABLE),
+    solution: texteTenable(TENABLE_BORNES.correctif),
+    plugins: z
+      .array(z.string().regex(PLUGIN_ID))
+      .min(1)
+      .max(TENABLE_BORNES.controlesParCorrectif)
+      .refine((l) => new Set(l).size === l.length, 'Contrôle cité deux fois.'),
+    machines: compteTenable,
+    cves: compteTenable,
+    detections: compteTenable,
+    vpr: score10,
+    cvss3Score: score10,
+    /** Probabilité EPSS entre 0 et 1 (rendue en pourcentage par Tenable, convertie par le script, comme pour un constat). */
+    epss: z.number().min(0).max(1).nullable(),
+  })
+  .strict();
+export type ElementCorrectifTenable = z.infer<typeof ElementCorrectifTenable>;
+
 export const ElementSynchronisation = z.union([
   ElementMachineTenable,
   ElementConstatTenable,
   ElementDetectionTenable,
   ElementHoteTenable,
+  ElementCorrectifTenable,
 ]);
 export type ElementSynchronisation = z.infer<typeof ElementSynchronisation>;
 

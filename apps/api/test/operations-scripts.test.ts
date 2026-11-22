@@ -16,8 +16,9 @@ it('exécute le script isolé des connecteurs contre un faux service HTTPS local
     timeout: 60000,
   });
   // Lot PRIO-1 : un test de plus (kits d'exploitation lus dans la chaîne exploitFrameworks). Lot TEN-SCORES : un de plus
-  // (AES lu comme entier borné, valeurs hors norme écartées).
-  expect(r.stderr).toContain('Ran 36 tests');
+  // (AES lu comme entier borné, valeurs hors norme écartées). Lot QF-TEN : un de plus (correctifs regroupés `sumremediation`
+  // en liste blanche, bornes, lecture incomplète ou refusée sans effet sur les failles).
+  expect(r.stderr).toContain('Ran 37 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);
 it('exécute le dictionnaire CPE du script isolé de la veille contre un faux service HTTPS local (ADR 0100, lot CPE-1)', async () => {

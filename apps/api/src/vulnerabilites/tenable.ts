@@ -28,11 +28,15 @@
    d'écriture (`rangerPassage`), avec la source « nessus-fichier » et la première détection la plus ancienne connue (un scan
    ne dit que la date de son passage).
    Lot N2 : un constat importé porte en plus `exploiteMalware` (« exploité par un logiciel malveillant » selon Tenable) ;
-   Security Center ne le rapporte pas, ses constats sont rangés à false. */
+   Security Center ne le rapporte pas, ses constats sont rangés à false.
+   Lot QF-TEN : les correctifs regroupés de Tenable (`sumremediation`), rapportés en dernier par le script et seulement si
+   leur lecture est complète, sont rangés et rattachés aux constats de l'instance ; à la fin acceptée, `correctifs_numero`
+   désigne la synchronisation dont ils sont montrés. Un import Nessus n'en a pas. */
 import {
   BilanSynchronisation,
   cleMachine,
   type ElementConstatTenable,
+  type ElementCorrectifTenable,
   type ElementDetectionTenable,
   type ElementHoteTenable,
   type ElementMachineTenable,
@@ -124,6 +128,7 @@ export class SynchronisationTenable implements OperationEnLots {
     await this.rangerConstats(k, s.integration_id, s.numero, de('constat'));
     await this.rangerDetections(k, s.integration_id, s.numero, de('detection'));
     await this.rangerHotes(k, s.integration_id, s.numero, de('hote'));
+    await this.rangerCorrectifs(k, s.integration_id, s.numero, de('correctif'));
     const r = await k
       .updateTable('vulnerabilites_synchronisations')
       .set((eb) => ({ lots: eb('lots', '+', 1), elements: eb('elements', '+', valides.length) }))
@@ -163,6 +168,10 @@ export class SynchronisationTenable implements OperationEnLots {
           inventaire_ok: bilan.inventaire.ok,
           inventaire_erreur: bilan.inventaire.erreur,
           inventaire_le: sql<Date>`now()`,
+          // Lot QF-TEN : correctifs regroupés de cette synchronisation, tous reçus (fin acceptée) ; sinon, les précédents.
+          correctifs_numero: sql<number | null>`CASE WHEN EXISTS (SELECT 1 FROM vulnerabilites_tenable_correctifs tc
+            WHERE tc.integration_id = ${s.integration_id}::uuid AND tc.vu_numero = ${s.numero}::int)
+            THEN ${s.numero}::int ELSE ${eb.ref('correctifs_numero')} END`,
           ...(complete
             ? {
                 numero_complet: sql<number>`greatest(${eb.ref('numero_complet')}, ${s.numero}::int)`,
@@ -489,6 +498,66 @@ export class SynchronisationTenable implements OperationEnLots {
         });
     }
     await this.rangerMachines(k, integration, numero, nouvelles);
+  }
+
+  /** Lot QF-TEN : correctifs regroupés de Tenable (`sumremediation`), rangés par (instance, identifiant) ; leurs contrôles
+      sont rattachés aux constats déjà rangés de la même instance (un numéro inconnu n'est pas gardé) et remplacés à chaque
+      synchronisation qui rapporte le correctif. Rien n'est supprimé : seuls ceux de la dernière synchronisation reçue en
+      entier sont montrés (`correctifs_numero`). Deux requêtes par lot, plus une par tranche de 5 000 liens. */
+  private async rangerCorrectifs(k: Kdb, integration: string, numero: number, el: ElementCorrectifTenable[]) {
+    if (!el.length) return;
+    const uniques = dernierParCle(el, (c) => c.identifiant);
+    const ids = await k
+      .insertInto('vulnerabilites_tenable_correctifs')
+      .values(
+        uniques.map((c) => ({
+          integration_id: integration,
+          solution_id: c.identifiant,
+          solution: c.solution,
+          machines: c.machines,
+          cves: c.cves,
+          detections: c.detections,
+          vpr_score: c.vpr === null ? null : String(c.vpr),
+          cvss3_score: c.cvss3Score === null ? null : String(c.cvss3Score),
+          epss_score: c.epss === null ? null : String(c.epss),
+          vu_numero: numero,
+        })),
+      )
+      .onConflict((oc) =>
+        oc.columns(['integration_id', 'solution_id']).doUpdateSet((eb) => ({
+          solution: eb.ref('excluded.solution'),
+          machines: eb.ref('excluded.machines'),
+          cves: eb.ref('excluded.cves'),
+          detections: eb.ref('excluded.detections'),
+          vpr_score: eb.ref('excluded.vpr_score'),
+          cvss3_score: eb.ref('excluded.cvss3_score'),
+          epss_score: eb.ref('excluded.epss_score'),
+          vu_numero: sql`greatest(vulnerabilites_tenable_correctifs.vu_numero, excluded.vu_numero)`,
+          vu_le: sql`now()`,
+        })),
+      )
+      .returning(['id', 'solution_id'])
+      .execute();
+    const parIdentifiant = new Map(ids.map((r) => [r.solution_id, r.id]));
+    await k
+      .deleteFrom('vulnerabilites_tenable_correctif_constats')
+      .where(
+        'correctif_id',
+        'in',
+        ids.map((r) => r.id),
+      )
+      .execute();
+    const liens = uniques.flatMap((c) =>
+      c.plugins.map((p) => ({ id: parIdentifiant.get(c.identifiant)!, p: Number(p) })),
+    );
+    for (let i = 0; i < liens.length; i += 5000) {
+      const t = liens.slice(i, i + 5000);
+      await sql`
+        INSERT INTO vulnerabilites_tenable_correctif_constats (correctif_id, constat_id)
+        SELECT x.id, c.id FROM unnest(${t.map((l) => l.id)}::uuid[], ${t.map((l) => l.p)}::int[]) AS x(id, plugin)
+        JOIN vulnerabilites_constats c ON c.integration_id = ${integration}::uuid AND c.plugin_id = x.plugin
+        ON CONFLICT DO NOTHING`.execute(k);
+    }
   }
 
   /* ---------------------------------------------------------------- Planification (tic de l'API) */
