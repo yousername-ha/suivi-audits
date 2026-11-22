@@ -44,6 +44,8 @@ test('Vulnérabilités : onglet « Alertes », aucune fenêtre d’alerte critiq
     await expect(page.locator('th', { hasText: /^Présence$/ })).toBeVisible();
     await expect(page.locator('th', { hasText: /^État$/ })).toBeVisible();
     await expect(page.getByText('Aucune alerte ne correspond.')).toBeVisible();
+    // L'explication de la page est repliée dans son aide depuis la refonte du 22/11/2026.
+    await page.getByText('À propos de cette page', { exact: true }).click();
     await expect(page.getByText(/Seul le RSSI peut prendre en compte une alerte\./)).toBeVisible();
     // Aucun rappel d'alerte critique dans l'en-tête du module, aucune fenêtre.
     await expect(page.getByText(/alertes? critiques? en cours/)).toHaveCount(0);

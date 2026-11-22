@@ -860,7 +860,9 @@ test('23. clic droit sur le fond > Créer ici > Fournisseur : créé et placé s
   // La fiche de l'objet créé au parcours 22 est ouverte en haut à droite : Échap la ferme.
   await p.keyboard.press('Escape');
   await expect(p.locator('.carte-inspecteur')).toHaveCount(0);
-  const cible = await pointCanevas(p, 0.82, 0.5);
+  // Point libre de la carte : avec la densité du 22/11/2026 le canevas est plus large et le milieu de sa hauteur, à
+  // droite, est occupé par la boîte du SMSI (l'objet créé y serait décalé pour ne rien chevaucher).
+  const cible = await pointCanevas(p, 0.82, 0.78);
   const m = await menuSur(p, cible);
   await m.getByRole('menuitem', { name: 'Fournisseur' }).click();
   const d = await creer(p, 'Créer : Fournisseur', 'Hébergeur fictif');

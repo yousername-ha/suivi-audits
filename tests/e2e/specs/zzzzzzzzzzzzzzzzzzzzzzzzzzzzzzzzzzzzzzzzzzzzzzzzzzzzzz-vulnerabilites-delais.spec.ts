@@ -76,6 +76,7 @@ for (const [mode, scheme] of [
       // Failles détectées : filtres « Délai » et tri repris de l'adresse (lien de la tuile et du résumé notifié).
       await page.goto('/vulnerabilites/failles?delai=en_depassement&tri=echeance');
       await expect(page.getByRole('heading', { name: 'Failles détectées', level: 1 })).toBeVisible();
+      await ouvrirFiltres(page, 'Délai');
       await expect(page.getByRole('combobox', { name: 'Délai', exact: true })).toHaveValue('En dépassement');
       await ouvrirFiltres(page, 'Trier par');
       await expect(page.getByRole('combobox', { name: 'Trier par', exact: true })).toHaveValue(
