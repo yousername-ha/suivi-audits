@@ -194,7 +194,9 @@ export class ImportNessus {
             premiere: x.machine.debut ?? x.machine.fin,
             derniere: x.machine.fin ?? x.machine.debut,
             exposition: null,
+            // Lot TEN-SCORES : un fichier .nessus ne porte ni ACR ni AES.
             acr: null,
+            aes: null,
             depot: null,
           })),
           // Lot N2 : `exploiteMalware` (revalidé par le schéma partagé) suit le constat jusqu'à sa colonne.

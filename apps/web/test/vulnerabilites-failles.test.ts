@@ -144,6 +144,7 @@ const machine = (m: Partial<MachineDto> = {}): MachineDto => ({
   depot: null,
   exposition: 'internal',
   acr: 4,
+  aes: 207,
   premiere: null,
   derniere: null,
   source: 'tenable',

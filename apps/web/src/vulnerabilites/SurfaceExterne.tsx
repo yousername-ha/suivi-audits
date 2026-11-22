@@ -150,6 +150,7 @@ import {
 } from './surface';
 import { nombrePages } from './veille';
 import { CLE_PERIMETRES_AFFECTABLES } from './perimetres';
+import { NOMS_PAGINATION } from './pagination';
 
 const CLE = ['vulnerabilites', 'surface'] as const;
 const OPTIONS_TYPE = TYPES_ALERTE_ALH.map((t) => ({ value: t, label: libelleTypeAlerte(t) }));
@@ -1059,7 +1060,9 @@ function Pages({
       <Text size="sm" c="dimmed" role="status">
         {donnees.total} résultat{donnees.total > 1 ? 's' : ''}
       </Text>
-      {pages > 1 && <Pagination total={pages} value={page} onChange={onPage} aria-label={`Pages des ${nom}`} />}
+      {pages > 1 && (
+        <Pagination {...NOMS_PAGINATION} total={pages} value={page} onChange={onPage} aria-label={`Pages des ${nom}`} />
+      )}
     </Group>
   );
 }
