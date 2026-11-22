@@ -26,6 +26,11 @@ Aucune action. Changement d'affichage du module Vulnérabilités seulement : ni 
     le délai tient sur une ligne. Le détail des sources et la règle du délai restent dans la fiche de la faille.
   - Animations décoratives coupées par la préférence « réduire les animations » et à l'impression. Libellés, liens et
     noms accessibles inchangés (session « Ergonomie et refonte Neon »).
+- Veille réglementaire, **aspect plus sobre et plus juridique** (même demande, style de la page de maintenance) : le
+  sommaire passe en quatre cases (à qualifier, à suivre, impactant, sans objet), et chaque publication devient une
+  carte d'acte. La carte donne la source et son autorité, le statut marqué d'un point de couleur, le titre, le résumé en
+  citation, la date de publication, le domaine, la qualification, puis les boutons de qualification et le lien vers la
+  source. Libellés et noms accessibles inchangés.
 
 ## [7.5.1] — 2026-11-21
 

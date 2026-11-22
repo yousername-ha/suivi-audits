@@ -74,6 +74,11 @@ const ICONES = {
   depassement: 'M12 5a8 8 0 1 0 0 16 8 8 0 0 0 0-16M12 9v4l2.8 1.8M9 2.5h6',
   finSupport: 'M7 3h10M7 21h10M8 3c0 4.5 8 4.5 8 9s-8 4.5-8 9M16 3c0 4.5-8 4.5-8 9s8 4.5 8 9',
   corrigees: 'M12 3 19 6v5.5c0 4.3-2.9 7.5-7 9.5-4.1-2-7-5.2-7-9.5V6zM9 12l2.2 2.2L15.5 10',
+  /* Veille réglementaire : à qualifier (document), à suivre (œil), impactant (balance), sans objet (archive). */
+  aQualifierVeille: 'M6 3h9l4 4v14H6zM15 3v4h4M9 12h7M9 16h5',
+  aSuivreVeille: 'M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6',
+  impactantVeille: 'M12 3v18M5 21h14M7 7h10M7 7l-3 7a3 3 0 0 0 6 0zM17 7l-3 7a3 3 0 0 0 6 0z',
+  sansObjetVeille: 'M4 5h16v4H4zM5 9v10h14V9M10 13h4',
 } as const;
 export type IconeTuile = keyof typeof ICONES;
 

@@ -21,14 +21,21 @@ Prises sur maquettes injectées dans les vraies pages, avec des données fictive
    et six cases d'instrument sur deux colonnes (icône dans un carré bordé, numéro, trait lumineux quand une action est
    attendue). La proposition 2 (cadran à aiguille et mini-radars) est écartée.
 
+5. **Veille réglementaire, plus sobre et plus juridique** (proposition « K1 ») : style de la page de maintenance, sans
+   police à empattements, sans fond papier ni tampon (propositions « Journal officiel » et « Registre » écartées).
+   Sommaire en quatre cases, une carte d'acte par publication (source et autorité, statut à point de couleur, titre,
+   résumé en citation, champs « Publié le », « Domaine », « Qualification »). Aucune référence numérotée : la donnée
+   n'existe pas. Les autorités (« Union européenne », « Autorité de contrôle »…) sont des libellés descriptifs.
+
 ## Fichiers
 
 | Fichier | Changement |
 | --- | --- |
-| `packages/ui/src/neon-vulnerabilites.css` | Nouvelle feuille, limitée au module par `main[data-module='vulnerabilites']`, chargée après les autres. |
+| `packages/ui/src/neon-vulnerabilites.css` | Nouvelle feuille, limitée au module par `main[data-module]` (vulnérabilités et veille réglementaire), chargée après les autres. |
 | `apps/web/src/components/Layout.tsx` | Attribut `data-module` sur la zone principale des pages du module. |
 | `apps/web/src/vulnerabilites/Instruments.tsx` | Nouveau : réacteur (SVG décoratif), en-tête des cases, ondes. |
 | `apps/web/src/vulnerabilites/VueEnsemble.tsx` | Niveau d'alerte posé sur le réacteur, règle repliée ; cases des chiffres clés. |
+| `apps/web/src/veille-reglementaire/VeilleReglementaire.tsx`, `veille-reglementaire.ts` | Sommaire en cases, cartes d'acte, surtitre ; `AUTORITES_REGLEMENTAIRES`. |
 | `apps/web/src/vulnerabilites/FaillesDetectees.tsx`, `failles.ts` | Ligne allégée : `PrioriteCourte`, `DelaiCourt`, `SourceCourte`, `faitsListe`, `raisonPriorite`. |
 
 Inchangés : libellés, liens, rôles et noms accessibles. Les flèches ajoutées en CSS ont un texte de remplacement vide
