@@ -16,6 +16,9 @@ import {
 import { libelleTypeActif } from './surface';
 
 export const CLE_PERIMETRES = ['vulnerabilites', 'machines', 'perimetres'] as const;
+/** Clé de la liste des périmètres où l'on peut ranger une machine ou un actif (`/api/vulnerabilites/perimetres`), distincte
+    de CLE_PERIMETRES (cartes de l'onglet) : deux réponses de forme différente ne partagent jamais une clé. */
+export const CLE_PERIMETRES_AFFECTABLES = ['vulnerabilites', 'perimetres-affectables'] as const;
 export const URL_PERIMETRES = '/api/vulnerabilites/machines/perimetres';
 export const urlDetailPerimetre = (id: IdPerimetreVue) => `${URL_PERIMETRES}/${encodeURIComponent(id)}`;
 /** Page de l'onglet « Périmètres ». */

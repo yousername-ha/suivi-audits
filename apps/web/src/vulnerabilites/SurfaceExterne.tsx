@@ -149,6 +149,7 @@ import {
   urlTechnologiesAlh,
 } from './surface';
 import { nombrePages } from './veille';
+import { CLE_PERIMETRES_AFFECTABLES } from './perimetres';
 
 const CLE = ['vulnerabilites', 'surface'] as const;
 const OPTIONS_TYPE = TYPES_ALERTE_ALH.map((t) => ({ value: t, label: libelleTypeAlerte(t) }));
@@ -1707,7 +1708,7 @@ function OngletPerimetres() {
     queryFn: () => get<PerimetreAlhDto[]>('/api/vulnerabilites/surface/perimetres'),
   });
   const options = useQuery({
-    queryKey: ['vulnerabilites', 'perimetres-affectables'],
+    queryKey: [...CLE_PERIMETRES_AFFECTABLES],
     queryFn: () => get<PerimetreAffectableDto[]>('/api/vulnerabilites/perimetres'),
   });
   const lier = async (p: PerimetreAlhDto, perimetreId: string | null) => {

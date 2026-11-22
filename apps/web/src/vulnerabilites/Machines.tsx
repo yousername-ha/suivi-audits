@@ -69,7 +69,7 @@ import {
   urlMachines,
 } from './failles';
 import { libellePrioriteMachine, urlParc } from './parc';
-import { adressePerimetre, filtresDepuisAdresse } from './perimetres';
+import { adressePerimetre, CLE_PERIMETRES_AFFECTABLES, filtresDepuisAdresse } from './perimetres';
 import { LegendeMarques, MarquesMachine, MentionFinSupport, MentionSansCorrectif, ParcMachines } from './ParcMachines';
 import { libelleExposition, urlExpositionMachine } from './surface';
 import { ouvertureMachines } from './recherche';
@@ -317,7 +317,7 @@ function OngletDepots() {
     queryFn: () => get<DepotTenableDto[]>('/api/vulnerabilites/depots'),
   });
   const options = useQuery({
-    queryKey: ['vulnerabilites', 'perimetres-affectables'],
+    queryKey: [...CLE_PERIMETRES_AFFECTABLES],
     queryFn: () => get<PerimetreAffectableDto[]>('/api/vulnerabilites/perimetres'),
   });
   const lier = async (d: DepotTenableDto, perimetreId: string | null) => {
@@ -624,8 +624,10 @@ function OngletMachines() {
     changer({ role: z });
     regler({ vue: 'liste' });
   };
+  // Même clé que les autres lectures de /api/vulnerabilites/perimetres : [...CLE, 'perimetres'] est celle des cartes de
+  // l'onglet « Périmètres » (CLE_PERIMETRES), d'une autre forme ; la partager plantait cette page en venant de l'onglet.
   const perimetres = useQuery({
-    queryKey: [...CLE, 'perimetres'],
+    queryKey: [...CLE_PERIMETRES_AFFECTABLES],
     queryFn: () => get<PerimetreAffectableDto[]>('/api/vulnerabilites/perimetres'),
     enabled: modifier,
   });
