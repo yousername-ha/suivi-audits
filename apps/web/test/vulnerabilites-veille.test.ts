@@ -1,6 +1,8 @@
 /* Module Vulnérabilités (ADR 0100, lots V2 et V3) : écran « Veille ». Menu conditionné par le droit du module, adresses de
    recherche, état affiché des sources, liens d'avis contrôlés (https, hôte de la source, nouvel onglet sans référent),
-   textes des sources rendus comme texte simple, activation réservée à l'administrateur. Données fictives. */
+   textes des sources rendus comme texte simple, activation réservée à l'administrateur. Lot VEILLE-PLATEFORME : le tableau
+   des sources (fréquences) et l'activation sont dans la carte « Veille des vulnérabilités » de la Plateforme
+   (ConfigurationVeille.tsx) ; leurs rendus sont vérifiés ici sans changement. Données fictives. */
 import { MantineProvider } from '@mantine/core';
 import type { Action, AvisVeilleDto, EtatSourceVeilleDto, EtatVeilleDto, FailleVeilleDto, Module } from '@suivi/shared';
 import { createElement, type ReactElement } from 'react';
@@ -9,7 +11,8 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { famillesVisibles, localiser } from '../src/navigation';
 import { ListeAvis } from '../src/vulnerabilites/AvisVeille';
-import { ActivationVeille, KevTable, ListeFailles, SourcesTable } from '../src/vulnerabilites/Veille';
+import { ActivationVeille, SourcesTable } from '../src/vulnerabilites/ConfigurationVeille';
+import { KevTable, ListeFailles } from '../src/vulnerabilites/Veille';
 import {
   adresseAvis,
   dateCourte,

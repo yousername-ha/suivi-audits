@@ -2,6 +2,27 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+Aucune action ; la configuration de la veille se trouve désormais dans la page Plateforme.
+
+### Modifié
+
+- Vulnérabilités, **configuration de la veille dans la page Plateforme** (lot VEILLE-PLATEFORME, décision du RSSI du
+  23/11/2026, « comme pour les intégrations », [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : nouvelle carte
+  **« Veille des vulnérabilités »** de la page Plateforme, visible seulement de qui administre le module Vulnérabilités
+  (droit qui protégeait déjà ces réglages) ; elle reprend toute la configuration de l'écran « Veille » : activation de la
+  veille et validation de son flux, sources et fréquences (avertissements de NVD et d'EPSS), « Collecter maintenant »,
+  dictionnaire des produits (CPE : activation, chargement, copie complète et sa suppression), sources facultatives
+  (Cloudflare Radar, tldrcve : activation, fréquence). L'écran « Veille » du module ne garde que le contenu (failles
+  exploitées, alertes et avis, annonces des sources facultatives, recherche) et une ligne d'état par source, en lecture
+  seule (état, dernière collecte réussie, retard, erreur abrégée), avec un lien « Configurer » vers la carte, visible
+  seulement avec ce même droit ; moins de texte d'explication. Le registre des flux et l'aide renvoient vers la carte. Aucune
+  route d'API, aucun droit ni aucun journal d'audit ne change ; la liste des produits surveillés reste dans le module
+  (session « Module surveillance vulnérabilités SMSI »).
+
 ## [7.6.1] — 2026-11-23
 
 ### Notes de mise à jour

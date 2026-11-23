@@ -46,11 +46,10 @@ describe('registre des flux vers l’extérieur', () => {
       expect(f.porteur.services.length, f.id).toBeGreaterThan(0);
       if (f.porteur.type === 'conteneur') expect(f.porteur.profil, f.id).toBeTruthy();
       expect(f.donnees, f.id).not.toBe('');
-      // Page de réglage : Configuration système, Plateforme, rubrique Intégrations pour les connecteurs (ADR 0076), ou
-      // écran de la veille du module Vulnérabilités (ADR 0100), écran de la veille réglementaire (ADR 0110).
-      expect(f.reglage.lien, f.id).toMatch(
-        /^\/(systeme\/|plateforme\/|integrations$|vulnerabilites\/veille$|veille-reglementaire$)/,
-      );
+      // Page de réglage : Configuration système, Plateforme (dont les cartes « Intégrations », ADR 0076, et « Veille des
+      // vulnérabilités », ADR 0100, lot VEILLE-PLATEFORME), rubrique Intégrations pour les connecteurs, ou écran de la veille
+      // réglementaire (ADR 0110).
+      expect(f.reglage.lien, f.id).toMatch(/^\/(systeme\/|plateforme\/|integrations$|veille-reglementaire$)/);
       expect(f.pareFeu.length, f.id).toBeGreaterThan(0);
       expect(f.siFerme, f.id).not.toBe('');
     }
@@ -133,6 +132,11 @@ describe('geste d’activation (précision du RSSI du 15/11/2026)', () => {
     expect(fluxExterne('veille-vulnerabilites').activation.geste).toBe('Bouton « Activer la veille »');
     expect(fluxExterne('veille-reglementaire').activation.geste).toBe('Bouton « Activer la veille réglementaire »');
     expect(fluxExterne('antivirus').reglage.lien).toBe('/systeme/securite');
+    // Lot VEILLE-PLATEFORME (décision du RSSI du 23/11/2026) : la veille se configure dans la carte de la Plateforme.
+    expect(fluxExterne('veille-vulnerabilites').reglage).toEqual({
+      libelle: 'Plateforme > Veille des vulnérabilités',
+      lien: '/plateforme/veille-vulnerabilites',
+    });
     // Activation globale (ADR 0019) : l'assistant, le module Intégrations (connecteur Tenable) et le module Vulnérabilités
     // (veille) sont des modules dont la désactivation referme le flux.
     expect(FLUX_EXTERNES.filter((f) => f.moduleActivation).map((f) => [f.id, f.moduleActivation])).toEqual([
