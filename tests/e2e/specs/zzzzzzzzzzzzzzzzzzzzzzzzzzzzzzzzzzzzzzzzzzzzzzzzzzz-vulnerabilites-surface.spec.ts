@@ -15,7 +15,7 @@
    carte, les fiches et le rangement sont couverts par les tests de l'interface et de l'API). Lot I1 : le connecteur se
    configure dans la carte « Intégrations » de la page Plateforme ; l'écran n'en montre que l'état et le lien. Lot SI2 :
    la carte vide dit qu'elle se remplit aussi par un import Silène ; le parcours de la carte à deux sources (regroupement
-   par adresse IP, filtre par nom, présentation empilée) est dans la spec de l'import Silène, qui a des données. */
+   par adresse IP, filtre unique de la carte, présentation empilée) est dans la spec de l'import Silène, qui a des données. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { attendreFenetresStables, ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';

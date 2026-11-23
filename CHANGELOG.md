@@ -26,6 +26,25 @@ Aucune action : changements d'affichage, ni migration ni commande sur le serveur
   - **Objectifs et indicateurs** : une seule rangée d'onglets (Vue compacte, ouverte par défaut, Par processus, Par
     objectif, Boîtes de pilotage) au lieu de deux.
   - Registres du Pilotage : les deux exports deviennent deux petits boutons alignés à droite.
+- Vulnérabilités, **carte de la surface externe** (vue EASM, demande du RSSI du 22/11/2026 : lisible avec beaucoup
+  d'adresses et de noms de domaine, sans changer le style).
+  - La carte n'a plus de cadre : elle se pose dans la page, qui défile, sans paraître dans une fenêtre.
+  - Internet rejoint les branches par un seul tronc : chaque branche s'y raccorde par un court trait, au lieu d'une
+    courbe chacune, qui formait une colonne illisible au-delà de quelques dizaines de branches. Le tronc est rouge
+    jusqu'à la dernière branche qui porte un chemin d'entrée critique.
+  - Noms rangés dans l'ordre naturel des nombres (« exemple-2 » avant « exemple-10 »).
+  - Deux regroupements de plus, une ligne par adresse avec les noms qui y résolvent : **Bloc d'adresses** (/24 en IPv4,
+    /64 en IPv6) et **Hébergeur** (fournisseur, numéro de système autonome, pays, CDN). Une adresse sans hébergeur connu
+    va dans « Hébergeur inconnu ». La route de la carte rend pour cela le réseau de chaque hôte d'AlgoLightHouse, déjà
+    en base (aucune requête de plus, rien de nouveau vers l'assistant) (session « Ergonomie et refonte Neon »).
+- Vulnérabilités, **surface externe** (retour du RSSI du 23/11/2026, « trop de menu tue le menu », maquette validée le
+  même jour) :
+  - un seul champ « Filtrer la carte », dans la barre collante, au lieu de deux barres : il retient une ligne si le
+    texte figure dans un nom, l'adresse, une CVE d'une alerte retenue ou un port ou service ; quand il correspond à une
+    partie d'un nom (et non au début de l'adresse), seuls les noms qui correspondent restent sur la ligne, les autres
+    sont comptés. Annonce du nombre de noms et d'adresses retenus et bouton « Effacer le filtre » ; les autres filtres
+    restent dans le panneau de la barre ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum SI2) ;
+  - les cartes des sources AlgoLightHouse et Silène se lisent comme des lignes d'état, plus compactes (contenu inchangé).
 
 ### Corrigé
 
@@ -34,6 +53,7 @@ Aucune action : changements d'affichage, ni migration ni commande sur le serveur
   d1 à d4 et g, dont tout le temps « Performance de sécurité », n'apparaissaient pas. Chaque entrée se range désormais
   par la lettre de son point, une entrée inconnue reste visible, et les trois temps sont présentés côte à côte (test
   `preparation-revue.test.ts`).
+
 
 ## [7.6.1] — 2026-11-23
 

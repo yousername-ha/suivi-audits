@@ -5,8 +5,9 @@
    sa pastille, actif de la liste commune avec ses ports ouverts et leur source, fiche Silène de l'actif, onglet « Constats
    Silène » et fiche d'un constat ; second rapport où un hôte et un constat ont disparu (évolution de la note, disparus
    comptés) ; lot SI2 : carte « Lignes d'approche » (nœuds de Silène, constats d'un hôte et fiche d'un constat,
-   regroupement par adresse IP, branche repliée puis dépliée, filtre par nom de domaine annoncé puis effacé, vue gardée en
-   changeant d'onglet, barre collante à 1 366 px, présentation empilée et aucun débordement à 390 px) ; suppression de
+   regroupement par adresse IP, branche repliée puis dépliée, filtre unique « Filtrer la carte » de la barre collante
+   (décision du RSSI du 23/11/2026) : partie d'un nom puis port annoncés, texte et regroupement gardés en changeant
+   d'onglet, puis effacement ; barre collante à 1 366 px, présentation empilée et aucun débordement à 390 px) ; suppression de
    l'instance par « Supprimer ce connecteur et tout ce qu'il a importé », et dans `finally` si le
    parcours s'est arrêté avant. Accessibilité en clair (1 366 px) et en sombre (390 px). Rapports JSON fictifs écrits à la
    main (tests/fixtures/silene), dont les champs interdits portent des marqueurs « INTERDIT » qui ne doivent jamais paraître.
@@ -207,29 +208,45 @@ for (const [mode, scheme, largeur] of [
       await expect(www).toBeVisible();
       await expect(page.getByRole('button', { name: /^Replier la branche 192\.0\.2\.10 : / })).toBeVisible();
       await axe(page);
-      // Filtre par nom de domaine (casse ignorée) : résultat annoncé, autres noms retirés, effacement.
-      await page.getByRole('textbox', { name: 'Nom de domaine ou adresse IP', exact: true }).fill('RDP');
+      // Un seul champ de filtre, dans la barre collante (décision du RSSI du 23/11/2026) : plus de champ « Nom de domaine
+      // ou adresse IP » ni de seconde barre au-dessus de la carte.
+      const filtreCarte = collant.getByRole('textbox', { name: 'Filtrer la carte', exact: true });
+      await expect(filtreCarte).toBeVisible();
+      await expect(page.getByRole('textbox', { name: 'Filtrer la carte', exact: true })).toHaveCount(1);
+      await expect(page.getByRole('textbox', { name: 'Nom de domaine ou adresse IP' })).toHaveCount(0);
+      // Partie d'un nom de domaine (casse ignorée) : résultat annoncé, autres noms retirés.
+      const rdp = page.getByRole('button', {
+        name: 'Nom de domaine rdp.example.org, résout vers 198.51.100.20, vu par Silène (ANSSI) : ouvrir sa fiche',
+        exact: true,
+      });
+      await filtreCarte.fill('RDP');
       await expect(page.getByRole('status').filter({ hasText: 'correspondent à « RDP »' })).toHaveText(
         '1 nom de domaine et 1 adresse IP correspondent à « RDP ».',
       );
       await expect(www).toHaveCount(0);
-      await expect(
-        page.getByRole('button', {
-          name: 'Nom de domaine rdp.example.org, résout vers 198.51.100.20, vu par Silène (ANSSI) : ouvrir sa fiche',
-          exact: true,
-        }),
-      ).toBeVisible();
+      await expect(rdp).toBeVisible();
       await axe(page);
-      await ouvrirFiltres(page, 'Regrouper par');
-      await page.getByRole('button', { name: 'Effacer le filtre par nom', exact: true }).click();
-      await expect(page.getByRole('textbox', { name: 'Nom de domaine ou adresse IP', exact: true })).toHaveValue('');
-      // La vue (regroupement) est gardée pendant la navigation dans la page.
+      // Port et protocole : la ligne de 192.0.2.10 reste entière, avec ses noms ; celle de 198.51.100.20 (3389) sort.
+      await filtreCarte.fill('22/tcp');
+      await expect(page.getByRole('status').filter({ hasText: 'correspondent à « 22/tcp »' })).toHaveText(
+        / et 1 adresse IP correspondent à « 22\/tcp »\.$/,
+      );
+      await expect(www).toBeVisible();
+      await expect(rdp).toHaveCount(0);
+      // La vue (texte du filtre et regroupement) est gardée pendant la navigation dans la page.
       await page.getByRole('tab', { name: 'Actifs', exact: true }).click();
       await page.getByRole('tab', { name: 'Carte', exact: true }).click();
+      await expect(filtreCarte).toHaveValue('22/tcp');
+      await expect(www).toBeVisible();
       await ouvrirFiltres(page, 'Regrouper par');
       await expect(page.getByRole('combobox', { name: 'Regrouper par', exact: true })).toHaveValue(
         'Adresse IP publique',
       );
+      // Effacement : le champ se vide, l'annonce disparaît, la ligne écartée revient.
+      await page.getByRole('button', { name: 'Effacer le filtre', exact: true }).click();
+      await expect(filtreCarte).toHaveValue('');
+      await expect(page.getByRole('status').filter({ hasText: 'correspondent à' })).toHaveCount(0);
+      await expect(rdp).toBeVisible();
 
       // Second rapport : 198.51.100.20 et RES-FICTIF-0003 ont disparu ; la note progresse.
       await page.goto('/plateforme/integrations');
