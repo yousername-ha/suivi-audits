@@ -1617,7 +1617,7 @@ export interface VDocuments {
 
 export interface VeilleReglementaireCollectes {
   id: Generated<string>;
-  source: "cnil" | "cepd" | "eur-lex" | "anssi";
+  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "cert-sante-actualites" | "legifrance";
   origine: "manuel" | "planifie";
   etat: Generated<"en_file" | "en_cours" | "recu" | "echec" | "expire">;
   demande_par: string;
@@ -1633,7 +1633,7 @@ export interface VeilleReglementaireCollectes {
 
 export interface VeilleReglementairePublications {
   id: Generated<string>;
-  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "ans" | "legifrance";
+  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "cert-sante-actualites" | "ans" | "legifrance";
   domaine: "securite" | "donnees-personnelles";
   identifiant: string;
   titre: string;
@@ -1649,7 +1649,7 @@ export interface VeilleReglementairePublications {
 }
 
 export interface VeilleReglementaireSources {
-  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "ans" | "legifrance";
+  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "cert-sante-actualites" | "ans" | "legifrance";
   activee: Generated<boolean>;
   frequence_heures: number | null;
   planifiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;

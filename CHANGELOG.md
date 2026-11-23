@@ -2,7 +2,7 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
-## [Non publié]
+## [7.6.1] — 2026-11-23
 
 ### Notes de mise à jour
 
@@ -14,9 +14,30 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   s'en servir, autoriser la sortie TCP 443 du serveur vers ces hôtes au pare-feu, ou au mandataire de l'établissement
   ([guide d'installation](docs/INSTALLATION.md)) ; sinon, rien ne change. Seul l'identifiant de la CVE consultée sort ; les
   deux flux facultatifs sont lus sans aucun paramètre.
+- Veille réglementaire, lot VR-2 : migration automatique additive `104` (listes fermées des sources, des liens et des
+  mots-clés recréées pour admettre les actualités du CERT Santé et le Journal officiel ; aucune donnée touchée), sans
+  reprise de données ni commande sur le serveur. **Les deux sources nouvelles sont désactivées au départ** : rien n'est lu
+  tant qu'une personne qui administre la veille réglementaire ne les active pas (et que le flux « veille-reglementaire »
+  est ouvert). **Hôtes nouveaux en sortie**, seulement si ces sources sont activées : `echanges.dila.gouv.fr` (Journal
+  officiel, données ouvertes de la DILA) et `cyberveille.esante.gouv.fr` (déjà autorisé si la veille des vulnérabilités
+  l'est), TCP 443, par l'exécutant d'exploitation ou par le mandataire de l'établissement (guide d'installation, étapes 0
+  et 11.14) ; hôtes autorisés par la décision du RSSI du 22/11/2026. L'API Légifrance (plateforme PISTE) n'est pas
+  livrée (lot à part, plus tard : décision du RSSI du 23/11/2026) : **aucun compte PISTE ni aucune clé à créer ou à
+  saisir** pour cette version.
 
 ### Ajouté
 
+- Administration, remise à vide de la base : choix « Les données de travail, puis recharger la démonstration »
+  (décision du RSSI du 23/11/2026, addendum de l'ADR 0065). Efface les données de travail puis recharge le jeu de
+  démonstration fictif (machines et constats Tenable fictifs compris, aucun appel vers Tenable), avec les garde-fous de la
+  remise à vide : interrupteur désactivé par défaut, phrase propre `RÉGÉNÉRER LA DÉMONSTRATION`, code de double
+  authentification, sauvegarde de moins de 30 minutes. Journal : `remise_a_vide.demonstration_chargee` ou
+  `remise_a_vide.demonstration_echec`.
+- Plateforme > Apparence, **police à l'essai** (demande du RSSI du 23/11/2026,
+  [ADR 0093, addendum du 23/11/2026](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md)) : Lexend (par défaut), Plex
+  Sans, Figtree ou Public Sans, pour tous les comptes de l'instance, avec aperçu immédiat avant l'enregistrement. Polices
+  hébergées avec l'application (licence SIL OFL à côté de chacune), téléchargées seulement si elles sont choisies. Aucune
+  migration ; à réduire à une seule police une fois le choix fait.
 - Vulnérabilités, **CVE inconnue de la veille** (lot CVE-INC, décisions du RSSI des 19, 20 et 22/11/2026,
   [ADR 0100](docs/adr/0100-module-vulnerabilites.md), migration `103`). Une CVE que ni la veille ni aucune détection ne
   cite s'ouvre désormais dans une fiche depuis la barre de recherche (bouton du panneau, ou Entrée). Sur clic, « Consulter
@@ -51,6 +72,21 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   des vulnérabilités, veille réglementaire, sources facultatives, CVE inconnue, dictionnaire CPE), l'erreur affichée quand
   le mandataire sortant est injoignable ne donne plus son nom ni son port, gardés au seul journal d'audit de la collecte
   (session « Module surveillance vulnérabilités SMSI »).
+- Veille réglementaire, **actualités du CERT Santé et Journal officiel** (lot VR-2, décision du RSSI du 22/11/2026,
+  [ADR 0110](docs/adr/0110-veille-reglementaire.md)) : deux sources de plus, désactivées au départ, réglables en fréquence
+  comme les autres. Actualités du CERT Santé (`cyberveille.esante.gouv.fr/actualites/rss.xml`) : titre, date et lien
+  seulement, jamais de résumé, domaine sécurité. Journal officiel (source « Légifrance », jusqu'ici « non disponible ») :
+  fichier quotidien des données ouvertes de la DILA (`echanges.dila.gouv.fr/OPENDATA/JORF/`, sans compte), archives
+  publiées depuis la veille de la dernière collecte réussie (sept jours la première fois, dix au plus), lues en mémoire et
+  bornées (32 Mio par archive, refusée au-delà sans être lue ; 512 Mio décompressée ; 200 000 fichiers ; en-tête de chaque
+  texte seulement, en UTF-8, sans déclaration de type de document ni d'entité) ; seuls les textes dont le titre contient
+  un mot de la carte « Filtre du Journal officiel » (liste propre, en français, même réglage que le filtre d'EUR-Lex) sont
+  gardés, domaine déduit du mot ; titre (abrégé par « … » au-delà de 300 caractères), date de publication et lien vers la
+  page du texte sur Légifrance (`https://www.legifrance.gouv.fr/jorf/id/JORFTEXT…`, forme exacte contrôlée par le script,
+  l'API, la base et l'interface), jamais le texte intégral. La forme réelle des archives n'est pas encore relevée : une
+  forme inattendue fait échouer la collecte avec une explication. Mandataire injoignable : erreur sans nom ni port, comme
+  pour les autres sources. L'API Légifrance (PISTE) fera l'objet d'un lot à part, plus tard (décision du RSSI du
+  23/11/2026) ; l'ANS reste « non disponible » (session « Module surveillance vulnérabilités SMSI »).
 
 ### Modifié
 

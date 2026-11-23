@@ -206,6 +206,138 @@ Le RSSI retient pour la tranche suivante :
 
 Non retenu : lire les pages du site principal de l'ANS (fragile à chaque refonte). La ligne « ANS » reste « non disponible ».
 
+## Addendum du 22/11/2026 : réalisation du lot VR-2
+
+Rédaction : session « Module surveillance vulnérabilités SMSI » (`session_01EnWdzdnc8fBi6Yrc154Jy6`). Cet addendum complète
+la décision ci-dessus ; la section « Ce qui n'est pas fait » plus bas décrit l'état du lot VR-1 et vaut, depuis ce lot,
+seulement pour l'ANS, l'API Légifrance (PISTE) et les autres points qui y sont listés.
+
+### Réalisé
+
+1. **Actualités du CERT Santé** : source `cert-sante-actualites` (identifiant distinct de la source `cert-sante` de la veille
+   des vulnérabilités, les deux listes étant réunies dans le script), flux RSS 2.0
+   `https://cyberveille.esante.gouv.fr/actualites/rss.xml`, lu par `lire_rss` comme l'ANSSI : titre, date et lien
+   seulement, **la description n'est jamais lue** (pas dans `RESUME_REGLEMENTAIRE`), domaine sécurité, désactivée au départ,
+   fréquences communes. L'hôte, déjà ouvert pour la veille des vulnérabilités, est inscrit aussi dans le flux
+   « veille-reglementaire » (registre, script, guide) : fermer l'un des deux flux ne ferme pas l'autre.
+2. **Journal officiel par les données ouvertes de la DILA** : la valeur `legifrance`, prévue par la migration 098, a son
+   collecteur (`journal_officiel` dans le script). Hôte joint : `echanges.dila.gouv.fr` (nouvelle destination TCP 443 du flux).
+   Chemins de la liste fermée : `/OPENDATA/JORF/` (page d'index du dossier) et `/OPENDATA/JORF/{archive}`, où `{archive}` est
+   contrôlé par `^JORF_(\d{8})(?:-\d{6})?\.tar\.gz$` avant toute lecture. Déroulement :
+   - la demande porte la liste de mots-clés du Journal officiel et, après une première réussite, `parametres.depuis` (la
+     veille de la dernière collecte réussie, AAAA-MM-JJ, en UTC ; sept jours sinon dans le script) ;
+   - la page d'index (4 Mio au plus) n'est pas analysée : les noms d'archives y sont relevés par leur forme exacte, datés,
+     ceux d'avant la date de départ écartés ; **dix archives au plus** (les plus récentes, collecte signalée incomplète
+     au-delà), une demi-seconde entre deux, plus aucune après 180 secondes de collecte ;
+   - chaque archive : **32 Mio au plus** (au-delà, refusée sans être lue, d'après la longueur annoncée ou à la lecture),
+     décompressée en mémoire par `gzip` et `tarfile` (mode flux `r|`, rien n'est écrit sur disque), **512 Mio** au plus une fois
+     décompressée (bombe de décompression refusée), **200 000 fichiers** au plus. Une archive refusée ou illisible est
+     écartée (collecte incomplète) ; si aucune ne peut être lue, la collecte échoue avec l'explication ;
+   - seuls les fichiers `JORFTEXT<12 chiffres>.xml` sont ouverts, et seulement leurs 64 premiers Kio : décodage UTF-8 strict,
+     refus de toute déclaration de type de document ou d'entité, analyse par `XMLPullParser` bornée en profondeur (12) et en
+     éléments (2 000), arrêt à la fin de l'élément `META`. Racine autre que `TEXTE_VERSION` (structure, par exemple) :
+     fichier ignoré ; en-tête illisible : fichier écarté et compté. Si des fichiers étaient candidats mais qu'aucune version
+     de texte n'a pu être lue dans toute la collecte, la collecte échoue (« forme inattendue ») plutôt que de rendre zéro
+     publication sans le dire ;
+   - champs lus : `ID` (sinon `CID`) de forme `JORFTEXT\d{12}`, `TITREFULL` (sinon `TITRE`), `DATE_PUBLI` (AAAA-MM-JJ, date
+     réelle) ; un champ illisible fait écarter le texte. Filtre : le titre complet nettoyé (balises retirées) doit contenir un
+     mot-clé (même `normaliser` et même `domaine_titre` qu'EUR-Lex) ; le domaine en découle. Le même texte présent dans deux
+     archives : la plus récente l'emporte ; 200 textes au plus par collecte ;
+   - publication : identifiant JORFTEXT, titre abrégé à 300 caractères (terminé par « … ») quand il est plus long, date de
+     publication à minuit UTC, lien `https://www.legifrance.gouv.fr/jorf/id/<JORFTEXT…>`, **jamais de résumé ni de texte
+     intégral**. L'hôte des liens (`hoteLiens`) n'est jamais joint par la plateforme ; la forme exacte du lien (`formeLien`)
+     est contrôlée par le script, `lienPublicationValide` (API et interface) et la base (migration 104).
+3. **Filtre par mots-clés** : **liste propre au Journal officiel** (`MOTS_CLES_JO_DEFAUT`, 19 mots, en français), plutôt que
+   la liste d'EUR-Lex, bilingue et faite pour des titres anglais : même schéma (`MotCleEurLex`), mêmes bornes, même route
+   (`PUT /api/veille-reglementaire/sources/legifrance/mots-cles`, `administrer`, `If-Match`, journal
+   `veille_reglementaire.mots_cles.regles`), rangée dans `veille_reglementaire_sources.mots_cles` de la ligne `legifrance`
+   (`SOURCES_FILTREES_MOTS_CLES`), carte « Filtre du Journal officiel » à côté de celle d'EUR-Lex (même composant, une région
+   nommée par carte).
+4. **Migration 104** (additive) : listes fermées des sources, des collectes et des liens recréées ; activation refusée pour
+   l'ANS seule ; mots-clés admis pour EUR-Lex et le Journal officiel. Les contraintes sans nom de la migration 098 sont
+   retirées sous les noms que PostgreSQL leur a donnés (`veille_reglementaire_sources_check`, `_check1`,
+   `veille_reglementaire_publications_check1`), sans `IF EXISTS`, et recréées avec un nom explicite. La règle du résumé
+   (migration 098) n'est pas touchée : ni le CERT Santé ni le Journal officiel ne peuvent en ranger un.
+5. **Exécutant** : `VEILLE_REGLEMENTAIRE_SOURCES` reçoit `cert-sante-actualites` et `legifrance` ; rien d'autre ne change
+   (les paramètres passent au script tels quels par l'entrée standard). Test : `scripts/tests/test_exploitation.py`.
+
+### Hôtes nouveaux autorisés par le RSSI
+
+| Hôte | Décision | Ce qui sort |
+| --- | --- | --- |
+| `cyberveille.esante.gouv.fr` (CERT Santé), sous le flux « veille-reglementaire » | 22/11/2026 : « CERT Santé – actualités » (décision du RSSI du 22/11/2026, ci-dessus, point 1) ; hôte déjà ouvert sous le flux « veille-vulnerabilites », inscrit aussi sous ce flux | la demande de lecture du flux RSS des actualités, sans paramètre |
+| `echanges.dila.gouv.fr` (DILA, données ouvertes du JORF) | 22/11/2026 : « Journal officiel, données ouvertes » (décision du RSSI du 22/11/2026, ci-dessus, point 2) | la demande de la page d'index du dossier, puis des archives quotidiennes récentes, sans paramètre |
+
+Les deux sont sous le flux « veille-reglementaire » (fermé par défaut, ADR 0097) et leurs sources sont désactivées au départ.
+`www.legifrance.gouv.fr` n'est pas une destination : seul le navigateur de la personne qui suit un lien l'ouvre. Aucun hôte de
+PISTE n'est autorisé (voir ci-dessous).
+
+### API Légifrance (plateforme PISTE) : lot à part, plus tard (décision du RSSI du 23/11/2026)
+
+La décision du RSSI la retient en option. Elle n'est pas livrée dans ce lot, pour trois raisons :
+
+- **le script n'émet que des `GET`** (invariant vérifié par `test_veille_vulnerabilites.py`) ; PISTE demande un `POST` pour le
+  jeton OAuth 2 (`https://oauth.piste.gouv.fr/api/oauth/token`, « client credentials ») et des `POST` pour l'API
+  Légifrance (`https://api.piste.gouv.fr/dila/legifrance/lf-engine-app/…`, par exemple `consult/lastNJo` puis le sommaire
+  de chaque JO). Relâcher cet invariant, et y faire sortir un secret, est un choix de sécurité à faire explicitement ;
+- **la clé** (identifiant et secret du client) devrait être rangée scellée comme les secrets des intégrations
+  (`vault.sealSmall` avec données associées, écriture seule, `apps/api/src/integrations/integrations.ts`), saisie dans
+  l'application seulement, remise à l'exécutant avec la réclamation de la collecte (comme `secrets` des intégrations) et
+  jamais journalisée : nouvelle colonne, nouvelle route en écriture seule, nouveau champ d'écran ;
+- **la forme des réponses n'est pas vérifiée** (réponse du jeton, conteneurs du JO, sommaire, identifiants) et ne peut l'être
+  sans une vraie clé.
+
+La voie DILA donne le même contenu (titres et identifiants des textes du JO), sans compte ni secret. **Décision du RSSI du
+23/11/2026 : la voie PISTE est un lot à part, plus tard**, après la création d'un compte PISTE par l'établissement et un essai
+réel de sa clé (forme du jeton : `access_token`, `expires_in` ; forme de `lastNJo` et du sommaire ; quotas). Rien n'est codé
+pour elle dans ce lot ; aucun hôte PISTE n'est inscrit au registre ; le guide d'installation précise qu'aucun compte n'est à
+créer pour cette version. Le lot à venir devra trancher l'émission de `POST` par le script et la remise d'un secret à
+l'exécutant.
+
+### Non vérifié
+
+- **Forme réelle du fichier quotidien du JORF** : nom des archives (`JORF_<AAAAMMJJ>-<HHMMSS>.tar.gz` supposé ; le motif
+  admet aussi `JORF_<AAAAMMJJ>.tar.gz`), présentation de la page d'index (index HTML de serveur supposé), arborescence et
+  noms des fichiers dans l'archive (`…/texte/version/…/JORFTEXT<12 chiffres>.xml` supposé), racine `TEXTE_VERSION`, champs
+  `META/META_COMMUN/ID`, `META_TEXTE_CHRONICLE/DATE_PUBLI`, `META_TEXTE_VERSION/TITREFULL`, encodage UTF-8 sans déclaration
+  de type de document, taille des archives quotidiennes (borne de 32 Mio choisie sans mesure), réponse du serveur à l'en-tête
+  `Accept` du script (JSON et XML) pour une page HTML et un fichier `tar.gz`. Les tests utilisent des archives fictives
+  construites en mémoire à cette forme supposée. **Première lecture réelle à faire** (une collecte « Collecter maintenant »
+  sur une pile de recette) ; si la forme diffère, la collecte échoue avec une explication et rien n'est rangé.
+- Flux des actualités du CERT Santé : forme relevée par la session principale le 22/11/2026 (20 éléments, liens
+  `https://cyberveille.esante.gouv.fr/actualites/<slug>`), pas par la plateforme.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+1. Liste de mots-clés **propre au Journal officiel**, en français (19 mots) : données à caractère personnel, données
+   personnelles, protection des données, informatique et libertés, vie privée, données de santé (données personnelles) ;
+   cybersécurité, sécurité des systèmes d'information, sécurité numérique, sécurité des réseaux, sécurité de l'information,
+   numérique en santé, identité numérique, identification électronique, services de confiance, intelligence artificielle,
+   importance vitale, cryptologie, résilience (sécurité). « Dispositifs médicaux » n'y est pas (des dizaines d'arrêtés de
+   remboursement par semaine).
+2. **Titre abrégé** au-delà de 300 caractères (terminé par « … ») pour le Journal officiel, quand les flux RSS écartent un
+   titre trop long : les titres du JO dépassent souvent 300 caractères et ses données ouvertes sont sous Licence Ouverte (le
+   filtre porte sur le titre complet).
+3. Date de départ : la veille de la dernière réussite ; dix archives au plus par collecte ; une collecte incomplète (archive
+   trop grosse, durée) compte comme une réussite, signalée « incomplète », et la suivante repart de la veille de cette
+   réussite : une archive intermédiaire non lue peut alors ne jamais l'être.
+4. Le domaine du CERT Santé est la sécurité (qualifié par le rôle RSSI).
+5. Mandataire sortant injoignable (décision du RSSI du 23/11/2026, lot CVE-INC) : les deux sources nouvelles passent par le
+   même client que les autres (`Client.lire`, `ConnexionMandataire`) ; l'erreur affichée ne nomme ni l'hôte ni le port du
+   mandataire, le détail sort à part (champ `detail`) pour le seul journal d'audit. Vérifié par
+   `test_unreachable_proxy_never_names_its_host_or_port_in_the_error_of_any_source`.
+
+### Preuves du lot VR-2
+
+`scripts/tests/test_veille_reglementaire.py` (classe `JournalOfficiel` : archives fictives construites en mémoire, versions
+de texte seules lues, texte intégral jamais repris, filtre, titre abrégé, archive trop grosse refusée sans être lue, bombe de
+décompression, trop de fichiers, en-têtes piégés, nom d'archive hors forme, date de départ illisible, durée, aucune écriture
+sur disque ; CERT Santé sans résumé), `scripts/tests/test_exploitation.py`, `apps/api/test/veille-reglementaire.test.ts`
+(migration 104, CERT Santé, Journal officiel : liste et date de départ remises avec la collecte, domaine déduit, lien de forme
+exacte, réglage de la liste à part), `apps/api/test/veille-reglementaire-architecture.test.ts`,
+`packages/shared/test/veille-reglementaire.test.ts`, `apps/web/test/veille-reglementaire.test.ts`, e2e
+`zzz…-veille-reglementaire.spec.ts` (adapté, non exécuté localement). Aucune source réelle jointe.
+
 ## Ce qui n'est pas fait
 
 - ANS (aucun flux public connu), Légifrance (Journal officiel : données ouvertes de la DILA et API PISTE, retenues le 22/11/2026), CERT Santé actualités (retenu le 22/11/2026), purge des publications anciennes, temps réel (SSE), suites données à

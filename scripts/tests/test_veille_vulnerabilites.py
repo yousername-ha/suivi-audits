@@ -833,6 +833,10 @@ class Mandataire(unittest.TestCase):
         demandes = [{"source": s, "parametres": {}} for s in ("cisa-kev", "nvd", "cnil", "eur-lex", "cloudflare-radar", "tldrcve")]
         demandes[1]["parametres"] = {"depuis": "2026-11-13T00:00:00.000Z", "jusqua": "2026-11-14T00:00:00.000Z"}
         demandes[3]["parametres"] = {"motsCles": [{"mot": "données", "domaine": v.DOMAINES_REGLEMENTAIRES[0]}]}
+        # Lot VR-2 (ADR 0110) : actualités du CERT Santé et Journal officiel (données ouvertes de la DILA), même chemin.
+        demandes.append({"source": "cert-sante-actualites", "parametres": {}})
+        demandes.append({"source": "legifrance", "parametres": {
+            "motsCles": [{"mot": "cybersécurité", "domaine": v.DOMAINES_REGLEMENTAIRES[0]}], "depuis": "2026-11-19"}})
         demandes.append({"source": "cve-inconnue", "parametres": {"cve": "CVE-2026-90001"}, "delai": 12})
         for erreur, attendu in causes:
             for demande in demandes:

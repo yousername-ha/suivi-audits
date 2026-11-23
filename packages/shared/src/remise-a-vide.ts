@@ -6,11 +6,21 @@ export const REMISE_A_VIDE_PORTEES = ['travail', 'tout'] as const;
 export const RemiseAVidePortee = z.enum(REMISE_A_VIDE_PORTEES);
 export type RemiseAVidePortee = z.infer<typeof RemiseAVidePortee>;
 
-/** Phrase à recopier, propre à chaque portée : on ne confond pas les deux niveaux d'un clic. */
-export const REMISE_A_VIDE_PHRASES: Record<RemiseAVidePortee, string> = {
+/** Choix proposés à l'écran : les deux portées, et « demonstration » (décision du RSSI du 23/11/2026) : effacer les données
+    de travail puis recharger le jeu de démonstration fictif, avec les mêmes garde-fous que la remise à vide. */
+export const REMISE_A_VIDE_CHOIX = ['travail', 'demonstration', 'tout'] as const;
+export type RemiseAVideChoix = (typeof REMISE_A_VIDE_CHOIX)[number];
+
+/** Phrase à recopier, propre à chaque choix : on ne confond pas les niveaux d'un clic. */
+export const REMISE_A_VIDE_PHRASES: Record<RemiseAVideChoix, string> = {
   travail: 'VIDER LES DONNÉES',
+  demonstration: 'RÉGÉNÉRER LA DÉMONSTRATION',
   tout: 'TOUT EFFACER',
 };
+
+/** Phrase attendue pour une demande : celle de la démonstration si elle est demandée, sinon celle de la portée. */
+export const phraseRemiseAVide = (r: { portee: RemiseAVidePortee; demonstration?: boolean | undefined }): string =>
+  REMISE_A_VIDE_PHRASES[r.demonstration ? 'demonstration' : r.portee];
 /** Une sauvegarde réussie datant de moins de ce délai est exigée avant toute remise à vide. */
 export const REMISE_A_VIDE_DELAI_SAUVEGARDE_MINUTES = 30;
 
@@ -24,7 +34,7 @@ export const RemiseAVideEtat = z.object({
     delaiMinutes: z.number().int(),
   }),
   occupee: z.boolean(),
-  phrases: z.object({ travail: z.string(), tout: z.string() }),
+  phrases: z.object({ travail: z.string(), demonstration: z.string(), tout: z.string() }),
 });
 export type RemiseAVideEtat = z.infer<typeof RemiseAVideEtat>;
 
@@ -41,8 +51,13 @@ export const RemiseAVideRequest = z
     portee: RemiseAVidePortee,
     confirm: z.string().min(1).max(60),
     code: Code,
+    /** Recharger le jeu de démonstration après l'effacement (portée « travail » seulement). */
+    demonstration: z.boolean().optional(),
   })
-  .strict();
+  .strict()
+  .refine((v) => !v.demonstration || v.portee === 'travail', {
+    message: 'La démonstration se recharge après l’effacement des données de travail seulement.',
+  });
 export type RemiseAVideRequest = z.infer<typeof RemiseAVideRequest>;
 
 export const RemiseAVideResultat = z.object({
@@ -50,5 +65,7 @@ export const RemiseAVideResultat = z.object({
   tables: z.number().int(),
   jeton: z.boolean(),
   message: z.string(),
+  /** Jeu de démonstration rechargé après l'effacement, ou échec du chargement (les données restent effacées). */
+  demonstration: z.enum(['chargee', 'echec']).optional(),
 });
 export type RemiseAVideResultat = z.infer<typeof RemiseAVideResultat>;

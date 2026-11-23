@@ -193,22 +193,29 @@ describe('architecture : veille des vulnérabilités', () => {
     const imports = [...SCRIPT.matchAll(/^(?:import|from) ([a-z0-9_.]+)/gm)].map((m) => m[1]!.split('.')[0]);
     expect([...new Set(imports)].sort()).toEqual([
       'base64',
+      // Lot VR-2 (ADR 0110) : archives quotidiennes du Journal officiel lues en mémoire (décodage UTF-8 incrémental,
+      // gzip et tar en flux, erreurs de décompression), bibliothèque standard.
+      'codecs',
       'datetime',
       'email',
       // Lot CPE-1 : tri des versions (cmp_to_key), bibliothèque standard.
       'functools',
+      'gzip',
       'hashlib',
       'html',
       'http',
+      'io',
       'ipaddress',
       'json',
       're',
       'socket',
       'ssl',
       'sys',
+      'tarfile',
       'time',
       'unicodedata',
       'xml',
+      'zlib',
     ]);
     expect(SCRIPT).not.toMatch(/urllib|HTTPRedirectHandler|subprocess|os\.environ|getenv/);
     expect([...SCRIPT.matchAll(/\.request\("([A-Z]+)"/g)].map((m) => m[1])).toEqual(['GET']);

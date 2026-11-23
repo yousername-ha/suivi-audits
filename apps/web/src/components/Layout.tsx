@@ -50,6 +50,7 @@ import { FenetreAlerteCritique } from '../vulnerabilites/FenetreAlerteCritique';
 import { RappelAlertesCritiques } from '../vulnerabilites/Alertes';
 import { RechercheVulnerabilites } from '../vulnerabilites/RechercheVulnerabilites';
 import { appliquerStyleFenetres } from '../fenetres';
+import { appliquerPolice } from '../police';
 
 /** Identité d'une famille pour sa teinte et son pictogramme : la même quel que soit son rang dans le menu. */
 const IDENTITE_FAMILLE: Record<FamilleId, IdentiteMenu> = {
@@ -80,6 +81,8 @@ function useAffichage() {
     html.dataset.style = me.appearance.style;
     // Fenêtres : style à l'essai pour toute l'instance (Plateforme > Apparence, barre d'accent par défaut).
     appliquerStyleFenetres(html, me.appearance.fenetres);
+    // Police : à l'essai pour toute l'instance (Plateforme > Apparence, Lexend par défaut).
+    appliquerPolice(html, me.appearance.police);
     // Onglets de page : forme à l'essai (préférence « onglets », barre bleu nuit par défaut).
     html.dataset.onglets = prefs.onglets ?? 'barre';
     if (colorScheme !== SCHEME[theme]) setColorScheme(SCHEME[theme]);
@@ -88,6 +91,7 @@ function useAffichage() {
     densite,
     me.appearance.style,
     me.appearance.fenetres,
+    me.appearance.police,
     prefs.onglets,
     theme,
     colorScheme,
