@@ -20,7 +20,7 @@ import {
 } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { FREQUENCES_CONTROLE, TYPES_CERTIFICAT, partSaas } from '@suivi/shared';
 import { DataTable, StatusChip } from '@suivi/ui';
 import { api, get, post } from '../api';
@@ -104,7 +104,8 @@ export function Fournisseurs() {
     [filtre, setFiltre] = useState('all'),
     [type, setType] = useState('all'),
     [recherche, setRecherche] = useState(''),
-    [erreur, setErreur] = useState<unknown>(null);
+    [erreur, setErreur] = useState<unknown>(null),
+    [params, setParams] = useSearchParams();
   const liste = useQuery({ queryKey: ['suppliers'], queryFn: () => get<Fournisseur[]>('/api/suppliers') });
   const creer = async () => {
     if (nom === null) return;
@@ -129,6 +130,20 @@ export function Fournisseurs() {
     }
   };
   const tous = liste.data ?? [];
+  /* Adresse directe de la fiche (lien « maintenu par » des groupes de machines) : ?fiche=<id>, et &onglet=machines pour
+     l'onglet « Machines et responsabilités ». Un identifiant inconnu n'ouvre rien. */
+  const ficheAdresse = tous.find((f) => f.id === params.get('fiche')) ?? null,
+    ficheOuverte = fiche ?? ficheAdresse,
+    ongletInitial = !fiche && ficheAdresse && params.get('onglet') === 'machines' ? 'responsabilites' : 'fiche';
+  const fermerFiche = () => {
+    setFiche(null);
+    if (params.has('fiche') || params.has('onglet')) {
+      const suite = new URLSearchParams(params);
+      suite.delete('fiche');
+      suite.delete('onglet');
+      setParams(suite, { replace: true });
+    }
+  };
   const affiches = filtrerFournisseurs(tous, filtre, type, recherche);
   const mfa = partSaas(tous, 'mfa'),
     sso = partSaas(tous, 'sso');
@@ -187,8 +202,21 @@ export function Fournisseurs() {
           </Group>
         </Stack>
       </Modal>
-      <Modal opened={!!fiche} onClose={() => setFiche(null)} size="xl" title={fiche ? `Fiche de ${fiche.name}` : ''}>
-        {fiche && <FicheFournisseur fournisseur={fiche} modifiable={modifier} onDone={() => setFiche(null)} />}
+      <Modal
+        opened={!!ficheOuverte}
+        onClose={fermerFiche}
+        size="xl"
+        title={ficheOuverte ? `Fiche de ${ficheOuverte.name}` : ''}
+      >
+        {ficheOuverte && (
+          <FicheFournisseur
+            key={ficheOuverte.id}
+            fournisseur={ficheOuverte}
+            modifiable={modifier}
+            ongletInitial={ongletInitial}
+            onDone={fermerFiche}
+          />
+        )}
       </Modal>
       <Modal
         opened={!!evaluer}
@@ -234,10 +262,12 @@ function controlesTypes(hds: boolean): ControleFournisseur[] {
 function FicheFournisseur({
   fournisseur,
   modifiable,
+  ongletInitial = 'fiche',
   onDone,
 }: {
   fournisseur: Fournisseur;
   modifiable: boolean;
+  ongletInitial?: 'fiche' | 'responsabilites';
   onDone: () => void;
 }) {
   const qc = useQueryClient(),
@@ -296,7 +326,7 @@ function FicheFournisseur({
     }
   };
   return (
-    <Tabs defaultValue="fiche">
+    <Tabs defaultValue={ongletInitial}>
       <Tabs.List>
         <Tabs.Tab value="fiche">Fiche</Tabs.Tab>
         <Tabs.Tab value="responsabilites">Machines et responsabilités</Tabs.Tab>

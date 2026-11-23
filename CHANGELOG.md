@@ -20,6 +20,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   journal sans autre donnée que le fournisseur et les nombres de lignes et de colonnes ; matrice d'un fournisseur retiré
   signalée par le contrôle des relations ; deux matrices fictives dans le jeu de démonstration (session « Projet audit_suivi
   Coeur »).
+- Fournisseurs, **adresse directe de la fiche** : `/pilotage/fournisseurs?fiche=<identifiant>` ouvre la fiche du fournisseur,
+  `&onglet=machines` l'onglet « Machines et responsabilités » (lien « maintenu par » des groupes de machines) (session
+  « Projet audit_suivi Coeur »).
 
 ## [7.6.1] — 2026-11-23
 
