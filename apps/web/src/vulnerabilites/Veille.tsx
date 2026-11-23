@@ -76,69 +76,40 @@ export function EtatSourcesVeille({
   /** Droit de configurer la veille (`peutConfigurerVeille`), calculé par l'appelant : seul il montre le lien. */
   peutConfigurer: boolean;
 }) {
+  // 7.6.1 (maquette validée par le RSSI le 23/11/2026, « moins de texte ») : une ligne d'état, une pastille par source
+  // (pictogramme, nom, état, dernière collecte réussie, erreur abrégée), au lieu d'un tableau. Lecture seule.
   return (
-    <Stack gap="xs" component="section" aria-label="État de la veille">
-      <Group justify="space-between">
-        <Title order={2} size="h4">
+    <section className="veille-etat" aria-label="État de la veille">
+      <div className="veille-etat__tete">
+        <Title order={2} className="veille-etat__titre">
           État des sources
         </Title>
-        <Group gap="xs">
-          <StatusChip etat={veilleActive ? 'succes' : 'neutre'}>
-            {veilleActive ? 'Veille active' : 'Veille inactive'}
-          </StatusChip>
-          {veilleActive && !executantVu && <StatusChip etat="attention">Exécutant non vu</StatusChip>}
-        </Group>
-      </Group>
-      <DataTable label="État des sources de la veille">
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Source</Table.Th>
-              <Table.Th>État</Table.Th>
-              <Table.Th>Dernière collecte réussie</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {lignes.map((l) => (
-              <Table.Tr key={l.cle}>
-                <Table.Td>
-                  <Group gap="xs" wrap="nowrap" align="center">
-                    {l.picto && <PictoSource source={pictoVeille(l.picto)} />}
-                    <Text size="sm" fw={600}>
-                      {l.libelle}
-                    </Text>
-                  </Group>
-                </Table.Td>
-                <Table.Td>
-                  <StatusChip etat={l.etat.etat}>{l.etat.libelle}</StatusChip>
-                  {l.erreur && (
-                    <Text size="xs" c="red" className="veille-texte">
-                      {l.erreur}
-                    </Text>
-                  )}
-                </Table.Td>
-                <Table.Td>
-                  {l.derniere ? (
-                    <span className="horodatage">{fmtDate(l.derniere)}</span>
-                  ) : (
-                    <Text size="sm" c="dimmed">
-                      Jamais
-                    </Text>
-                  )}
-                </Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      </DataTable>
-      {peutConfigurer && (
-        <div>
-          <Anchor component={Link} to={LIEN_CONFIGURATION_VEILLE} size="sm">
+        <StatusChip etat={veilleActive ? 'succes' : 'neutre'}>
+          {veilleActive ? 'Veille active' : 'Veille inactive'}
+        </StatusChip>
+        {veilleActive && !executantVu && <StatusChip etat="attention">Exécutant non vu</StatusChip>}
+        {peutConfigurer && (
+          <Anchor component={Link} to={LIEN_CONFIGURATION_VEILLE} size="sm" className="veille-etat__lien">
             Configurer<span className="sr-only"> la veille des vulnérabilités</span>
           </Anchor>
-        </div>
-      )}
-    </Stack>
+        )}
+      </div>
+      <div role="region" aria-label="État des sources de la veille" className="veille-etat__sources">
+        <ul>
+          {lignes.map((l) => (
+            <li key={l.cle} className="veille-source" data-etat={l.etat.etat}>
+              {l.picto && <PictoSource source={pictoVeille(l.picto)} />}
+              <span className="veille-source__nom">{l.libelle}</span>
+              <span className="veille-source__etat">{l.etat.libelle}</span>
+              <span className="veille-source__date">
+                {l.derniere ? <span className="horodatage">{fmtDate(l.derniere)}</span> : 'Jamais'}
+              </span>
+              {l.erreur && <span className="veille-source__erreur veille-texte">{l.erreur}</span>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
   );
 }
 

@@ -444,3 +444,87 @@
   display: grid;
   gap: var(--mantine-spacing-sm);
 }
+
+/* 7.6.1 (maquette validée par le RSSI le 23/11/2026, « la page veille c'est trop infobésité ») : l'état de la veille tient
+   en une ligne, une pastille par source. Le texte dit l'état ; la teinte du point le double. Lecture seule, la
+   configuration est dans la carte « Veille des vulnérabilités » de la page Plateforme. */
+.veille-etat {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--carte-bleu-accent);
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-md);
+  background: var(--carte-boite);
+}
+.veille-etat__tete {
+  display: contents;
+}
+.app-main .page .veille-etat h2.veille-etat__titre {
+  margin: 0;
+  color: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.veille-etat__lien {
+  order: 3;
+  margin-inline-start: auto;
+}
+.veille-etat__sources {
+  order: 2;
+}
+.veille-etat__sources ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.veille-source {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--mantine-spacing-2xs);
+  font-size: var(--mantine-font-size-sm);
+}
+.veille-source__nom {
+  font-weight: 600;
+}
+.veille-source__etat::before {
+  content: '';
+  display: inline-block;
+  inline-size: 0.5em;
+  block-size: 0.5em;
+  margin-inline-end: 0.3em;
+  border-radius: 50%;
+  background: var(--carte-gris-accent);
+  vertical-align: 0.1em;
+}
+.veille-source[data-etat='succes'] .veille-source__etat::before {
+  background: var(--carte-vert-accent, var(--mantine-color-green-7));
+}
+.veille-source[data-etat='attention'] .veille-source__etat::before {
+  background: var(--carte-orange-accent);
+}
+.veille-source[data-etat='erreur'] .veille-source__etat::before {
+  background: var(--carte-rouge-accent);
+}
+.veille-source__etat,
+.veille-source__date {
+  color: var(--carte-secondaire);
+  font-size: var(--mantine-font-size-xs);
+}
+.veille-source__date::before {
+  content: '·';
+  margin-inline-end: 0.3em;
+}
+.veille-source__erreur {
+  flex-basis: 100%;
+  color: var(--carte-rouge-accent);
+  font-size: var(--mantine-font-size-xs);
+}
