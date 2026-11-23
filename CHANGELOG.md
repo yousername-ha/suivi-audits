@@ -23,6 +23,11 @@ Aucune action ; la configuration de la veille se trouve désormais dans la page 
   route d'API, aucun droit ni aucun journal d'audit ne change ; la liste des produits surveillés reste dans le module
   (session « Module surveillance vulnérabilités SMSI »).
 
+- Vulnérabilités, page **Veille** (maquette validée par le RSSI le 23/11/2026, « moins de texte ») : l'état des sources
+  tient en une ligne, une pastille par source (pictogramme, nom, état, dernière collecte réussie, erreur abrégée), avec
+  l'état de la veille et le lien « Configurer » pour qui administre le module, au lieu d'un tableau (session « Refonte
+  Neon »).
+
 ## [7.6.1] — 2026-11-23
 
 ### Notes de mise à jour
