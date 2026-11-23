@@ -1,4 +1,5 @@
 import {
+  normaliserPhrase,
   phraseRemiseAVide,
   RemiseAVideAutorisation,
   RemiseAVideEtat,
@@ -61,7 +62,8 @@ export const remiseAVideRoutes = [
       if (!(await svc.remiseAVide.autorisee()))
         throw new HttpError(403, 'La remise à vide n’est pas autorisée sur ce serveur.', { reason: 'interdite' });
       const phrase = phraseRemiseAVide(body);
-      if (body.confirm !== phrase) throw new HttpError(422, `Recopiez exactement : ${phrase}`, { reason: 'phrase' });
+      if (normaliserPhrase(body.confirm) !== phrase)
+        throw new HttpError(422, `Recopiez exactement : ${phrase}`, { reason: 'phrase' });
       await exigerCode(svc, user, ip, body.code, 'remise_a_vide');
       const { tables } = await svc.remiseAVide.executer(body.portee, user, ip);
       // Amorçage identique à un démarrage : état initial vide, configuration par défaut, jeton si plus aucun compte.

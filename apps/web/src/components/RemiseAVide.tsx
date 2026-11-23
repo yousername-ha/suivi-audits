@@ -4,6 +4,7 @@
 import { Alert, Badge, Button, Card, Group, Modal, Radio, Stack, Switch, Text, TextInput, Title } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  normaliserPhrase,
   REMISE_A_VIDE_PHRASES,
   type RemiseAVideChoix,
   type RemiseAVideEtat,
@@ -15,22 +16,34 @@ import { ErrorAlert } from './common';
 
 const CLE = ['admin', 'remise-a-vide'] as const;
 
-/** Le bouton d'effacement n'est actif que si tout est prêt : phrase exacte, code à six chiffres, sauvegarde récente,
-    exploitation libre. Le serveur refait tous ces contrôles. */
+/** Ce qui empêche encore l'effacement, dit à l'écran sous le bouton ; null si tout est prêt : interrupteur, exploitation
+    libre, sauvegarde récente, phrase exacte (comparée après normalisation : composition Unicode, espaces), code à six
+    chiffres. Le serveur refait tous ces contrôles. */
+export function raisonBlocage(
+  etat: Pick<RemiseAVideEtat, 'autorisee' | 'occupee' | 'sauvegarde'> | undefined,
+  choix: RemiseAVideChoix,
+  confirm: string,
+  code: string,
+): string | null {
+  if (!etat) return 'État de la remise à vide en cours de lecture.';
+  if (!etat.autorisee) return 'La remise à vide n’est pas autorisée sur ce serveur.';
+  if (etat.occupee) return 'Une sauvegarde ou une opération d’exploitation est en cours : patientez.';
+  if (!etat.sauvegarde.recente)
+    return `Il faut une sauvegarde réussie de moins de ${etat.sauvegarde.delaiMinutes} minutes : lancez-en une dans « Sauvegardes et restauration », puis revenez ici.`;
+  if (normaliserPhrase(confirm) !== REMISE_A_VIDE_PHRASES[choix])
+    return `Recopiez exactement la phrase, en majuscules et avec les accents : ${REMISE_A_VIDE_PHRASES[choix]}`;
+  if (!/^\d{6}$/.test(code)) return 'Saisissez le code à six chiffres de votre application d’authentification.';
+  return null;
+}
+
+/** Le bouton d'effacement n'est actif que si rien ne l'empêche (raisonBlocage). */
 export function peutRemettreAVide(
   etat: Pick<RemiseAVideEtat, 'autorisee' | 'occupee' | 'sauvegarde'> | undefined,
   choix: RemiseAVideChoix,
   confirm: string,
   code: string,
 ): boolean {
-  return (
-    !!etat &&
-    etat.autorisee &&
-    !etat.occupee &&
-    etat.sauvegarde.recente &&
-    confirm === REMISE_A_VIDE_PHRASES[choix] &&
-    /^\d{6}$/.test(code)
-  );
+  return raisonBlocage(etat, choix, confirm, code) === null;
 }
 
 const date = (iso: string | null) =>
@@ -77,7 +90,7 @@ export function RemiseAVidePanel() {
             requestId: idRequete.current,
             portee: choix === 'tout' ? 'tout' : 'travail',
             ...(choix === 'demonstration' ? { demonstration: true } : {}),
-            confirm,
+            confirm: normaliserPhrase(confirm),
             code,
           },
         }),
@@ -100,6 +113,8 @@ export function RemiseAVidePanel() {
     setError(null);
     void qc.invalidateQueries({ queryKey: CLE });
   }
+
+  const raison = raisonBlocage(etat, choix, confirm, code);
 
   return (
     <Card withBorder padding="md" aria-labelledby="remise-a-vide-titre">
@@ -242,6 +257,11 @@ export function RemiseAVidePanel() {
               onChange={(e) => setCode(e.currentTarget.value.replace(/\D/g, '').slice(0, 6))}
             />
             <ErrorAlert error={error} />
+            {raison && !pending && (
+              <Text size="sm" c="dimmed" role="status" id="remise-a-vide-raison">
+                {raison}
+              </Text>
+            )}
             <Group justify="flex-end">
               <Button variant="default" disabled={pending} onClick={fermer}>
                 Annuler
@@ -249,7 +269,8 @@ export function RemiseAVidePanel() {
               <Button
                 color="red"
                 loading={pending}
-                disabled={pending || !peutRemettreAVide(etat, choix, confirm, code)}
+                disabled={pending || raison !== null}
+                aria-describedby={raison ? 'remise-a-vide-raison' : undefined}
                 onClick={() => void effacer()}
               >
                 {choix === 'demonstration' ? 'Effacer et recharger la démonstration' : 'Effacer définitivement'}

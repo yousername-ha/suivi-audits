@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { REMISE_A_VIDE_PHRASES } from '@suivi/shared';
-import { peutRemettreAVide } from '../src/components/RemiseAVide';
+import { normaliserPhrase, REMISE_A_VIDE_PHRASES } from '@suivi/shared';
+import { peutRemettreAVide, raisonBlocage } from '../src/components/RemiseAVide';
 
 const pret = {
   autorisee: true,
@@ -39,5 +39,27 @@ describe('remise à vide : conditions du bouton rouge', () => {
         '123456',
       ),
     ).toBe(false);
+  });
+});
+
+describe('remise à vide : raison du bouton grisé, phrase normalisée', () => {
+  it('dit ce qui manque, dans l’ordre des contrôles', () => {
+    const phrase = REMISE_A_VIDE_PHRASES.demonstration;
+    expect(raisonBlocage(pret, 'demonstration', phrase, '123456')).toBeNull();
+    expect(raisonBlocage({ ...pret, autorisee: false }, 'demonstration', phrase, '123456')).toMatch(/pas autorisée/);
+    expect(raisonBlocage({ ...pret, occupee: true }, 'demonstration', phrase, '123456')).toMatch(/en cours/);
+    expect(
+      raisonBlocage({ ...pret, sauvegarde: { ...pret.sauvegarde, recente: false } }, 'demonstration', phrase, '123456'),
+    ).toMatch(/sauvegarde réussie de moins de 30 minutes/);
+    expect(raisonBlocage(pret, 'demonstration', 'REGENERER LA DEMONSTRATION', '123456')).toMatch(/avec les accents/);
+    expect(raisonBlocage(pret, 'demonstration', phrase, '12')).toMatch(/six chiffres/);
+  });
+  it('accepte la phrase tapée en caractères décomposés ou entourée d’espaces ; la casse et les accents comptent', () => {
+    const phrase = REMISE_A_VIDE_PHRASES.demonstration;
+    expect(normaliserPhrase(phrase.normalize('NFD'))).toBe(phrase);
+    expect(peutRemettreAVide(pret, 'demonstration', phrase.normalize('NFD'), '123456')).toBe(true);
+    expect(peutRemettreAVide(pret, 'demonstration', `  ${phrase.replace(' ', '  ')} `, '123456')).toBe(true);
+    expect(peutRemettreAVide(pret, 'demonstration', phrase.toLowerCase(), '123456')).toBe(false);
+    expect(peutRemettreAVide(pret, 'demonstration', 'REGENERER LA DEMONSTRATION', '123456')).toBe(false);
   });
 });

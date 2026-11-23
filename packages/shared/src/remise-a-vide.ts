@@ -18,6 +18,11 @@ export const REMISE_A_VIDE_PHRASES: Record<RemiseAVideChoix, string> = {
   tout: 'TOUT EFFACER',
 };
 
+/** Phrase saisie ramenée à une forme comparable : composition Unicode (NFC : « É » tapé en deux caractères, comme le font
+    certains claviers et téléphones, vaut « É »), espaces de début et de fin retirés, espaces multiples réduits. La casse et
+    les accents comptent toujours. */
+export const normaliserPhrase = (s: string): string => s.normalize('NFC').trim().replace(/\s+/g, ' ');
+
 /** Phrase attendue pour une demande : celle de la démonstration si elle est demandée, sinon celle de la portée. */
 export const phraseRemiseAVide = (r: { portee: RemiseAVidePortee; demonstration?: boolean | undefined }): string =>
   REMISE_A_VIDE_PHRASES[r.demonstration ? 'demonstration' : r.portee];

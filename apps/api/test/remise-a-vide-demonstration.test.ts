@@ -69,6 +69,16 @@ describe('remise à vide : régénérer la démonstration', () => {
     expect((await a.post('/api/admin/remise-a-vide', await demande({ demonstration: undefined }))).statusCode).toBe(
       422,
     );
+    // Phrase tapée en caractères décomposés (certains claviers et téléphones) : acceptée, le refus vient du code faux.
+    expect(
+      (
+        await a.post(
+          '/api/admin/remise-a-vide',
+          await demande({ confirm: ` ${REMISE_A_VIDE_PHRASES.demonstration.normalize('NFD')} `, code: '000000' }),
+        )
+      ).statusCode,
+    ).toBe(401);
+    t.svc.limits.updateMfaByUser.reset();
     // Code faux : refusé et tracé.
     expect((await a.post('/api/admin/remise-a-vide', await demande({ code: '000000' }))).statusCode).toBe(401);
     // Jamais avec la portée « tout » : les comptes seraient effacés avant le chargement.
