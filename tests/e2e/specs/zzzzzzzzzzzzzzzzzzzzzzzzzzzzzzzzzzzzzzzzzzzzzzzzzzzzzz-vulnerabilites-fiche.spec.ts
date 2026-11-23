@@ -9,7 +9,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { FicheFailleDto } from '../../../packages/shared/src/fiche-faille-vulnerabilites';
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { attendreFenetresStables, sessionAdmin, watchPage } from '../helpers';
 
 const CVE = 'CVE-2026-90001';
 const SOURCES = { exploitation: [], exploitable: [], valeurs: { gravites: [], cvss: [], epss: [] }, certSante: null };
@@ -95,6 +95,7 @@ for (const [mode, scheme] of [
     const axe = async () => {
       // Après un changement de page ou l'ouverture d'une fenêtre : même attente que zzzzz-accessibilite.
       await page.waitForTimeout(400);
+      await attendreFenetresStables(page); // fenêtre ouverte juste avant : fin de son fondu
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
     };
     try {

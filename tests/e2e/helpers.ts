@@ -25,6 +25,37 @@ export async function ouvrirFiltres(page: Page, nom: string | RegExp) {
   await expect(champ).toBeVisible();
 }
 
+/** Attend la fin de l'ouverture des fenêtres affichées, avant une analyse d'accessibilité : opacité calculée à 1 et aucune
+ * animation en cours sur chaque fenêtre (dialog, alertdialog), sur le voile d'une fenêtre Mantine et sur leurs ancêtres.
+ * Analysée pendant le fondu, une fenêtre mêle ses couleurs au fond (contraste 4,49 pour 4,5 mesuré sur un exécuteur lent,
+ * lot ROBUSTESSE-TESTS du 23/11/2026) ; une attente fixe ne suffit pas. Sans fenêtre affichée, rend la main tout de suite. */
+export async function attendreFenetresStables(page: Page) {
+  await page
+    .waitForFunction(
+      () =>
+        [
+          ...document.querySelectorAll(
+            '[role="dialog"], [role="alertdialog"], .mantine-Modal-overlay, .mantine-Drawer-overlay',
+          ),
+        ]
+          .filter((fenetre) => fenetre.getClientRects().length > 0)
+          .every((fenetre) => {
+            for (let e: Element | null = fenetre; e; e = e.parentElement)
+              if (
+                getComputedStyle(e).opacity !== '1' ||
+                e.getAnimations().some((a) => a.pending || a.playState === 'running')
+              )
+                return false;
+            return true;
+          }),
+      undefined,
+      { timeout: 10_000 },
+    )
+    .catch((e: unknown) => {
+      throw new Error(`Fenêtre encore en transition avant l'analyse d'accessibilité : ${String(e)}`, { cause: e });
+    });
+}
+
 export const PASSWORD = 'E2e-Mot-de-passe-2026!';
 
 /** Commande qui affiche un nouveau jeton (par défaut sur la pile locale). */

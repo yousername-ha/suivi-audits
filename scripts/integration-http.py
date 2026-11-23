@@ -7,7 +7,10 @@ Bibliothèque standard seule.
 
 Entrée : un objet JSON sur l'entrée standard (type, opération, configuration, secrets, mandataire facultatif) ; ni argument ni variable
 d'environnement ne porte de secret. Sortie : un objet JSON {ok, resultat, erreur} sur la sortie standard, normalisé et
-borné ; il ne contient jamais de secret, et l'erreur tient sur une ligne. « synchroniser » ajoute `elements` : les machines,
+borné ; il ne contient jamais de secret, et l'erreur tient sur une ligne. Échec dû au mandataire de l'établissement
+(décision du RSSI du 23/11/2026, ADR 0100, addendum « lot ALH-MANDATAIRE ») : l'erreur, lue par toute personne qui lit le
+module, ne nomme ni l'hôte ni le port du mandataire ; ils ne sont donnés qu'à part, dans « detail » (une ligne), que
+l'exécutant remet au seul journal d'audit, lu par l'administration. « synchroniser » ajoute `elements` : les machines,
 constats, détections, machines d'inventaire et correctifs regroupés, réduits aux seuls champs listés (CHAMPS_ANALYSE,
 CHAMPS_DEPOT pour le dépôt d'une machine, CHAMPS_HOTE, CHAMPS_CORRECTIF), que l'exécutant rapporte par lots bornés.
 
@@ -117,6 +120,16 @@ def trop_imbrique(brut):
 
 class Refus(Exception):
     """Erreur expliquée, sans secret ni contenu de réponse."""
+
+
+class ErreurMandataire(Refus):
+    """Échec dû au mandataire de l'établissement (décision du RSSI du 23/11/2026, même règle que la veille) : le message,
+    rendu à toute personne qui lit le module, ne nomme ni l'hôte ni le port du mandataire ; `detail` (hôte, port et cause)
+    ne sort que dans le champ « detail » de la sortie, remis par l'exécutant au seul journal d'audit."""
+
+    def __init__(self, message, detail):
+        super().__init__(message)
+        self.detail = detail
 
 
 class ReponseInattendue(Refus):
@@ -245,17 +258,34 @@ def lire_reponse_tunnel(sock):
 
 def ouvrir_tunnel(m, hote, port, delai):
     """Tunnel CONNECT vers hote:port à travers le mandataire ; l'authentification simple n'est envoyée qu'au mandataire.
-    Renvoie la connexion ouverte, prête pour TLS vers le service. Chaque échec est expliqué sur une ligne, sans secret."""
+    Renvoie la connexion ouverte, prête pour TLS vers le service. Chaque échec est expliqué sur une ligne, sans secret, et
+    sans le nom ni le port du mandataire (ErreurMandataire : ils ne sont que dans le détail)."""
     try:
         sock = socket.create_connection((m["hote"], m["port"]), timeout=delai)
     except socket.gaierror:
-        raise Refus("Mandataire injoignable : nom %s introuvable depuis le serveur (DNS)." % m["hote"]) from None
+        raise ErreurMandataire("Mandataire sortant injoignable : nom introuvable depuis le serveur (DNS).",
+                               "Mandataire %s : nom introuvable depuis le serveur (DNS)." % nom_mandataire(m)) from None
     except ConnectionRefusedError:
-        raise Refus("Mandataire injoignable : connexion refusée sur %s (le mandataire n'écoute pas, ou un pare-feu la refuse)." % nom_mandataire(m)) from None
+        raise ErreurMandataire("Mandataire sortant injoignable : connexion refusée (le mandataire n'écoute pas, ou un pare-feu la refuse).",
+                               "Mandataire %s : connexion refusée." % nom_mandataire(m)) from None
     except (TimeoutError, socket.timeout):
-        raise Refus("Mandataire injoignable : délai dépassé vers %s (pare-feu ou mandataire indisponible)." % nom_mandataire(m)) from None
+        raise ErreurMandataire("Mandataire sortant injoignable : délai dépassé (pare-feu ou mandataire indisponible).",
+                               "Mandataire %s : délai dépassé." % nom_mandataire(m)) from None
     except OSError as e:
-        raise Refus("Mandataire injoignable : %s (%s)." % (nom_mandataire(m), e.strerror or type(e).__name__)) from None
+        cause = e.strerror or type(e).__name__
+        raise ErreurMandataire("Mandataire sortant injoignable (%s)." % cause,
+                               "Mandataire %s : %s." % (nom_mandataire(m), cause)) from None
+    try:
+        return demander_tunnel(sock, m, hote, port)
+    except Refus as e:
+        # Réponse du mandataire à la demande de tunnel (refus, authentification, fermeture, délai) : message inchangé, qui
+        # ne nomme pas le mandataire ; son hôte et son port dans le détail seulement.
+        raise ErreurMandataire(str(e), "Mandataire %s : %s" % (nom_mandataire(m), e)) from None
+
+
+def demander_tunnel(sock, m, hote, port):
+    """Demande CONNECT sur la connexion ouverte au mandataire ; tout échec ferme la connexion et lève Refus (message sans le
+    nom ni le port du mandataire)."""
     try:
         cible = ("[%s]:%d" if ":" in hote else "%s:%d") % (hote, port)
         lignes = ["CONNECT %s HTTP/1.1" % cible, "Host: %s" % cible, "User-Agent: suivi-audits-integrations"]
@@ -1412,7 +1442,11 @@ def executer(p):
             return {"ok": True, "resultat": resultat, "elements": elements, "erreur": None}
         return {"ok": True, "resultat": operations[operation](client), "erreur": None}
     except Exception as erreur:  # noqa: BLE001 - tout échec est expliqué, jamais propagé avec ses détails
-        return {"ok": False, "resultat": None, "erreur": une_ligne(explication(erreur))}
+        sortie = {"ok": False, "resultat": None, "erreur": une_ligne(explication(erreur))}
+        if isinstance(erreur, ErreurMandataire):
+            # Hôte et port du mandataire : à part, pour le seul journal d'audit (jamais dans l'erreur affichée).
+            sortie["detail"] = une_ligne(erreur.detail)
+        return sortie
 
 
 def main():

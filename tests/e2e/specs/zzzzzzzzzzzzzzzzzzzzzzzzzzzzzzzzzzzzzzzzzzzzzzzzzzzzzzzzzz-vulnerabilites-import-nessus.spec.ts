@@ -17,7 +17,7 @@
 import path from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
+import { attendreFenetresStables, ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 const FIXTURES = path.resolve(import.meta.dirname, '../../fixtures/nessus');
 const SCAN1 = path.join(FIXTURES, 'scan-fictif-1.nessus');
@@ -48,6 +48,7 @@ async function axe(page: Page) {
   // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
   await page.waitForTimeout(400);
   await ecarterAlerte(page);
+  await attendreFenetresStables(page); // fenêtre ouverte juste avant : fin de son fondu
   expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
 }
 

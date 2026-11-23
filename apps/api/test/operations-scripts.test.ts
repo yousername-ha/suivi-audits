@@ -15,8 +15,9 @@ it('exécute le protocole hôte, les sauvegardes de sécurité, les interruption
   // 23/11/2026 : six de plus (deux files chargées servies tour à tour, jamais un second script quand la clôture de la
   // première demande échoue, une seule file chargée servie à chaque passage, même règle au passage complet, mémoire de
   // l'alternance illisible ou remplacée par un lien, détail du mandataire injoignable remis à part de l'erreur dans les
-  // trois files de la veille).
-  expect(r.stderr).toContain('Ran 104 tests');
+  // trois files de la veille). Lot ALH-MANDATAIRE : un de plus (détail du mandataire d'AlgoLightHouse remis à part de
+  // l'erreur, avec un échec seulement).
+  expect(r.stderr).toContain('Ran 105 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);
 it('exécute le script isolé des connecteurs contre un faux service HTTPS local (module Intégrations, ADR 0076)', async () => {
@@ -26,8 +27,9 @@ it('exécute le script isolé des connecteurs contre un faux service HTTPS local
   // Lot PRIO-1 : un test de plus (kits d'exploitation lus dans la chaîne exploitFrameworks). Lot TEN-SCORES : un de plus
   // (AES lu comme entier borné, valeurs hors norme écartées). Lot QF-TEN : un de plus (correctifs regroupés `sumremediation`
   // en liste blanche, bornes, lecture incomplète ou refusée sans effet sur les failles). Relecture de la PR #369 : un de plus
-  // (borne de profondeur JSON linéaire sur un Mio hostile).
-  expect(r.stderr).toContain('Ran 38 tests');
+  // (borne de profondeur JSON linéaire sur un Mio hostile). Lot ALH-MANDATAIRE : un de plus (mandataire jamais nommé dans
+  // l'erreur, pour chaque cause et pour les réponses à la demande de tunnel ; détail à part).
+  expect(r.stderr).toContain('Ran 39 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);
 it('exécute le dictionnaire CPE du script isolé de la veille contre un faux service HTTPS local (ADR 0100, lot CPE-1)', async () => {

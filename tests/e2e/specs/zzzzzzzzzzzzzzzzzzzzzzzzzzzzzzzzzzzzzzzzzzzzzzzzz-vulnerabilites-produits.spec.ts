@@ -3,7 +3,7 @@
    famille, modification, suppression, accessibilité, CSP. Données fictives. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
+import { attendreFenetresStables, ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 test('Vulnérabilités : produits surveillés ajoutés, filtrés, modifiés puis supprimés', async ({ browser }) => {
   const ctx = await browser.newContext({
@@ -55,6 +55,8 @@ test('Vulnérabilités : produits surveillés ajoutés, filtrés, modifiés puis
     const fiche = page.getByRole('dialog', { name: `${nom} 1.0` });
     await expect(fiche.getByText('Aucune faille de la veille ne correspond')).toBeVisible();
     await expect(fiche.getByText('Aucune machine reliée que vous puissiez lire.')).toBeVisible();
+    // Fin du fondu de la fenêtre avant l'analyse (contraste mesuré à 4,49 pendant la transition).
+    await attendreFenetresStables(page);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
     await page.keyboard.press('Escape');
     await expect(fiche).toBeHidden();

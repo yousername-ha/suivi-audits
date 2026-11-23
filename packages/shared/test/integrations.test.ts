@@ -229,6 +229,21 @@ describe('rapport de l’exécutant', () => {
       expect(() => RapportExecution.parse(r)).toThrow();
   });
 
+  it('détail du mandataire (lot ALH-MANDATAIRE) : avec un échec seulement, sur une ligne, borné', () => {
+    const echec = { ok: false, resultat: null, erreur: 'Mandataire sortant injoignable : délai dépassé.' };
+    const detail = 'Mandataire mandataire.exemple.invalid:3128 : délai dépassé.';
+    expect(RapportExecution.parse({ ...echec, detail }).detail).toBe(detail);
+    expect(RapportExecution.parse(echec).detail).toBeUndefined();
+    for (const r of [
+      { ok: true, resultat: { version: '6.9.1' }, erreur: null, detail },
+      { ...echec, detail: '' },
+      { ...echec, detail: 'ligne 1\nligne 2' },
+      { ...echec, detail: 'x'.repeat(301) },
+      { ...echec, detail: ['pas', 'un texte'] },
+    ])
+      expect(() => RapportExecution.parse(r)).toThrow();
+  });
+
   it('résultat de « tester » : la seule version, de forme contrôlée', () => {
     const s = RESULTATS_OPERATION.tenable.tester!;
     expect(s.parse({ version: '6.9.1' })).toEqual({ version: '6.9.1' });
