@@ -4286,6 +4286,9 @@ dépendance ; `scripts/update-worker.py`, `MODES_COURTS`, `docker*` et `apps/*/s
    ni avec l'état de la source. Pour le dictionnaire CPE et la CVE inconnue, dont la fin n'écrit aujourd'hui aucune
    erreur au journal d'audit, le détail n'est pas transmis : l'erreur rendue est masquée, l'hôte et le port ne sont
    écrits nulle part. Le connecteur AlgoLightHouse (`scripts/integration-http.py`, autre script) n'est pas touché.
+   Pendant une mise à jour, un exécutant déjà à jour face à une application encore ancienne voit le champ `detail` refusé
+   (code 2) ; la collecte en cours est alors close « interrompue » au bout de 10 minutes et la suivante passe : fenêtre
+   jugée acceptable par la session Coeur le 23/11/2026, sans mécanisme en plus.
 2. **Alternance des files dans le passage court.** `Worker.files_courtes` (`scripts/exploitation-worker.py`), employé par
    `cpe_court` et par `cpe` (passage complet, même règle) : la file qui n'a pas été servie la dernière fois est essayée
    d'abord, l'autre ensuite si la première n'a rien réclamé ; mémoire de la dernière file servie dans le dossier privé,

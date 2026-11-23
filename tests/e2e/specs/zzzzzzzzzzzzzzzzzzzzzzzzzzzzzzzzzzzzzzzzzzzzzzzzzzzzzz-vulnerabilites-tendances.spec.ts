@@ -15,6 +15,10 @@ const axe = async (page: Page) => {
   await page.waitForTimeout(400);
   expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
 };
+/** Jour civil (AAAA-MM-JJ) d'un horodatage, heure de Paris : même calcul que le jour des instantanés (`aujourdhui`,
+    apps/api/src/vulnerabilites/suivi.ts). */
+const jourDeParis = (horodatage: string) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date(horodatage));
 const sansDebordement = async (page: Page) =>
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(
     true,
@@ -35,13 +39,34 @@ for (const [mode, scheme] of [
     const page = await ctx.newPage(),
       problems = watchPage(page);
     try {
-      // Route de lecture : toute la plateforme, 30 points ; historique vide ou commencé aujourd'hui (tic de l'API).
+      // Route de lecture : toute la plateforme, 30 points ; historique vide, ou commencé par le tic de l'API entre le jour
+      // de création de la pile (première migration appliquée, heure de Paris) et le jour de la lecture (`au`, même
+      // réponse) : jamais avant la pile. Comparer au jour courant échouait quand le passage franchit minuit, heure de Paris
+      // (pile créée à 23 h 39, lecture à 0 h 05).
       const r = await page.request.get('/api/vulnerabilites/tendances');
       expect(r.status()).toBe(200);
-      const v = await r.json();
+      const v = (await r.json()) as {
+        au: string;
+        depuis: string | null;
+        jours: { jour: string; niveau: number | null }[];
+      };
       expect(v).toMatchObject({ periode: 30, granularite: 'jour', perimetre: { id: null, aucun: false } });
       expect(v.jours).toHaveLength(30);
-      expect(v.depuis === null || v.depuis === v.au).toBe(true);
+      if (v.depuis !== null) {
+        const systeme = await page.request.get('/api/admin/systeme');
+        expect(systeme.status()).toBe(200);
+        const appliquees = ((await systeme.json()) as { migrations: { applied_at: string }[] }).migrations
+          .map((m) => m.applied_at)
+          .sort();
+        expect(appliquees.length).toBeGreaterThan(0);
+        const creation = jourDeParis(appliquees[0]!);
+        expect(
+          creation <= v.depuis && v.depuis <= v.au,
+          `historique depuis le ${v.depuis}, pile créée le ${creation}, lu le ${v.au}`,
+        ).toBe(true);
+        // Même réponse : aucun point avant le premier instantané.
+        for (const j of v.jours) if (j.jour < v.depuis) expect(j.niveau, j.jour).toBeNull();
+      }
       expect((await page.request.get('/api/vulnerabilites/tendances?periode=45')).status()).toBe(422);
       expect(
         (

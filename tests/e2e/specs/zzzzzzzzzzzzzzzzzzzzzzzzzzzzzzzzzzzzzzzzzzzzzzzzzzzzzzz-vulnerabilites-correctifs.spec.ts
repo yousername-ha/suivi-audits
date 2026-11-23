@@ -8,7 +8,7 @@
    requêtes sur des données rangées : apps/api/test/vulnerabilites-correctifs.test.ts. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
+import { attendreFenetresStables, ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 const CLE = '0123456789abcdef';
 const SOLUTION = 'Upgrade to Exemple Web 2.0 or later (fictif).';
@@ -85,6 +85,7 @@ for (const [mode, scheme] of [
     const axe = async () => {
       // Après un changement de page, d'onglet ou l'ouverture d'une fenêtre : même attente que zzzzz-accessibilite.
       await page.waitForTimeout(400);
+      await attendreFenetresStables(page); // fenêtre ouverte juste avant : fin de son fondu
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
     };
     try {

@@ -9,7 +9,7 @@
    et échappement sur des données rangées : apps/api/test/vulnerabilites-recherche.test.ts. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { attendreFenetresStables, sessionAdmin, watchPage } from '../helpers';
 
 const CHAMP = 'Rechercher une CVE, une machine, une adresse IP ou une application';
 const ID = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
@@ -84,6 +84,7 @@ for (const [mode, scheme] of [
     const axe = async () => {
       // Après un changement de page ou l'ouverture d'une liste : même attente que zzzzz-accessibilite.
       await page.waitForTimeout(400);
+      await attendreFenetresStables(page); // fenêtre ouverte juste avant : fin de son fondu
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
     };
     try {

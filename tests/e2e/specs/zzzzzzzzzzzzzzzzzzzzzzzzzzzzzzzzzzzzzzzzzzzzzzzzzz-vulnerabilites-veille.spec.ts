@@ -7,7 +7,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { FicheFailleDto } from '../../../packages/shared/src/fiche-faille-vulnerabilites';
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { attendreFenetresStables, sessionAdmin, watchPage } from '../helpers';
 
 test('Vulnérabilités : écran « Veille », sources, validation du flux annulée, recherche', async ({ browser }) => {
   const ctx = await browser.newContext({
@@ -150,6 +150,7 @@ for (const [mode, scheme, largeur] of [
       problems = watchPage(page);
     const axe = async () => {
       await page.waitForTimeout(400);
+      await attendreFenetresStables(page); // fenêtre ouverte juste avant : fin de son fondu
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
     };
     try {

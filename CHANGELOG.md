@@ -62,6 +62,18 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   d'une mise à jour, un échec de ce type peut n'être clos qu'au bout de quelques minutes (« Exécutant interrompu »)
   (session « Module surveillance vulnérabilités SMSI »).
 
+### Corrigé
+
+- Tests du module Vulnérabilités qui échouaient parfois sans défaut (lot ROBUSTESSE-TESTS, décision du RSSI du
+  23/11/2026), sans effet sur l'application, sans contrôle retiré ni exigence relevée. Temps de réponse
+  (`performance-vulnerabilites`) : chaque requête mesurée est précédée d'une passe d'étalonnage fixe (base et processus) ;
+  le seuil devient seuil × facteur de la machine (médiane des passes rapportée à 100 ms), jamais moins que 800 ms et
+  1 500 ms, au plus × 2,5 ; facteur et seuil effectif sont écrits dans la sortie et dans les mesures de la CI. Parcours
+  « tendances » : le début de l'historique est comparé au jour de création de la pile et au jour lu dans la même réponse,
+  et non plus au jour courant (échec quand le passage franchissait minuit, heure de Paris). Analyses d'accessibilité
+  après l'ouverture d'une fenêtre : elles attendent la fin de son fondu (opacité à 1, aucune animation en cours) au lieu
+  de mesurer un contraste mêlé au fond (session « Module surveillance vulnérabilités SMSI »).
+
 ## [7.6.0] — 2026-11-22
 
 ### Notes de mise à jour

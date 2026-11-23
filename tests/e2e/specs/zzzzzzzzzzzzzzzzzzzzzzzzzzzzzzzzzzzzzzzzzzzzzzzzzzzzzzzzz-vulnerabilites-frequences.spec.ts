@@ -7,7 +7,7 @@
    défaut dans `finally`. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { attendreFenetresStables, sessionAdmin, watchPage } from '../helpers';
 
 const KEV = 'Fréquence de la source Catalogue des failles exploitées (KEV)';
 const NVD = 'Fréquence de la source Base nationale des vulnérabilités (NVD)';
@@ -93,6 +93,7 @@ for (const [mode, scheme, largeur] of [
       // Avertissement, pas blocage : le bouton reste actif.
       await expect(ajout.getByRole('button', { name: 'Créer l’instance' })).toBeEnabled();
       await page.waitForTimeout(400);
+      await attendreFenetresStables(page); // fenêtre « Ajouter » ouverte : fin de son fondu
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
       await frequence.selectOption('168');
       await expect(ajout.getByText(/charge supplémentaire sur Security Center/)).toHaveCount(0);
