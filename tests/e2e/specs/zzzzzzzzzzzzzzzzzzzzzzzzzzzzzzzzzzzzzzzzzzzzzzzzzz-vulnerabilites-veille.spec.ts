@@ -3,13 +3,50 @@
    accessibilité, CSP. Le flux n'est jamais ouvert ici : la fenêtre est annulée, pour qu'aucune source réelle ne soit jointe
    depuis la pile de test. Lot V4c : état de la lecture des fiches du CERT Santé.
    Lot L1 : alertes et avis en liste aérée, pastilles de source, fiche d'une alerte et CVE citées, en clair et en sombre, à
-   1 366 et 390 px ; lectures remplacées par des données fictives (`page.route`, rien n'atteint la base ni n'y est écrit). */
+   1 366 et 390 px ; lectures remplacées par des données fictives (`page.route`, rien n'atteint la base ni n'y est écrit).
+   Lot VEILLE-PLATEFORME (décision du RSSI du 23/11/2026) : la configuration (activation et sa validation, sources et
+   fréquences, « Collecter maintenant », dictionnaire CPE, sources facultatives) est dans la carte « Veille des
+   vulnérabilités » de la Plateforme ; l'écran « Veille » n'en garde qu'une ligne d'état par source et un lien « Configurer »,
+   visible seulement de qui administre le module (compte fictif à `vulnerabilites:lire` seul : ni lien, ni carte). */
 import AxeBuilder from '@axe-core/playwright';
 import type { FicheFailleDto } from '../../../packages/shared/src/fiche-faille-vulnerabilites';
-import { expect, test } from '@playwright/test';
-import { attendreFenetresStables, sessionAdmin, watchPage } from '../helpers';
+import { expect, test, type Browser, type Page } from '@playwright/test';
+import { attendreFenetresStables, preparerCompte, sessionAdmin, sessionCompte, watchPage } from '../helpers';
 
-test('Vulnérabilités : écran « Veille », sources, validation du flux annulée, recherche', async ({ browser }) => {
+const CONFIGURER = 'Configurer la veille des vulnérabilités';
+const HOTES = [
+  'www.cisa.gov',
+  'services.nvd.nist.gov',
+  'api.first.org',
+  'cert.cyber.gouv.fr',
+  'cyberveille.esante.gouv.fr',
+];
+const SOURCES = [
+  'Catalogue des failles exploitées (KEV)',
+  'Base nationale des vulnérabilités (NVD)',
+  'Dictionnaire des produits (CPE)',
+  'Préavis des CVE (Cloudflare Radar)',
+];
+
+/** L'écran « Veille » ne porte aucun réglage : ni activation, ni collecte, ni fréquence, ni interrupteur. */
+async function sansReglage(page: Page) {
+  for (const nom of [
+    'Activer la veille',
+    'Désactiver la veille',
+    'Collecter maintenant',
+    'Copier le dictionnaire complet',
+  ])
+    await expect(page.getByRole('button', { name: nom, exact: true })).toHaveCount(0);
+  // La barre de recherche du module est une liste de choix (combobox) : seules les fréquences sont cherchées.
+  await expect(page.getByRole('combobox', { name: /^Fréquence/ })).toHaveCount(0);
+  await expect(page.getByRole('combobox', { name: 'Lecture des nouveautés' })).toHaveCount(0);
+  await expect(page.getByRole('switch')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Sources de la veille', exact: true })).toHaveCount(0);
+}
+
+test('Vulnérabilités : écran « Veille » (lignes d’état), carte de la Plateforme, validation du flux annulée, recherche', async ({
+  browser,
+}) => {
   const ctx = await browser.newContext({
     ignoreHTTPSErrors: true,
     locale: 'fr-FR',
@@ -21,41 +58,136 @@ test('Vulnérabilités : écran « Veille », sources, validation du flux annul�
   try {
     await page.goto('/vulnerabilites/veille');
     await expect(page.getByRole('heading', { name: 'Veille', level: 1 })).toBeVisible();
-    const sources = page.getByRole('region', { name: 'Sources de la veille' });
-    for (const hote of [
-      'www.cisa.gov',
-      'services.nvd.nist.gov',
-      'api.first.org',
-      'cert.cyber.gouv.fr',
-      'cyberveille.esante.gouv.fr',
-    ])
-      await expect(sources).toContainText(hote);
-    await expect(page.getByText('Aucune source n’est lue')).toBeVisible();
+    // Une ligne d'état par source, en lecture seule ; veille fermée sur la pile de test.
+    const etat = page.getByRole('region', { name: 'État des sources de la veille', exact: true });
+    for (const s of SOURCES) await expect(etat).toContainText(s);
+    await expect(etat.getByText('Veille inactive').first()).toBeVisible();
+    await expect(page.getByRole('region', { name: 'État de la veille', exact: true })).toContainText('Veille inactive');
+    await sansReglage(page);
     // Lot V4c : état de la lecture des fiches du CERT Santé, aucune lue sur une pile vierge.
     await expect(page.getByText(/Fiches du CERT Santé .* 0 fiche lue, aucune à lire\./)).toBeVisible();
     // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
     await page.waitForTimeout(400);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
 
+    // Le lien « Configurer » ouvre la carte de la Plateforme, où se trouvent les sources et leurs hôtes.
+    await page.getByRole('link', { name: CONFIGURER, exact: true }).click();
+    await expect(page).toHaveURL(/\/plateforme\/veille-vulnerabilites$/);
+    const carte = page.getByRole('dialog', { name: 'Veille des vulnérabilités', exact: true });
+    await expect(carte).toBeVisible();
+    const sources = carte.getByRole('region', { name: 'Sources de la veille', exact: true });
+    for (const hote of HOTES) await expect(sources).toContainText(hote);
+    await expect(carte.getByText('Aucune source n’est lue')).toBeVisible();
+    await expect(carte.getByRole('group', { name: 'Dictionnaire des produits (CPE)' })).toBeVisible();
+    await expect(carte.getByRole('table', { name: 'Sources facultatives de la veille' })).toBeVisible();
+    await page.waitForTimeout(400);
+    await attendreFenetresStables(page); // carte ouverte juste avant : fin de son fondu
+    expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
+
     // Validation du flux : destinations et ce qui sort ; « Confirmer » exige la case ; annulée, rien n'est ouvert.
-    await page.getByRole('button', { name: 'Activer la veille' }).click();
+    await carte.getByRole('button', { name: 'Activer la veille' }).click();
     const fenetre = page.getByRole('dialog', { name: /Veille sur les vulnérabilités/ });
     await expect(fenetre).toContainText('cyberveille.esante.gouv.fr');
     await expect(fenetre).toContainText('Aucune donnée métier');
     await expect(fenetre.getByRole('button', { name: 'Confirmer' })).toBeDisabled();
     await fenetre.getByRole('button', { name: 'Annuler' }).click();
     await expect(fenetre).toBeHidden();
+    // La carte reste ouverte sous la fenêtre de validation refermée.
+    await expect(carte).toBeVisible();
     const flux = (await (await page.request.get('/api/admin/flux-externes')).json()) as {
       modules: { module: string; ouvert: boolean }[];
     };
     expect(flux.modules.find((m) => m.module === 'veille-vulnerabilites')?.ouvert).toBe(false);
     await expect(page.getByRole('button', { name: 'Collecter maintenant' })).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await expect(carte).toBeHidden();
+    await expect(page).toHaveURL(/\/plateforme$/);
+    await expect(page.getByRole('heading', { name: 'Veille des vulnérabilités', level: 2 })).toBeVisible();
 
     // Recherche : aucune donnée collectée sur la pile de test.
+    await page.goto('/vulnerabilites/veille');
     await page.getByLabel('Rechercher', { exact: true }).fill('CVE-2026-0001');
     await page.getByRole('button', { name: 'Rechercher', exact: true }).click();
     await expect(page.getByText('Aucune faille connue ne correspond à la recherche.')).toBeVisible();
     await expect(page.getByText('Aucune alerte ni aucun avis à afficher.')).toBeVisible();
+    expect(problems).toEqual([]);
+  } finally {
+    await ctx.close();
+  }
+});
+
+/** Compte fictif créé par l'administrateur, avec un rôle personnalisé aux droits donnés (rôle réutilisé s'il existe ; même
+    modèle que la spec des intégrations). */
+async function compteAvecDroits(
+  browser: Browser,
+  nomRole: string,
+  prefixe: string,
+  permissions: string[],
+): Promise<{ username: string; secret: string }> {
+  const admin = await sessionAdmin(browser);
+  const adm = await browser.newContext({ ignoreHTTPSErrors: true, storageState: admin.state });
+  const rq = adm.request;
+  const username = `${prefixe}-${Date.now().toString(36)}`;
+  try {
+    const roles = (await (await rq.get('/api/admin/roles')).json()) as { id: string; name: string }[];
+    let roleId = roles.find((x) => x.name === nomRole)?.id;
+    if (!roleId) {
+      const role = await rq.post('/api/admin/roles', {
+        data: { from: 'lecteur', name: nomRole },
+        headers: { 'x-csrf-token': admin.csrf },
+      });
+      expect(role.status(), await role.text()).toBe(201);
+      const r = await role.json();
+      const patch = await rq.patch(`/api/admin/roles/${r.id}`, {
+        data: { permissions },
+        headers: { 'x-csrf-token': admin.csrf, 'if-match': `"${r.version}"` },
+      });
+      expect(patch.status(), await patch.text()).toBe(200);
+      roleId = r.id as string;
+    }
+    const u = await rq.post('/api/admin/users', {
+      data: { username, displayName: `Compte ${username}`, roles: [{ roleId }] },
+      headers: { 'x-csrf-token': admin.csrf },
+    });
+    expect(u.status(), await u.text()).toBe(201);
+    const temp = (await u.json()).temporaryPassword as string;
+    const c = await browser.newContext({ ignoreHTTPSErrors: true });
+    const secret = (await preparerCompte(c, username, temp)).secret;
+    await c.close();
+    return { username, secret };
+  } finally {
+    await adm.close();
+  }
+}
+
+test('Vulnérabilités, lot VEILLE-PLATEFORME : lire sans administrer montre l’état, ni lien ni carte', async ({
+  browser,
+}) => {
+  const { username, secret } = await compteAvecDroits(
+    browser,
+    'Lecture de la veille des vulnérabilités (e2e)',
+    'veille-lecture',
+    ['vulnerabilites:lire'],
+  );
+  const ctx = await browser.newContext({
+    ignoreHTTPSErrors: true,
+    locale: 'fr-FR',
+    viewport: { width: 1366, height: 900 },
+    storageState: (await sessionCompte(browser, username, secret)).state,
+  });
+  const page = await ctx.newPage(),
+    problems = watchPage(page);
+  try {
+    await page.goto('/vulnerabilites/veille');
+    await expect(page.getByRole('heading', { name: 'Veille', level: 1 })).toBeVisible();
+    const etat = page.getByRole('region', { name: 'État des sources de la veille', exact: true });
+    for (const s of SOURCES) await expect(etat).toContainText(s);
+    await expect(page.getByRole('link', { name: /^Configurer/ })).toHaveCount(0);
+    await sansReglage(page);
+    // La carte n'existe pas pour ce compte : l'adresse ne l'ouvre pas.
+    await page.goto('/plateforme/veille-vulnerabilites');
+    await expect(page).not.toHaveURL(/\/plateforme/);
+    await expect(page.getByRole('dialog', { name: 'Veille des vulnérabilités', exact: true })).toHaveCount(0);
     expect(problems).toEqual([]);
   } finally {
     await ctx.close();

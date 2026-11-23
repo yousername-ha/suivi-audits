@@ -1,7 +1,8 @@
 /* Module Vulnérabilités (ADR 0100, lot CPE-1) : saisie assistée par le dictionnaire CPE de la NVD. Adresses (terme de deux
    caractères au moins, sans appel sinon), choix d'un produit (éditeur, produit, CPE construit), version choisie (le CPE
    suit), CPE collé (remplit les champs sans appel), menu des versions (toutes versions, NVD ou copie, veille à part),
-   messages honnêtes, champ de la version toujours libre, état de la source et réglages dans l'écran de la veille, aide.
+   messages honnêtes, champ de la version toujours libre, état de la source et réglages dans la carte de la Plateforme
+   (lot VEILLE-PLATEFORME), aide.
    Données fictives. */
 import { MantineProvider } from '@mantine/core';
 import {
@@ -186,7 +187,7 @@ describe('menu et messages des versions', () => {
   });
 });
 
-describe('écran de la veille : source « Dictionnaire des produits (CPE) »', () => {
+describe('carte « Veille des vulnérabilités » de la Plateforme : source « Dictionnaire des produits (CPE) »', () => {
   const section = (e: EtatDictionnaireCpeDto, peutRegler: boolean) =>
     rendu(
       createElement(DictionnaireCpeSection, {

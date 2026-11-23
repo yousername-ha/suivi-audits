@@ -260,7 +260,7 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
     },
     donnees:
       'L’adresse IP du serveur et des demandes de lecture : le catalogue KEV, une fenêtre de dates pour NVD, les identifiants CVE déjà publiés par ces sources pour EPSS, les flux RSS et les avis du CERT-FR, le flux RSS du CERT Santé et la page de ses publications nouvelles ou modifiées qui citent une CVE (30 au plus par collecte). Si la source « Dictionnaire des produits (CPE) » est activée : les pages du dictionnaire CPE de la NVD, et, quand une personne choisit un produit dans la saisie d’un produit surveillé, l’éditeur et le produit choisis pour en lire les versions (la NVD voit alors ce produit ; rien de tel avec la copie complète du dictionnaire). Sur le clic d’une personne qui ouvre la fiche d’une CVE inconnue de la veille : l’identifiant de cette CVE, vers cve.org (cveawg.mitre.org) et NVD. Si les sources facultatives sont activées : la lecture du flux des CVE annoncées de Cloudflare Radar et du flux RSS de tldrcve, sans aucun paramètre (le filtre par produit surveillé est fait sur le serveur ; rien n’est envoyé). Aucune donnée métier en dehors de ce produit et de cet identifiant : ni machine, ni adresse, ni domaine, ni périmètre, ni version déclarée, ni contenu de la plateforme.',
-    reglage: { libelle: 'Risques > Vulnérabilités > Veille', lien: '/vulnerabilites/veille' },
+    reglage: { libelle: 'Plateforme > Veille des vulnérabilités', lien: '/plateforme/veille-vulnerabilites' },
     activation: { par: 'flux', geste: 'Bouton « Activer la veille »' },
     moduleActivation: 'vulnerabilites',
     pareFeu: [`Sortie TCP 443 du serveur vers ${HOTES_VEILLE.map((s) => s.hote).join(', ')}.`],

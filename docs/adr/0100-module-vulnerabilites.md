@@ -4386,3 +4386,91 @@ deux opérations) ; shared (`RapportExecution` : détail avec un échec seulemen
 routes des instances et des exécutions, détail dans la seule entrée d'audit de fin, refusé avec un succès par la vraie CLI ;
 `integrations.test.ts` : détail avec un succès ou sur plusieurs lignes refusé par la CLI). Non vérifié : face au mandataire
 réel de l'établissement (faux mandataire local seulement).
+
+## Addendum du 23/11/2026 — lot VEILLE-PLATEFORME : configuration de la veille dans la page Plateforme
+
+Rédaction : sous-agent développeur pour la session « Module surveillance vulnérabilités SMSI »
+(`session_01EnWdzdnc8fBi6Yrc154Jy6`). **Aucune migration**, aucune route d'API ajoutée, retirée ni modifiée, aucun droit
+changé, aucun journal d'audit changé, aucune dépendance, aucun appel sortant nouveau, rien chez l'assistant ni chez
+l'exécutant. Seul l'endroit d'affichage change.
+
+### Décision du RSSI (23/11/2026)
+
+« La page veille c'est trop infobésité, la configuration doit aller dans la configuration de la plateforme. Moins de
+texte. » Décision confirmée le même jour : **comme pour les intégrations** (addendum « lot I1 » ci-dessus, et addendum du
+19/11/2026 de l'[ADR 0076](0076-module-integrations.md)). Elle remplace la dernière ligne du tableau « Frontière des
+réglages » du lot I1 (« Activation de la veille, Collecter maintenant : laissé dans le module ») : ces réglages quittent le
+module ; la liste des produits surveillés y reste.
+
+### Ce qui a bougé
+
+| Réglage | Avant | Après |
+|---|---|---|
+| Activation de la veille (flux « veille-vulnerabilites »), destinations, ce qui sort, mandataire, validation explicite | Écran « Veille » | Carte « Veille des vulnérabilités » de la Plateforme |
+| Sources et leurs fréquences (`ChampFrequence`, avertissements de NVD et d'EPSS, prochaine collecte), format et langue, hôtes, erreur entière | Écran « Veille » (tableau des sources) | Carte (tableau « Sources de la veille ») |
+| « Collecter maintenant » | Écran « Veille » (en-tête) | Carte (à côté du titre des sources, veille active) |
+| Dictionnaire des produits (CPE) : activation, fréquence des nouveautés, état du chargement, copie complète et sa suppression, explication de la place | Écran « Veille » | Carte (`DictionnaireCpeSection`, inchangée) |
+| Sources facultatives (Cloudflare Radar, tldrcve) : activation, fréquence, avertissement des fréquences élevées | Écran « Veille » (tableau et texte d'introduction) | Carte (`SourcesFacultatives`, déplacée de `AnnoncesVeille.tsx`) |
+
+- **Carte** (`apps/web/src/pages/Administration.tsx`, panneau `ConfigurationVeillePanel` de
+  `apps/web/src/vulnerabilites/ConfigurationVeille.tsx`) : rangée après « Intégrations », pictogramme bouclier, teinte rouge,
+  adresse `/plateforme/veille-vulnerabilites` (lien profond qui ouvre la carte), fenêtre à défilement (`consultation`,
+  plusieurs tableaux : jamais découpée en parties). Les composants `ActivationVeille`, `SourcesTable`, `FrequenceSource` et
+  `SourcesFacultatives` y sont déplacés sans changement de rendu ; les appels sont ceux d'avant (`PUT
+  /api/admin/flux-externes/veille-vulnerabilites`, `POST /api/vulnerabilites/veille/collectes`, `PUT
+  /api/vulnerabilites/veille/sources/:source/frequence`, `PATCH /api/vulnerabilites/cpe/dictionnaire`, `POST` et `DELETE
+  /api/vulnerabilites/cpe/dictionnaire/copie`, `PATCH /api/vulnerabilites/veille/annonces/sources/:source`), mêmes If-Match,
+  mêmes journaux d'audit.
+- **Droit de la carte** : celui qui protégeait déjà ces réglages dans l'écran « Veille », `vulnerabilites:administrer`, avec
+  `vulnerabilites:lire` (sans lequel l'état ne se lit pas : la page « Veille » l'exigeait déjà). Règle unique
+  `peutConfigurerVeille` (`apps/web/src/vulnerabilites/veille.ts`), recopiée dans `administration-droits.ts` (fichier léger
+  du menu) et comparée par un test. Dans la carte, « Activer la veille » reste réservé à `administration:administrer`
+  (droit de la route commune des flux), comme avant.
+- **Registre des flux** (`packages/shared/src/flux-externes.ts`) : `reglage` du flux « veille-vulnerabilites » devient
+  « Plateforme > Veille des vulnérabilités » (`/plateforme/veille-vulnerabilites`) ; ce libellé est repris par les messages
+  « flux fermé » de l'API (texte seulement), par le résumé des flux et par l'assistant d'installation.
+
+### Ce qui reste dans le module
+
+- **Écran « Veille »** : le contenu (failles exploitées récentes, alertes et avis, recherche, failles connues, annonces des
+  sources facultatives activées : préavis de Cloudflare Radar et cartes de tldrcve, fiche d'une CVE) et l'état de la lecture
+  des fiches du CERT Santé ; en tête, **une ligne d'état par source**, en lecture seule (`EtatSourcesVeille`, règle pure
+  `lignesEtatVeille`) : les cinq sources publiques, le dictionnaire CPE et les deux sources facultatives, chacune avec son
+  état (veille inactive, désactivée, collecte en cours, à jour, en retard, en erreur, jamais collectée), sa dernière
+  collecte réussie et son erreur abrégée à 140 caractères (le texte entier se lit dans la carte) ; une pastille « Veille
+  active / inactive » et « Exécutant non vu ». Puis le lien **« Configurer »** vers la carte, visible seulement de qui a le
+  droit de la carte (même mécanique que « Configurer l'intégration »). Aucun bouton, aucune liste, aucun interrupteur.
+- **Moins de texte** : l'encadré « Aucune source n'est lue », les destinations, « ce qui sort », le texte du mandataire, les
+  explications du dictionnaire et l'introduction des sources facultatives ne sont plus que dans la carte ; la description
+  de l'écran est raccourcie.
+- **Produits surveillés** : la liste et la saisie assistée par le dictionnaire CPE restent dans le module (non déplacées).
+- **Aide** : article « Vulnérabilités : configuration de la veille (Plateforme) » (droit `vulnerabilites:administrer`)
+  pour les réglages ; l'article de la veille ne décrit plus que le contenu et les lignes d'état.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Lecture exigée avec l'administration** pour voir la carte et le lien (`vulnerabilites:lire` et
+  `vulnerabilites:administrer`) ; un compte à `administration:administrer` sans droit d'administrer le module ne voit pas
+  la carte (il voyait le bouton « Activer la veille » de l'écran « Veille » s'il lisait le module) ; il peut toujours
+  refermer le flux dans « Flux vers l'extérieur ».
+- **Lignes d'état** : tableau sobre de trois colonnes (source, état, dernière collecte réussie), composants de la charte,
+  sans style nouveau ; la présentation est laissée à la session Neon.
+- **Annonces** : placées après les alertes et avis, sous le titre « Annonces des sources facultatives », seulement si une
+  source facultative est activée.
+- **Lien « Configurer »** : texte visible « Configurer », nom accessible « Configurer la veille des vulnérabilités ».
+
+### Tests
+
+Web : `apps/web/test/veille-plateforme.test.ts` (carte visible si et seulement si le droit est réuni, même règle que le
+lien ; panneau dans la fenêtre de carte ; routes inchangées appelées par le panneau ; écran « Veille » et section des
+annonces sans aucun réglage ni écriture ; lignes d'état des huit sources, erreur abrégée, aucun champ, lien seulement avec
+le droit ; registre des flux et aide), tests existants adaptés (imports déplacés, liste CSP, intitulé du dictionnaire).
+Shared : lien du registre des flux. E2e adaptés : `…-vulnerabilites-veille.spec.ts` (lignes d'état, lien vers la carte,
+hôtes, validation du flux annulée depuis la carte, accessibilité de la carte ; compte fictif à `vulnerabilites:lire` seul :
+ni lien, ni carte, ni réglage) et `…-vulnerabilites-frequences.spec.ts` (fréquences réglées et relues dans la carte, après
+rechargement de son adresse).
+
+### Non vérifié
+
+Parcours Playwright non exécutés localement (CI seulement). Docker, Node 26 et CSP du serveur de production : non vérifiés
+ici.
