@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import {
+  MatriceRaciBody,
+  MatriceRaciReponse,
   SupplierBody,
   SupplierCriterionBody,
   SupplierCriterionLinksBody,
@@ -9,7 +11,7 @@ import {
 } from '@suivi/shared';
 import type { Session } from '../../auth.js';
 import { route } from '../../http/route.js';
-import { requireIfMatch } from '../../http/concurrency.js';
+import { requireIfMatch, setEtag } from '../../http/concurrency.js';
 import { base, scope, supplierParam, criterionParam } from './commun.js';
 
 export const fournisseursRoutes = [
@@ -141,6 +143,53 @@ export const fournisseursRoutes = [
     body: SupplierFollowUpBody,
     handler: async ({ svc, s, params, body, ip }) =>
       svc.grc.suppliers.followUp(params.id, params.evaluationId, body, (s as Session).user, ip),
+  }),
+  /* Matrice RACI du fournisseur (ADR 0113) : une au plus, absente tant qu'elle n'a pas été créée. */
+  route({
+    ...base,
+    access: 'fournisseurs:lire' as const,
+    method: 'GET',
+    url: '/api/suppliers/:id/raci',
+    summary: 'Matrice RACI du fournisseur (activités × acteurs) et contrôle de la règle « un A, au moins un R »',
+    params: supplierParam,
+    response: MatriceRaciReponse,
+    handler: async ({ svc, s, params, reply }) => {
+      const r = await svc.grc.raciFournisseurs.lire(params.id, (s as Session).user);
+      if (r.matrice) setEtag(reply, r.matrice.version);
+      return r;
+    },
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:modifier' as const,
+    method: 'PUT',
+    url: '/api/suppliers/:id/raci',
+    summary:
+      'Créer (If-Match "0") ou remplacer la matrice RACI du fournisseur ; la règle est signalée, jamais bloquante',
+    params: supplierParam,
+    body: MatriceRaciBody,
+    response: MatriceRaciReponse,
+    handler: async ({ svc, s, params, body, req, reply, ip }) => {
+      const r = await svc.grc.raciFournisseurs.enregistrer(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.matrice.version);
+      return r;
+    },
+  }),
+  route({
+    ...base,
+    access: 'fournisseurs:supprimer' as const,
+    method: 'DELETE',
+    url: '/api/suppliers/:id/raci',
+    summary: 'Supprimer la matrice RACI du fournisseur (droit « supprimer », ADR 0068)',
+    params: supplierParam,
+    handler: async ({ svc, s, params, req, ip }) =>
+      svc.grc.raciFournisseurs.supprimer(params.id, requireIfMatch(req), (s as Session).user, ip),
   }),
   route({
     ...base,

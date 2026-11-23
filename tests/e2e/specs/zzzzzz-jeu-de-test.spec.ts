@@ -95,6 +95,18 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await page.getByRole('button', { name: /^Fiche du fournisseur Logiciel de dossiers fictif/ }).click();
     await expect(page.getByRole('dialog').getByText('MFA non activée.')).toBeVisible();
     await capture(page, '08-fiche-fournisseur');
+    // Matrice RACI fictive (ADR 0113) : onglet « Machines et responsabilités », une liste nommée par case, deux activités
+    // à revoir signalées sans bloquer.
+    const ficheFournisseur = page.getByRole('dialog');
+    await ficheFournisseur.getByRole('tab', { name: 'Machines et responsabilités', exact: true }).click();
+    await expect(
+      ficheFournisseur.getByRole('combobox', { name: 'Gestion des accès et des comptes – RSSI', exact: true }),
+    ).toHaveValue('A');
+    await expect(ficheFournisseur.getByRole('status')).toContainText('2 activités à revoir');
+    await expect(ficheFournisseur.getByRole('status')).toContainText('« Surveillance et supervision » (Aucun A)');
+    await expect(
+      ficheFournisseur.getByRole('button', { name: 'Enregistrer la matrice RACI', exact: true }),
+    ).toBeDisabled();
     await page.keyboard.press('Escape');
 
     // Contexte : PESTEL, parties intéressées.

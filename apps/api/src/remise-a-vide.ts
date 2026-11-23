@@ -170,6 +170,8 @@ export const TABLES_TRAVAIL = [
   'sup_evaluation_items',
   'sup_evaluations',
   'sup_scope_links',
+  // Matrices RACI des fournisseurs (ADR 0113) : saisies par les utilisateurs, effacées avec le registre des fournisseurs.
+  'fournisseurs_raci',
   'cfg_items',
   'cfg_versions',
   'cfg_usages',

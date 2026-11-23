@@ -10,7 +10,7 @@
    dates sont relatives au jour du chargement : retards et échéances à venir existent toujours. */
 import crypto from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
-import { methodTemplate } from '@suivi/shared';
+import { matriceRaciModele, methodTemplate, type LettreRaci } from '@suivi/shared';
 import type { JsonObject } from '@suivi/shared/legacy';
 import { sql } from 'kysely';
 import type { Services } from './services.js';
@@ -456,6 +456,8 @@ export interface BilanChargement {
   /** Couples critère ↔ fournisseur rattachés (ADR 0098). */
   rattachementsCriteres: number;
   evaluations: number;
+  /** Matrices RACI fictives des fournisseurs (ADR 0113). */
+  matricesRaci: number;
   normes: BilanNormes | null;
   annexes: BilanAnnexes | null;
   complements: BilanComplements | null;
@@ -535,6 +537,7 @@ export async function chargerJeuDeTest(
       criteres: 0,
       rattachementsCriteres: 0,
       evaluations: 0,
+      matricesRaci: 0,
       normes: null,
       annexes: null,
       complements: null,
@@ -819,6 +822,50 @@ export async function chargerJeuDeTest(
       'Évaluation SUP-003',
     );
     bilan.evaluations = 2;
+    // Matrices RACI (ADR 0113) : créées à partir du modèle, comme le bouton « Créer la matrice RACI », puis remplies. Celle
+    // de l'hébergeur respecte la règle ; celle du logiciel de dossiers laisse deux activités à revoir (avertissement).
+    const raci = async (fournisseur: string, lignes: Record<string, string>) => {
+      const modele = matriceRaciModele();
+      const cree = await exiger<{ matrice: { version: number } }>(
+        await appel('PUT', `/api/suppliers/${fournisseur}/raci`, modele, { 'if-match': '"0"' }),
+        `Matrice RACI ${fournisseur}`,
+      );
+      // Une chaîne par activité : une lettre (ou « - ») par colonne, dans l'ordre fournisseur, RSSI, DSI, Référent métier.
+      const colonnes = ['fournisseur', ...modele.acteurs.map((a) => a.id)];
+      const cases = Object.entries(lignes).flatMap(([activite, lettres]) =>
+        [...lettres].flatMap((l, i) =>
+          l === '-' ? [] : [{ activite, acteur: colonnes[i]!, lettre: l as LettreRaci }],
+        ),
+      );
+      await exiger(
+        await appel(
+          'PUT',
+          `/api/suppliers/${fournisseur}/raci`,
+          { ...modele, cases },
+          { 'if-match': `"${cree.matrice.version}"` },
+        ),
+        `Matrice RACI ${fournisseur} remplie`,
+      );
+      bilan.matricesRaci++;
+    };
+    await raci('SUP-001', {
+      correctifs: 'RAIC',
+      sauvegardes: 'RCAI',
+      acces: 'RACI',
+      supervision: 'RIAI',
+      incidents: 'RACI',
+      changements: 'RACC',
+      reversibilite: 'RACC',
+    });
+    await raci('SUP-003', {
+      correctifs: 'RCAI',
+      sauvegardes: 'R-AI',
+      acces: 'CAAR',
+      supervision: 'R-I-',
+      incidents: 'RACI',
+      changements: 'RCAC',
+      reversibilite: 'RACC',
+    });
     // 6) Décision de la revue de direction précédente : crée une action suivie (entrée 9.3.2 a de la revue suivante).
     const revue = await exiger<{ version: number }>(
       await appel('GET', `/api/grc/${commun}/pilotage/legacy/reviews/R1`),

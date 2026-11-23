@@ -2,6 +2,25 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+- Migration automatique additive `106` (table `fournisseurs_raci`, vide au départ), sans reprise de données ni commande sur le
+  serveur. Aucun flux nouveau vers l'extérieur.
+
+### Ajouté
+
+- Fournisseurs, **matrice RACI** (décision du RSSI du 23/11/2026, [ADR 0113](docs/adr/0113-matrice-raci-des-fournisseurs.md)) :
+  dans la fiche d'un fournisseur, onglet « Machines et responsabilités », une matrice activités × acteurs créée à partir d'un
+  modèle (sept activités ; le fournisseur, RSSI, DSI et Référent métier), puis modifiable (activités et acteurs ajoutés,
+  renommés, retirés, activités réordonnées ; la colonne du fournisseur reste). Une lettre par case (R, A, C, I ou « — »),
+  colonne « Contrôle » et résumé des activités à revoir selon la règle « exactement un A et au moins un R », sans bloquer
+  l'enregistrement. API `GET`, `PUT` et `DELETE /api/suppliers/{id}/raci` (`If-Match` ; suppression au droit « supprimer »),
+  journal sans autre donnée que le fournisseur et les nombres de lignes et de colonnes ; matrice d'un fournisseur retiré
+  signalée par le contrôle des relations ; deux matrices fictives dans le jeu de démonstration (session « Projet audit_suivi
+  Coeur »).
+
 ## [7.6.1] — 2026-11-23
 
 ### Notes de mise à jour
