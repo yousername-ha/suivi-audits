@@ -17,6 +17,12 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Ajouté
 
+- Administration, remise à vide de la base : choix « Les données de travail, puis recharger la démonstration »
+  (décision du RSSI du 23/11/2026, addendum de l'ADR 0065). Efface les données de travail puis recharge le jeu de
+  démonstration fictif (machines et constats Tenable fictifs compris, aucun appel vers Tenable), avec les garde-fous de la
+  remise à vide : interrupteur désactivé par défaut, phrase propre `RÉGÉNÉRER LA DÉMONSTRATION`, code de double
+  authentification, sauvegarde de moins de 30 minutes. Journal : `remise_a_vide.demonstration_chargee` ou
+  `remise_a_vide.demonstration_echec`.
 - Vulnérabilités, **CVE inconnue de la veille** (lot CVE-INC, décisions du RSSI des 19, 20 et 22/11/2026,
   [ADR 0100](docs/adr/0100-module-vulnerabilites.md), migration `103`). Une CVE que ni la veille ni aucune détection ne
   cite s'ouvre désormais dans une fiche depuis la barre de recherche (bouton du panneau, ou Entrée). Sur clic, « Consulter
