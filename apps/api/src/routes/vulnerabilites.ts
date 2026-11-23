@@ -67,7 +67,11 @@
    Lot CPE-1 : saisie assistée par le dictionnaire CPE de la NVD (liste locale, versions d'un produit, saisie en cours) avec
    `modifier` ; état de la source avec `lire` ; réglage et copie complète avec `administrer`, If-Match, journal.
    Lot CVE-INC : compléments de la fiche d'une CVE, ouverture de la fiche d'une CVE inconnue et consultation de cve.org et
-   NVD avec `lire` (limites horaires par personne) ; sources facultatives lues avec `lire`, réglées avec `administrer`. */
+   NVD avec `lire` (limites horaires par personne) ; sources facultatives lues avec `lire`, réglées avec `administrer`.
+   Lot GRP-MACHINES : groupes de machines lus avec `lire` (machines lues seulement, drapeau hors lecture sans nombre) ;
+   créés, modifiés, supprimés et garnis avec `modifier` (le droit qui modifie les machines), If-Match, journal ; fournisseur
+   rattaché avec, en plus, `fournisseurs:lire` ; groupes d'un fournisseur avec `lire` et `fournisseurs:lire`. Filtre par
+   groupe de la liste et du parc des machines (`groupe`). */
 import {
   ADS_BORNES,
   CveParams,
@@ -129,6 +133,16 @@ import {
   RechercheParc,
   IdPerimetreVue,
   ParamsFicheFaille,
+  BilanMembresGroupe,
+  GroupeMachines,
+  GroupeMachinesBody,
+  GroupeMachinesPatch,
+  GroupesDuFournisseur,
+  ListeGroupesMachines,
+  MembresGroupeBody,
+  PageMachinesGroupe,
+  ParamsGroupesFournisseur,
+  RechercheMachinesGroupe,
 } from '@suivi/shared';
 import { z } from 'zod';
 import type { Session } from '../auth.js';
@@ -705,6 +719,123 @@ export const vulnerabilitesRoutes = [
       setEtag(reply, m.version);
       return m;
     },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/groupes',
+    summary:
+      'Groupes de machines (lot GRP-MACHINES), par nom : nom, description, fournisseur rattaché (nom lu dans le registre, ou « supprimé »), nombre de machines que la personne lit et drapeau « d’autres machines hors de votre lecture », sans nombre ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    response: ListeGroupesMachines,
+    handler: async ({ svc, s }) => svc.vulnerabilites.groupes.lister((s as Session).user),
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/groupes/:id',
+    summary: 'Un groupe de machines (ETag : version du groupe)',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    response: GroupeMachines,
+    handler: async ({ svc, s, params, reply }) => {
+      const g = await svc.vulnerabilites.groupes.lire((s as Session).user, params.id);
+      setEtag(reply, g.version);
+      return g;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/groupes/:id/machines',
+    summary:
+      'Fenêtre d’un groupe : machines que la personne lit, membres ou non (`membres` : oui ou non), recherche par nom (partiel) ou adresse IP (début), par nom, 25 par page ; autres groupes de chaque machine ; identifiants de toutes les machines trouvées (500 au plus) pour « Tout cocher » (ETag : version du groupe) ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: id,
+    query: RechercheMachinesGroupe,
+    response: PageMachinesGroupe,
+    handler: async ({ svc, s, params, query, reply }) => {
+      const p = await svc.vulnerabilites.groupes.machines((s as Session).user, params.id, query);
+      setEtag(reply, p.groupe.version);
+      return p;
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/groupes',
+    summary:
+      'Créer un groupe de machines : nom unique à la casse près, description, fournisseur facultatif (droit de lire les fournisseurs exigé, fournisseur présent au registre), machines lues par la personne (500 au plus) ; journalisé',
+    tags,
+    access: 'vulnerabilites:modifier',
+    body: GroupeMachinesBody,
+    status: 201,
+    response: GroupeMachines,
+    handler: async ({ svc, s, body, ip, reply }) => {
+      const g = await svc.vulnerabilites.groupes.creer(body, (s as Session).user, ip);
+      setEtag(reply, g.version);
+      return g;
+    },
+  }),
+  route({
+    method: 'PATCH',
+    url: '/api/vulnerabilites/groupes/:id',
+    summary:
+      'Renommer, décrire un groupe ou changer son fournisseur (If-Match : version du groupe) ; changer le fournisseur exige aussi le droit de lire les fournisseurs ; journalisé',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: GroupeMachinesPatch,
+    response: GroupeMachines,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const g = await svc.vulnerabilites.groupes.modifier(
+        params.id,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, g.version);
+      return g;
+    },
+  }),
+  route({
+    method: 'DELETE',
+    url: '/api/vulnerabilites/groupes/:id',
+    summary:
+      'Supprimer un groupe de machines (If-Match : version du groupe) ; refusé (409) s’il compte des machines hors de la lecture de la personne ; les machines restent ; journalisé',
+    tags,
+    access: 'vulnerabilites:supprimer',
+    params: id,
+    handler: async ({ svc, s, params, req, ip }) => {
+      await svc.vulnerabilites.groupes.supprimer(params.id, requireIfMatch(req), (s as Session).user, ip);
+    },
+  }),
+  route({
+    method: 'POST',
+    url: '/api/vulnerabilites/groupes/:id/machines',
+    summary:
+      'Ajouter et retirer des machines d’un groupe en lot (500 au plus), tout ou rien ; chaque machine doit être lue par la personne (sinon 404) ; If-Match : version du groupe, qui augmente si quelque chose change ; journalisé',
+    tags,
+    access: 'vulnerabilites:modifier',
+    params: id,
+    body: MembresGroupeBody,
+    response: BilanMembresGroupe,
+    handler: async ({ svc, s, params, body, req, ip, reply }) => {
+      const b = await svc.vulnerabilites.groupes.membres(params.id, body, requireIfMatch(req), (s as Session).user, ip);
+      setEtag(reply, b.groupe.version);
+      return b;
+    },
+  }),
+  route({
+    method: 'GET',
+    url: '/api/vulnerabilites/fournisseurs/:id/groupes',
+    summary:
+      'Groupes de machines rattachés à un fournisseur (fiche du fournisseur) : nom, description, nombre de machines lues, drapeau hors lecture, failles critiques ouvertes comptées sur les seules machines lues ; aucun détail de machine ; exige aussi le droit de lire les fournisseurs (403) ; fournisseur absent du registre : 404 ; lecture seule',
+    tags,
+    access: 'vulnerabilites:lire',
+    params: ParamsGroupesFournisseur,
+    response: GroupesDuFournisseur,
+    handler: async ({ svc, s, params }) => svc.vulnerabilites.groupes.duFournisseur((s as Session).user, params.id),
   }),
   route({
     method: 'GET',

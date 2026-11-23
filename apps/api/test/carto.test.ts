@@ -466,6 +466,7 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
         '102_vulnerabilites_correctifs_tenable.sql',
         '103_vulnerabilites_cve_inconnue.sql',
         '104_veille_reglementaire_cert_sante_jo.sql',
+        '105_vulnerabilites_groupes_machines.sql',
         '106_fournisseurs_raci.sql',
       ]);
       const st = await t2.svc.legacy.recompose();

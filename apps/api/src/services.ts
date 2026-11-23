@@ -52,6 +52,7 @@ import { AnnoncesVeille } from './vulnerabilites/annonces.js';
 import { VeilleReglementaire } from './veille-reglementaire.js';
 import { PurgeJournaux } from './vulnerabilites/purge-journaux.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
+import { GroupesMachines } from './vulnerabilites/groupes.js';
 import { SynchronisationTenable } from './vulnerabilites/tenable.js';
 import { ImportNessus } from './vulnerabilites/import-nessus.js';
 import { AnnuaireAd } from './vulnerabilites/annuaire-ad.js';
@@ -268,6 +269,8 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       /** Lot ALH3 : actifs exposés (AlgoLightHouse) reliés aux machines internes (Tenable). */
       liaisonsMachines,
       failles,
+      /** Lot GRP-MACHINES : groupes de machines faits à la main (lecture par périmètre, fournisseur rattaché). */
+      groupes: new GroupesMachines(db, grc),
       rapprochements,
       priorite: reglagePriorite,
       masque: motsNonMasques,
