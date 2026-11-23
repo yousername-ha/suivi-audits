@@ -54,7 +54,7 @@ import type { Actor, Client, Db, Kdb } from '../db/db.js';
 import type { IntegrationExecutions, Integrations as LigneIntegrations } from '../db/types.generated.js';
 import type { FluxExternes } from '../flux-externes.js';
 import { conflict } from '../http/concurrency.js';
-import type { Mandataire } from '../mandataire.js';
+import { detailMandataire, type Mandataire } from '../mandataire.js';
 import { HttpError } from '../http/errors.js';
 import type { Vault } from '../security/crypto.js';
 
@@ -753,7 +753,9 @@ export class Integrations {
           nom: cur.nom,
           operation: cur.operation,
           etat: fin.etat,
-          ...(resultat ? { resultat } : { erreur: fin.erreur }),
+          // Échec dû au mandataire sortant (décision du RSSI du 23/11/2026, lot ALH-MANDATAIRE) : hôte et port au seul
+          // journal d'audit, jamais dans l'exécution rangée ni dans une réponse.
+          ...(resultat ? { resultat } : { erreur: fin.erreur, ...detailMandataire(p) }),
         },
         c,
       );

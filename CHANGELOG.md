@@ -52,6 +52,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   le mandataire sortant est injoignable ne donne plus son nom ni son port, gardés au seul journal d'audit de la collecte
   (session « Module surveillance vulnérabilités SMSI »).
 
+### Modifié
+
+- Vulnérabilités, **connecteur AlgoLightHouse derrière le mandataire sortant** (lot ALH-MANDATAIRE, décision du RSSI du
+  23/11/2026, [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : quand l'échec d'un test ou d'une synchronisation vient
+  du mandataire de l'établissement (injoignable, tunnel refusé, authentification), l'erreur affichée dans l'état de la
+  surface externe et dans les intégrations ne donne plus son nom ni son port ; ils sont gardés au seul journal d'audit de
+  l'exécution, lu par l'administration, comme pour la veille. Tenable, joint directement, n'est pas concerné. Le temps
+  d'une mise à jour, un échec de ce type peut n'être clos qu'au bout de quelques minutes (« Exécutant interrompu »)
+  (session « Module surveillance vulnérabilités SMSI »).
+
 ## [7.6.0] — 2026-11-22
 
 ### Notes de mise à jour

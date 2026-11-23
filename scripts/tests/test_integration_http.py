@@ -796,6 +796,8 @@ class FauxMandataire(socketserver.ThreadingTCPServer):
         super().__init__(("127.0.0.1", 0), TraitementMandataire)
         self.demandes = []
         self.attendu = None
+        # Réponse imposée à la demande de tunnel (ligne d'état), ou « fermer » : connexion close sans réponse.
+        self.forcee = None
 
 
 class TraitementMandataire(socketserver.BaseRequestHandler):
@@ -812,6 +814,11 @@ class TraitementMandataire(socketserver.BaseRequestHandler):
         entetes = {k.strip().lower(): val.strip() for k, _, val in (x.partition(":") for x in lignes[1:])}
         srv.demandes.append({"ligne": lignes[0], "entetes": entetes})
         methode, cible, _ = lignes[0].split(" ", 2)
+        if srv.forcee == "fermer":
+            return
+        if srv.forcee is not None:
+            client.sendall(("HTTP/1.1 %s\r\nContent-Length: 0\r\n\r\n" % srv.forcee).encode("ascii"))
+            return
         if methode != "CONNECT":
             client.sendall(b"HTTP/1.1 405 Method Not Allowed\r\nContent-Length: 0\r\n\r\n")
             return
@@ -875,7 +882,7 @@ class AlgoLightHouse(unittest.TestCase):
 
     def setUp(self):
         FauxAlh.donnees, FauxAlh.recues, FauxAlh.absentes = alh_donnees(), [], set()
-        self.mandataire.demandes, self.mandataire.attendu = [], None
+        self.mandataire.demandes, self.mandataire.attendu, self.mandataire.forcee = [], None, None
         reel = h.contexte
         self.reconnu = True
         for cible, valeur in (("ADRESSE_ALH", h.re.compile(r"^https://localhost:%d$" % self.port)),
@@ -1178,6 +1185,69 @@ class AlgoLightHouse(unittest.TestCase):
         self.assertIn("Certificat du service refusé à travers le mandataire", sortie["erreur"])
         sortie = h.executer(self.demande(mandataire=self.mandataire_params(autorite=self.ca)))
         self.assertTrue(sortie["ok"], sortie)
+
+    def test_proxy_failures_never_name_its_host_or_port_in_the_error_only_in_the_detail(self):
+        """Décision du RSSI du 23/11/2026 (lot ALH-MANDATAIRE, même règle que la veille), pour « tester » et « synchroniser »
+        et pour chaque cause (nom introuvable, connexion refusée, délai dépassé, autre erreur du réseau, réponse du
+        mandataire à la demande de tunnel) : l'erreur, lue par qui lit le module, ne nomme ni l'hôte ni le port du
+        mandataire ; le détail (une ligne, bornée) les donne, à part, pour le seul journal d'audit."""
+        hote, port = "mandataire-interne.exemple.invalid", 3129
+        causes = ((socket.gaierror(-2, "Name or service not known"), "Mandataire sortant injoignable : nom introuvable"),
+                  (ConnectionRefusedError(111, "Connection refused"), "Mandataire sortant injoignable : connexion refusée"),
+                  (TimeoutError(), "Mandataire sortant injoignable : délai dépassé"),
+                  (OSError(101, "Network is unreachable"), "Mandataire sortant injoignable (Network is unreachable)"))
+        for operation in ("tester", "synchroniser"):
+            for erreur, attendu in causes:
+                with self.subTest(operation=operation, cause=type(erreur).__name__), \
+                        patch.object(h.socket, "create_connection", side_effect=erreur):
+                    sortie = h.executer(self.demande(operation, mandataire=self.mandataire_params(hote=hote, port=port)))
+                    self.assertEqual((sortie["ok"], sortie["resultat"]), (False, None), sortie)
+                    self.assertIn(attendu, sortie["erreur"])
+                    for interdit in (hote, str(port), "mandataire-interne"):
+                        self.assertNotIn(interdit, sortie["erreur"])
+                    self.assertTrue(sortie["detail"].startswith("Mandataire %s:%d : " % (hote, port)), sortie["detail"])
+                    self.assertNotIn("\n", sortie["detail"])
+                    self.assertLessEqual(len(sortie["detail"]), h.ERREUR_MAX)
+                    self.assertNotIn("elements", sortie)
+                    self.propre(sortie)
+        self.assertEqual(FauxAlh.recues, [])
+        # Vrai mandataire local : port fermé (connexion refusée), puis réponses à la demande de tunnel.
+        libre = socket.socket()
+        libre.bind(("127.0.0.1", 0))
+        ferme = libre.getsockname()[1]
+        libre.close()
+        sortie = h.executer(self.demande(mandataire=self.mandataire_params(port=ferme)))
+        self.assertIn("Mandataire sortant injoignable : connexion refusée", sortie["erreur"])
+        self.assertNotIn(str(ferme), sortie["erreur"])
+        self.assertNotIn("127.0.0.1", sortie["erreur"])
+        self.assertEqual(sortie["detail"], "Mandataire 127.0.0.1:%d : connexion refusée." % ferme)
+        port_mandataire = self.mandataire.server_address[1]
+        for forcee, attendu in (("403 Forbidden", "Tunnel refusé par le mandataire vers localhost (code 403)"),
+                                ("407 Proxy Authentication Required", "exige une authentification (code 407)"),
+                                ("fermer", "Le mandataire a fermé la connexion pendant la demande de tunnel")):
+            with self.subTest(tunnel=forcee):
+                self.mandataire.forcee = forcee
+                sortie = h.executer(self.demande(mandataire=self.mandataire_params()))
+                self.assertFalse(sortie["ok"])
+                self.assertIn(attendu, sortie["erreur"])
+                self.assertNotIn("127.0.0.1", sortie["erreur"])
+                self.assertNotIn(str(port_mandataire), sortie["erreur"])
+                self.assertEqual(sortie["detail"], "Mandataire 127.0.0.1:%d : %s" % (port_mandataire, sortie["erreur"]))
+                self.propre(sortie)
+        self.mandataire.forcee = None
+        # Les autres échecs n'ont pas de détail : certificat refusé à travers le mandataire, connexion directe en échec.
+        self.reconnu = False
+        sortie = h.executer(self.demande(mandataire=self.mandataire_params()))
+        self.assertIn("Certificat du service refusé à travers le mandataire", sortie["erreur"])
+        self.assertNotIn("detail", sortie)
+        self.reconnu = True
+        with patch.object(h.socket, "create_connection", side_effect=ConnectionRefusedError(111, "Connection refused")):
+            sortie = h.executer(self.demande())
+        self.assertIn("Connexion refusée", sortie["erreur"])
+        self.assertNotIn("detail", sortie)
+        # Un succès à travers le mandataire n'a pas de détail.
+        self.assertEqual(h.executer(self.demande(mandataire=self.mandataire_params())),
+                         {"ok": True, "resultat": {"version": "1.14.0"}, "erreur": None})
 
     def test_malformed_proxy_or_proxy_for_tenable_calls_nothing(self):
         for m in ("http://mandataire.exemple.invalid:3128", {"hote": "x"}, self.mandataire_params(port="3128"),

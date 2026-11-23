@@ -495,15 +495,20 @@ export const RESULTATS_OPERATION: Record<IntegrationType, Partial<Record<Operati
   'silene-fichier': { importer: BilanImportSilene },
 };
 
-/** Entrée de `suivi integrations-finish <id>` : succès avec résultat, ou échec avec erreur courte. */
+/** Entrée de `suivi integrations-finish <id>` : succès avec résultat, ou échec avec erreur courte. `detail` (échec
+    seulement ; décision du RSSI du 23/11/2026, lot ALH-MANDATAIRE) : hôte et port du mandataire sortant de l'établissement
+    quand l'échec vient de lui, consignés au seul journal d'audit (lu par l'administration), jamais rangés avec l'exécution
+    ni rendus par une route. */
 export const RapportExecution = z
   .object({
     ok: z.boolean(),
     resultat: z.record(z.string(), z.unknown()).nullable(),
     erreur: ErreurExecution.nullable(),
+    detail: ErreurExecution.optional(),
   })
   .strict()
   .refine((r) => (r.ok ? r.resultat !== null && r.erreur === null : r.resultat === null && r.erreur !== null), {
     message: 'Un succès porte un résultat sans erreur ; un échec, une erreur sans résultat.',
-  });
+  })
+  .refine((r) => !r.ok || r.detail === undefined, { message: 'Le détail accompagne un échec seulement.' });
 export type RapportExecution = z.infer<typeof RapportExecution>;

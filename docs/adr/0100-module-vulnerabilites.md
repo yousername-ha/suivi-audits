@@ -4332,3 +4332,54 @@ Docker.
 « Collecter maintenant » pour les sources facultatives ; marques des sources facultatives dans la fiche d'une CVE ouverte
 depuis un autre écran que la veille ; évaluation SSVC transmise à l'assistant ; pastilles dessinées pour les trois nouvelles
 sources.
+
+## Addendum du 23/11/2026 — lot ALH-MANDATAIRE : mandataire masqué dans l'erreur du connecteur AlgoLightHouse
+
+Rédaction : sous-agent développeur pour la session « Module surveillance vulnérabilités SMSI »
+(`session_01EnWdzdnc8fBi6Yrc154Jy6`). Aucune migration, aucune dépendance ; `scripts/update-worker.py`, `docker*` et
+`apps/*/src/assistant/*` inchangés.
+
+**Constat.** Le connecteur AlgoLightHouse (`scripts/integration-http.py`, `ouvrir_tunnel`), que le point 1 des décisions du
+RSSI du 23/11/2026 (addendum « lot CVE-INC ») laissait de côté, mettait le nom et le port du mandataire sortant dans l'erreur
+de l'exécution. Cette erreur est rendue par `GET /api/vulnerabilites/surface/etat` (`vulnerabilites:lire`, état de la surface
+externe) et par les routes des instances et des exécutions d'intégration (`integrations:lire`).
+
+**Décision du RSSI (23/11/2026)** : même règle que la veille. L'erreur visible dit « Mandataire sortant injoignable » avec la
+cause (nom introuvable, connexion refusée, délai dépassé, erreur du réseau), sans nom ni port ; l'hôte et le port ne sont
+écrits qu'au journal d'audit, lu par l'administration.
+
+**Réalisation.**
+
+- Script : `ErreurMandataire` porte le message affiché et, à part, le détail (« Mandataire hôte:port : cause »), rendu dans le
+  champ `detail` de la sortie (une ligne, 300 caractères au plus), jamais dans `erreur`. Il couvre les quatre causes de la
+  connexion au mandataire et les réponses du mandataire à la demande de tunnel (tunnel refusé, authentification demandée
+  ou refusée, connexion fermée ou interrompue, délai) ; ces derniers messages, qui ne nommaient déjà pas le mandataire,
+  sont inchangés. Les autres échecs (certificat refusé à travers le mandataire, échecs du service) n'ont pas de détail.
+- Exécutant (`scripts/exploitation-worker.py`) : `integration_echec(texte, detail)`, sur le modèle de `veille_echec`, sert
+  aux deux rapports (`integration_rapport`, `integration_synchro`) ; le détail du script n'est transmis qu'avec un échec
+  rapporté par le script, nettoyé et borné comme l'erreur ; jamais avec un succès ni avec un échec propre à l'exécutant.
+- API : `RapportExecution` (`packages/shared/src/integrations.ts`) admet `detail` (une ligne, 300 caractères) avec un échec
+  seulement ; `Integrations.terminer` l'ajoute à l'entrée `integration.execution.terminee` (par `detailMandataire`) et ne le
+  range pas dans `integration_executions` : aucune route ne le rend.
+- Tenable (interne) ne passe jamais par le mandataire (ADR 0101) : le script refuse un mandataire pour lui avant tout appel,
+  l'exécutant ne le lui transmet pas, la recherche des contrôles d'une CVE se fait sans mandataire ; aucun chemin de Tenable
+  ne produit ce message ni ce détail.
+
+**Fenêtre de mise à jour.** Comme pour la veille : un exécutant neuf face à une application ancienne voit son rapport refusé
+quand il porte `detail` (`RapportExecution` refuse les clés inconnues ; `suivi integrations-finish` sort en code 2). Seuls les
+échecs dus au mandataire sont touchés : l'exécution reste « en cours » jusqu'au ménage de la file, qui la clôt en échec
+(« Exécutant interrompu : aucun résultat reçu. ») cinq minutes après son début pour un test, trente pour une
+synchronisation, au journal d'audit sans erreur ni détail ; les autres exécutions du même passage attendent le passage
+suivant. Un exécutant ancien face à une application neuve n'envoie pas de détail : rien ne change.
+
+**Choix de réalisation, à confirmer par le RSSI** : le détail est donné aussi pour les réponses à la demande de tunnel (la
+veille ne le donne que pour les quatre causes de connexion) ; le message « Tunnel refusé par le mandataire vers <hôte> »
+garde le nom de l'espace AlgoLightHouse (la destination, pas le mandataire), comme avant et comme la veille pour ses sources.
+
+Tests : Python (`test_integration_http.py` : aucune cause, tunnel compris, ne nomme le mandataire dans l'erreur, pour
+« tester » et « synchroniser », détail à part ; `test_exploitation.py` : détail remis à part avec un échec seulement, pour les
+deux opérations) ; shared (`RapportExecution` : détail avec un échec seulement, une ligne, borné) ; API sur PostgreSQL
+(`vulnerabilites-surface-externe.test.ts` : ni nom ni port dans l'exécution, dans l'état de la surface externe ni dans les
+routes des instances et des exécutions, détail dans la seule entrée d'audit de fin, refusé avec un succès par la vraie CLI ;
+`integrations.test.ts` : détail avec un succès ou sur plusieurs lignes refusé par la CLI). Non vérifié : face au mandataire
+réel de l'établissement (faux mandataire local seulement).
