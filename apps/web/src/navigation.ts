@@ -4,9 +4,14 @@
    ce fichier ne fait que les regrouper. Le test navigation.test.ts vérifie qu'aucune rubrique n'est perdue ni doublée.
    Exception : la « Configuration du pilotage » (`/pilotage/configuration`) n'est plus une rubrique du menu Pilotage mais une
    carte de la page Plateforme (administration-droits.ts, ADR 0081) ; son adresse et son droit restent ceux d'origine. De
-   même, « Intégrations » est une carte de la page Plateforme (ADR 0076, addendum du 19/11/2026) ; /integrations y redirige. */
+   même, « Intégrations » est une carte de la page Plateforme (ADR 0076, addendum du 19/11/2026) ; /integrations y redirige.
+   « Mes rappels » (`/pilotage/rappels`) s'ouvre par la cloche de l'en-tête depuis la 7.6.1. */
 import type { Action, Module, OrdreMenu, Permission } from '@suivi/shared';
 import { PILOTAGE_NAV } from './pilotage-navigation';
+
+/** Rubriques du Pilotage ouvertes depuis l'en-tête plutôt que depuis le menu (7.6.1 : « Mes rappels », cloche à gauche
+    du compte). Leur adresse et leur droit restent ceux d'origine. */
+export const PILOTAGE_DANS_ENTETE = ['rappels'] as const;
 
 export type FamilleId = 'pilotage' | 'organisation' | 'risques' | 'conformite' | 'actions' | 'resilience' | 'documents';
 
@@ -98,7 +103,8 @@ export const FAMILLES: Famille[] = [
       dest('parcours', 'Parcours guidé', [p('parcours-iso'), p('parcours')]),
       dest('objectifs', 'Objectifs et indicateurs', [p('processus'), p('objectifs'), p('indicateurs')]),
       dest('revues', 'Revues de direction', [p('revues')]),
-      dest('rappels', 'Mes rappels', [p('rappels')]),
+      // 7.6.1 (demande du RSSI du 23/11/2026) : « Mes rappels » n'est plus au menu ; la cloche de l'en-tête
+      // (ClocheRappels.tsx) y mène, à la même adresse et avec le même droit.
       // Module Intégrations (ADR 0076) : plus de rubrique du Pilotage depuis l'addendum du 19/11/2026 ; les connecteurs se
       // configurent dans la carte « Intégrations » de la page Plateforme (administration-droits.ts).
     ],

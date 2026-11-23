@@ -41,6 +41,7 @@ import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
 import { useLive } from '../realtime';
 import { canReadBusiness, useCan, useMe, usePreferences } from '../session';
+import { ClocheRappels } from './ClocheRappels';
 import { MarqueOrganisation } from './MarqueOrganisation';
 import { RechercheMenu } from './RechercheMenu';
 import type { PageMenu } from './recherche-menu';
@@ -381,6 +382,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   <IconeTheme />
                 </ActionIcon>
               </Tooltip>
+              {can('pilotage', 'lire') && <ClocheRappels />}
               <Text size="sm" fw={600} visibleFrom="sm" className="header-user">
                 {me.user?.displayName || me.user?.username}
               </Text>

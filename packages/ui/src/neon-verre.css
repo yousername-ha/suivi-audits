@@ -120,3 +120,99 @@ html:is([data-onglets='barre'], [data-onglets='pastilles'])
     -webkit-backdrop-filter: none;
   }
 }
+
+/* 7.6.1 : cloche des rappels dans l'en-tête, à gauche du compte (même verre que la bascule du thème). Le nombre de rappels
+   non lus est une pastille posée sur le coin ; le nom accessible de la cloche le dit aussi. */
+.shell-header .cloche-rappels {
+  position: relative;
+  overflow: visible;
+}
+.cloche-rappels__nombre {
+  position: absolute;
+  inset-block-start: calc(var(--mantine-spacing-2xs) * -1);
+  inset-inline-end: calc(var(--mantine-spacing-2xs) * -1);
+  min-inline-size: 1.15rem;
+  block-size: 1.15rem;
+  padding-inline: 0.25rem;
+  border: var(--suivi-trait-l) solid var(--mantine-color-body);
+  border-radius: 999em;
+  background: var(--mantine-color-red-7);
+  color: var(--mantine-color-white);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05rem;
+  text-align: center;
+}
+.cloche-rappels__panneau {
+  padding: 0;
+  overflow: hidden;
+  border: var(--suivi-trait-l) solid var(--suivi-verre-trait);
+  border-radius: var(--mantine-radius-md);
+}
+.cloche-rappels__tete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border-block-end: var(--suivi-trait-l) solid var(--suivi-trait);
+  font-weight: 700;
+}
+.cloche-rappels__compte {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cloche-rappels__vide {
+  padding: var(--mantine-spacing-md);
+}
+.cloche-rappels__liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cloche-rappels__liste li + li {
+  border-block-start: var(--suivi-trait-l) solid var(--suivi-trait);
+}
+.cloche-rappels__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  inline-size: 100%;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid transparent;
+}
+.cloche-rappels__item:hover,
+.cloche-rappels__item:focus-visible {
+  border-inline-start-color: var(--suivi-verre-repere);
+  background: color-mix(in srgb, var(--suivi-verre-repere) 8%, transparent);
+}
+.cloche-rappels__titre {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.cloche-rappels__message {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+}
+.cloche-rappels__tout {
+  display: block;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  border-block-start: var(--suivi-trait-l) solid var(--suivi-trait);
+  color: var(--suivi-verre-repere);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+.cloche-rappels__tout:hover,
+.cloche-rappels__tout:focus-visible {
+  background: color-mix(in srgb, var(--suivi-verre-repere) 8%, transparent);
+}
