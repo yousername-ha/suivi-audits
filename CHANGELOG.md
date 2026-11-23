@@ -17,6 +17,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Ajouté
 
+- Plateforme > Apparence, **police à l'essai** (demande du RSSI du 23/11/2026,
+  [ADR 0093, addendum du 23/11/2026](docs/adr/0093-refonte-neon-charte-menu-et-accueil.md)) : Lexend (par défaut), Plex
+  Sans, Figtree ou Public Sans, pour tous les comptes de l'instance, avec aperçu immédiat avant l'enregistrement. Polices
+  hébergées avec l'application (licence SIL OFL à côté de chacune), téléchargées seulement si elles sont choisies. Aucune
+  migration ; à réduire à une seule police une fois le choix fait.
 - Vulnérabilités, **CVE inconnue de la veille** (lot CVE-INC, décisions du RSSI des 19, 20 et 22/11/2026,
   [ADR 0100](docs/adr/0100-module-vulnerabilites.md), migration `103`). Une CVE que ni la veille ni aucune détection ne
   cite s'ouvre désormais dans une fiche depuis la barre de recherche (bouton du panneau, ou Entrée). Sur clic, « Consulter

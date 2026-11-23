@@ -87,11 +87,16 @@ export const STYLES = ['sage', 'clair'] as const;
     dégradé sur tout le contour (A). Appliqué par l'attribut data-fenetres de <html>. */
 export const FENETRES = ['barre', 'lisere'] as const;
 export type StyleFenetres = (typeof FENETRES)[number];
+/** Police à l'essai pour toute l'instance (demande du RSSI du 23/11/2026, à réduire à une seule police une fois le choix
+    fait) : Lexend (défaut), Plex Sans, Figtree ou Public Sans. Appliquée par l'attribut data-police de <html>. */
+export const POLICES = ['lexend', 'plex', 'figtree', 'public-sans'] as const;
+export type PoliceEssai = (typeof POLICES)[number];
 export const ApparenceSettings = z.object({
   theme: z.enum(THEMES),
   densite: z.enum(DENSITES),
   style: z.enum(STYLES).default('sage'),
   fenetres: z.enum(FENETRES).default('barre'),
+  police: z.enum(POLICES).default('lexend'),
 });
 export const NotificationsSettings = z.object({
   echeancesJours: z.number().int().min(0).max(365),
