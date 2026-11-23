@@ -422,3 +422,58 @@ html .mantine-Modal-content.retex-modal > .mantine-Modal-body {
 .fenetre-large > .mantine-Modal-body > .mantine-Stack-root > .mantine-InputWrapper-root:first-child {
   grid-column: 1 / -1;
 }
+
+/* Mode clair (choix du RSSI du 23/11/2026, variante A) : la boîte d'outils, les groupes de vues des studios et la loupe
+   du module Vulnérabilités passent en blanc, au contour fin, avec le liseré bleu du menu à gauche. Icônes en bleu nuit,
+   vue choisie sur un fond bleu clair. Le bloc bleu nuit ne se fondait pas dans l'interface claire. Le mode sombre garde
+   la boîte bleu nuit. Les variables du menu sont redéfinies dans la boîte : les règles communes s'appliquent telles
+   quelles. */
+[data-mantine-color-scheme='light']
+  .app-main
+  :is(
+    .barre-boite,
+    .fs-views,
+    .pr-views,
+    .pi-views,
+    .fs-toolbar-end,
+    .pr-toolbar-end,
+    .pi-toolbar-end,
+    .bb-toolbar .bb-search,
+    .rv
+  ) {
+  --menu-fond: var(--suivi-surface);
+  --menu-texte: var(--menu-fond-haut);
+  --menu-commande: var(--menu-fond-haut);
+  --menu-selection: var(--menu-fond-haut);
+  --menu-secondaire: var(--neon-secondaire);
+  --menu-trait: var(--suivi-trait);
+  --menu-commande-trait: var(--suivi-trait);
+  --menu-famille-fond: var(--suivi-surface);
+  --menu-survol: color-mix(in srgb, var(--menu-teinte-pilotage) 14%, var(--suivi-surface));
+  --menu-destination-fond: color-mix(in srgb, var(--menu-teinte-pilotage) 22%, var(--suivi-surface));
+}
+[data-mantine-color-scheme='light'] .app-main .barre-boite.barre-boite,
+[data-mantine-color-scheme='light']
+  .app-main
+  :is(.fs-views, .pr-views, .pi-views, .fs-toolbar-end, .pr-toolbar-end, .pi-toolbar-end),
+[data-mantine-color-scheme='light'] .app-main .rv .rv__champ {
+  background: var(--suivi-surface);
+  box-shadow: 0 1px 3px -1px color-mix(in srgb, var(--menu-fond-haut) 18%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+[data-mantine-color-scheme='light'] .app-main .rv .rv__champ {
+  border-inline-start: var(--suivi-trait-focus) solid var(--menu-teinte-pilotage);
+}
+[data-mantine-color-scheme='light'] .app-main .rv .rv__champ svg,
+[data-mantine-color-scheme='light'] .app-main .barre-boite__recherche .mantine-Input-section {
+  color: var(--menu-commande);
+}
+[data-mantine-color-scheme='light'] .app-main .barre-boite__recherche .mantine-Input-input {
+  border-color: var(--menu-commande-trait);
+  background: var(--menu-famille-fond);
+  color: var(--menu-texte);
+}
+[data-mantine-color-scheme='light'] .app-main .barre-boite__recherche:focus-within .mantine-Input-input::placeholder {
+  color: var(--menu-secondaire);
+}

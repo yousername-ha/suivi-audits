@@ -2,6 +2,20 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+Aucune action : changement d'affichage, ni migration ni commande sur le serveur.
+
+### Modifié
+
+- **Boîte d'outils en mode clair** (choix du RSSI du 23/11/2026, variante A parmi trois rendus) : la boîte des listes
+  (vues, loupe, filtre), les groupes de vues des studios et la loupe du module Vulnérabilités passent en blanc, au
+  contour fin, avec le liseré bleu du menu à gauche. Icônes en bleu nuit, vue choisie sur un fond bleu clair. Le bloc
+  bleu nuit ne se fondait pas dans l'interface claire. Le mode sombre ne change pas. Noms des champs et des boutons
+  inchangés. (session « Refonte Neon »)
+
 ## [7.6.1] — 2026-11-23
 
 ### Notes de mise à jour
