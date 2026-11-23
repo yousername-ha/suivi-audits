@@ -17,7 +17,8 @@ it('exécute le protocole hôte, les sauvegardes de sécurité, les interruption
   // l'alternance illisible ou remplacée par un lien, détail du mandataire injoignable remis à part de l'erreur dans les
   // trois files de la veille). Lot ALH-MANDATAIRE : un de plus (détail du mandataire d'AlgoLightHouse remis à part de
   // l'erreur, avec un échec seulement).
-  expect(r.stderr).toContain('Ran 105 tests');
+  // Lot VR-2 (ADR 0110) : un de plus (actualités du CERT Santé et Journal officiel dans la file réglementaire).
+  expect(r.stderr).toContain('Ran 106 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);
 it('exécute le script isolé des connecteurs contre un faux service HTTPS local (module Intégrations, ADR 0076)', async () => {

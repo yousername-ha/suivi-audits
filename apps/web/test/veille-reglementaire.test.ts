@@ -1,7 +1,8 @@
 /* Veille réglementaire (ADR 0110) : menu conditionné par le droit du module, adresses de la liste (filtres, recherche,
    page), état affiché des sources, liste des publications (texte simple, lien contrôlé et sans référent, ANSSI sans
    résumé), qualification en un clic réservée au rôle du domaine, réglage des sources réservé à qui administre, activation
-   réservée à l'administrateur. Données fictives. */
+   réservée à l'administrateur. Lot VR-2 : CERT Santé et Journal officiel (lien Légifrance de forme exacte, carte de filtre
+   propre). Données fictives. */
 import { MantineProvider } from '@mantine/core';
 import type {
   Action,
@@ -116,6 +117,20 @@ describe('présentation', () => {
     expect(lienPublication(publication({ lien: 'https://exemple.invalid/x' }))).toBeNull();
     expect(lienPublication(publication({ lien: 'javascript:alert(1)' }))).toBeNull();
     expect(lienPublication(publication({ source: 'anssi', lien: 'https://www.cnil.fr/fictif/1' }))).toBeNull();
+    // Journal officiel : seulement la page d'un texte sur Légifrance, par son identifiant.
+    const jo = 'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000000001';
+    expect(lienPublication(publication({ source: 'legifrance', lien: jo }))).toBe(jo);
+    for (const lien of [
+      'https://www.legifrance.gouv.fr/x',
+      'https://echanges.dila.gouv.fr/OPENDATA/JORF/',
+      `${jo}?x=1`,
+    ])
+      expect(lienPublication(publication({ source: 'legifrance', lien })), lien).toBeNull();
+    const cs = 'https://cyberveille.esante.gouv.fr/actualites/fictif';
+    expect(lienPublication(publication({ source: 'cert-sante-actualites', lien: cs }))).toBe(cs);
+    expect(
+      lienPublication(publication({ source: 'cert-sante-actualites', lien: 'https://esante.gouv.fr/x' })),
+    ).toBeNull();
   });
 
   it('état d’une source : sans collecteur, désactivée, en cours, inactive, erreur, retard, jamais, à jour', () => {
@@ -154,6 +169,8 @@ describe('présentation', () => {
     const html = rendu(h(ListePublications, { publications: [publication()] }));
     expect(html).toContain('aria-label="Source : CNIL"');
     expect(html).not.toMatch(/<img/);
+    expect(PICTOS_REGLEMENTAIRES['cert-sante-actualites']).toMatchObject({ sigle: 'CS', nom: 'CERT Santé' });
+    expect(PICTOS_REGLEMENTAIRES.legifrance.sigle).toBe('JO');
   });
 });
 
@@ -308,13 +325,51 @@ describe('filtre d’EUR-Lex', () => {
   });
 });
 
+describe('filtre du Journal officiel (lot VR-2)', () => {
+  const jo = source({
+    source: 'legifrance',
+    libelle: 'Journal officiel (Légifrance)',
+    hote: 'echanges.dila.gouv.fr',
+    domaine: 'securite',
+    motsCles: { liste: [{ mot: 'cybersécurité', domaine: 'securite' }], parDefaut: true },
+  });
+  it('carte propre, région nommée : ses champs se distinguent de ceux d’EUR-Lex', () => {
+    const html = rendu(h(MotsClesEurLex, { source: jo, peutRegler: true, onEnregistrer: () => {} }));
+    expect(html).toContain('Filtre du Journal officiel');
+    expect(html).toContain('aria-label="Filtre du Journal officiel"');
+    expect(html).toContain('<section');
+    expect(html).toContain('cybersécurité');
+    expect(html).not.toContain('EUR-Lex');
+    const eurlex = rendu(h(MotsClesEurLex, { source: { ...jo, source: 'eur-lex' } }));
+    expect(eurlex).toContain('aria-label="Filtre d’EUR-Lex"');
+  });
+  it('CERT Santé : titre, date et lien, sans résumé', () => {
+    const html = rendu(
+      h(ListePublications, {
+        publications: [
+          publication({
+            source: 'cert-sante-actualites',
+            domaine: 'securite',
+            resume: null,
+            lien: 'https://cyberveille.esante.gouv.fr/actualites/fictif',
+          }),
+        ],
+      }),
+    );
+    // Carte d'acte de la base (7.6.0) : nom court et nature de l'autorité en tête.
+    expect(html).toContain('CERT Santé · Centre de veille (santé)');
+    expect(html).toContain('href="https://cyberveille.esante.gouv.fr/actualites/fictif"');
+    expect(html).not.toContain('Résumé fictif');
+  });
+});
+
 describe('sources et activation', () => {
-  it('réglage (activation, fréquence) pour qui administre ; texte sinon ; Légifrance non réglable', () => {
+  it('réglage (activation, fréquence) pour qui administre ; texte sinon ; ANS non réglable', () => {
     const sources = [
       source(),
       source({
-        source: 'legifrance',
-        libelle: 'Journal officiel (Légifrance)',
+        source: 'ans',
+        libelle: 'Actualités de l’Agence du numérique en santé',
         hote: null,
         collecteur: false,
         activee: false,
@@ -324,7 +379,7 @@ describe('sources et activation', () => {
       h(SourcesReglementaires, { sources: sources, fluxOuvert: true, peutRegler: true, onRegler: () => {} }),
     );
     expect(admin).toContain('aria-label="Activer la source Actualités de la CNIL"');
-    expect(admin).not.toContain('aria-label="Activer la source Journal officiel (Légifrance)"');
+    expect(admin).not.toContain('aria-label="Activer la source Actualités de l’Agence du numérique en santé"');
     expect(admin).toContain('Non disponible');
     const lecture = rendu(h(SourcesReglementaires, { sources: sources, fluxOuvert: true }));
     expect(lecture).not.toContain('aria-label="Activer la source');
@@ -344,8 +399,12 @@ describe('sources et activation', () => {
     expect(fermee).toContain('Seul un administrateur peut activer la veille réglementaire.');
     expect(fermee).toContain('www.cnil.fr');
     expect(fermee).toContain('cyber.gouv.fr');
-    // ANS : aucun flux public connu, son hôte n'est pas une destination.
-    expect(fermee).not.toContain('esante.gouv.fr');
+    // Lot VR-2 : CERT Santé et données ouvertes de la DILA ; jamais l'hôte des liens vers Légifrance.
+    expect(fermee).toContain('cyberveille.esante.gouv.fr');
+    expect(fermee).toContain('echanges.dila.gouv.fr');
+    expect(fermee).not.toContain('www.legifrance.gouv.fr');
+    // ANS : aucun flux public connu, son hôte n'est pas une destination (le CERT Santé, sur un autre hôte, l'est).
+    expect(fermee).not.toMatch(/(^|[^.\w-])(www\.)?esante\.gouv\.fr/);
     const admin = rendu(
       h(ActivationVeilleReglementaire, {
         etat: etat(false),

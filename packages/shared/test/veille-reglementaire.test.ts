@@ -1,6 +1,8 @@
 /* Veille réglementaire (ADR 0110) : liste fermée des sources, domaines, rôles de qualification, schémas des éléments
    rapportés par l'exécutant (ANSSI sans résumé, lien en https sur l'hôte de la source, texte nettoyé), réglage et
-   recherche ; ANS et Légifrance sans collecteur ; filtre d'EUR-Lex par mots-clés. Données fictives. */
+   recherche ; ANS sans collecteur ; filtre d'EUR-Lex par mots-clés ; lot VR-2 : actualités du CERT Santé (sans résumé),
+   Journal officiel (données ouvertes de la DILA, lien Légifrance de forme exacte, sa propre liste de mots-clés). Données
+   fictives. */
 import { describe, expect, it } from 'vitest';
 import {
   domaineSelonMotsCles,
@@ -9,7 +11,11 @@ import {
   FREQUENCE_VEILLE_REGLEMENTAIRE_DEFAUT,
   frequenceReglementaireAdmise,
   lienPublicationValide,
+  estSourceFiltree,
+  fluxExterne,
   MOTS_CLES_EURLEX_DEFAUT,
+  MOTS_CLES_JO_DEFAUT,
+  motsClesParDefaut,
   MotsClesEurLexBody,
   normaliserMotCle,
   QualificationBody,
@@ -20,6 +26,7 @@ import {
   PERMISSIONS_RESERVEES,
   QUALIFICATION_SECURITE_ROLE,
   sourceReglementaire,
+  SOURCES_FILTREES_MOTS_CLES,
   SOURCES_REGLEMENTAIRES,
   SOURCES_REGLEMENTAIRES_DEFINITIONS,
   SOURCES_REGLEMENTAIRES_JOINTES,
@@ -36,15 +43,29 @@ const element = (extra: Record<string, unknown> = {}) => ({
 });
 
 describe('veille réglementaire : sources', () => {
-  it('six sources, Légifrance et ANS prévues sans collecteur ni hôte', () => {
-    expect(SOURCES_REGLEMENTAIRES).toEqual(['cnil', 'cepd', 'eur-lex', 'anssi', 'ans', 'legifrance']);
+  it('sept sources, l’ANS seule prévue sans collecteur ni hôte (lot VR-2 : CERT Santé et Journal officiel collectés)', () => {
+    expect(SOURCES_REGLEMENTAIRES).toEqual([
+      'cnil',
+      'cepd',
+      'eur-lex',
+      'anssi',
+      'cert-sante-actualites',
+      'ans',
+      'legifrance',
+    ]);
     expect(SOURCES_REGLEMENTAIRES_DEFINITIONS.map((s) => s.id)).toEqual([...SOURCES_REGLEMENTAIRES]);
-    for (const s of ['legifrance', 'ans'] as const) {
-      expect(estSourceCollectee(s)).toBe(false);
-      expect(sourceReglementaire(s)).toMatchObject({ hote: null, chemin: null });
-    }
+    expect(estSourceCollectee('ans')).toBe(false);
+    expect(sourceReglementaire('ans')).toMatchObject({ hote: null, chemin: null });
+    for (const s of ['legifrance', 'cert-sante-actualites'] as const) expect(estSourceCollectee(s)).toBe(true);
     expect(sourceReglementaire('ans').reprise).toBe('Non disponible : aucun flux public connu.');
-    expect(SOURCES_REGLEMENTAIRES_JOINTES.map((s) => s.id)).toEqual(['cnil', 'cepd', 'eur-lex', 'anssi']);
+    expect(SOURCES_REGLEMENTAIRES_JOINTES.map((s) => s.id)).toEqual([
+      'cnil',
+      'cepd',
+      'eur-lex',
+      'anssi',
+      'cert-sante-actualites',
+      'legifrance',
+    ]);
   });
   it('hôtes et chemins décidés par le RSSI ; ANSSI sans résumé', () => {
     expect(SOURCES_REGLEMENTAIRES_JOINTES.map((s) => `https://${s.hote}${s.chemin}`)).toEqual([
@@ -52,7 +73,19 @@ describe('veille réglementaire : sources', () => {
       'https://www.edpb.europa.eu/feed/publications_en',
       'https://eur-lex.europa.eu/EN/display-feed.rss?rssId=222',
       'https://cyber.gouv.fr/actualites/rss/',
+      'https://cyberveille.esante.gouv.fr/actualites/rss.xml',
+      'https://echanges.dila.gouv.fr/OPENDATA/JORF/',
     ]);
+    expect(sourceReglementaire('legifrance').cheminsSuivants).toEqual(['/OPENDATA/JORF/{archive}']);
+    expect(sourceReglementaire('legifrance').hoteLiens).toBe('www.legifrance.gouv.fr');
+    // Décision du RSSI du 22/11/2026 : titre, date et lien seulement pour le CERT Santé ; jamais le texte intégral du JO.
+    expect(sourceReglementaire('cert-sante-actualites')).toMatchObject({ resume: false, domaine: 'securite' });
+    expect(sourceReglementaire('legifrance')).toMatchObject({ resume: false, domaine: 'securite', langue: 'fr' });
+    // Hôtes joints par le flux : ceux des sources collectées ; l'hôte des liens vers Légifrance n'est jamais joint.
+    const destinations = fluxExterne('veille-reglementaire').destinations.map((d) => d.hote.split(' ')[0]);
+    expect(destinations).toContain('cyberveille.esante.gouv.fr');
+    expect(destinations).toContain('echanges.dila.gouv.fr');
+    expect(destinations).not.toContain('www.legifrance.gouv.fr');
     expect(sourceReglementaire('anssi').resume).toBe(false);
     expect(sourceReglementaire('ans').resume).toBe(false);
     expect(sourceReglementaire('cnil').reprise).toMatch(/CC BY-ND/);
@@ -85,7 +118,35 @@ describe('veille réglementaire : éléments de l’exécutant', () => {
       'javascript:alert(1)',
     ])
       expect(lienPublicationValide('cnil', l), l).toBe(false);
-    expect(lienPublicationValide('legifrance', 'https://www.legifrance.gouv.fr/x')).toBe(false);
+    expect(lienPublicationValide('ans', 'https://esante.gouv.fr/x')).toBe(false);
+    expect(lienPublicationValide('cert-sante-actualites', 'https://cyberveille.esante.gouv.fr/actualites/fictif')).toBe(
+      true,
+    );
+    expect(lienPublicationValide('cert-sante-actualites', 'https://esante.gouv.fr/actualites/fictif')).toBe(false);
+  });
+  it('Journal officiel : lien vers la page d’un texte sur Légifrance, de forme exacte', () => {
+    expect(lienPublicationValide('legifrance', 'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000000001')).toBe(
+      true,
+    );
+    for (const l of [
+      'https://www.legifrance.gouv.fr/x',
+      'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT1',
+      'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000000001/',
+      'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000000001?x=1',
+      'https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000000001',
+      'https://echanges.dila.gouv.fr/OPENDATA/JORF/JORF_20261120-001500.tar.gz',
+      'http://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000000001',
+    ])
+      expect(lienPublicationValide('legifrance', l), l).toBe(false);
+    const jo = {
+      ...element({ lien: 'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000000001' }),
+      resume: null,
+    };
+    expect(elementPublication('legifrance').safeParse(jo).success).toBe(true);
+    expect(elementPublication('legifrance').safeParse({ ...jo, resume: 'Texte intégral.' }).success).toBe(false);
+    const cs = { ...element({ lien: 'https://cyberveille.esante.gouv.fr/actualites/fictif' }), resume: null };
+    expect(elementPublication('cert-sante-actualites').safeParse(cs).success).toBe(true);
+    expect(elementPublication('cert-sante-actualites').safeParse({ ...cs, resume: 'R' }).success).toBe(false);
   });
   it('schéma par source : résumé refusé pour l’ANSSI, lien d’une autre source refusé, champs stricts', () => {
     expect(elementPublication('cnil').safeParse(element()).success).toBe(true);
@@ -136,6 +197,26 @@ describe('veille réglementaire : filtre d’EUR-Lex', () => {
     expect(new Set(MOTS_CLES_EURLEX_DEFAUT.map((m) => m.domaine))).toEqual(
       new Set(['securite', 'donnees-personnelles']),
     );
+  });
+  it('Journal officiel : sa propre liste, en français, sans « dispositifs médicaux » ; même mécanisme', () => {
+    expect([...SOURCES_FILTREES_MOTS_CLES]).toEqual(['eur-lex', 'legifrance']);
+    expect(estSourceFiltree('legifrance')).toBe(true);
+    expect(estSourceFiltree('cert-sante-actualites')).toBe(false);
+    expect(motsClesParDefaut('legifrance')).toBe(MOTS_CLES_JO_DEFAUT);
+    expect(motsClesParDefaut('eur-lex')).toBe(MOTS_CLES_EURLEX_DEFAUT);
+    expect(MotsClesEurLexBody.safeParse({ motsCles: [...MOTS_CLES_JO_DEFAUT] }).success).toBe(true);
+    const mots = MOTS_CLES_JO_DEFAUT.map((m) => m.mot);
+    expect(mots).toContain('données à caractère personnel');
+    expect(mots).toContain('cybersécurité');
+    expect(mots).not.toContain('dispositifs médicaux');
+    const l = [...MOTS_CLES_JO_DEFAUT];
+    expect(
+      domaineSelonMotsCles('Décret n° 2026-1 relatif à un traitement de données à caractère personnel (fictif)', l),
+    ).toBe('donnees-personnelles');
+    expect(domaineSelonMotsCles('Décret relatif à la sécurité des systèmes d’information (fictif)', l)).toBe(
+      'securite',
+    );
+    expect(domaineSelonMotsCles('Arrêté portant nomination (fictif)', l)).toBeNull();
   });
   it('réglage : 1 à 60 mots de 2 à 60 caractères, sans doublon normalisé ; null rétablit la liste par défaut', () => {
     expect(MotsClesEurLexBody.safeParse({ motsCles: null }).success).toBe(true);
