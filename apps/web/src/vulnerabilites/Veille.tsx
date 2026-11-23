@@ -1,71 +1,41 @@
 import { BarreFiltres } from '../components/BarreFiltres';
-/* Module Vulnérabilités (ADR 0100, lots V2 et V3) : écran « Veille ». État de chaque source (dernière collecte réussie,
-   erreur, retard), activation de la veille (destinations et ce qui sort, validation explicite d'un administrateur), failles
-   exploitées récentes (catalogue KEV) avec l'action exigée et l'échéance, alertes et avis récents, barre de recherche.
-   Écran sobre avec les composants de la charte (packages/ui), sous la CSP stricte (ADR 0006) ; le style du poste de
-   commandement viendra au lot V8. Les textes des sources s'affichent tels quels (anglais pour la CISA et NVD), comme texte
-   simple ; un lien vers l'avis s'ouvre dans un nouvel onglet sans transmettre de référent. Les boutons suivent les droits de
-   la session pour l'affichage seulement : le serveur reste seul juge.
+/* Module Vulnérabilités (ADR 0100, lots V2 et V3) : écran « Veille ». Failles exploitées récentes (catalogue KEV) avec
+   l'action exigée et l'échéance, alertes et avis récents, barre de recherche. Écran sobre avec les composants de la charte
+   (packages/ui), sous la CSP stricte (ADR 0006). Les textes des sources s'affichent tels quels (anglais pour la CISA et NVD),
+   comme texte simple ; un lien vers l'avis s'ouvre dans un nouvel onglet sans transmettre de référent.
    Lot V4c : état de la lecture des fiches du CERT Santé ; produit cité et mentions de chaque fiche, telles quelles ; pour
    une faille connue, sources qui l'ont publiée (la première d'abord), exploitation avérée et « exploitable » avec leur
    première source et sa date.
    Lot L1 : pastille de chaque source (PictoSource) ; alertes et avis en liste aérée (AvisVeille.tsx), une alerte du CERT-FR
    se détache d'un avis, la fiche d'une alerte ou d'un avis s'ouvre depuis la liste, ses CVE ouvrent leur fiche illustrée ;
    failles connues en liste, un fait par ligne (gravité, exploitation, EPSS, produit touché).
-   Lot F1 : fréquence de chaque source (liste déroulante pour qui administre le module, texte sinon ; EPSS fixe), avertissement
-   de NVD et d'EPSS, prochaine collecte prévue.
-   Lot CPE-1 : source « Dictionnaire des produits (CPE) » sous le tableau des sources (DictionnaireCpe.tsx) : explication de
-   la place, état du chargement par lots, fréquence des nouveautés, activation, copie complète facultative.
-   Lot CVE-INC : sources facultatives (préavis de Cloudflare Radar, résumés de tldrcve ; AnnoncesVeille.tsx) ; la fiche d'une
-   CVE (FicheCve.tsx) montre leurs marques, et, pour une CVE inconnue de la veille, la consultation de cve.org et NVD sur
-   clic, les contrôles Tenable et le lien « Voir chez Tenable ». */
+   Lot CVE-INC : annonces des sources facultatives (préavis de Cloudflare Radar, résumés de tldrcve ; AnnoncesVeille.tsx) ; la
+   fiche d'une CVE (FicheCve.tsx) montre leurs marques, et, pour une CVE inconnue de la veille, la consultation de cve.org et
+   NVD sur clic, les contrôles Tenable et le lien « Voir chez Tenable ».
+   Lot VEILLE-PLATEFORME (décision du RSSI du 23/11/2026, « comme pour les intégrations ») : aucun réglage ici. Activation,
+   fréquences, « Collecter maintenant », dictionnaire CPE et sources facultatives se règlent dans la carte « Veille des
+   vulnérabilités » de la Plateforme (ConfigurationVeille.tsx) ; l'écran n'en garde qu'une ligne d'état par source et un lien
+   « Configurer », visible seulement de qui peut configurer la veille (peutConfigurerVeille). */
+import { Alert, Anchor, Group, Modal, Pagination, Stack, Table, Text, TextInput, Title, Button } from '@mantine/core';
 import {
-  Alert,
-  Anchor,
-  Badge,
-  Button,
-  Group,
-  Modal,
-  Pagination,
-  Stack,
-  Table,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import {
-  avertissementVeille,
-  fluxExterne,
-  FREQUENCES_VEILLE,
-  frequenceVeilleModifiable,
-  libelleFrequence,
-  PRECISION_MANDATAIRE,
   type AvisVeilleDto,
   type EtatDictionnaireCpeDto,
-  type EtatSourceVeilleDto,
   type EtatVeilleDto,
-  type ReglageDictionnaireCpe,
   type FailleVeilleDto,
   type PageVeille,
-  type SourceVeille,
 } from '@suivi/shared';
-import { ConfirmButton, DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router';
 import { EnteteVulnerabilites } from './EnteteVulnerabilites';
-import { api, errorMessage, get } from '../api';
+import { get } from '../api';
 import { FicheAvis, ListeAvis } from './AvisVeille';
-import { DictionnaireCpeSection } from './DictionnaireCpe';
-import { URL_COPIE_CPE, URL_DICTIONNAIRE_CPE } from './dictionnaire-cpe';
+import { URL_DICTIONNAIRE_CPE } from './dictionnaire-cpe';
 import { fmtDate } from '../components/common';
-import { ChampFrequence } from '../components/ChampFrequence';
-import { CLE_FLUX_EXTERNES } from '../components/FluxExternes';
-import { Destinations, useValidationFlux } from '../components/ValidationFlux';
 import { useCan } from '../session';
 import { FicheCve } from './FicheCve';
-import { AnnoncesVeilleSection } from './AnnoncesVeille';
+import { AnnoncesVeilleSection, useSourcesAnnonces } from './AnnoncesVeille';
 import { ouvertureVeille } from './recherche';
 import { resumeFichesCertSante, resumePublications } from './sources';
 import { PictoSource, PictosSources } from './PictoSource';
@@ -75,158 +45,71 @@ import { libelleSurfaceCve, LIEN_SURFACE } from './surface';
 import {
   dateCourte,
   echeanceDepassee,
-  etatSource,
   GRAVITE_ETAT,
   GRAVITE_LIBELLES,
   identifiantAvis,
   libelleEpss,
-  libelleLangue,
-  messageCollectesDemandees,
+  LIEN_CONFIGURATION_VEILLE,
+  type LigneEtatVeille,
+  lignesEtatVeille,
   nombrePages,
+  peutConfigurerVeille,
   urlAvis,
   urlFailles,
 } from './veille';
 import { NOMS_PAGINATION } from './pagination';
 
 const CLE = ['vulnerabilites', 'veille'] as const;
-const FLUX = 'veille-vulnerabilites' as const;
 
-/** Lot F1 : fréquence d'une source (liste déroulante pour qui administre, texte sinon ; EPSS fixe), avertissement du tableau du
-    RSSI relié au champ, et prochaine collecte automatique prévue. Sans état React. */
-export function FrequenceSource({
-  s,
-  peutRegler,
-  enCours,
-  onFrequence,
+/** Lot VEILLE-PLATEFORME : une ligne d'état par source, en lecture seule (active ou non, dernière collecte réussie, retard,
+    erreur courte), puis le lien « Configurer » vers la carte de la Plateforme, visible seulement de qui peut configurer la
+    veille (droit passé par l'appelant). Aucun réglage, aucun bouton. Sans état React : rendu testable hors navigateur. */
+export function EtatSourcesVeille({
+  lignes,
+  veilleActive,
+  executantVu,
+  peutConfigurer,
 }: {
-  s: EtatSourceVeilleDto;
-  peutRegler: boolean;
-  enCours: boolean;
-  onFrequence?: (s: EtatSourceVeilleDto, heures: number) => void;
+  lignes: readonly LigneEtatVeille[];
+  veilleActive: boolean;
+  executantVu: boolean;
+  /** Droit de configurer la veille (`peutConfigurerVeille`), calculé par l'appelant : seul il montre le lien. */
+  peutConfigurer: boolean;
 }) {
-  const avertissement = avertissementVeille(s.source);
-  const reglable = peutRegler && !!onFrequence && frequenceVeilleModifiable(s.source);
+  // 7.6.1 (maquette validée par le RSSI le 23/11/2026, « moins de texte ») : une ligne d'état, une pastille par source
+  // (pictogramme, nom, état, dernière collecte réussie, erreur abrégée), au lieu d'un tableau. Lecture seule.
   return (
-    <Stack gap="2xs">
-      {reglable ? (
-        <ChampFrequence
-          size="xs"
-          ariaLabel={`Fréquence de la source ${s.libelle}`}
-          frequences={FREQUENCES_VEILLE[s.source]}
-          valeur={s.frequenceHeures}
-          disabled={enCours}
-          avertissement={avertissement}
-          onChange={(h) => onFrequence(s, h)}
-        />
-      ) : (
-        <>
-          <Text size="sm">
-            {libelleFrequence(s.frequenceHeures)}
-            {!frequenceVeilleModifiable(s.source) && ' (fixe)'}
-          </Text>
-          {avertissement && (
-            <Text size="xs" c="dimmed" className="veille-texte">
-              {avertissement}
-            </Text>
-          )}
-        </>
-      )}
-      <Text size="xs" c="dimmed">
-        Prochaine collecte :{' '}
-        {s.prochaineCollecte ? (
-          <span className="horodatage">{fmtDate(s.prochaineCollecte)}</span>
-        ) : (
-          'aucune (veille désactivée)'
+    <section className="veille-etat" aria-label="État de la veille">
+      <div className="veille-etat__tete">
+        <Title order={2} className="veille-etat__titre">
+          État des sources
+        </Title>
+        <StatusChip etat={veilleActive ? 'succes' : 'neutre'}>
+          {veilleActive ? 'Veille active' : 'Veille inactive'}
+        </StatusChip>
+        {veilleActive && !executantVu && <StatusChip etat="attention">Exécutant non vu</StatusChip>}
+        {peutConfigurer && (
+          <Anchor component={Link} to={LIEN_CONFIGURATION_VEILLE} size="sm" className="veille-etat__lien">
+            Configurer<span className="sr-only"> la veille des vulnérabilités</span>
+          </Anchor>
         )}
-      </Text>
-    </Stack>
-  );
-}
-
-/** État des sources (sans état React) : rendu testable hors navigateur. */
-export function SourcesTable({
-  sources,
-  fluxOuvert,
-  peutRegler = false,
-  enCours = null,
-  onFrequence,
-}: {
-  sources: EtatSourceVeilleDto[];
-  fluxOuvert: boolean;
-  /** Droit d'administrer le module (affichage seulement : le serveur reste seul juge). */
-  peutRegler?: boolean;
-  /** Source dont le réglage est en cours d'envoi. */
-  enCours?: SourceVeille | null;
-  onFrequence?: (s: EtatSourceVeilleDto, heures: number) => void;
-}) {
-  return (
-    <DataTable label="Sources de la veille">
-      <Table>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>Source</Table.Th>
-            <Table.Th>Format et langue</Table.Th>
-            <Table.Th>Fréquence</Table.Th>
-            <Table.Th>Dernière collecte réussie</Table.Th>
-            <Table.Th>État</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {sources.map((s) => {
-            const e = etatSource(s, fluxOuvert);
-            return (
-              <Table.Tr key={s.source}>
-                <Table.Td>
-                  <Group gap="xs" wrap="nowrap" align="center">
-                    <PictoSource source={pictoVeille(s.source)} />
-                    <Text fw={600}>{s.libelle}</Text>
-                  </Group>
-                  <Text size="xs" c="dimmed">
-                    {s.organisme} · <span className="veille-code">{s.hote}</span>
-                  </Text>
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm">{s.format}</Text>
-                  <Text size="xs" c="dimmed">
-                    {libelleLangue(s.langue)}
-                  </Text>
-                </Table.Td>
-                <Table.Td>
-                  <FrequenceSource
-                    s={s}
-                    peutRegler={peutRegler}
-                    enCours={enCours === s.source}
-                    onFrequence={onFrequence}
-                  />
-                </Table.Td>
-                <Table.Td>
-                  {s.derniereReussite ? (
-                    <span className="horodatage">{fmtDate(s.derniereReussite)}</span>
-                  ) : (
-                    <Text size="sm" c="dimmed">
-                      Jamais
-                    </Text>
-                  )}
-                  {s.derniereCollecte?.tronque && s.derniereCollecte.etat === 'recu' && (
-                    <Text size="xs" c="orange">
-                      Dernière collecte incomplète : la source annonçait plus d’éléments que la borne.
-                    </Text>
-                  )}
-                </Table.Td>
-                <Table.Td>
-                  <StatusChip etat={e.etat}>{e.libelle}</StatusChip>
-                  {s.erreur && (
-                    <Text size="xs" c="red" className="veille-texte">
-                      {s.erreur}
-                    </Text>
-                  )}
-                </Table.Td>
-              </Table.Tr>
-            );
-          })}
-        </Table.Tbody>
-      </Table>
-    </DataTable>
+      </div>
+      <div role="region" aria-label="État des sources de la veille" className="veille-etat__sources">
+        <ul>
+          {lignes.map((l) => (
+            <li key={l.cle} className="veille-source" data-etat={l.etat.etat}>
+              {l.picto && <PictoSource source={pictoVeille(l.picto)} />}
+              <span className="veille-source__nom">{l.libelle}</span>
+              <span className="veille-source__etat">{l.etat.libelle}</span>
+              <span className="veille-source__date">
+                {l.derniere ? <span className="horodatage">{fmtDate(l.derniere)}</span> : 'Jamais'}
+              </span>
+              {l.erreur && <span className="veille-source__erreur veille-texte">{l.erreur}</span>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
   );
 }
 
@@ -238,82 +121,6 @@ export function FichesCertSante({ f }: { f: EtatVeilleDto['fichesCertSante'] }) 
       Dernière lecture :{' '}
       {f.derniereLecture ? <span className="horodatage">{fmtDate(f.derniereLecture)}</span> : 'jamais'}.
     </Text>
-  );
-}
-
-/** Activation de la veille : flux fermé, destinations et ce qui sort, bouton pour l'administrateur ; ouvert, désactivation. */
-export function ActivationVeille({
-  etat,
-  peutActiver,
-  envoi,
-  onActiver,
-  onDesactiver,
-}: {
-  etat: EtatVeilleDto;
-  peutActiver: boolean;
-  envoi: boolean;
-  onActiver: () => void;
-  onDesactiver: () => void;
-}) {
-  const f = fluxExterne(FLUX);
-  return (
-    <Stack gap="xs">
-      <Group justify="space-between">
-        <Title order={2} size="h4">
-          Activation
-        </Title>
-        <Badge variant="light" color={etat.flux.ouvert ? 'green' : 'gray'}>
-          {etat.flux.ouvert ? 'Veille active' : 'Veille inactive'}
-        </Badge>
-      </Group>
-      {!etat.flux.ouvert && (
-        <Alert color="orange" role="status" title="Aucune source n’est lue">
-          La veille est inactive : son flux vers l’extérieur est fermé. L’activer ouvre ce flux, après validation par un
-          administrateur ; la désactivation du module Vulnérabilités le referme.
-        </Alert>
-      )}
-      <Text size="sm">Destinations, toutes en lecture :</Text>
-      <Destinations f={f} />
-      {etat.mandataire.actif && (
-        <Text size="sm">
-          <strong>Par le mandataire de l’établissement :</strong> {PRECISION_MANDATAIRE} Pare-feu : sortie du serveur
-          vers le mandataire, sur le port réglé (Configuration système, Mandataire sortant).
-        </Text>
-      )}
-      <Text size="sm">
-        <strong>Ce qui sort du serveur :</strong> {f.donnees}
-      </Text>
-      {etat.flux.ouvert && !etat.executant.disponible && (
-        <Alert color="orange" role="status" title="Exécutant d’exploitation non vu">
-          C’est l’exécutant d’exploitation du serveur qui lit les sources : sans lui, aucune collecte n’est faite (guide
-          d’installation, étape 11.6).
-        </Alert>
-      )}
-      {peutActiver ? (
-        <Group>
-          {etat.flux.ouvert ? (
-            <ConfirmButton
-              variant="default"
-              disabled={envoi}
-              message="Désactiver la veille ? Son flux vers l’extérieur est refermé ; les failles et avis déjà collectés restent consultables."
-              onConfirm={onDesactiver}
-            >
-              Désactiver la veille
-            </ConfirmButton>
-          ) : (
-            <Button loading={envoi} onClick={onActiver}>
-              Activer la veille
-            </Button>
-          )}
-        </Group>
-      ) : (
-        !etat.flux.ouvert && (
-          <Text size="sm" c="dimmed">
-            Seul un administrateur peut activer la veille.
-          </Text>
-        )
-      )}
-    </Stack>
   );
 }
 
@@ -538,11 +345,7 @@ function Pages({
 
 export function VeillePage() {
   const can = useCan();
-  const qc = useQueryClient();
   const lire = can('vulnerabilites', 'lire');
-  const administrer = can('vulnerabilites', 'administrer');
-  const admin = can('administration', 'administrer');
-  const flux = useValidationFlux();
   // Lot PC1 : la Vue d'ensemble ouvre la veille sur une CVE (`?q=`) quand aucune fiche de faille n'est lisible.
   const [adresse] = useSearchParams();
   const [saisie, setSaisie] = useState(() => (adresse.get('q') ?? '').trim().slice(0, 100));
@@ -550,10 +353,6 @@ export function VeillePage() {
   const [pageKev, setPageKev] = useState(1);
   const [pageAvis, setPageAvis] = useState(1);
   const [pageFailles, setPageFailles] = useState(1);
-  const [envoi, setEnvoi] = useState(false);
-  const [collecte, setCollecte] = useState(false);
-  const [frequenceEnCours, setFrequenceEnCours] = useState<SourceVeille | null>(null);
-  const [erreur, setErreur] = useState<unknown>(null);
   const [cveOuverte, setCveOuverte] = useState<string | null>(() => ouvertureVeille(adresse).cve);
   const [avisOuvert, setAvisOuvert] = useState<AvisVeilleDto | null>(null);
   // Une CVE citée par une alerte ou un avis ouvre sa fiche illustrée à la place de la fiche de l'avis.
@@ -575,6 +374,7 @@ export function VeillePage() {
     }
     if (o.cve) setCveOuverte(o.cve);
   }, [loc.key, loc.search]);
+  // État en lecture seule des sources (lignes d'état) : mêmes lectures que la carte de la Plateforme, sans réglage.
   const etat = useQuery({
     queryKey: [...CLE, 'etat'],
     queryFn: () => get<EtatVeilleDto>('/api/vulnerabilites/veille/etat'),
@@ -587,21 +387,7 @@ export function VeillePage() {
     enabled: lire,
     refetchInterval: 30_000,
   });
-  const [envoiCpe, setEnvoiCpe] = useState(false);
-  // Lot CPE-1 : réglage, copie complète et sa suppression, If-Match sur la version de la source.
-  const actionCpe = async (methode: 'PATCH' | 'POST' | 'DELETE', url: string, body?: ReglageDictionnaireCpe) => {
-    if (!dictionnaire.data) return;
-    setEnvoiCpe(true);
-    try {
-      await api(methode, url, { body, ifMatch: dictionnaire.data.version });
-      notifications.show({ color: 'teal', message: 'Dictionnaire des produits (CPE) : réglage enregistré.' });
-    } catch (e) {
-      notifications.show({ color: 'red', message: errorMessage(e) });
-    } finally {
-      await qc.invalidateQueries({ queryKey: [...CLE, 'dictionnaire-cpe'] });
-      setEnvoiCpe(false);
-    }
-  };
+  const annonces = useSourcesAnnonces(lire);
   const kev = useQuery({
     queryKey: [...CLE, 'kev', recherche, pageKev],
     queryFn: () => get<PageVeille<FailleVeilleDto>>(urlFailles(recherche, true, pageKev)),
@@ -619,54 +405,6 @@ export function VeillePage() {
   });
   const aujourdhui = new Date().toISOString().slice(0, 10);
 
-  const basculer = async (ouvert: boolean) => {
-    if (ouvert && !(await flux.valider(FLUX, undefined, etat.data?.mandataire.actif))) return;
-    setEnvoi(true);
-    setErreur(null);
-    try {
-      await api('PUT', `/api/admin/flux-externes/${FLUX}`, { body: { ouvert, confirmation: true } });
-      await qc.invalidateQueries({ queryKey: CLE });
-      await qc.invalidateQueries({ queryKey: CLE_FLUX_EXTERNES });
-    } catch (e) {
-      setErreur(e);
-    } finally {
-      setEnvoi(false);
-    }
-  };
-  const collecter = async () => {
-    setCollecte(true);
-    try {
-      const r = await api<unknown[]>('POST', '/api/vulnerabilites/veille/collectes', { body: {} });
-      notifications.show({
-        color: 'teal',
-        message: messageCollectesDemandees(r.length),
-      });
-      await qc.invalidateQueries({ queryKey: [...CLE, 'etat'] });
-    } catch (e) {
-      notifications.show({ color: 'red', message: errorMessage(e) });
-    } finally {
-      setCollecte(false);
-    }
-  };
-  // Lot F1 : la fréquence choisie part aussitôt (If-Match : version de la source) ; le serveur refuse ce qui sort de la liste.
-  const reglerFrequence = async (src: EtatSourceVeilleDto, heures: number) => {
-    setFrequenceEnCours(src.source);
-    try {
-      await api('PUT', `/api/vulnerabilites/veille/sources/${src.source}/frequence`, {
-        body: { frequenceHeures: heures },
-        ifMatch: src.version,
-      });
-      notifications.show({
-        color: 'teal',
-        message: `${src.libelle} : ${libelleFrequence(heures).toLowerCase()}.`,
-      });
-    } catch (e) {
-      notifications.show({ color: 'red', message: errorMessage(e) });
-    } finally {
-      await qc.invalidateQueries({ queryKey: [...CLE, 'etat'] });
-      setFrequenceEnCours(null);
-    }
-  };
   const chercher = (e: FormEvent) => {
     e.preventDefault();
     setRecherche(saisie.trim());
@@ -685,57 +423,21 @@ export function VeillePage() {
     <Page>
       <EnteteVulnerabilites
         title="Veille"
-        description="Failles et avis publiés par cinq sources publiques (CISA, NIST, FIRST, CERT-FR, CERT Santé), lus à la fréquence choisie pour chaque source (toutes les deux heures par défaut, EPSS une fois par jour) par l’exécutant d’exploitation du serveur. Les textes des sources sont repris tels quels : ce sont des données, pas des consignes."
-        actions={
-          administrer &&
-          etat.data?.flux.ouvert && (
-            <Button loading={collecte} onClick={() => void collecter()}>
-              Collecter maintenant
-            </Button>
-          )
-        }
+        description="Failles et avis publiés par les sources publiques (CISA, NIST, FIRST, CERT-FR, CERT Santé), repris tels quels : ce sont des données, pas des consignes."
       />
       <Stack>
-        <ErrorAlert error={etat.error || erreur} />
+        <ErrorAlert error={etat.error || dictionnaire.error || annonces.error} />
         {etat.data && (
           <>
-            <ActivationVeille
-              etat={etat.data}
-              peutActiver={admin}
-              envoi={envoi}
-              onActiver={() => void basculer(true)}
-              onDesactiver={() => void basculer(false)}
-            />
-            {flux.fenetre}
-            <Title order={2} size="h4">
-              Sources
-            </Title>
-            <SourcesTable
-              sources={etat.data.sources}
-              fluxOuvert={etat.data.flux.ouvert}
-              peutRegler={administrer}
-              enCours={frequenceEnCours}
-              onFrequence={(src, h) => void reglerFrequence(src, h)}
+            <EtatSourcesVeille
+              lignes={lignesEtatVeille(etat.data, dictionnaire.data, annonces.data)}
+              veilleActive={etat.data.flux.ouvert}
+              executantVu={etat.data.executant.disponible}
+              peutConfigurer={peutConfigurerVeille(can)}
             />
             <FichesCertSante f={etat.data.fichesCertSante} />
           </>
         )}
-        <ErrorAlert error={dictionnaire.error} />
-        {dictionnaire.data && (
-          <DictionnaireCpeSection
-            etat={dictionnaire.data}
-            peutRegler={administrer}
-            envoi={envoiCpe}
-            onReglage={(r) => void actionCpe('PATCH', URL_DICTIONNAIRE_CPE, r)}
-            onCopier={() => void actionCpe('POST', URL_COPIE_CPE)}
-            onSupprimerCopie={() => void actionCpe('DELETE', URL_COPIE_CPE)}
-          />
-        )}
-        <AnnoncesVeilleSection
-          fluxOuvert={!!etat.data?.flux.ouvert}
-          peutRegler={administrer}
-          onOuvrirCve={setCveOuverte}
-        />
         <form onSubmit={chercher} role="search">
           <BarreFiltres label="Veille des vulnérabilités">
             <TextInput
@@ -786,6 +488,7 @@ export function VeillePage() {
         <ErrorAlert error={avis.error} />
         {avis.data && <ListeAvis avis={avis.data.elements} onOuvrir={setAvisOuvert} onOuvrirCve={ouvrirCve} />}
         <Pages donnees={avis.data} page={pageAvis} onPage={setPageAvis} libelle="Pages des avis" />
+        <AnnoncesVeilleSection sources={annonces.data} onOuvrirCve={setCveOuverte} />
       </Stack>
       <Modal
         closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}

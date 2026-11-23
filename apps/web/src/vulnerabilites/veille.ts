@@ -3,15 +3,21 @@
    texte simple ; une adresse d'avis n'est rendue en lien que si elle a la forme attendue pour sa source (https, hôte de la
    source), contrôlée une seconde fois ici. */
 import {
+  type Action,
   ADRESSE_CERTFR,
   ADRESSE_CERTSANTE,
   type AvisVeilleDto,
+  type EtatDictionnaireCpeDto,
+  type EtatSourceAnnonceDto,
   type EtatSourceVeilleDto,
+  type EtatVeilleDto,
   type GraviteCvss,
+  type Module,
   type SourceVeille,
   sourceVeille,
 } from '@suivi/shared';
 import type { Etat } from '@suivi/ui';
+import { etatDictionnaireCpe } from './dictionnaire-cpe';
 
 /** Adresse de la liste des avis (recherche, source, page), lue par le serveur. */
 export function urlAvis(q: string, page = 1): string {
@@ -41,6 +47,87 @@ export function etatSource(s: EtatSourceVeilleDto, fluxOuvert: boolean): { libel
   if (s.erreur) return { libelle: 'En erreur', etat: 'erreur' };
   if (s.enRetard) return { libelle: s.derniereReussite ? 'En retard' : 'Jamais collectée', etat: 'attention' };
   return { libelle: 'À jour', etat: 'succes' };
+}
+
+/* ------------------------------------------------------------------ Lot VEILLE-PLATEFORME */
+/** Carte de la page Plateforme où se configure la veille (décision du RSSI du 23/11/2026, « comme pour les intégrations »). */
+export const LIEN_CONFIGURATION_VEILLE = '/plateforme/veille-vulnerabilites';
+
+/** Droit qui montre la carte « Veille des vulnérabilités » de la Plateforme et le lien « Configurer » de l'écran « Veille » :
+    celui qui protégeait déjà ces réglages (administrer le module, avec sa lecture, sans laquelle l'état ne se lit pas).
+    Affichage seulement : le serveur reste seul juge (routes inchangées). */
+export const peutConfigurerVeille = (can: (m: Module, a: Action) => boolean) =>
+  can('vulnerabilites', 'lire') && can('vulnerabilites', 'administrer');
+
+/** Longueur d'une erreur sur la ligne d'état d'une source ; le texte entier se lit dans la carte de la Plateforme. */
+export const ERREUR_COURTE = 140;
+export function erreurCourte(e: string | null, max = ERREUR_COURTE): string | null {
+  if (!e) return null;
+  const t = e.trim().replace(/\s+/g, ' ');
+  return t.length > max ? `${t.slice(0, max - 1).trimEnd()}…` : t;
+}
+
+/** État d'une source facultative (préavis de Cloudflare Radar, résumés de tldrcve). */
+export function etatSourceAnnonce(
+  s: Pick<EtatSourceAnnonceDto, 'activee' | 'erreur' | 'derniereReussite'>,
+  fluxOuvert: boolean,
+): { libelle: string; etat: Etat } {
+  if (!s.activee) return { libelle: 'Désactivée', etat: 'neutre' };
+  if (!fluxOuvert) return { libelle: 'Veille inactive', etat: 'neutre' };
+  if (s.erreur) return { libelle: 'En erreur', etat: 'erreur' };
+  if (!s.derniereReussite) return { libelle: 'Jamais collectée', etat: 'attention' };
+  return { libelle: 'À jour', etat: 'succes' };
+}
+
+/** Une ligne d'état d'une source, en lecture seule, sur l'écran « Veille ». */
+export interface LigneEtatVeille {
+  cle: string;
+  libelle: string;
+  /** Source dont la pastille existe (les cinq sources et NVD pour le dictionnaire) ; null sinon. */
+  picto: SourceVeille | null;
+  etat: { libelle: string; etat: Etat };
+  /** Dernière collecte réussie (dictionnaire : date jusqu'à laquelle la liste est à jour). */
+  derniere: string | null;
+  erreur: string | null;
+}
+
+/** Lignes d'état de toutes les sources : les cinq sources publiques, le dictionnaire CPE, les sources facultatives. */
+export function lignesEtatVeille(
+  etat: EtatVeilleDto | undefined,
+  dictionnaire: EtatDictionnaireCpeDto | undefined,
+  annonces: readonly EtatSourceAnnonceDto[] | undefined,
+): LigneEtatVeille[] {
+  const ouvert = !!etat?.flux.ouvert;
+  return [
+    ...(etat?.sources ?? []).map((s) => ({
+      cle: s.source,
+      libelle: s.libelle,
+      picto: s.source,
+      etat: etatSource(s, ouvert),
+      derniere: s.derniereReussite,
+      erreur: erreurCourte(s.erreur),
+    })),
+    ...(dictionnaire
+      ? [
+          {
+            cle: 'nvd-cpe',
+            libelle: dictionnaire.source.libelle,
+            picto: 'nvd' as const,
+            etat: etatDictionnaireCpe(dictionnaire),
+            derniere: dictionnaire.derniereMiseAJour,
+            erreur: erreurCourte(dictionnaire.erreur),
+          },
+        ]
+      : []),
+    ...(annonces ?? []).map((s) => ({
+      cle: s.source,
+      libelle: s.libelle,
+      picto: null,
+      etat: etatSourceAnnonce(s, ouvert),
+      derniere: s.derniereReussite,
+      erreur: erreurCourte(s.erreur),
+    })),
+  ];
 }
 
 export const libelleLangue = (l: 'fr' | 'en') => (l === 'fr' ? 'Français' : 'Anglais (texte d’origine)');

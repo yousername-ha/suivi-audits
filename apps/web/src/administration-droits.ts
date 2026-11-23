@@ -8,7 +8,8 @@ export type Cote = 'plateforme' | 'systeme';
 /** Rubriques de la page Pilotage rangées dans l'Administration (ADR 0081) : elles n'ont plus d'entrée dans le menu
     Pilotage, leur carte est dans « Plateforme ». Adresse (/pilotage/<id>) et droit d'origine inchangés. La rubrique
    « Intégrations » (hors Pilotage, ADR 0076) est aussi devenue une carte de « Plateforme » : son ancienne adresse
-   /integrations redirige vers /plateforme/integrations. */
+   /integrations redirige vers /plateforme/integrations. La configuration de la veille des vulnérabilités (ADR 0100, lot
+   VEILLE-PLATEFORME) est aussi une carte de « Plateforme » ; l'écran « Veille » du module reste à son adresse. */
 export const PILOTAGE_DANS_ADMINISTRATION = ['configuration'] as const;
 export type Peut = (m: Module, a: Action) => boolean;
 
@@ -39,6 +40,13 @@ export const DROITS_CARTES: readonly { id: string; cote: Cote; peut: (can: Peut)
   { id: 'assistant', cote: 'plateforme', peut: (can) => can('assistant', 'administrer') },
   // Intégrations (ADR 0076, addendum du 19/11/2026) : droit de l'ancienne rubrique du Pilotage, lecture du module.
   { id: 'integrations', cote: 'plateforme', peut: (can) => can('integrations', 'lire') },
+  // Veille des vulnérabilités (ADR 0100, lot VEILLE-PLATEFORME, décision du RSSI du 23/11/2026) : droit qui protégeait déjà
+  // ces réglages dans l'écran « Veille » (administrer le module, avec sa lecture) ; même règle que peutConfigurerVeille.
+  {
+    id: 'veille-vulnerabilites',
+    cote: 'plateforme',
+    peut: (can) => can('vulnerabilites', 'lire') && can('vulnerabilites', 'administrer'),
+  },
   { id: 'import', cote: 'plateforme', peut: (can) => can('import_export', 'lire') },
   { id: 'sauvegardes', cote: 'systeme', peut: administration },
   { id: 'mises-a-jour', cote: 'systeme', peut: administration },

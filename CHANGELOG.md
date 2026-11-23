@@ -9,6 +9,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 Aucune action : changements d'affichage, ni migration ni commande sur le serveur. Une nouvelle adresse,
 `/pilotage/boites` (vue « Boîtes de pilotage » des objectifs et indicateurs), avec le droit de lecture du Pilotage.
 
+Aucune action ; la configuration de la veille se trouve désormais dans la page Plateforme.
+
 ### Modifié
 
 - Retours du RSSI du 23/11/2026 sur la 7.6.0, rendus validés le même jour (session « Refonte Neon ») :
@@ -45,6 +47,23 @@ Aucune action : changements d'affichage, ni migration ni commande sur le serveur
     sont comptés. Annonce du nombre de noms et d'adresses retenus et bouton « Effacer le filtre » ; les autres filtres
     restent dans le panneau de la barre ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum SI2) ;
   - les cartes des sources AlgoLightHouse et Silène se lisent comme des lignes d'état, plus compactes (contenu inchangé).
+- Vulnérabilités, **configuration de la veille dans la page Plateforme** (lot VEILLE-PLATEFORME, décision du RSSI du
+  23/11/2026, « comme pour les intégrations », [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : nouvelle carte
+  **« Veille des vulnérabilités »** de la page Plateforme, visible seulement de qui administre le module Vulnérabilités
+  (droit qui protégeait déjà ces réglages) ; elle reprend toute la configuration de l'écran « Veille » : activation de la
+  veille et validation de son flux, sources et fréquences (avertissements de NVD et d'EPSS), « Collecter maintenant »,
+  dictionnaire des produits (CPE : activation, chargement, copie complète et sa suppression), sources facultatives
+  (Cloudflare Radar, tldrcve : activation, fréquence). L'écran « Veille » du module ne garde que le contenu (failles
+  exploitées, alertes et avis, annonces des sources facultatives, recherche) et une ligne d'état par source, en lecture
+  seule (état, dernière collecte réussie, retard, erreur abrégée), avec un lien « Configurer » vers la carte, visible
+  seulement avec ce même droit ; moins de texte d'explication. Le registre des flux et l'aide renvoient vers la carte. Aucune
+  route d'API, aucun droit ni aucun journal d'audit ne change ; la liste des produits surveillés reste dans le module
+  (session « Module surveillance vulnérabilités SMSI »).
+
+- Vulnérabilités, page **Veille** (maquette validée par le RSSI le 23/11/2026, « moins de texte ») : l'état des sources
+  tient en une ligne, une pastille par source (pictogramme, nom, état, dernière collecte réussie, erreur abrégée), avec
+  l'état de la veille et le lien « Configurer » pour qui administre le module, au lieu d'un tableau (session « Refonte
+  Neon »).
 
 ### Corrigé
 

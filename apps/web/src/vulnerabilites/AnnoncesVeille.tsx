@@ -1,6 +1,7 @@
-/* Module Vulnérabilités (ADR 0100, lot CVE-INC) : sources facultatives de la veille, désactivées au départ.
-   - Tableau des deux sources (activation et fréquence pour qui administre le module, texte sinon ; avertissement des
-     fréquences élevées, comme pour un connecteur sous 24 heures).
+/* Module Vulnérabilités (ADR 0100, lot CVE-INC) : annonces des sources facultatives de la veille, désactivées au départ.
+   - Lot VEILLE-PLATEFORME (décision du RSSI du 23/11/2026) : l'activation et la fréquence de ces sources se règlent dans la
+     carte « Veille des vulnérabilités » de la Plateforme (ConfigurationVeille.tsx) ; l'écran « Veille » n'en garde que les
+     annonces et une ligne d'état par source.
    - Préavis de Cloudflare Radar : marque « Annonce précoce », CVE critiques et produits surveillés cités (correspondance de
      mots, « à confirmer », jamais une détection), lien vers la page de Cloudflare ; remplacé dès que la CVE est connue par
      NVD, cve.org ou un CERT. Aucune notification, aucune alerte.
@@ -9,21 +10,12 @@
      (présente sur le parc, exposée, produit surveillé). « Que faire ? » : résumé du flux cité, source nommée, lien vers la page
      de tldrcve. Aucun effet sur la priorité ; textes simples bornés, tels que le flux les publie.
    CSP stricte (ADR 0006) : classes de packages/ui/src/neon-veille.css, aucun style en ligne ; pagination nommée. */
-import { Badge, Group, Pagination, Stack, Switch, Table, Text, Title } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import {
-  type AnnonceDto,
-  avertissementAnnonces,
-  type EtatSourceAnnonceDto,
-  libelleFrequenceMinutes,
-  type PageAnnoncesDto,
-  type SourceAnnonce,
-} from '@suivi/shared';
+import { Badge, Group, Pagination, Text, Title } from '@mantine/core';
+import { type AnnonceDto, type EtatSourceAnnonceDto, type PageAnnoncesDto, type SourceAnnonce } from '@suivi/shared';
 import { ErrorAlert, StatusChip } from '@suivi/ui';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { api, errorMessage, get } from '../api';
-import { ChampFrequence } from '../components/ChampFrequence';
+import { get } from '../api';
 import { fmtDate } from '../components/common';
 import { PucesCve } from './AvisVeille';
 import {
@@ -33,13 +25,12 @@ import {
   lienSur,
   URL_ANNONCES_SOURCES,
   urlAnnonces,
-  urlSourceAnnonce,
   verdictCite,
 } from './cve-inconnue';
 import { NOMS_PAGINATION } from './pagination';
 import { GRAVITE_LIBELLES, nombrePages } from './veille';
 
-const CLE_ANNONCES_SOURCES = ['vulnerabilites', 'veille', 'annonces-sources'] as const;
+export const CLE_ANNONCES_SOURCES = ['vulnerabilites', 'veille', 'annonces-sources'] as const;
 
 function Lien({ href, children, nom }: { href: string | null; children: string; nom: string }) {
   if (!href) return null;
@@ -48,105 +39,6 @@ function Lien({ href, children, nom }: { href: string | null; children: string; 
       {children}
       <span className="sr-only"> : {nom} (nouvel onglet)</span>
     </a>
-  );
-}
-
-/** Tableau des sources facultatives (sans état React). */
-export function SourcesFacultatives({
-  sources,
-  fluxOuvert,
-  peutRegler,
-  enCours,
-  onReglage,
-}: {
-  sources: EtatSourceAnnonceDto[];
-  fluxOuvert: boolean;
-  peutRegler: boolean;
-  enCours: SourceAnnonce | null;
-  onReglage: (s: EtatSourceAnnonceDto, r: { activee?: boolean; frequenceMinutes?: number }) => void;
-}) {
-  return (
-    <Table striped withTableBorder aria-label="Sources facultatives de la veille">
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th>Source</Table.Th>
-          <Table.Th>Activée</Table.Th>
-          <Table.Th>Fréquence</Table.Th>
-          <Table.Th>Dernière collecte réussie</Table.Th>
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>
-        {sources.map((s) => {
-          const avertissement = avertissementAnnonces(s.source, s.frequenceMinutes);
-          return (
-            <Table.Tr key={s.source}>
-              <Table.Td>
-                <Text size="sm" fw={600}>
-                  {s.libelle}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {s.organisme} · <span className="veille-code">{s.hote}</span>
-                </Text>
-                {s.erreur && (
-                  <Text size="xs" c="red">
-                    Erreur : {s.erreur}
-                  </Text>
-                )}
-              </Table.Td>
-              <Table.Td>
-                {peutRegler ? (
-                  <Switch
-                    aria-label={`Activer la source ${s.libelle}`}
-                    checked={s.activee}
-                    disabled={enCours === s.source}
-                    onChange={(e) => onReglage(s, { activee: e.currentTarget.checked })}
-                  />
-                ) : (
-                  <Text size="sm">{s.activee ? 'Oui' : 'Non (désactivée)'}</Text>
-                )}
-              </Table.Td>
-              <Table.Td>
-                <Stack gap="2xs">
-                  {peutRegler ? (
-                    <ChampFrequence
-                      size="xs"
-                      ariaLabel={`Fréquence de la source ${s.libelle}`}
-                      frequences={s.frequences}
-                      valeur={s.frequenceMinutes}
-                      libelle={libelleFrequenceMinutes}
-                      disabled={enCours === s.source}
-                      avertissement={avertissement}
-                      onChange={(m) => onReglage(s, { frequenceMinutes: m })}
-                    />
-                  ) : (
-                    <Text size="sm">{libelleFrequenceMinutes(s.frequenceMinutes)}</Text>
-                  )}
-                  <Text size="xs" c="dimmed">
-                    Prochaine collecte :{' '}
-                    {s.prochaineCollecte ? (
-                      <span className="horodatage">{fmtDate(s.prochaineCollecte)}</span>
-                    ) : !fluxOuvert ? (
-                      'aucune (veille inactive)'
-                    ) : (
-                      'aucune (source désactivée)'
-                    )}
-                  </Text>
-                </Stack>
-              </Table.Td>
-              <Table.Td>
-                {s.derniereReussite ? (
-                  <span className="horodatage">{fmtDate(s.derniereReussite)}</span>
-                ) : (
-                  <Text size="sm" c="dimmed">
-                    Jamais
-                  </Text>
-                )}
-              </Table.Td>
-            </Table.Tr>
-          );
-        })}
-      </Table.Tbody>
-    </Table>
   );
 }
 
@@ -336,57 +228,33 @@ function PageAnnonces({
   );
 }
 
-/** Section de l'écran « Veille » : sources facultatives et leurs annonces. */
-export function AnnoncesVeilleSection({
-  fluxOuvert,
-  peutRegler,
-  onOuvrirCve,
-}: {
-  fluxOuvert: boolean;
-  peutRegler: boolean;
-  onOuvrirCve: (cve: string) => void;
-}) {
-  const qc = useQueryClient();
-  const [enCours, setEnCours] = useState<SourceAnnonce | null>(null);
-  const sources = useQuery({
+/** État des sources facultatives (activation, fréquence, dernière collecte) : lu par l'écran « Veille » (lignes d'état, listes
+    des sources activées) et par la carte de la Plateforme (réglages). Une seule clé, une seule adresse. */
+export function useSourcesAnnonces(actif = true) {
+  return useQuery({
     queryKey: CLE_ANNONCES_SOURCES,
     queryFn: () => get<EtatSourceAnnonceDto[]>(URL_ANNONCES_SOURCES),
+    enabled: actif,
     refetchInterval: 60_000,
   });
-  const regler = async (s: EtatSourceAnnonceDto, r: { activee?: boolean; frequenceMinutes?: number }) => {
-    setEnCours(s.source);
-    try {
-      await api('PATCH', urlSourceAnnonce(s.source), { body: r, ifMatch: s.version });
-      notifications.show({ color: 'teal', message: `${s.libelle} : réglage enregistré.` });
-    } catch (e) {
-      notifications.show({ color: 'red', message: errorMessage(e) });
-    } finally {
-      await qc.invalidateQueries({ queryKey: CLE_ANNONCES_SOURCES });
-      setEnCours(null);
-    }
-  };
-  const actives = sources.data?.filter((s) => s.activee) ?? [];
+}
+
+/** Section de l'écran « Veille » : annonces des sources facultatives activées (préavis, cartes de tldrcve), sans réglage :
+    l'activation et la fréquence se règlent dans la carte « Veille des vulnérabilités » de la Plateforme. */
+export function AnnoncesVeilleSection({
+  sources,
+  onOuvrirCve,
+}: {
+  sources: readonly EtatSourceAnnonceDto[] | undefined;
+  onOuvrirCve: (cve: string) => void;
+}) {
+  const actives = sources?.filter((s) => s.activee) ?? [];
+  if (!actives.length) return null;
   return (
     <>
       <Title order={2} size="h4">
-        Sources facultatives
+        Annonces des sources facultatives
       </Title>
-      <Text size="sm" c="dimmed">
-        Désactivées au départ. Les préavis de Cloudflare Radar annoncent des CVE avant leur publication par NVD ou un
-        CERT : seules les CVE critiques et celles qui citent un produit surveillé sont gardées, sans notification ni
-        alerte. Les résumés de tldrcve sont présentés tels que le flux les publie, à côté des faits de la plateforme,
-        sans effet sur la priorité.
-      </Text>
-      <ErrorAlert error={sources.error} />
-      {sources.data && (
-        <SourcesFacultatives
-          sources={sources.data}
-          fluxOuvert={fluxOuvert}
-          peutRegler={peutRegler}
-          enCours={enCours}
-          onReglage={(s, r) => void regler(s, r)}
-        />
-      )}
       {actives.some((s) => s.source === 'cloudflare-radar') && (
         <PageAnnonces
           source="cloudflare-radar"
