@@ -71,11 +71,15 @@ describe('architecture : veille réglementaire', () => {
     expect(SOURCES_REGLEMENTAIRES_JOINTES.map((s) => s.id)).not.toContain('ans');
     // Le site de l'ANS n'est pas une destination (le CERT Santé, sur un autre hôte, l'est depuis le lot VR-2).
     const hotes = fluxExterne('veille-reglementaire').destinations.map((d) => d.hote.split(' ')[0]);
+    // Mots de la règle de pare-feu, sans expression régulière construite (comparaison littérale, point final retiré).
+    const motsPareFeu = fluxExterne('veille-reglementaire')
+      .pareFeu.join(' ')
+      .split(/[\s,]+/)
+      .map((m) => m.replace(/\.$/, ''));
+    expect(motsPareFeu).toContain('echanges.dila.gouv.fr');
     for (const interdit of ['esante.gouv.fr', 'www.esante.gouv.fr']) {
       expect(hotes).not.toContain(interdit);
-      expect(fluxExterne('veille-reglementaire').pareFeu.join(' ')).not.toMatch(
-        new RegExp(`(^|[ ,])${interdit.replace(/\./g, '\\.')}([ ,.]|$)`),
-      );
+      expect(motsPareFeu).not.toContain(interdit);
     }
     expect(MIGRATION).not.toContain('esante');
     expect(MIGRATION_VR2).not.toMatch(/source = 'ans' AND lien/);
