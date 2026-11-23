@@ -119,6 +119,12 @@ const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: s
     legacy: 'indicators',
     description: 'Suivez les résultats avec des valeurs réellement mesurées.',
   },
+  // 7.6.1 : vue « Boîtes de pilotage » des objectifs et indicateurs, devenue un onglet de la page (rubrique à part entière).
+  boites: {
+    kind: 'process',
+    legacy: 'processes',
+    description: 'Par processus : ses objectifs, ses indicateurs et ses actions, réunis dans une boîte.',
+  },
   applicabilite: {
     kind: 'soa',
     legacy: 'dda',
@@ -323,12 +329,14 @@ export function PilotagePage() {
                 {section === 'revues' && (
                   <PreparationRevue smsi={smsi} onCreer={(initial) => create('management_review', initial)} />
                 )}
+                {/* 7.6.1 : une rubrique par vue (onglets de la page), la vue compacte par défaut. */}
                 {section === 'processus' && <ObjectifsProcessus smsi={smsi} vue="processus" />}
-                {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} vue="compacte" />}
+                {section === 'objectifs' && <ObjectifsProcessus smsi={smsi} vue="objectif" />}
                 {section === 'indicateurs' && <ObjectifsProcessus smsi={smsi} vue="compacte" />}
+                {section === 'boites' && <ObjectifsProcessus smsi={smsi} vue="boites" />}
                 {section === 'audits' && can('pilotage', 'lire') && <PlansSmsi vue="audit" smsi={smsi} />}
                 {section === 'exercices' && <PlansSmsi vue="exo" smsi={smsi} />}
-                {!['processus', 'objectifs', 'indicateurs'].includes(section) && (
+                {!['processus', 'objectifs', 'indicateurs', 'boites'].includes(section) && (
                   <BusinessRegistry
                     key={smsi + section}
                     smsi={smsi}

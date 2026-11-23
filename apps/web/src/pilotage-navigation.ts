@@ -31,6 +31,7 @@ export const PILOTAGE_NAV = [
       { id: 'processus', label: 'Objectifs par processus', module: 'pilotage' },
       { id: 'objectifs', label: 'Objectifs', module: 'pilotage' },
       { id: 'indicateurs', label: 'Indicateurs', module: 'pilotage' },
+      { id: 'boites', label: 'Boîtes de pilotage', module: 'pilotage' },
     ],
   },
   {
