@@ -22,6 +22,14 @@ commande sur le serveur.
     /64 en IPv6) et **Hébergeur** (fournisseur, numéro de système autonome, pays, CDN). Une adresse sans hébergeur connu
     va dans « Hébergeur inconnu ». La route de la carte rend pour cela le réseau de chaque hôte d'AlgoLightHouse, déjà
     en base (aucune requête de plus, rien de nouveau vers l'assistant) (session « Ergonomie et refonte Neon »).
+- Vulnérabilités, **surface externe** (retour du RSSI du 23/11/2026, « trop de menu tue le menu », maquette validée le
+  même jour) :
+  - un seul champ « Filtrer la carte », dans la barre collante, au lieu de deux barres : il retient une ligne si le
+    texte figure dans un nom, l'adresse, une CVE d'une alerte retenue ou un port ou service ; quand il correspond à une
+    partie d'un nom (et non au début de l'adresse), seuls les noms qui correspondent restent sur la ligne, les autres
+    sont comptés. Annonce du nombre de noms et d'adresses retenus et bouton « Effacer le filtre » ; les autres filtres
+    restent dans le panneau de la barre ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum SI2) ;
+  - les cartes des sources AlgoLightHouse et Silène se lisent comme des lignes d'état, plus compactes (contenu inchangé).
 
 ## [7.6.1] — 2026-11-23
 

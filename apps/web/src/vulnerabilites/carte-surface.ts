@@ -13,7 +13,8 @@
      tracée dans une autre branche devient un renvoi explicite vers la ligne qui la porte, sans répéter ses services ;
    - regroupement par nom de domaine (domaine parent), par adresse IP (la branche est l'adresse, dépliée sur ses noms, ses
      services, la limite du SI et les machines) ou par périmètre ;
-   - filtre par nom de domaine (partie du nom, casse ignorée, comparaison littérale) ou début d'adresse IP ;
+   - filtre par nom de domaine (partie du nom, casse ignorée, comparaison littérale) ou début d'adresse IP ; réuni le
+     23/11/2026 (décision du RSSI) avec le filtre de la carte en un seul texte (`filtreTexte`) ;
    - la carte est la page elle-même (décision du RSSI du 19/11/2026) : plus de caméra ni de zoom, la scène entière est
      dessinée à la largeur de la page et se parcourt par le défilement normal ; les branches repliées par défaut au-delà
      d'un seuil, le regroupement et les filtres la gardent lisible. */
@@ -343,10 +344,9 @@ export function construireModele(dto: CarteSurfaceDto, regroupement: Regroupemen
 
 /* ------------------------------------------------------------------ Filtres */
 export interface FiltresCarte {
-  /** Domaine, adresse ou identifiant CVE (partie) ; port (« 443 », « 443/tcp ») ; service ou produit (partie). */
+  /** Seul champ texte de la carte (`filtreTexte`) : nom de domaine, adresse ou identifiant CVE (partie) ; port (« 443 »,
+      « 443/tcp ») ; service ou produit (partie). Une partie d'un nom ne garde que les noms qui la contiennent. */
   texte: string;
-  /** Lot SI2 : partie d'un nom de domaine (casse ignorée) ou début d'une adresse IP ; comparaison littérale. */
-  nom: string;
   /** Criticités retenues (vide : toutes). */
   criticites: CriticiteAlh[];
   enAlerteSeulement: boolean;
@@ -356,7 +356,6 @@ export interface FiltresCarte {
 }
 export const FILTRES_CARTE_VIDES: FiltresCarte = {
   texte: '',
-  nom: '',
   criticites: [],
   enAlerteSeulement: false,
   perimetre: '',
@@ -385,7 +384,7 @@ export interface LigneFiltree extends LigneCarte {
   /** Alerte la plus haute (criticité de l'éditeur, puis priorité), ou null. */
   principale: AlerteCarteDto | null;
   critique: boolean;
-  /** Noms de la ligne écartés par le filtre par nom (comptés, non dessinés). */
+  /** Noms de la ligne écartés par le filtre de la carte (comptés, non dessinés). */
   domainesMasques: number;
   renvoi: Renvoi | null;
 }
@@ -398,7 +397,7 @@ export interface ModeleFiltre {
   groupes: GroupeFiltre[];
   internet: AlerteCarteDto[];
   sansActif: AlerteCarteDto[];
-  /** Noms de domaine et adresses IP retenus (annoncés avec le filtre par nom). */
+  /** Noms de domaine et adresses IP retenus (annoncés avec le filtre de la carte). */
   correspondances: { domaines: number; adresses: number };
 }
 
@@ -428,19 +427,32 @@ export function portCorrespond(p: PortActifDto, t: string): boolean {
   );
 }
 
-/** Filtre par nom (lot SI2) : la ligne est retenue si un de ses noms contient le texte (casse ignorée) ou si son adresse
-    commence par lui ; seuls les noms qui le contiennent sont gardés, sauf si c'est l'adresse qui correspond. Comparaison
-    littérale : aucune expression régulière n'est construite à partir de la saisie. */
-export function filtreNom(
-  l: Pick<LigneCarte, 'domaines' | 'adresse' | 'hote'>,
+/** Filtre de la carte, un seul champ (décision du RSSI du 23/11/2026, qui réunit le filtre texte du lot ALH4 et le filtre
+    par nom du lot SI2). Le texte retient une ligne entière s'il paraît dans un de ses noms, son adresse, une CVE d'une de
+    ses alertes retenues ou un de ses services (port « 443 », « 443/tcp », nom du service, produit). Sur une ligne retenue,
+    s'il est une partie d'un nom et pas le début de l'adresse, seuls les noms qui le contiennent restent (les autres sont
+    comptés) ; le début de l'adresse (« 192.0.2. »), une CVE ou un service gardent tous les noms. Casse ignorée, comparaison
+    littérale : aucune expression régulière n'est construite à partir de la saisie. Rend null si la ligne n'est pas
+    retenue. */
+export function filtreTexte(
+  l: Pick<LigneCarte, 'domaines' | 'adresse' | 'hote' | 'ports'>,
+  retenues: readonly Pick<AlerteCarteDto, 'cves'>[],
   saisie: string,
 ): { domaines: ActifCarteDto[]; masques: number } | null {
-  const n = saisie.trim().toLowerCase();
-  if (!n) return { domaines: l.domaines, masques: 0 };
-  if ([l.adresse, l.hote?.valeur].some((v) => !!v && v.toLowerCase().startsWith(n)))
+  const t = saisie.trim().toLowerCase();
+  if (!t) return { domaines: l.domaines, masques: 0 };
+  const adresses = [l.adresse, l.hote?.valeur];
+  const trouves = l.domaines.filter((d) => d.valeur.toLowerCase().includes(t));
+  const debutAdresse = adresses.some((v) => !!v && v.toLowerCase().startsWith(t));
+  if (trouves.length && !debutAdresse) return { domaines: trouves, masques: l.domaines.length - trouves.length };
+  if (
+    trouves.length ||
+    contient(adresses, t) ||
+    retenues.some((a) => contient(a.cves, t)) ||
+    l.ports.some((p) => portCorrespond(p, t))
+  )
     return { domaines: l.domaines, masques: 0 };
-  const retenus = l.domaines.filter((d) => d.valeur.toLowerCase().includes(n));
-  return retenus.length ? { domaines: retenus, masques: l.domaines.length - retenus.length } : null;
+  return null;
 }
 
 const alertesRetenues = (l: Pick<Agregat, 'alertes'>, f: FiltresCarte) => {
@@ -458,16 +470,9 @@ export function filtrerModele(m: ModeleCarte, f: FiltresCarte): ModeleFiltre {
       if (f.perimetre && l.perimetre !== f.perimetre) continue;
       const r = alertesRetenues(l, f);
       if (f.enAlerteSeulement && !r.retenues.length) continue;
-      if (
-        t &&
-        !contient([...l.domaines.map((d) => d.valeur), l.adresse, l.hote?.valeur], t) &&
-        !r.retenues.some((a) => contient(a.cves, t)) &&
-        !l.ports.some((p) => portCorrespond(p, t))
-      )
-        continue;
-      const nom = filtreNom(l, f.nom);
-      if (!nom) continue;
-      lignes.push({ ...l, ...r, domaines: nom.domaines, domainesMasques: nom.masques, renvoi: null });
+      const noms = filtreTexte(l, r.retenues, t);
+      if (!noms) continue;
+      lignes.push({ ...l, ...r, domaines: noms.domaines, domainesMasques: noms.masques, renvoi: null });
     }
     if (!lignes.length) continue;
     lignes.sort(

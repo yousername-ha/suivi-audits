@@ -5,7 +5,9 @@
    sans style en ligne. Lot SI2 : deux sources (nœud unique, pastilles, services réunis, constats Silène sans priorité),
    regroupement par adresse IP, noms d'une même adresse réunis et renvoi entre branches, filtre par nom de domaine ou début
    d'adresse, carte « page entière » (plus de caméra : scène entière, repères collants, présentation empilée sur écran
-   étroit), grande échelle (150 noms, 60 adresses, 200 services) dans les deux regroupements. Données entièrement fictives :
+   étroit), grande échelle (150 noms, 60 adresses, 200 services) dans les deux regroupements. Décision du RSSI du
+   23/11/2026 : un seul champ « Filtrer la carte », dans la barre collante (nom, adresse, CVE, port ; une partie d'un nom ne
+   garde que les noms qui la contiennent). Données entièrement fictives :
    domaines en .example et example.org, adresses de 192.0.2.0/24, 198.51.100.0/24 et 203.0.113.0/24, machines inventées. */
 import { MantineProvider } from '@mantine/core';
 import type { ActifCarteDto, AlerteCarteDto, CarteSurfaceDto, ServiceAlhDto, SileneCarteDto } from '@suivi/shared';
@@ -13,7 +15,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { HELP_ARTICLES } from '../src/help';
-import { annonceFiltreNom, CarteSurface } from '../src/vulnerabilites/CarteSurface';
+import { annonceFiltre, CarteSurface, type VueCarte } from '../src/vulnerabilites/CarteSurface';
 import * as carteSurface from '../src/vulnerabilites/carte-surface';
 import {
   basculerCalmes,
@@ -28,8 +30,8 @@ import {
   etiquetteDomaine,
   FILTRES_CARTE_VIDES,
   type FiltresCarte,
-  filtreNom,
   filtrerModele,
+  filtreTexte,
   LIGNES_MAX,
   type LigneDessinee,
   type LigneFiltree,
@@ -377,11 +379,20 @@ describe('carte « Lignes d’approche » : la page elle-même (décision du RSS
     expect(html).not.toContain('Vue d’ensemble');
     expect(html).not.toContain('Rapprocher (zoom avant)');
     expect(html).not.toContain('Recadrer');
-    // Repères collants : barre de regroupement et de filtre par nom, titres des colonnes.
+    // Repères collants : la seule barre de la carte (décision du RSSI du 23/11/2026) avec son unique champ « Filtrer la
+    // carte », le regroupement et les autres filtres dans son panneau, puis les titres des colonnes.
     const debut = html.indexOf('<div class="sc-collant">');
     const collant = html.slice(debut, html.indexOf('</svg>', html.indexOf('class="sc-entetes"')));
     expect(collant).toContain('Regrouper par');
-    expect(collant).toContain('Nom de domaine ou adresse IP');
+    expect(collant).toContain('>Filtrer la carte<');
+    expect(collant).toContain('placeholder="Nom, adresse, CVE, port…"');
+    for (const t of ['>Périmètre<', '>Type d’alerte<', '>Criticité<', '>Branches en alerte seulement<'])
+      expect(collant).toContain(t);
+    // Un seul champ de filtre et une seule barre : plus de « Nom de domaine ou adresse IP », rien au-dessus de la barre.
+    expect(html.split('>Filtrer la carte<')).toHaveLength(2);
+    expect(html).not.toContain('Nom de domaine ou adresse IP');
+    expect(html.match(/role="toolbar"/g)).toHaveLength(1);
+    expect(html.slice(0, debut)).not.toContain('role="toolbar"');
     expect(collant).toMatch(/<svg[^>]*class="sc-entetes"/);
     for (const t of ['>Domaine parent<', '>Nom de domaine<', '>IP publique<', '>Service<', '>Limite du SI<'])
       expect(collant).toContain(t);
@@ -685,11 +696,11 @@ describe('lot SI2 : noms d’une même adresse et renvoi', () => {
   });
 });
 
-describe('lot SI2 : filtre par nom de domaine ou adresse IP', () => {
+describe('filtre de la carte, un seul champ (lot SI2, fusion décidée par le RSSI le 23/11/2026)', () => {
   it('partie du nom, casse ignorée ; seuls les noms qui correspondent restent, les autres comptés', () => {
     const d = deuxSources();
     for (const r of ['parent', 'adresse'] as const) {
-      const m = filtrer(d.carte, r, { nom: 'WWW.Example' });
+      const m = filtrer(d.carte, r, { texte: 'WWW.Example' });
       expect(lignesDe(m).flatMap((l) => l.domaines.map((x) => x.valeur))).toEqual(['www.example.org']);
       expect(lignesDe(m)[0]!.domainesMasques).toBe(1);
       expect(m.correspondances).toEqual({ domaines: 1, adresses: 1 });
@@ -697,31 +708,76 @@ describe('lot SI2 : filtre par nom de domaine ou adresse IP', () => {
   });
   it('début d’adresse IP : toute la ligne, tous ses noms ; aucune expression régulière construite', () => {
     const d = deuxSources();
-    const m = filtrer(d.carte, 'parent', { nom: '192.0.2.' });
+    const m = filtrer(d.carte, 'parent', { texte: '192.0.2.' });
     expect(lignesDe(m).map((l) => l.adresse)).toEqual(['192.0.2.10']);
     expect(lignesDe(m)[0]!.domaines).toHaveLength(2);
-    // Saisie prise à la lettre : « .* » ne correspond à rien, « 0.2.10 » n'est pas un début d'adresse.
-    expect(lignesDe(filtrer(d.carte, 'parent', { nom: '.*' }))).toEqual([]);
-    expect(filtreNom({ domaines: [], adresse: '192.0.2.10', hote: null }, '0.2.10')).toBeNull();
+    expect(lignesDe(m)[0]!.domainesMasques).toBe(0);
+    // Saisie prise à la lettre : « .* » ne correspond à rien.
+    expect(lignesDe(filtrer(d.carte, 'parent', { texte: '.*' }))).toEqual([]);
+    // « 0.2.10 » n'est pas un début d'adresse : la ligne reste (son adresse le contient), mais seuls les noms qui le
+    // contiennent sont gardés ; « 192.0.2. » en est un : tous les noms restent.
+    const l = {
+      domaines: [actif({ valeur: 'srv-0.2.10.example.org' }), actif({ valeur: 'www.example.org' })],
+      adresse: '192.0.2.10',
+      hote: null,
+      ports: [],
+    };
+    expect(filtreTexte(l, [], '0.2.10')).toEqual({ domaines: [l.domaines[0]], masques: 1 });
+    expect(filtreTexte(l, [], '192.0.2.')).toEqual({ domaines: l.domaines, masques: 0 });
+    expect(filtreTexte({ ...l, domaines: [] }, [], '0.2.10')).toEqual({ domaines: [], masques: 0 });
+    expect(filtreTexte(l, [], '0.2.11')).toBeNull();
     // S'ajoute aux autres filtres : seule l'adresse en alerte reste, avec le renvoi de l'autre branche vers elle.
-    const enAlerte = lignesDe(filtrer(d.carte, 'parent', { nom: 'mail', enAlerteSeulement: true }));
+    const enAlerte = lignesDe(filtrer(d.carte, 'parent', { texte: 'mail', enAlerteSeulement: true }));
     expect(enAlerte.map((l) => l.adresse)).toEqual(['198.51.100.20', '198.51.100.20']);
     expect(enAlerte.filter((l) => l.renvoi)).toHaveLength(1);
-    expect(lignesDe(filtrer(d.carte, 'parent', { nom: 'vpn', enAlerteSeulement: true }))).toEqual([]);
+    expect(lignesDe(filtrer(d.carte, 'parent', { texte: 'vpn', enAlerteSeulement: true }))).toEqual([]);
   });
-  it('nombre de résultats annoncé, bouton d’effacement', () => {
-    expect(annonceFiltreNom('', { domaines: 3, adresses: 2 })).toBe('');
-    expect(annonceFiltreNom(' mail ', { domaines: 2, adresses: 1 })).toBe(
+  it('CVE d’une alerte retenue ou service : la ligne entière, sans réduire ses noms', () => {
+    const d = deuxSources();
+    // Port et protocole, puis produit (Silène) : 192.0.2.10 et ses deux noms.
+    for (const texte of ['22/tcp', 'fictionalssh']) {
+      const m = filtrer(d.carte, 'parent', { texte });
+      expect(lignesDe(m).map((l) => l.adresse)).toEqual(['192.0.2.10']);
+      const noms = lignesDe(m)[0]!.domaines.map((x) => x.valeur);
+      expect(noms.sort()).toEqual(['api.example.org', 'www.example.org']);
+      expect(lignesDe(m)[0]!.domainesMasques).toBe(0);
+      expect(m.correspondances).toEqual({ domaines: 2, adresses: 1 });
+    }
+    // CVE d'une alerte de l'hôte : retenue tant que l'alerte l'est (criticité), sans réduire les noms.
+    const avecCve: CarteSurfaceDto = {
+      ...d.carte,
+      alertes: d.carte.alertes.map((a) => (a.actifId === d.hote.id ? { ...a, cves: ['CVE-2026-90021'] } : a)),
+    };
+    const parCve = filtrer(avecCve, 'parent', { texte: 'cve-2026-90021' });
+    expect(lignesDe(parCve).map((l) => l.adresse)).toEqual(['192.0.2.10']);
+    expect(lignesDe(parCve)[0]!.domaines).toHaveLength(2);
+    expect(lignesDe(filtrer(avecCve, 'parent', { texte: 'cve-2026-90021', criticites: ['minor'] }))).toEqual([]);
+  });
+  it('nombre de résultats annoncé dans la barre collante, bouton d’effacement, texte gardé par la vue', () => {
+    expect(annonceFiltre('', { domaines: 3, adresses: 2 })).toBe('');
+    expect(annonceFiltre(' mail ', { domaines: 2, adresses: 1 })).toBe(
       '2 noms de domaine et 1 adresse IP correspondent à « mail ».',
     );
-    expect(annonceFiltreNom('zz', { domaines: 0, adresses: 0 })).toBe(
+    expect(annonceFiltre('zz', { domaines: 0, adresses: 0 })).toBe(
       'Aucun nom de domaine ni aucune adresse IP ne correspond à « zz ».',
     );
     const html = rendre(deuxSources().carte);
     const annonce = html.match(/<p[^>]*sc-annonce[^>]*>/)![0];
     expect(annonce).toContain('role="status"');
     expect(annonce).toContain('aria-live="polite"');
-    expect(html).toContain('Effacer le filtre par nom');
+    expect(html.indexOf(annonce)).toBeGreaterThan(html.indexOf('<div class="sc-collant">'));
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>(?:(?!<\/button>).)*>Effacer le filtre</);
+    expect(html).not.toContain('Effacer le filtre par nom');
+    // Le texte du champ est tenu par la vue de la carte (gardée par l'écran pendant la navigation dans la page).
+    const tenue = rendreVue(deuxSources().carte, {
+      regroupement: 'parent',
+      filtres: { ...FILTRES_CARTE_VIDES, texte: 'www' },
+      replis: {},
+    });
+    expect(tenue).toMatch(/<input[^>]*value="www"/);
+    expect(tenue).toContain('1 nom de domaine et 1 adresse IP correspondent à « www ».');
+    expect(tenue).toContain('>Effacer le filtre<');
+    expect(tenue).not.toMatch(/<button[^>]*disabled=""[^>]*>(?:(?!<\/button>).)*>Effacer le filtre</);
   });
 });
 
@@ -815,14 +871,14 @@ describe('lot SI2 : grande échelle (150 noms, 60 adresses, 200 services)', () =
       const porteurs = lignesDe(m).filter((l): l is LigneFiltree => !!l.hote && !l.renvoi);
       expect(new Set(porteurs.map((l) => l.adresse)).size).toBe(porteurs.length);
       expect(porteurs.reduce((n, l) => n + l.ports.length, 0)).toBe(200);
-      // Tout déplier reste borné ; le filtre par nom réduit à quelques lignes.
+      // Tout déplier reste borné ; le filtre de la carte, sur une partie d'un nom, réduit à quelques lignes.
       const tout = disposer(m, toutDeplier(m), { peutModifier: true });
       expect(tout.lignesAffichees).toBeLessThanOrEqual(LIGNES_MAX);
-      expect(lignesDe(filtrer(c, r, { nom: 'service-007' })).flatMap((l) => l.domaines)).toHaveLength(1);
+      expect(lignesDe(filtrer(c, r, { texte: 'service-007' })).flatMap((l) => l.domaines)).toHaveLength(1);
     });
 });
 
-const rendreRegroupe = (carte: CarteSurfaceDto, regroupement: Regroupement) =>
+const rendreVue = (carte: CarteSurfaceDto, vue: VueCarte) =>
   renderToStaticMarkup(
     createElement(
       MantineProvider,
@@ -830,9 +886,11 @@ const rendreRegroupe = (carte: CarteSurfaceDto, regroupement: Regroupement) =>
       createElement(CarteSurface, {
         carte,
         peutModifier: true,
-        vue: { regroupement, filtres: FILTRES_CARTE_VIDES, replis: {} },
+        vue,
         onVue: () => undefined,
         actions: { onAlerte: () => undefined, onActif: () => undefined, onMachine: () => undefined },
       }),
     ),
   );
+const rendreRegroupe = (carte: CarteSurfaceDto, regroupement: Regroupement) =>
+  rendreVue(carte, { regroupement, filtres: FILTRES_CARTE_VIDES, replis: {} });

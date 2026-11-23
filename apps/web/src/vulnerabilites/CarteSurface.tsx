@@ -10,8 +10,10 @@ import { BarreFiltres } from '../components/BarreFiltres';
    sur le port, sans priorité ; noms qui résolvent vers une même adresse réunis sur un nœud, renvoi vers l'adresse déjà
    tracée dans une autre branche ; regroupement par nom de domaine, par adresse IP ou par périmètre ; filtre par nom.
    Décision du RSSI du 19/11/2026 : la carte est la page elle-même. Plus de cadre, de caméra, de zoom ni de vue d'ensemble :
-   la scène entière est dessinée à la largeur utile et se parcourt par le défilement de la page ; la barre de regroupement
-   et de filtre par nom et les titres des colonnes restent visibles (classe collante de la charte). Sur un écran étroit, où
+   la scène entière est dessinée à la largeur utile et se parcourt par le défilement de la page ; la barre de la carte et
+   les titres des colonnes restent visibles (classe collante de la charte). Décision du RSSI du 23/11/2026 (« trop de menu
+   tue le menu ») : une seule barre, la barre collante, avec un seul champ « Filtrer la carte » (nom, adresse, CVE, port :
+   `filtreTexte`) et, dans son panneau de filtres, le regroupement et les autres filtres. Sur un écran étroit, où
    la chaîne à huit colonnes ne se lirait pas, la même scène est présentée empilée, branche par branche. L'état de la vue
    (regroupement, filtres, replis) peut être tenu par l'écran parent pour survivre au changement d'onglet. */
 import { Alert, Anchor, Button, Checkbox, Group, Select, Stack, Switch, Text, TextInput } from '@mantine/core';
@@ -656,8 +658,8 @@ export const VUE_CARTE_INITIALE: VueCarte = {
   replis: {},
 };
 
-/** Phrase annoncée par le filtre par nom. */
-export function annonceFiltreNom(saisie: string, c: { domaines: number; adresses: number }): string {
+/** Phrase annoncée par le filtre de la carte : noms de domaine et adresses IP retenus. */
+export function annonceFiltre(saisie: string, c: { domaines: number; adresses: number }): string {
   if (!saisie.trim()) return '';
   if (!c.domaines && !c.adresses)
     return `Aucun nom de domaine ni aucune adresse IP ne correspond à « ${saisie.trim()} ».`;
@@ -754,55 +756,11 @@ export function CarteSurface({
           </Group>
         </Alert>
       )}
-      <BarreFiltres label="Carte de la surface externe">
-        <TextInput
-          label="Filtrer la carte"
-          description="Domaine, adresse, CVE, port (443, 443/tcp) ou produit."
-          maxLength={100}
-          value={filtres.texte}
-          onChange={(e) => changer({ texte: e.currentTarget.value })}
-        />
-        <Select
-          label="Périmètre"
-          placeholder="Tous"
-          clearable
-          value={filtres.perimetre || null}
-          onChange={(v) => changer({ perimetre: v ?? '' })}
-          data={modele.perimetres}
-          comboboxProps={{ withinPortal: false }}
-        />
-        <Select
-          label="Type d’alerte"
-          placeholder="Tous"
-          clearable
-          value={filtres.typeAlerte || null}
-          onChange={(v) => changer({ typeAlerte: (v ?? '') as TypeAlerteAlh | '' })}
-          data={OPTIONS_TYPE}
-          comboboxProps={{ withinPortal: false }}
-        />
-
-        <Checkbox.Group
-          label="Criticité"
-          value={filtres.criticites}
-          onChange={(v) => changer({ criticites: v as CriticiteAlh[] })}
-        >
-          <Group gap="sm" mt="2xs">
-            {CRITICITES_ALH.map((c) => (
-              <Checkbox key={c} value={c} label={libelleCriticite(c)} />
-            ))}
-          </Group>
-        </Checkbox.Group>
-        <Switch
-          label="Branches en alerte seulement"
-          checked={filtres.enAlerteSeulement}
-          onChange={(e) => changer({ enAlerteSeulement: e.currentTarget.checked })}
-        />
-      </BarreFiltres>
-
-      {/* Repères collants pendant le défilement de la page : regroupement, filtre par nom, repli, titres des colonnes. */}
+      {/* Repères collants pendant le défilement de la page : la seule barre de la carte (son filtre, et dans son panneau le
+          regroupement et les autres filtres), l'annonce du filtre, le repli et les titres des colonnes. */}
       <div className="sc-collant">
         <BarreFiltres
-          label="Présentation de la surface externe"
+          label="Carte de la surface externe"
           actions={
             <Group gap="xs">
               <Button size="compact-sm" variant="default" onClick={() => setReplis(toutReplier())}>
@@ -814,6 +772,14 @@ export function CarteSurface({
             </Group>
           }
         >
+          <TextInput
+            label="Filtrer la carte"
+            placeholder="Nom, adresse, CVE, port…"
+            description="Partie d’un nom de domaine (seuls les noms qui correspondent restent), début d’adresse IP (192.0.2.), CVE, port (443, 443/tcp), service ou produit."
+            maxLength={100}
+            value={filtres.texte}
+            onChange={(e) => changer({ texte: e.currentTarget.value })}
+          />
           <Select
             label="Regrouper par"
             allowDeselect={false}
@@ -822,19 +788,46 @@ export function CarteSurface({
             data={OPTIONS_REGROUPEMENT}
             comboboxProps={{ withinPortal: false }}
           />
-          <TextInput
-            label="Nom de domaine ou adresse IP"
-            description="Partie du nom (www, example.org) ou début de l’adresse (192.0.2.)."
-            maxLength={100}
-            value={filtres.nom}
-            onChange={(e) => changer({ nom: e.currentTarget.value })}
+          <Select
+            label="Périmètre"
+            placeholder="Tous"
+            clearable
+            value={filtres.perimetre || null}
+            onChange={(v) => changer({ perimetre: v ?? '' })}
+            data={modele.perimetres}
+            comboboxProps={{ withinPortal: false }}
           />
-          <Button size="compact-sm" variant="default" disabled={!filtres.nom} onClick={() => changer({ nom: '' })}>
-            Effacer le filtre par nom
+          <Select
+            label="Type d’alerte"
+            placeholder="Tous"
+            clearable
+            value={filtres.typeAlerte || null}
+            onChange={(v) => changer({ typeAlerte: (v ?? '') as TypeAlerteAlh | '' })}
+            data={OPTIONS_TYPE}
+            comboboxProps={{ withinPortal: false }}
+          />
+          <Checkbox.Group
+            label="Criticité"
+            value={filtres.criticites}
+            onChange={(v) => changer({ criticites: v as CriticiteAlh[] })}
+          >
+            <Group gap="sm" mt="2xs">
+              {CRITICITES_ALH.map((c) => (
+                <Checkbox key={c} value={c} label={libelleCriticite(c)} />
+              ))}
+            </Group>
+          </Checkbox.Group>
+          <Switch
+            label="Branches en alerte seulement"
+            checked={filtres.enAlerteSeulement}
+            onChange={(e) => changer({ enAlerteSeulement: e.currentTarget.checked })}
+          />
+          <Button size="compact-sm" variant="default" disabled={!filtres.texte} onClick={() => changer({ texte: '' })}>
+            Effacer le filtre
           </Button>
         </BarreFiltres>
         <Text size="sm" role="status" aria-live="polite" className="sc-annonce">
-          {annonceFiltreNom(filtres.nom, filtre.correspondances)}
+          {annonceFiltre(filtres.texte, filtre.correspondances)}
         </Text>
         <svg
           viewBox={`0 0 ${scene.largeur} 26`}

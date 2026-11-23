@@ -31,7 +31,7 @@
   inline-size: 100%;
   block-size: auto;
 }
-/* Repères collants pendant le défilement : regroupement, filtre par nom, repli et titres des colonnes. */
+/* Repères collants pendant le défilement : la barre de la carte (filtre, regroupement), repli et titres des colonnes. */
 .sc-collant {
   position: sticky;
   inset-block-start: var(--suivi-entete-h, 0);
@@ -705,4 +705,45 @@
   padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
   border: var(--suivi-trait-l) solid var(--suivi-trait);
   border-radius: var(--mantine-radius-md);
+}
+
+/* 7.6.1 (retour du RSSI du 23/11/2026, « trop de menu tue le menu ») : chaque source se lit comme une ligne d'état. Les
+   lignes d'une source s'enchaînent (pastille, nom, dates, bilan, lien « Configurer ») au lieu de s'empiler ; le contenu,
+   les régions et les noms accessibles ne changent pas. Liseré de la teinte du module à gauche. */
+.ss-sources {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--mantine-spacing-sm);
+}
+@media (max-width: 64em) {
+  .ss-sources {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.ss-source {
+  flex-flow: row wrap;
+  align-items: baseline;
+  gap: var(--mantine-spacing-2xs) var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border-inline-start: calc(var(--suivi-trait-l) * 3) solid var(--carte-bleu-accent, var(--suivi-trait));
+  border-radius: var(--mantine-radius-xs) var(--mantine-radius-md);
+}
+.app-main .page .ss-source h2.mantine-Title-root {
+  font-size: var(--mantine-font-size-md);
+}
+/* Le lien « Configurer l'intégration » suit l'état, en petit (même habillage de lien d'action que le module). */
+.app-main.app-main .ss-source a.mantine-Anchor-root.mantine-Anchor-root[href] {
+  padding: 0.15em 0.6em;
+  font-size: var(--mantine-font-size-xs);
+}
+.ss-source .mantine-Stack-root {
+  flex-flow: row wrap;
+  align-items: baseline;
+  column-gap: var(--mantine-spacing-sm);
+  row-gap: 0;
+}
+.ss-source .mantine-Group-root {
+  align-items: baseline;
+}
+.ss-source :is([role='status'], .mantine-Text-root[data-size='xs']) {
+  font-size: var(--mantine-font-size-xs);
 }
