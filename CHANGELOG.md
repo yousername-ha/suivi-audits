@@ -2,78 +2,6 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
-## [Non publié]
-
-### Notes de mise à jour
-
-Aucune action : changements d'affichage, ni migration ni commande sur le serveur. Une nouvelle adresse,
-`/pilotage/boites` (vue « Boîtes de pilotage » des objectifs et indicateurs), avec le droit de lecture du Pilotage.
-
-Aucune action ; la configuration de la veille se trouve désormais dans la page Plateforme.
-
-### Modifié
-
-- Retours du RSSI du 23/11/2026 sur la 7.6.0, rendus validés le même jour (session « Refonte Neon ») :
-  - **Tailles** : la densité « normale » reprend l'échelle de la 7.5 (champs et boutons de 2,25 rem, titres de page
-    1,625 rem, libellés des champs plus grands) ; les tailles de la 7.6.0 deviennent la densité « compacte ».
-  - **SWOT et PESTEL** plus compacts (matrice, cercle central et grandes lettres du SWOT ; constellation et panneau du
-    facteur du PESTEL ; un libellé de facteur ne se coupe plus au milieu d'un mot).
-  - **Recherche réduite à une loupe** dans les boîtes d'outils et sous les onglets du module Vulnérabilités : elle
-    s'ouvre au clic, au toucher ou au clavier et reste ouverte tant qu'elle porte un texte. Dans le module, la loupe se
-    place au bout de la rangée des onglets. Le bouton qui lance une recherche porte une flèche au lieu d'une seconde
-    loupe ; noms des champs et des boutons inchangés.
-  - **Cloche des rappels** dans l'en-tête, à gauche du compte : nombre de rappels non lus, les cinq derniers au clic et
-    « Voir tous mes rappels ». « Mes rappels » quitte le menu du Pilotage ; l'adresse `/pilotage/rappels` et les liens
-    des notifications et des courriels ne changent pas.
-  - **Objectifs et indicateurs** : une seule rangée d'onglets (Vue compacte, ouverte par défaut, Par processus, Par
-    objectif, Boîtes de pilotage) au lieu de deux.
-  - Registres du Pilotage : les deux exports deviennent deux petits boutons alignés à droite.
-- Vulnérabilités, **carte de la surface externe** (vue EASM, demande du RSSI du 22/11/2026 : lisible avec beaucoup
-  d'adresses et de noms de domaine, sans changer le style).
-  - La carte n'a plus de cadre : elle se pose dans la page, qui défile, sans paraître dans une fenêtre.
-  - Internet rejoint les branches par un seul tronc : chaque branche s'y raccorde par un court trait, au lieu d'une
-    courbe chacune, qui formait une colonne illisible au-delà de quelques dizaines de branches. Le tronc est rouge
-    jusqu'à la dernière branche qui porte un chemin d'entrée critique.
-  - Noms rangés dans l'ordre naturel des nombres (« exemple-2 » avant « exemple-10 »).
-  - Deux regroupements de plus, une ligne par adresse avec les noms qui y résolvent : **Bloc d'adresses** (/24 en IPv4,
-    /64 en IPv6) et **Hébergeur** (fournisseur, numéro de système autonome, pays, CDN). Une adresse sans hébergeur connu
-    va dans « Hébergeur inconnu ». La route de la carte rend pour cela le réseau de chaque hôte d'AlgoLightHouse, déjà
-    en base (aucune requête de plus, rien de nouveau vers l'assistant) (session « Ergonomie et refonte Neon »).
-- Vulnérabilités, **surface externe** (retour du RSSI du 23/11/2026, « trop de menu tue le menu », maquette validée le
-  même jour) :
-  - un seul champ « Filtrer la carte », dans la barre collante, au lieu de deux barres : il retient une ligne si le
-    texte figure dans un nom, l'adresse, une CVE d'une alerte retenue ou un port ou service ; quand il correspond à une
-    partie d'un nom (et non au début de l'adresse), seuls les noms qui correspondent restent sur la ligne, les autres
-    sont comptés. Annonce du nombre de noms et d'adresses retenus et bouton « Effacer le filtre » ; les autres filtres
-    restent dans le panneau de la barre ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum SI2) ;
-  - les cartes des sources AlgoLightHouse et Silène se lisent comme des lignes d'état, plus compactes (contenu inchangé).
-- Vulnérabilités, **configuration de la veille dans la page Plateforme** (lot VEILLE-PLATEFORME, décision du RSSI du
-  23/11/2026, « comme pour les intégrations », [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : nouvelle carte
-  **« Veille des vulnérabilités »** de la page Plateforme, visible seulement de qui administre le module Vulnérabilités
-  (droit qui protégeait déjà ces réglages) ; elle reprend toute la configuration de l'écran « Veille » : activation de la
-  veille et validation de son flux, sources et fréquences (avertissements de NVD et d'EPSS), « Collecter maintenant »,
-  dictionnaire des produits (CPE : activation, chargement, copie complète et sa suppression), sources facultatives
-  (Cloudflare Radar, tldrcve : activation, fréquence). L'écran « Veille » du module ne garde que le contenu (failles
-  exploitées, alertes et avis, annonces des sources facultatives, recherche) et une ligne d'état par source, en lecture
-  seule (état, dernière collecte réussie, retard, erreur abrégée), avec un lien « Configurer » vers la carte, visible
-  seulement avec ce même droit ; moins de texte d'explication. Le registre des flux et l'aide renvoient vers la carte. Aucune
-  route d'API, aucun droit ni aucun journal d'audit ne change ; la liste des produits surveillés reste dans le module
-  (session « Module surveillance vulnérabilités SMSI »).
-
-- Vulnérabilités, page **Veille** (maquette validée par le RSSI le 23/11/2026, « moins de texte ») : l'état des sources
-  tient en une ligne, une pastille par source (pictogramme, nom, état, dernière collecte réussie, erreur abrégée), avec
-  l'état de la veille et le lien « Configurer » pour qui administre le module, au lieu d'un tableau (session « Refonte
-  Neon »).
-
-### Corrigé
-
-- **Revue de direction** : la préparation n'affichait que 4 entrées sur 10. Elle rangeait les entrées par les
-  identifiants de l'ISO 9001 alors que l'API rend ceux de l'ISO/IEC 27001:2022 (9.3.2 a à g, d1 à d4) ; les points c,
-  d1 à d4 et g, dont tout le temps « Performance de sécurité », n'apparaissaient pas. Chaque entrée se range désormais
-  par la lettre de son point, une entrée inconnue reste visible, et les trois temps sont présentés côte à côte (test
-  `preparation-revue.test.ts`).
-
-
 ## [7.6.1] — 2026-11-23
 
 ### Notes de mise à jour
@@ -96,6 +24,9 @@ Aucune action ; la configuration de la veille se trouve désormais dans la page 
   et 11.14) ; hôtes autorisés par la décision du RSSI du 22/11/2026. L'API Légifrance (plateforme PISTE) n'est pas
   livrée (lot à part, plus tard : décision du RSSI du 23/11/2026) : **aucun compte PISTE ni aucune clé à créer ou à
   saisir** pour cette version.
+- Interface (retours du RSSI du 23/11/2026) : changements d'affichage seulement, ni migration ni commande sur le serveur.
+  Une nouvelle adresse, `/pilotage/boites` (vue « Boîtes de pilotage » des objectifs et indicateurs), avec le droit de
+  lecture du Pilotage. La configuration de la veille des vulnérabilités se trouve désormais dans la page Plateforme.
 
 ### Ajouté
 
@@ -169,6 +100,57 @@ Aucune action ; la configuration de la veille se trouve désormais dans la page 
   l'exécution, lu par l'administration, comme pour la veille. Tenable, joint directement, n'est pas concerné. Le temps
   d'une mise à jour, un échec de ce type peut n'être clos qu'au bout de quelques minutes (« Exécutant interrompu »)
   (session « Module surveillance vulnérabilités SMSI »).
+- Retours du RSSI du 23/11/2026 sur la 7.6.0, rendus validés le même jour (session « Refonte Neon ») :
+  - **Tailles** : la densité « normale » reprend l'échelle de la 7.5 (champs et boutons de 2,25 rem, titres de page
+    1,625 rem, libellés des champs plus grands) ; les tailles de la 7.6.0 deviennent la densité « compacte ».
+  - **SWOT et PESTEL** plus compacts (matrice, cercle central et grandes lettres du SWOT ; constellation et panneau du
+    facteur du PESTEL ; un libellé de facteur ne se coupe plus au milieu d'un mot).
+  - **Recherche réduite à une loupe** dans les boîtes d'outils et sous les onglets du module Vulnérabilités : elle
+    s'ouvre au clic, au toucher ou au clavier et reste ouverte tant qu'elle porte un texte. Dans le module, la loupe se
+    place au bout de la rangée des onglets. Le bouton qui lance une recherche porte une flèche au lieu d'une seconde
+    loupe ; noms des champs et des boutons inchangés.
+  - **Cloche des rappels** dans l'en-tête, à gauche du compte : nombre de rappels non lus, les cinq derniers au clic et
+    « Voir tous mes rappels ». « Mes rappels » quitte le menu du Pilotage ; l'adresse `/pilotage/rappels` et les liens
+    des notifications et des courriels ne changent pas.
+  - **Objectifs et indicateurs** : une seule rangée d'onglets (Vue compacte, ouverte par défaut, Par processus, Par
+    objectif, Boîtes de pilotage) au lieu de deux.
+  - Registres du Pilotage : les deux exports deviennent deux petits boutons alignés à droite.
+- Vulnérabilités, **carte de la surface externe** (vue EASM, demande du RSSI du 22/11/2026 : lisible avec beaucoup
+  d'adresses et de noms de domaine, sans changer le style).
+  - La carte n'a plus de cadre : elle se pose dans la page, qui défile, sans paraître dans une fenêtre.
+  - Internet rejoint les branches par un seul tronc : chaque branche s'y raccorde par un court trait, au lieu d'une
+    courbe chacune, qui formait une colonne illisible au-delà de quelques dizaines de branches. Le tronc est rouge
+    jusqu'à la dernière branche qui porte un chemin d'entrée critique.
+  - Noms rangés dans l'ordre naturel des nombres (« exemple-2 » avant « exemple-10 »).
+  - Deux regroupements de plus, une ligne par adresse avec les noms qui y résolvent : **Bloc d'adresses** (/24 en IPv4,
+    /64 en IPv6) et **Hébergeur** (fournisseur, numéro de système autonome, pays, CDN). Une adresse sans hébergeur connu
+    va dans « Hébergeur inconnu ». La route de la carte rend pour cela le réseau de chaque hôte d'AlgoLightHouse, déjà
+    en base (aucune requête de plus, rien de nouveau vers l'assistant) (session « Ergonomie et refonte Neon »).
+- Vulnérabilités, **surface externe** (retour du RSSI du 23/11/2026, « trop de menu tue le menu », maquette validée le
+  même jour) :
+  - un seul champ « Filtrer la carte », dans la barre collante, au lieu de deux barres : il retient une ligne si le
+    texte figure dans un nom, l'adresse, une CVE d'une alerte retenue ou un port ou service ; quand il correspond à une
+    partie d'un nom (et non au début de l'adresse), seuls les noms qui correspondent restent sur la ligne, les autres
+    sont comptés. Annonce du nombre de noms et d'adresses retenus et bouton « Effacer le filtre » ; les autres filtres
+    restent dans le panneau de la barre ([ADR 0100](docs/adr/0100-module-vulnerabilites.md), addendum SI2) ;
+  - les cartes des sources AlgoLightHouse et Silène se lisent comme des lignes d'état, plus compactes (contenu inchangé).
+- Vulnérabilités, **configuration de la veille dans la page Plateforme** (lot VEILLE-PLATEFORME, décision du RSSI du
+  23/11/2026, « comme pour les intégrations », [ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : nouvelle carte
+  **« Veille des vulnérabilités »** de la page Plateforme, visible seulement de qui administre le module Vulnérabilités
+  (droit qui protégeait déjà ces réglages) ; elle reprend toute la configuration de l'écran « Veille » : activation de la
+  veille et validation de son flux, sources et fréquences (avertissements de NVD et d'EPSS), « Collecter maintenant »,
+  dictionnaire des produits (CPE : activation, chargement, copie complète et sa suppression), sources facultatives
+  (Cloudflare Radar, tldrcve : activation, fréquence). L'écran « Veille » du module ne garde que le contenu (failles
+  exploitées, alertes et avis, annonces des sources facultatives, recherche) et une ligne d'état par source, en lecture
+  seule (état, dernière collecte réussie, retard, erreur abrégée), avec un lien « Configurer » vers la carte, visible
+  seulement avec ce même droit ; moins de texte d'explication. Le registre des flux et l'aide renvoient vers la carte. Aucune
+  route d'API, aucun droit ni aucun journal d'audit ne change ; la liste des produits surveillés reste dans le module
+  (session « Module surveillance vulnérabilités SMSI »).
+
+- Vulnérabilités, page **Veille** (maquette validée par le RSSI le 23/11/2026, « moins de texte ») : l'état des sources
+  tient en une ligne, une pastille par source (pictogramme, nom, état, dernière collecte réussie, erreur abrégée), avec
+  l'état de la veille et le lien « Configurer » pour qui administre le module, au lieu d'un tableau (session « Refonte
+  Neon »).
 
 ### Corrigé
 
@@ -181,6 +163,11 @@ Aucune action ; la configuration de la veille se trouve désormais dans la page 
   et non plus au jour courant (échec quand le passage franchissait minuit, heure de Paris). Analyses d'accessibilité
   après l'ouverture d'une fenêtre : elles attendent la fin de son fondu (opacité à 1, aucune animation en cours) au lieu
   de mesurer un contraste mêlé au fond (session « Module surveillance vulnérabilités SMSI »).
+- **Revue de direction** : la préparation n'affichait que 4 entrées sur 10. Elle rangeait les entrées par les
+  identifiants de l'ISO 9001 alors que l'API rend ceux de l'ISO/IEC 27001:2022 (9.3.2 a à g, d1 à d4) ; les points c,
+  d1 à d4 et g, dont tout le temps « Performance de sécurité », n'apparaissaient pas. Chaque entrée se range désormais
+  par la lettre de son point, une entrée inconnue reste visible, et les trois temps sont présentés côte à côte (test
+  `preparation-revue.test.ts`).
 
 ## [7.6.0] — 2026-11-22
 
