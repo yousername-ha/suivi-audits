@@ -4485,3 +4485,143 @@ rechargement de son adresse).
 
 Parcours Playwright non exécutés localement (CI seulement). Docker, Node 26 et CSP du serveur de production : non vérifiés
 ici.
+
+## Addendum du 23/11/2026 — lot GRP-MACHINES : groupes de machines, présentation « Parc » par défaut
+
+Rédaction : sous-agent développeur pour la session « Module surveillance vulnérabilités SMSI »
+(`session_01EnWdzdnc8fBi6Yrc154Jy6`). Migration additive `105`, routes ajoutées (aucune retirée ni modifiée dans sa forme ;
+la liste et le parc des machines gagnent un paramètre facultatif), aucun droit nouveau, aucune dépendance, aucun appel
+sortant, rien chez l'assistant ni chez l'exécutant.
+
+### Décisions du RSSI (23/11/2026, maquettes validées le même jour)
+
+1. **Vue « Parc » par défaut** sur la page « Machines » quand la personne n'a pas encore de préférence ; un choix mémorisé
+   reste respecté.
+2. **Groupes de machines, « simples et souples »** : un nom (obligatoire, borné), une description (facultative, bornée), des
+   machines choisies à la main ; une machine peut être dans plusieurs groupes. **Un fournisseur au plus**, par sa référence
+   `legacy:suppliers:<id>`, contrôlée à l'écriture (refusée si le fournisseur n'existe pas) ; s'il disparaît ensuite, le
+   groupe reste valide et l'interface affiche « fournisseur supprimé ». Le nom du fournisseur est donné même à qui n'a pas
+   `fournisseurs:lire` (précision de la session Coeur, même jour) ; rattacher ou changer le fournisseur exige en plus
+   `fournisseurs:lire` (403 sinon), le reste du groupe restant modifiable sans ce droit.
+3. **Filtre par groupe** dans la liste et dans le parc : tous, un groupe, « Sans groupe ».
+4. **Droits** : lecture avec `vulnerabilites:lire` et le cloisonnement par périmètre habituel des machines (machines lues
+   seulement, nombre lu, drapeau « d'autres machines hors de votre lecture » sans nombre) ; création, modification,
+   suppression et membres avec le droit qui modifie déjà les machines du module, `vulnerabilites:modifier` ; journal
+   d'audit de chaque écriture ; If-Match et version.
+5. **Route pour la fiche du fournisseur** : groupes rattachés au fournisseur, sans détail de machine, avec le nombre de
+   machines lues, le drapeau hors lecture et le nombre de failles critiques ouvertes comptées sur les seules machines lues.
+6. L'assistant ne reçoit rien de nouveau.
+
+### Réalisation
+
+- **Migration `105`** : `vulnerabilites_groupes` (nom de 1 à 120 caractères sans espace autour ni caractère de contrôle,
+  unique à la casse près ; description de 1 000 caractères au plus ; `fournisseur_ref` nul ou de forme
+  `legacy:suppliers:<id>` ; version, auteur et dates) et `vulnerabilites_groupe_machines` (clé primaire groupe et machine,
+  clés étrangères `ON DELETE CASCADE` vers le groupe et vers la machine : une machine supprimée sort de ses groupes, le
+  groupe reste ; index sur la machine). Pas de clé étrangère vers le fournisseur : le registre vit dans l'état historique.
+  Types de la base régénérés ; cinq listes figées des migrations à jour.
+- **Remise à vide** : les deux tables sont des données de travail (effacées par les deux portées), comme les produits
+  surveillés et leurs liens aux machines. Les groupes sont des réglages faits à la main, mais ils ne valent que par les
+  machines et le fournisseur auxquels ils renvoient, tous deux effacés avec le travail : garder des groupes vides rattachés
+  à un fournisseur disparu n'aurait pas de sens.
+- **Service** `apps/api/src/vulnerabilites/groupes.ts` (`svc.vulnerabilites.groupes`) ; schémas et DTO zod dans
+  `packages/shared/src/groupes-machines.ts`. Nom du fournisseur lu dans le registre à chaque lecture (lecture du seul
+  registre des fournisseurs par `LegacyStore.mapper('suppliers')`, une par requête, jamais une par groupe ; aucune copie).
+- **Filtre** `groupe` (identifiant d'un groupe, ou `aucun`) de `GET /api/vulnerabilites/machines` et `GET
+  /api/vulnerabilites/machines/parc`, calculé dans la requête des filtres d'ACR et d'AES (lot TEN-SCORES) : une requête de
+  plus au plus, quel que soit le nombre de ces filtres ; le rang reste calculé sur toutes les machines lues. Un groupe
+  inconnu rend une liste vide.
+- **Interface** (`apps/web/src/vulnerabilites/GroupesMachines.tsx`, fonctions pures dans `groupes.ts`) : bouton « Groupes
+  de machines… » à droite du titre (droit de modifier) ; fenêtre « Groupes de machines » (liste, « Nouveau groupe »,
+  « Modifier ») ; fenêtre d'un groupe (nom, description, menu du fournisseur par `GET /api/suppliers`, masqué sans
+  `fournisseurs:lire` mais nom affiché ; machines lues à cocher, recherche par nom ou adresse IP, « Toutes / Dans le groupe
+  / Hors du groupe », « Tout cocher (n trouvées) », « aussi dans « X » », pagination nommée ; enregistrement en PATCH puis en
+  lots de 500, chacun avec la version rendue par le précédent ; suppression par `ConfirmButton`). Menu « Groupe » des filtres
+  (« Tous les groupes », chaque groupe avec son nombre de machines lues, « Sans groupe »), et sous les filtres, pour un
+  groupe filtré, « maintenu par <fournisseur> » (lien vers `/pilotage/fournisseurs` pour qui lit les fournisseurs, nom seul
+  sinon ; « fournisseur supprimé », sans lien). Présentation par défaut : `VUE_MACHINES_DEFAUT = 'parc'` du paquet partagé.
+
+### Routes, paramètres et réponses
+
+Toutes par `route()` (session, double authentification, module « vulnerabilites » actif, CSRF et origine sur les
+écritures). DTO : `packages/shared/src/groupes-machines.ts`.
+
+| Route | Droit | Entrée | Réponse |
+|---|---|---|---|
+| `GET /api/vulnerabilites/groupes` | `vulnerabilites:lire` | — | `GroupeMachines[]`, par nom |
+| `GET /api/vulnerabilites/groupes/:id` | `vulnerabilites:lire` | `id` uuid | `GroupeMachines`, ETag version ; 404 inconnu |
+| `GET /api/vulnerabilites/groupes/:id/machines` | `vulnerabilites:lire` | `RechercheMachinesGroupe` : `q` (100 car., nom partiel ou début de l'adresse IP), `membres` (`oui` \| `non`), `page` | `PageMachinesGroupe`, ETag version |
+| `POST /api/vulnerabilites/groupes` | `vulnerabilites:modifier` (+ `fournisseurs:lire` si fournisseur) | `GroupeMachinesBody` : `nom`, `description` (défaut `''`), `fournisseurRef` (défaut `null`), `machineIds` (500 au plus, défaut `[]`) | 201, `GroupeMachines` |
+| `PATCH /api/vulnerabilites/groupes/:id` | `vulnerabilites:modifier` (+ `fournisseurs:lire` si le fournisseur change) | If-Match ; `GroupeMachinesPatch` : `nom`, `description`, `fournisseurRef` (`null` : retiré), un au moins | `GroupeMachines` (inchangé, même version, si rien ne change) |
+| `DELETE /api/vulnerabilites/groupes/:id` | `vulnerabilites:modifier` | If-Match | 204 |
+| `POST /api/vulnerabilites/groupes/:id/machines` | `vulnerabilites:modifier` | If-Match ; `MembresGroupeBody` : `ajouter`, `retirer` (uuid, 500 au plus en tout, sans doublon ni recouvrement) | `BilanMembresGroupe` : `ajoutees`, `retirees`, `groupe` ; ETag |
+| `GET /api/vulnerabilites/fournisseurs/:id/groupes` | `vulnerabilites:lire` **et** `fournisseurs:lire` | `id` : identifiant du fournisseur (`SUP-001`, 1 à 60 caractères sans espace) | `GroupesDuFournisseur` |
+
+- `GroupeMachines` : `id`, `nom`, `description`, `fournisseur` (`null` ou `{ id, ref, nom, etat }`, `etat` `present` ou
+  `supprime`, `nom` nul si supprimé), `machinesLues`, `horsLecture`, `version`, `createdBy`, `createdAt`, `updatedBy`,
+  `updatedAt`.
+- `PageMachinesGroupe` : `groupe`, `total` (machines lues trouvées), `page`, `parPage` (25), `elements` (`MachineGroupe` :
+  `id`, `nom`, `adresse`, `systeme`, `role`, `perimetreNom`, `membre`, `autresGroupes` `[{ id, nom }]`), `identifiants`
+  (toutes les machines trouvées, dans l'ordre, 500 au plus, pour « Tout cocher »), `identifiantsTronques`.
+- **Route de la fiche du fournisseur** : `GET /api/vulnerabilites/fournisseurs/:id/groupes`, paramètre de chemin `id`
+  (identifiant du fournisseur, `ParamsGroupesFournisseur`), aucun paramètre de requête ; réponse `GroupesDuFournisseur` =
+  `{ fournisseurId: string, groupes: GroupeDuFournisseur[] }`, `GroupeDuFournisseur` = `{ id, nom, description,
+  machinesLues, horsLecture, faillesCritiquesOuvertes }`, par nom ; aucun nom ni adresse de machine. Refus : 403 sans
+  `vulnerabilites:lire` ou sans `fournisseurs:lire` (option prudente : les deux), 409 module « vulnerabilites » désactivé,
+  404 fournisseur absent du registre, 422 identifiant mal formé.
+- `faillesCritiquesOuvertes` : constats (Tenable, Nessus) de gravité `critique`, présents (détection vue par la dernière
+  synchronisation complète de son instance, fragment `present`) sur au moins une machine du groupe que la personne lit, et
+  encore à traiter (ni corrigés, ni au risque accepté, ni non concernés : fragment `close('constat')`) ; ce sont les mêmes
+  fragments que le compteur « critique » des machines (`machinesRangees`). Les failles déclarées (produit surveillé relié)
+  n'y entrent pas.
+- **Messages d'erreur** : 404 « Groupe de machines introuvable. » ; 404 « Machine introuvable ou non accessible. » (machine
+  inconnue ou non lue, tout le lot refusé) ; 409 « Un groupe de machines porte déjà ce nom (sans tenir compte de la
+  casse). » ; 409 « Ce groupe compte des machines hors de votre lecture : … » (suppression) ; 403 « Rattacher, changer ou
+  retirer le fournisseur d'un groupe demande aussi le droit de lire les fournisseurs, module actif. » ; 422 « Fournisseur
+  absent du registre de l'organisation. » ; 412 (version périmée, `current` rendu) ; 428 (If-Match absent) ; 422 données
+  invalides (zod).
+- **Journal** : `vulnerabilites.groupe.cree` (`nom`, `description`, `fournisseurRef`, `machines` : identifiants,
+  `version`), `vulnerabilites.groupe.modifie` (`champs`, `avant`, `apres`, `version`), `vulnerabilites.groupe.machines`
+  (`ajoutees`, `retirees` : identifiants, `version` ; rien n'est écrit si rien ne change), `vulnerabilites.groupe.supprime`
+  (`nom`, `description`, `fournisseurRef`, `machines` : nombre lu, `version`). Jamais un nom ni une adresse de machine.
+
+### Choix de réalisation, à confirmer par le RSSI
+
+- **Suppression d'un groupe qui compte des machines hors de la lecture de la personne : refusée (409)**. Elle effacerait des
+  rattachements qu'elle ne voit pas ; une personne qui lit toutes les machines du groupe (l'administration, par exemple)
+  peut le supprimer.
+- **Suppression avec `vulnerabilites:modifier`**, comme décidé (« le droit qui modifie déjà les machines ») ; le module a
+  aussi `vulnerabilites:supprimer`, exigé pour supprimer un produit surveillé : à trancher s'il doit l'être ici.
+- **Retirer le fournisseur** d'un groupe exige aussi `fournisseurs:lire` (c'est un changement du fournisseur).
+- **Nom unique** à la casse près (menu « Groupe » et mention « aussi dans « X » » sans ambiguïté).
+- **Ajouter ou retirer une machine** exige de la lire (comme relier un produit surveillé à une machine), sans exiger
+  l'écriture sur son périmètre.
+- **Groupes visibles de toute personne qui lit le module** (nom, description, fournisseur) ; seules les machines sont
+  cloisonnées.
+- **Lien « maintenu par »** : vers la page des fournisseurs (`/pilotage/fournisseurs`) ; la fiche d'un fournisseur n'a pas
+  d'adresse propre aujourd'hui (fenêtre de la page). Constante `PAGE_FOURNISSEURS` de `apps/web/src/vulnerabilites/groupes.ts`
+  à changer si la session Coeur ajoute un lien direct.
+- **Fenêtre** : la création demande d'abord le nom (puis la fenêtre du groupe s'ouvre pour cocher les machines), la route
+  des machines d'un groupe ayant besoin d'un groupe existant.
+- **Remise à vide** : données de travail (voir ci-dessus).
+- **Nom du fournisseur hors porte de lecture** (ADR 0083) : comme décidé, il est donné à toute personne qui lit le module ;
+  il est lu par le mappeur du registre des fournisseurs (`LegacyStore.mapper('suppliers').read`), sans la rédaction par
+  droits de la porte, et seuls l'identifiant et le nom en sortent. Le garde-fou `architecture-acces.test.ts` ne détecte que
+  `recompose()` et les tables GRC : cet accès n'y figure donc pas ; à inscrire à sa liste blanche si la revue le souhaite.
+
+### Tests
+
+API : `apps/api/test/vulnerabilites-groupes.test.ts` (migration et contraintes, machine supprimée retirée du groupe,
+droits 403, CSRF, module désactivé, création et doublon, machine non lue refusée, fournisseur : droit, inexistant,
+inchangé, retiré, module « fournisseurs » coupé, fournisseur supprimé ensuite, If-Match 428 et 412, membres en lot,
+cloisonnement dans le groupe, la fenêtre et la route du fournisseur, failles critiques ouvertes et confidentialité,
+« aussi dans », filtre de la liste et du parc, nombre de requêtes, journal sans nom ni adresse). Shared :
+`packages/shared/test/groupes-machines.test.ts`. Web : `apps/web/test/vulnerabilites-groupes.test.ts`. E2e :
+`…-vulnerabilites-groupes.spec.ts` (nouveau) ; `…-vulnerabilites-failles.spec.ts` et `…-vulnerabilites-import-nessus.spec.ts`
+adaptés à la présentation « Parc » par défaut (le premier vérifie le parc à l'ouverture puis passe à la liste ; le second
+mémorise « Liste » le temps du parcours et rend les préférences).
+
+### Non vérifié
+
+Parcours Playwright non exécutés localement (CI seulement). Node 26 absent de l'environnement de la session (contrôles
+rejoués avec Node 24). Docker et CSP du serveur de production : non vérifiés ici.

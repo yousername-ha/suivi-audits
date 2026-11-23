@@ -19,6 +19,10 @@ import { BarreFiltres } from '../components/BarreFiltres';
    Lot TEN-SCORES : criticité (ACR) et exposition (AES) selon Tenable, en colonnes de la liste, dans la fiche et en filtres
    (catégorie minimale), seulement si une intégration Tenable Security Center existe (état des synchronisations, lu avec la
    seule lecture du module) ; informations affichées, sans effet sur la priorité ni sur le rang.
+   Lot GRP-MACHINES (décision du RSSI du 23/11/2026) : présentation « Parc » par défaut (un choix mémorisé reste respecté) ;
+   menu « Groupe » dans les filtres (tous, chaque groupe avec son nombre de machines lues, « Sans groupe »), valable pour la
+   liste et le parc, avec « maintenu par <fournisseur> » ; bouton « Groupes de machines… » (droit de modifier les machines),
+   fenêtre dans GroupesMachines.tsx.
    Composants de la charte, CSP stricte (ADR 0006). */
 import {
   Alert,
@@ -46,6 +50,7 @@ import {
   type ExpositionMachineDto,
   type FiltreAcr,
   type FiltreAes,
+  type GroupeMachines,
   type MachineDto,
   type MarquesMachineDto,
   type ParcMachinesDto,
@@ -95,6 +100,8 @@ import { ouvertureMachines } from './recherche';
 import { nombrePages } from './veille';
 import { SourceConnecteur } from './SourceConnecteur';
 import { NOMS_PAGINATION } from './pagination';
+import { FenetreGroupes, MentionFournisseurGroupe } from './GroupesMachines';
+import { optionsFiltreGroupe, TOUS_LES_GROUPES, vueMachines } from './groupes';
 
 const CLE = ['vulnerabilites', 'machines'] as const;
 const OPTIONS_ROLE = [
@@ -712,10 +719,11 @@ function OngletMachines() {
       setMachineVoulue(null);
     }
   }, [machineVoulue, ficheVoulue.data, ficheVoulue.error]);
-  // Présentation mémorisée pour la personne (préférences du compte) : liste par défaut, parc réduit par défaut.
+  // Présentation mémorisée pour la personne (préférences du compte) : parc par défaut (lot GRP-MACHINES, décision du RSSI
+  // du 23/11/2026 ; « Liste » auparavant), parc réduit par défaut ; un choix mémorisé reste respecté.
   const { prefs, save } = usePreferences();
   const affichage = prefs.vulnerabilitesMachines ?? {};
-  const vue: VueMachines = affichage.vue ?? 'liste';
+  const vue: VueMachines = vueMachines(affichage.vue);
   const echelle: EchelleParc = affichage.echelle ?? 'reduit';
   const regler = (patch: { vue?: VueMachines; echelle?: EchelleParc }) =>
     void save({ vulnerabilitesMachines: { ...affichage, ...patch } }).catch((e: unknown) =>
@@ -752,6 +760,17 @@ function OngletMachines() {
     queryFn: () => get<PerimetreAffectableDto[]>('/api/vulnerabilites/perimetres'),
     enabled: modifier,
   });
+  // Lot GRP-MACHINES : groupes du menu « Groupe », avec le nombre de machines que la personne lit.
+  const groupes = useQuery({
+    queryKey: ['vulnerabilites', 'groupes'],
+    queryFn: () => get<GroupeMachines[]>('/api/vulnerabilites/groupes'),
+  });
+  const groupeFiltre = (groupes.data ?? []).find((g) => g.id === filtres.groupe) ?? null;
+  // Groupe filtré supprimé entre-temps : retour à « Tous les groupes ».
+  const groupeDisparu = !!groupes.data && !!filtres.groupe && filtres.groupe !== 'aucun' && !groupeFiltre;
+  useEffect(() => {
+    if (groupeDisparu) setFiltres((f) => ({ ...f, groupe: '' }));
+  }, [groupeDisparu]);
   const changer = (f: Partial<FiltresMachines>) => {
     setFiltres({ ...filtres, ...f });
     setPage(1);
@@ -867,6 +886,15 @@ function OngletMachines() {
               checked={!!filtres.finSupport}
               onChange={(e) => changer({ finSupport: e.currentTarget.checked })}
             />
+            <Select
+              label="Groupe"
+              placeholder={TOUS_LES_GROUPES}
+              clearable
+              value={filtres.groupe || null}
+              onChange={(v) => changer({ groupe: v ?? '' })}
+              data={optionsFiltreGroupe(groupes.data ?? [])}
+              comboboxProps={{ withinPortal: false }}
+            />
             {tenable && (
               <FiltresScoresTenable
                 acr={filtres.acr ?? ''}
@@ -877,6 +905,9 @@ function OngletMachines() {
             )}
           </BarreFiltres>
         </form>
+        {groupeFiltre && (
+          <MentionFournisseurGroupe groupe={groupeFiltre} lireFournisseurs={can('fournisseurs', 'lire')} />
+        )}
         {vue === 'liste' && modifier && (
           <Group align="flex-end" role="group" aria-label="Affectation des machines choisies">
             <Select
@@ -906,7 +937,7 @@ function OngletMachines() {
             </Button>
           </Group>
         )}
-        <ErrorAlert error={(vue === 'liste' ? machines.error : parc.error) ?? perimetres.error} />
+        <ErrorAlert error={(vue === 'liste' ? machines.error : parc.error) ?? perimetres.error ?? groupes.error} />
         <LegendeMarques parc={vue === 'parc'} />
         {vue === 'parc' && parc.data && (
           <>
@@ -978,7 +1009,9 @@ export function MachinesPage() {
   const can = useCan();
   const lire = can('vulnerabilites', 'lire');
   const administrer = can('vulnerabilites', 'administrer');
+  const modifier = can('vulnerabilites', 'modifier');
   const [onglet, setOnglet] = useState<string | null>('machines');
+  const [groupesOuverts, setGroupesOuverts] = useState(false);
   if (!lire)
     return (
       <Page>
@@ -989,6 +1022,13 @@ export function MachinesPage() {
     <Page>
       <EnteteVulnerabilites
         title="Machines"
+        actions={
+          modifier && (
+            <Button variant="default" onClick={() => setGroupesOuverts(true)}>
+              Groupes de machines…
+            </Button>
+          )
+        }
         description="Machines lues dans Tenable Security Center ou importées d’un scan Nessus, chacune marquée de sa source (une machine vue par les deux apparaît deux fois), de la plus critique à la moins critique : exploitation avérée d’abord, puis rôle (front, back applicatif, base de données), puis nombre de failles critiques et élevées. Vous voyez celles des périmètres que vous pouvez lire ; une machine sans périmètre n’est visible qu’avec le droit d’administrer le module. Le périmètre d’une machine vient de son dépôt Tenable relié (onglet « Dépôts Tenable »), sauf s’il est indiqué à la main, ce qui prime ; une machine importée d’un scan Nessus n’a pas de dépôt : son périmètre s’indique ici. Le rôle et le périmètre sont indiqués ici, une machine à la fois ou en masse ; la fiche d’une machine relie ses produits surveillés."
       />
       <Tabs value={onglet} onChange={setOnglet} keepMounted={false}>
@@ -1005,6 +1045,7 @@ export function MachinesPage() {
           </Tabs.Panel>
         )}
       </Tabs>
+      {modifier && <FenetreGroupes opened={groupesOuverts} onClose={() => setGroupesOuverts(false)} />}
     </Page>
   );
 }

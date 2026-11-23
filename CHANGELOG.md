@@ -2,6 +2,37 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+- Migration automatique additive `105` (deux tables du module Vulnérabilités pour les groupes de machines, vides au
+  départ), sans reprise de données ni commande sur le serveur. Aucune action.
+
+### Ajouté
+
+- Vulnérabilités, **groupes de machines** (décision du RSSI du 23/11/2026, maquettes validées le même jour ; addendum
+  « lot GRP-MACHINES » de l'[ADR 0100](docs/adr/0100-module-vulnerabilites.md)) : un groupe réunit des machines choisies à
+  la main (nom unique, description facultative, une machine peut être dans plusieurs groupes) et se rattache à un
+  fournisseur au plus (référence `legacy:suppliers:<id>`, contrôlée à l'écriture ; un fournisseur supprimé ensuite laisse
+  le groupe, marqué « fournisseur supprimé »). Écran « Machines » : bouton « Groupes de machines… » (création, nom,
+  description, fournisseur, machines lues à cocher avec recherche par nom ou adresse IP, « Tout cocher (n trouvées) »,
+  mention « aussi dans « X » », suppression avec confirmation) et menu « Groupe » des filtres (chaque groupe avec son
+  nombre de machines lues, « Sans groupe »), valable pour la liste et le parc, avec « maintenu par <fournisseur> ».
+  Lecture avec `vulnerabilites:lire` et le cloisonnement des machines par périmètre (machines lues seulement, drapeau
+  « d'autres machines hors de votre lecture » sans nombre) ; écritures avec `vulnerabilites:modifier`, If-Match et
+  journal (`vulnerabilites.groupe.*`, sans nom ni adresse de machine) ; rattacher ou changer le fournisseur demande aussi
+  `fournisseurs:lire`. Route `GET /api/vulnerabilites/fournisseurs/:id/groupes` pour la fiche d'un fournisseur (groupes
+  rattachés, machines lues, failles critiques ouvertes des seules machines lues, aucun détail de machine ;
+  `vulnerabilites:lire` et `fournisseurs:lire`). Rien des groupes ne part chez l'assistant. (session « Module surveillance
+  vulnérabilités SMSI »)
+
+### Modifié
+
+- Vulnérabilités, écran « Machines » : la présentation **« Parc »** s'ouvre par défaut quand la personne n'a pas encore
+  choisi ; un choix « Liste » mémorisé reste respecté (décision du RSSI du 23/11/2026). (session « Module surveillance
+  vulnérabilités SMSI »)
+
 ## [7.6.1] — 2026-11-23
 
 ### Notes de mise à jour

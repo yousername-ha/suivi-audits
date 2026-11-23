@@ -222,6 +222,11 @@ export const TABLES_TRAVAIL = [
   'vulnerabilites_veille_cve_produits',
   'vulnerabilites_produits_machines',
   'vulnerabilites_rapprochements',
+  // Groupes de machines (ADR 0100, lot GRP-MACHINES) : réglages faits à la main, mais qui ne valent que par les machines et
+  // le fournisseur auxquels ils renvoient, tous deux effacés avec le travail (comme les produits surveillés et leurs liens) :
+  // effacés par les deux portées, plutôt que gardés vides et rattachés à un fournisseur disparu.
+  'vulnerabilites_groupes',
+  'vulnerabilites_groupe_machines',
   // Suivi des failles (ADR 0100, lot V4b) : états décidés par les utilisateurs, historique immuable de ces décisions et liens
   // vers les actions du registre ; ils portent sur les constats, les rapprochements et les actions, tous effacés avec le
   // travail. L'historique, en ajout seul, n'est effacé que par ce chemin (déclencheurs suspendus le temps de la transaction).

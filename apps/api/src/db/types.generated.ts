@@ -2057,6 +2057,25 @@ export interface VulnerabilitesDetections {
   vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface VulnerabilitesGroupeMachines {
+  groupe_id: string;
+  machine_id: string;
+  ajoute_par: string;
+  ajoute_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesGroupes {
+  id: Generated<string>;
+  nom: string;
+  description: Generated<string>;
+  fournisseur_ref: string | null;
+  version: Generated<number>;
+  created_by: string;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  updated_by: string;
+  updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface VulnerabilitesImports {
   execution_id: string;
   integration_id: string;
@@ -2735,6 +2754,8 @@ export interface DB {
   vulnerabilites_cve_tenable: VulnerabilitesCveTenable;
   vulnerabilites_depassements: VulnerabilitesDepassements;
   vulnerabilites_detections: VulnerabilitesDetections;
+  vulnerabilites_groupe_machines: VulnerabilitesGroupeMachines;
+  vulnerabilites_groupes: VulnerabilitesGroupes;
   vulnerabilites_imports: VulnerabilitesImports;
   vulnerabilites_instantanes: VulnerabilitesInstantanes;
   vulnerabilites_instantanes_mesures: VulnerabilitesInstantanesMesures;
