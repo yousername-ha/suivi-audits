@@ -200,7 +200,7 @@
 .rv__ouvrir:focus-visible {
   background: color-mix(in srgb, var(--rv-accent) 12%, transparent);
 }
-/* 7.6.1 (retour du RSSI du 23/11/2026, « trop de menu tue le menu ») : la loupe du module au bout de la rangée des onglets.
+/* 7.6.1 (retour du RSSI du 23/11/2026, « trop de menu tue le menu ») : la loupe du module dans la rangée des onglets.
    Ouverte, elle prend sa largeur et les onglets passent à la ligne si besoin ; sur un écran étroit, elle passe dessous. Le
    conteneur est neutre sur les pages sans la recherche du module. */
 .entete-module:has(> .rv) {
@@ -216,12 +216,10 @@
   margin-block-end: 0;
 }
 .entete-module > .rv {
+  /* En tête de la rangée : le panneau des résultats s'ouvre vers la droite, sous la loupe, comme avant. */
+  order: -1;
   flex: 0 1 auto;
   margin-block-end: 0;
-}
-/* Au bout de la rangée, le panneau des résultats s'ouvre vers la gauche : il ne déborde jamais de la page. */
-.entete-module > .rv .rv__panneau {
-  inset-inline: auto 0;
 }
 @media (max-width: 48em) {
   .entete-module:has(> .rv) {

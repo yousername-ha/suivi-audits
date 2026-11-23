@@ -371,3 +371,15 @@ html:is([data-onglets='barre'], [data-onglets='pastilles'])
     inline-size: min(100%, 20rem);
   }
 }
+
+/* 7.6.1 (demande du RSSI du 23/11/2026 : une fiche de risque tient en une seule vue sur un écran 1920 × 1080 comme sur un
+   écran 3840) : dans les fenêtres, l'espacement entre les champs reste serré, proche de celui de la 7.6.0 ; les champs,
+   les boutons et les textes gardent les tailles de la densité normale. Les pages gardent l'espacement de la 7.5. */
+html[data-densite='normale'] .mantine-Modal-content {
+  --mantine-spacing-2xs: 0.125rem;
+  --mantine-spacing-xs: 0.25rem;
+  --mantine-spacing-sm: 0.375rem;
+  --mantine-spacing-md: 0.5rem;
+  --mantine-spacing-lg: 0.75rem;
+  --mantine-spacing-xl: 1rem;
+}
