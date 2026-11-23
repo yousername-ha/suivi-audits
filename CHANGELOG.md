@@ -2,6 +2,20 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+Aucune action : correctif d'affichage, ni migration ni commande sur le serveur.
+
+### Corrigé
+
+- Administration, remise à vide (et « recharger la démonstration ») : le bouton grisé dit désormais pourquoi sous
+  lui-même (remise à vide non autorisée, opération en cours, sauvegarde de moins de 30 minutes manquante, phrase
+  différente, code incomplet). La phrase à recopier est comparée après normalisation Unicode et des espaces : un « É »
+  tapé en deux caractères, comme sur certains claviers et téléphones, est accepté ; la casse et les accents comptent
+  toujours.
+
 ## [7.6.1] — 2026-11-23
 
 ### Notes de mise à jour
