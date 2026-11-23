@@ -161,8 +161,8 @@ fictives) ; il retient trois candidates à essayer sur sa plateforme avant de ch
 Décision :
 
 1. **À l'essai, à réduire à une seule police une fois le choix fait** : Plateforme > Apparence, « Police (essai) », pour tous
-   les comptes de l'instance : Lexend (par défaut), Plex Sans, Figtree ou Public Sans. Réglage `police` de la section
-   d'apparence existante (`lexend` par défaut, `plex`, `figtree`, `public-sans`, toute autre valeur refusée), dans le JSON des
+   les comptes de l'instance : Lexend (par défaut), Plex Sans, Figtree ou Public Sans. Réglage `police` facultatif de la
+   section d'apparence existante (absent ou `lexend` : Lexend ; `plex`, `figtree`, `public-sans` ; toute autre valeur refusée), dans le JSON des
    réglages : aucune migration ; même droit que l'apparence (`parametres:modifier`), journal d'audit et If-Match ; appliqué
    par l'attribut `data-police` de `<html>`, qui remplace `--mantine-font-family` et `--mantine-font-family-headings`
    (feuille `packages/ui/src/polices-essai.css`). Aperçu immédiat dans le panneau tant que la section n'est pas enregistrée.

@@ -96,7 +96,8 @@ export const ApparenceSettings = z.object({
   densite: z.enum(DENSITES),
   style: z.enum(STYLES).default('sage'),
   fenetres: z.enum(FENETRES).default('barre'),
-  police: z.enum(POLICES).default('lexend'),
+  /** Absente (enregistrement antérieur à l'essai, relu tel quel) : Lexend. */
+  police: z.enum(POLICES).optional(),
 });
 export const NotificationsSettings = z.object({
   echeancesJours: z.number().int().min(0).max(365),
