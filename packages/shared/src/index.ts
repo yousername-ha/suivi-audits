@@ -77,6 +77,8 @@ export * from './carte-surface.js';
 export * from './mandataire.js';
 export * from './rapprochement-vulnerabilites.js';
 export * from './dictionnaire-cpe.js';
+export * from './cve-inconnue.js';
+export * from './annonces-veille.js';
 export * from './priorite-vulnerabilites.js';
 export * from './suivi-vulnerabilites.js';
 export * from './delais-vulnerabilites.js';

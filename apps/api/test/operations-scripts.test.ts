@@ -8,7 +8,17 @@ it('exécute le protocole hôte, les sauvegardes de sécurité, les interruption
     timeout: 60000,
   });
   // Lot CPE-1 (ADR 0100) : dix tests de plus (passage court « cpe-versions », témoin, débit, file des versions, tranches).
-  expect(r.stderr).toContain('Ran 83 tests');
+  // Lot CVE-INC : neuf de plus (file des CVE inconnues au passage court et complet, témoin commun, rapport refusé clos en
+  // échec, contrôles Tenable, troisième file de la veille). Relecture de la PR #369 : six de plus (chiffres Unicode refusés,
+  // script illisible, délai, privilèges et sortie trop grosse pour les deux scripts, budget des recherches Tenable, file des
+  // CVE après une panne de celle des versions, mesure d'un passage court complet avec cve.org muet). Décisions du RSSI du
+  // 23/11/2026 : six de plus (deux files chargées servies tour à tour, jamais un second script quand la clôture de la
+  // première demande échoue, une seule file chargée servie à chaque passage, même règle au passage complet, mémoire de
+  // l'alternance illisible ou remplacée par un lien, détail du mandataire injoignable remis à part de l'erreur dans les
+  // trois files de la veille). Lot ALH-MANDATAIRE : un de plus (détail du mandataire d'AlgoLightHouse remis à part de
+  // l'erreur, avec un échec seulement).
+  // Lot VR-2 (ADR 0110) : un de plus (actualités du CERT Santé et Journal officiel dans la file réglementaire).
+  expect(r.stderr).toContain('Ran 106 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);
 it('exécute le script isolé des connecteurs contre un faux service HTTPS local (module Intégrations, ADR 0076)', async () => {
@@ -17,8 +27,10 @@ it('exécute le script isolé des connecteurs contre un faux service HTTPS local
   });
   // Lot PRIO-1 : un test de plus (kits d'exploitation lus dans la chaîne exploitFrameworks). Lot TEN-SCORES : un de plus
   // (AES lu comme entier borné, valeurs hors norme écartées). Lot QF-TEN : un de plus (correctifs regroupés `sumremediation`
-  // en liste blanche, bornes, lecture incomplète ou refusée sans effet sur les failles).
-  expect(r.stderr).toContain('Ran 37 tests');
+  // en liste blanche, bornes, lecture incomplète ou refusée sans effet sur les failles). Relecture de la PR #369 : un de plus
+  // (borne de profondeur JSON linéaire sur un Mio hostile). Lot ALH-MANDATAIRE : un de plus (mandataire jamais nommé dans
+  // l'erreur, pour chaque cause et pour les réponses à la demande de tunnel ; détail à part).
+  expect(r.stderr).toContain('Ran 39 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);
 it('exécute le dictionnaire CPE du script isolé de la veille contre un faux service HTTPS local (ADR 0100, lot CPE-1)', async () => {
@@ -28,10 +40,21 @@ it('exécute le dictionnaire CPE du script isolé de la veille contre un faux se
   expect(r.stderr).toContain('Ran 9 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);
+it('exécute la CVE inconnue et les sources facultatives des scripts isolés contre un faux service HTTPS local (ADR 0100, lot CVE-INC)', async () => {
+  const r = await promisify(execFile)('python3', [path.join(REPO, 'scripts/tests/test_cve_inconnue.py')], {
+    timeout: 60000,
+  });
+  // Relecture de la PR #369 : quatre de plus (cve.org muet, réponse partielle de NVD dans le délai du passage court ; délai
+  // reçu contrôlé ; chiffres Unicode refusés ; nombre ou date hostile d'un préavis écarté et compté).
+  expect(r.stderr).toContain('Ran 17 tests');
+  expect(r.stderr).toMatch(/\nOK\n/);
+}, 65000);
 it('exécute le script isolé de la veille contre un faux service HTTPS local (module Vulnérabilités, ADR 0100)', async () => {
   const r = await promisify(execFile)('python3', [path.join(REPO, 'scripts/tests/test_veille_vulnerabilites.py')], {
     timeout: 60000,
   });
-  expect(r.stderr).toContain('Ran 39 tests');
+  // Relecture de la PR #369 (lot CVE-INC) : un de plus (borne de profondeur JSON linéaire sur un Mio hostile). Décision du
+  // RSSI du 23/11/2026 : un de plus (mandataire injoignable jamais nommé dans l'erreur, pour chaque source et chaque cause).
+  expect(r.stderr).toContain('Ran 41 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);

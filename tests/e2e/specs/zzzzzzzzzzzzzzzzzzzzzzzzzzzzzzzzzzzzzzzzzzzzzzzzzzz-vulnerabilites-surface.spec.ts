@@ -15,10 +15,10 @@
    carte, les fiches et le rangement sont couverts par les tests de l'interface et de l'API). Lot I1 : le connecteur se
    configure dans la carte « Intégrations » de la page Plateforme ; l'écran n'en montre que l'état et le lien. Lot SI2 :
    la carte vide dit qu'elle se remplit aussi par un import Silène ; le parcours de la carte à deux sources (regroupement
-   par adresse IP, filtre par nom, présentation empilée) est dans la spec de l'import Silène, qui a des données. */
+   par adresse IP, filtre unique de la carte, présentation empilée) est dans la spec de l'import Silène, qui a des données. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
+import { attendreFenetresStables, ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de l’écran, flux refermé', async ({
   browser,
@@ -42,6 +42,8 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
   const accessible = async () => {
     // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
     await page.waitForTimeout(400);
+    // Fenêtre encore en fondu : contraste mêlé au fond (lot ROBUSTESSE-TESTS).
+    await attendreFenetresStables(page);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
   };
   try {

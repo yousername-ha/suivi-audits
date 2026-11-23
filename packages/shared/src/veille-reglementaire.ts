@@ -5,10 +5,13 @@
    chemins est comparée à celle-ci par apps/api/test/veille-reglementaire-architecture.test.ts.
    Les publications sont des données affichées en texte simple : balises retirées à la collecte, longueur bornée, lien gardé
    seulement en https sur l'hôte de sa source. ANSSI : titre, date et lien seulement, jamais de résumé (décision du RSSI du
-   20/11/2026). CNIL (licence CC BY-ND) : le résumé du flux est repris tel quel ou pas du tout, jamais tronqué. ANS et
-   Légifrance : valeurs prévues, sans collecteur (l'adresse indiquée pour l'ANS ne rend pas de flux, constat du 20/11/2026).
+   20/11/2026). CNIL (licence CC BY-ND) : le résumé du flux est repris tel quel ou pas du tout, jamais tronqué. ANS : valeur
+   prévue, sans collecteur (l'adresse indiquée pour l'ANS ne rend pas de flux, constat du 20/11/2026).
    EUR-Lex : le flux publie tous les actes du Journal officiel ; seuls ceux dont le titre contient un mot de la liste réglable
-   (MOTS_CLES_EURLEX_DEFAUT) sont gardés, et le domaine se déduit du mot trouvé. */
+   (MOTS_CLES_EURLEX_DEFAUT) sont gardés, et le domaine se déduit du mot trouvé.
+   Lot VR-2 (décision du RSSI du 22/11/2026) : actualités du CERT Santé (titre, date et lien seulement) ; Journal officiel
+   (« legifrance ») lu dans le fichier quotidien des données ouvertes de la DILA, filtré par sa propre liste de mots-clés
+   (MOTS_CLES_JO_DEFAUT, même mécanisme qu'EUR-Lex), titre, date et lien vers Légifrance seulement. */
 import { z } from 'zod';
 import type { FluxEtatApplique } from './flux-externes.js';
 import type { Permission, SystemRole } from './permissions.js';
@@ -16,12 +19,26 @@ import { texteExterneValide, VEILLE_BORNES } from './veille-vulnerabilites.js';
 
 /* ------------------------------------------------------------------ Sources (liste fermée) */
 /** Identifiants stables (base, journal d'audit, CLI de l'exécutant) : ne jamais renommer. */
-export const SOURCES_REGLEMENTAIRES = ['cnil', 'cepd', 'eur-lex', 'anssi', 'ans', 'legifrance'] as const;
+export const SOURCES_REGLEMENTAIRES = [
+  'cnil',
+  'cepd',
+  'eur-lex',
+  'anssi',
+  'cert-sante-actualites',
+  'ans',
+  'legifrance',
+] as const;
 export const SourceReglementaire = z.enum(SOURCES_REGLEMENTAIRES);
 export type SourceReglementaire = z.infer<typeof SourceReglementaire>;
-/** Sources dotées d'un collecteur. Légifrance (Journal officiel) et ANS : valeurs prévues, sans collecteur dans cette
-    tranche (aucun flux public connu pour l'ANS). */
-export const SOURCES_REGLEMENTAIRES_COLLECTEES = ['cnil', 'cepd', 'eur-lex', 'anssi'] as const;
+/** Sources dotées d'un collecteur. ANS : valeur prévue, sans collecteur (aucun flux public connu). */
+export const SOURCES_REGLEMENTAIRES_COLLECTEES = [
+  'cnil',
+  'cepd',
+  'eur-lex',
+  'anssi',
+  'cert-sante-actualites',
+  'legifrance',
+] as const;
 export type SourceReglementaireCollectee = (typeof SOURCES_REGLEMENTAIRES_COLLECTEES)[number];
 export const estSourceCollectee = (s: SourceReglementaire): s is SourceReglementaireCollectee =>
   (SOURCES_REGLEMENTAIRES_COLLECTEES as readonly string[]).includes(s);
@@ -38,10 +55,19 @@ export interface SourceReglementaireDefinition {
   id: SourceReglementaire;
   libelle: string;
   organisme: string;
-  /** Hôte joint (TCP 443), seul admis pour le flux et pour les liens des publications ; null : aucun collecteur. */
+  /** Hôte joint (TCP 443), seul admis pour le flux et, sauf `hoteLiens`, pour les liens des publications ; null : aucun
+      collecteur. */
   hote: string | null;
   /** Chemin exact du flux (requête comprise) ; null : aucun collecteur. */
   chemin: string | null;
+  /** Chemins lus ensuite sur le même hôte, avec une variable dont le script contrôle la forme (Journal officiel :
+      `{archive}`, nom d'une archive quotidienne de la liste). */
+  cheminsSuivants?: readonly string[];
+  /** Hôte des liens des publications quand il diffère de l'hôte joint (Journal officiel : lien vers Légifrance). Jamais
+      joint par la plateforme : seul le navigateur de la personne l'ouvre. */
+  hoteLiens?: string;
+  /** Forme exacte exigée du lien, en plus de l'hôte (Journal officiel : page d'un texte par son identifiant). */
+  formeLien?: RegExp;
   /** Domaine de qualification des publications de la source (qui les qualifie : QUALIFICATION_SECURITE_ROLE, DROIT_DPO). EUR-Lex : domaine par
       défaut seulement, celui de chaque acte se déduit du mot-clé trouvé dans son titre. */
   domaine: DomaineReglementaire;
@@ -100,6 +126,18 @@ export const SOURCES_REGLEMENTAIRES_DEFINITIONS: readonly SourceReglementaireDef
     reprise: 'Titre, date et lien seulement : le résumé n’est jamais repris.',
   },
   {
+    id: 'cert-sante-actualites',
+    libelle: 'Actualités du CERT Santé',
+    organisme: 'CERT Santé (Agence du numérique en santé)',
+    hote: 'cyberveille.esante.gouv.fr',
+    chemin: '/actualites/rss.xml',
+    domaine: 'securite',
+    resume: false,
+    langue: 'fr',
+    reprise:
+      'Titre, date et lien seulement : le résumé n’est jamais repris (aucune condition de réutilisation publiée).',
+  },
+  {
     id: 'ans',
     libelle: 'Actualités de l’Agence du numérique en santé',
     organisme: 'Agence du numérique en santé (ANS)',
@@ -113,19 +151,23 @@ export const SOURCES_REGLEMENTAIRES_DEFINITIONS: readonly SourceReglementaireDef
   {
     id: 'legifrance',
     libelle: 'Journal officiel (Légifrance)',
-    organisme: 'DILA',
-    hote: null,
-    chemin: null,
+    organisme: 'Direction de l’information légale et administrative (DILA), données ouvertes du JORF',
+    hote: 'echanges.dila.gouv.fr',
+    chemin: '/OPENDATA/JORF/',
+    cheminsSuivants: ['/OPENDATA/JORF/{archive}'],
+    hoteLiens: 'www.legifrance.gouv.fr',
+    formeLien: /^https:\/\/www\.legifrance\.gouv\.fr\/jorf\/id\/JORFTEXT\d{12}$/,
     domaine: 'securite',
     resume: false,
     langue: 'fr',
-    reprise: 'Pas encore collecté : aucun flux dans cette tranche.',
+    reprise:
+      'Fichier quotidien du Journal officiel (données ouvertes de la DILA, Licence Ouverte) : seuls les textes dont le titre contient un mot-clé de la liste réglable sont gardés ; titre, date de publication et lien vers Légifrance, jamais le texte intégral (un titre de plus de 300 caractères est abrégé et se termine par « … »).',
   },
 ];
 
 export const sourceReglementaire = (id: SourceReglementaire): SourceReglementaireDefinition =>
   SOURCES_REGLEMENTAIRES_DEFINITIONS.find((s) => s.id === id)!;
-/** Sources jointes par le flux « veille-reglementaire » (celles qui ont un collecteur). */
+/** Sources jointes par le flux « veille-reglementaire » (celles qui ont un collecteur), dans l'ordre de la liste. */
 export const SOURCES_REGLEMENTAIRES_JOINTES = SOURCES_REGLEMENTAIRES_DEFINITIONS.filter(
   (s): s is SourceReglementaireDefinition & { hote: string; chemin: string } => s.hote !== null && s.chemin !== null,
 );
@@ -167,7 +209,7 @@ export const VEILLE_REGLEMENTAIRE_BORNES = {
   lien: 500,
   /** Publications gardées au plus par collecte (éléments `<item>` du flux). */
   items: 200,
-  /** Mots-clés du filtre d'EUR-Lex : nombre et longueur de chacun. */
+  /** Mots-clés des filtres d'EUR-Lex et du Journal officiel : nombre et longueur de chacun. */
   motsCles: 60,
   motCle: 60,
 } as const;
@@ -239,6 +281,39 @@ export const MOTS_CLES_EURLEX_DEFAUT: readonly MotCleEurLex[] = [
   { mot: 'resilience', domaine: 'securite' },
 ];
 
+/** Liste par défaut du Journal officiel (lot VR-2), en français seulement (titres du JORF). Ni « dispositifs médicaux »
+    (des dizaines d'arrêtés de remboursement par semaine) ni « santé » seul (trop large). */
+export const MOTS_CLES_JO_DEFAUT: readonly MotCleEurLex[] = [
+  { mot: 'données à caractère personnel', domaine: 'donnees-personnelles' },
+  { mot: 'données personnelles', domaine: 'donnees-personnelles' },
+  { mot: 'protection des données', domaine: 'donnees-personnelles' },
+  { mot: 'informatique et libertés', domaine: 'donnees-personnelles' },
+  { mot: 'vie privée', domaine: 'donnees-personnelles' },
+  { mot: 'données de santé', domaine: 'donnees-personnelles' },
+  { mot: 'cybersécurité', domaine: 'securite' },
+  { mot: 'sécurité des systèmes d’information', domaine: 'securite' },
+  { mot: 'sécurité numérique', domaine: 'securite' },
+  { mot: 'sécurité des réseaux', domaine: 'securite' },
+  { mot: 'sécurité de l’information', domaine: 'securite' },
+  { mot: 'numérique en santé', domaine: 'securite' },
+  { mot: 'identité numérique', domaine: 'securite' },
+  { mot: 'identification électronique', domaine: 'securite' },
+  { mot: 'services de confiance', domaine: 'securite' },
+  { mot: 'intelligence artificielle', domaine: 'securite' },
+  { mot: 'importance vitale', domaine: 'securite' },
+  { mot: 'cryptologie', domaine: 'securite' },
+  { mot: 'résilience', domaine: 'securite' },
+];
+
+/** Sources filtrées par mots-clés : chacune a sa liste, réglable à part (même route, même forme, mêmes bornes). */
+export const SOURCES_FILTREES_MOTS_CLES = ['eur-lex', 'legifrance'] as const;
+export type SourceFiltreeMotsCles = (typeof SOURCES_FILTREES_MOTS_CLES)[number];
+export const estSourceFiltree = (s: SourceReglementaire): s is SourceFiltreeMotsCles =>
+  (SOURCES_FILTREES_MOTS_CLES as readonly string[]).includes(s);
+/** Liste par défaut d'une source filtrée. */
+export const motsClesParDefaut = (s: SourceFiltreeMotsCles): readonly MotCleEurLex[] =>
+  s === 'legifrance' ? MOTS_CLES_JO_DEFAUT : MOTS_CLES_EURLEX_DEFAUT;
+
 /** Domaine d'un acte d'après son titre : celui du mot-clé trouvé (mot entier, sans tenir compte de la casse ni des accents) ;
     si des mots des deux domaines sont trouvés, « données personnelles » l'emporte (choix de réalisation, ADR 0110) ; null si
     aucun mot n'est trouvé (l'acte n'est pas gardé). */
@@ -249,12 +324,19 @@ export function domaineSelonMotsCles(titre: string, motsCles: readonly MotCleEur
   return trouves.has('securite') ? 'securite' : null;
 }
 
-/** Lien d'une publication : https, sur l'hôte exact de sa source, sans espace, guillemet ni chevron. */
+/** Lien d'une publication : https, sur l'hôte exact de ses liens (celui de sa source, sauf `hoteLiens`), sans espace,
+    guillemet ni chevron ; de la forme exacte `formeLien` si la source en impose une. */
 export function lienPublicationValide(source: SourceReglementaire, lien: string): boolean {
-  const hote = sourceReglementaire(source).hote;
+  const d = sourceReglementaire(source);
+  const hote = d.hote === null ? null : (d.hoteLiens ?? d.hote);
   if (!hote || lien.length > VEILLE_REGLEMENTAIRE_BORNES.lien) return false;
   const prefixe = `https://${hote}/`;
-  return lien.startsWith(prefixe) && !/[\s"'<>\\`]/.test(lien) && /^[\x21-\x7e]+$/.test(lien);
+  return (
+    lien.startsWith(prefixe) &&
+    !/[\s"'<>\\`]/.test(lien) &&
+    /^[\x21-\x7e]+$/.test(lien) &&
+    (!d.formeLien || d.formeLien.test(lien))
+  );
 }
 
 const texteExterne = (max: number) =>
@@ -379,7 +461,7 @@ export interface EtatSourceReglementaireDto {
   domaine: DomaineReglementaire;
   langue: 'fr' | 'en';
   reprise: string;
-  /** La source a-t-elle un collecteur (Légifrance : non) ? */
+  /** La source a-t-elle un collecteur (ANS : non) ? */
   collecteur: boolean;
   activee: boolean;
   frequenceHeures: number;
@@ -390,7 +472,7 @@ export interface EtatSourceReglementaireDto {
   enErreur: boolean;
   /** Activée, flux ouvert, sans réussite depuis trois périodes. */
   enRetard: boolean;
-  /** EUR-Lex : mots-clés en vigueur (réglés, sinon ceux par défaut) ; null pour les autres sources. */
+  /** EUR-Lex et Journal officiel : mots-clés en vigueur (réglés, sinon ceux par défaut) ; null pour les autres sources. */
   motsCles: { liste: MotCleEurLex[]; parDefaut: boolean } | null;
   derniereCollecte: CollecteReglementaireDto | null;
   /** Prochaine collecte automatique ; null si la source n'est pas activée ou le flux fermé. */

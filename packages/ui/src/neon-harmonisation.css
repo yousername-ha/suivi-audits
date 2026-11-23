@@ -62,7 +62,18 @@
   border-color: var(--menu-teinte-pilotage);
   background: var(--menu-survol);
 }
-.barre-boite__soumettre .barre-loupe {
+/* 7.6.1 : dans la boîte bleu nuit, le bouton qui lance la recherche prend la couleur des autres outils (la règle des
+   commandes sobres, pensée pour un fond clair, le rendait presque invisible). */
+html .barre-boite .mantine-Button-root.barre-boite__soumettre {
+  border-color: transparent;
+  background: transparent;
+  color: var(--menu-commande);
+}
+html .barre-boite .mantine-Button-root.barre-boite__soumettre:is(:hover, :focus-visible) {
+  border-color: var(--menu-teinte-pilotage);
+  background: var(--menu-survol);
+}
+.barre-boite__soumettre :is(.barre-loupe, .barre-lancer) {
   inline-size: 1.125rem;
   block-size: 1.125rem;
 }

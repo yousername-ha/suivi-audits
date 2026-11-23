@@ -11,6 +11,7 @@ import {
   lienPublicationValide,
   type MotCleEurLex,
   type PublicationReglementaireDto,
+  type SourceFiltreeMotsCles,
   sourceReglementaire,
   type SourceReglementaire,
   type StatutPublication,
@@ -60,7 +61,7 @@ export const peutQualifier = (
 export const qualifieurDuDomaine = (domaine: DomaineReglementaire) =>
   domaine === 'securite' ? 'au rôle RSSI' : 'au droit DPO';
 
-/** État affiché d'une source : non disponible (sans collecteur : ANS, Légifrance), désactivée, veille inactive, collecte en cours, erreur, retard, à jour. */
+/** État affiché d'une source : non disponible (sans collecteur : ANS), désactivée, veille inactive, collecte en cours, erreur, retard, à jour. */
 export function etatSourceReglementaire(
   s: EtatSourceReglementaireDto,
   fluxOuvert: boolean,
@@ -76,7 +77,24 @@ export function etatSourceReglementaire(
   return { libelle: 'À jour', etat: 'succes' };
 }
 
-/** Mots-clés d'EUR-Lex d'un domaine, un par ligne, pour la saisie. */
+/** Carte du filtre par mots-clés de chaque source filtrée (EUR-Lex ; Journal officiel, lot VR-2) : titre, explication et
+    nom repris dans la notification. */
+export const FILTRES_MOTS_CLES: Record<SourceFiltreeMotsCles, { titre: string; texte: string; nom: string }> = {
+  'eur-lex': {
+    titre: 'Filtre d’EUR-Lex',
+    nom: 'd’EUR-Lex',
+    texte:
+      'Le flux d’EUR-Lex publie tous les actes du Journal officiel : seuls ceux dont le titre contient l’un de ces mots sont gardés (sans tenir compte des majuscules ni des accents, mot entier).',
+  },
+  legifrance: {
+    titre: 'Filtre du Journal officiel',
+    nom: 'du Journal officiel',
+    texte:
+      'Le fichier quotidien du Journal officiel contient tous les textes publiés : seuls ceux dont le titre contient l’un de ces mots sont gardés (sans tenir compte des majuscules ni des accents, mot entier). Sa liste est propre au Journal officiel, en français.',
+  },
+};
+
+/** Mots-clés d'une source filtrée, d'un domaine, un par ligne, pour la saisie. */
 export const lignesMotsCles = (liste: readonly MotCleEurLex[], domaine: DomaineReglementaire) =>
   liste
     .filter((m) => m.domaine === domaine)
@@ -110,6 +128,7 @@ export const AUTORITES_REGLEMENTAIRES: Record<SourceReglementaire, { court: stri
   cepd: { court: 'CEPD', autorite: 'Comité européen' },
   'eur-lex': { court: 'EUR-Lex', autorite: 'Union européenne' },
   anssi: { court: 'ANSSI', autorite: 'Agence nationale' },
+  'cert-sante-actualites': { court: 'CERT Santé', autorite: 'Centre de veille (santé)' },
   ans: { court: 'ANS', autorite: 'Agence nationale (santé)' },
   legifrance: { court: 'Légifrance', autorite: 'Journal officiel' },
 };
@@ -127,6 +146,7 @@ export const PICTOS_REGLEMENTAIRES: Record<SourceReglementaire, PictoReglementai
   cepd: { sigle: 'CEPD', nom: 'Comité européen de la protection des données', forme: 'pilule', teinte: 'bleu' },
   'eur-lex': { sigle: 'EUR', nom: 'EUR-Lex', forme: 'rectangle', teinte: 'marine' },
   anssi: { sigle: 'SSI', nom: 'ANSSI', forme: 'bouclier', teinte: 'rouge' },
+  'cert-sante-actualites': { sigle: 'CS', nom: 'CERT Santé', forme: 'fanion', teinte: 'sarcelle' },
   ans: { sigle: 'ANS', nom: 'Agence du numérique en santé', forme: 'octogone', teinte: 'vert' },
   legifrance: { sigle: 'JO', nom: 'Journal officiel (Légifrance)', forme: 'trapeze', teinte: 'gris' },
 };

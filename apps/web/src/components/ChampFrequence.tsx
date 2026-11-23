@@ -14,6 +14,7 @@ export function ChampFrequence({
   avertissement,
   disabled = false,
   size = 'sm',
+  libelle = libelleFrequence,
 }: {
   /** Libellé visible ; sinon `ariaLabel` (cellule d'un tableau dont l'en-tête nomme la colonne). */
   label?: string;
@@ -24,6 +25,8 @@ export function ChampFrequence({
   avertissement: string | null;
   disabled?: boolean;
   size?: 'xs' | 'sm';
+  /** Libellé d'une valeur (heures par défaut ; lot CVE-INC : minutes pour les sources facultatives de la veille). */
+  libelle?: (valeur: number) => string;
 }) {
   return (
     <NativeSelect
@@ -43,7 +46,7 @@ export function ChampFrequence({
       inputWrapperOrder={['label', 'input', 'description']}
       value={String(valeur)}
       disabled={disabled}
-      data={frequences.map((h) => ({ value: String(h), label: libelleFrequence(h) }))}
+      data={frequences.map((h) => ({ value: String(h), label: libelle(h) }))}
       onChange={(e) => onChange(Number(e.currentTarget.value))}
     />
   );

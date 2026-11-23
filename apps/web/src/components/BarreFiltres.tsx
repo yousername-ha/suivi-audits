@@ -11,7 +11,7 @@ import {
   type SegmentedControlProps,
 } from '@mantine/core';
 import { Children, cloneElement, Fragment, isValidElement, type ReactElement, type ReactNode, type Ref } from 'react';
-import { BoiteOutils, IconeLoupe, type VueBoite } from './BarreOutils';
+import { BoiteOutils, IconeLancer, type VueBoite } from './BarreOutils';
 
 type Champ = ReactElement<TextInputProps & { ref?: Ref<HTMLInputElement> }>;
 type Controle = ReactElement<{
@@ -208,9 +208,10 @@ export function BarreFiltres({
           title: commande.props.title ?? String(commande.props.children).trim(),
           // Le nom du bouton reste son texte (masqué à l'écran), pas un attribut aria-label : un bouton « Rechercher »
           // à côté d'un champ « Rechercher » ne répond ainsi pas à la recherche d'un champ par son libellé.
+          // 7.6.1 : une flèche « lancer », pour ne pas répéter la loupe du champ quand celui-ci est réduit à une loupe.
           children: (
             <>
-              <IconeLoupe />
+              <IconeLancer />
               <VisuallyHidden>{commande.props.children}</VisuallyHidden>
             </>
           ),

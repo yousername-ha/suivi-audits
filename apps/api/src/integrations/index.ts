@@ -54,7 +54,7 @@ import type { Actor, Client, Db, Kdb } from '../db/db.js';
 import type { IntegrationExecutions, Integrations as LigneIntegrations } from '../db/types.generated.js';
 import type { FluxExternes } from '../flux-externes.js';
 import { conflict } from '../http/concurrency.js';
-import type { Mandataire } from '../mandataire.js';
+import { detailMandataire, type Mandataire } from '../mandataire.js';
 import { HttpError } from '../http/errors.js';
 import type { Vault } from '../security/crypto.js';
 
@@ -142,6 +142,13 @@ const nomEnBase = (e: unknown): never => {
 
 /** Clé d'un récepteur d'opération par lots : type de connecteur et opération. */
 export type CleRecepteur = `${IntegrationType}:${OperationIntegration}`;
+
+/** Ce que l'exécutant reçoit pour lire une instance (lot CVE-INC) : type, configuration, secrets ouverts. */
+export interface AccesExecutant {
+  type: IntegrationType;
+  configuration: Record<string, unknown>;
+  secrets: Record<string, string>;
+}
 
 export class Integrations {
   /** Modules destinataires des opérations rapportées par lots, par type et par opération, branchés par services.ts. */
@@ -542,7 +549,10 @@ export class Integrations {
 
   /* ---------------------------------------------------------------- CLI de l'exécutant */
   /** `suivi integrations-claim` : réclame l'exécution en file la plus ancienne dont le type a son flux ouvert et l'instance
-      active ; rend ce qu'il faut pour l'exécuter, secrets compris (seul chemin par lequel un secret quitte l'API). Une
+      active ; rend ce qu'il faut pour l'exécuter, secrets compris. Avec `pourExecutant` (recherche des contrôles Tenable
+      d'une CVE, lot CVE-INC, remise par `suivi cve-tenable-claim`), ce sont les deux seuls chemins par lesquels un secret
+      quitte l'API : tous deux par la CLI de l'exécutant, jamais par une route, et journalisés à la remise
+      (`integration.execution.reclamee`, `vulnerabilites.cve_tenable.reclamee`), sans le secret. Une
       demande dont le flux est fermé ou l'instance désactivée est close sans appel. Le module désactivé : rien n'est
       réclamé et les demandes en file sont closes. Une opération dont le module destinataire est désactivé
       (`modulesInactifs`) est close de même. */
@@ -743,7 +753,9 @@ export class Integrations {
           nom: cur.nom,
           operation: cur.operation,
           etat: fin.etat,
-          ...(resultat ? { resultat } : { erreur: fin.erreur }),
+          // Échec dû au mandataire sortant (décision du RSSI du 23/11/2026, lot ALH-MANDATAIRE) : hôte et port au seul
+          // journal d'audit, jamais dans l'exécution rangée ni dans une réponse.
+          ...(resultat ? { resultat } : { erreur: fin.erreur, ...detailMandataire(p) }),
         },
         c,
       );
@@ -771,6 +783,25 @@ export class Integrations {
     if (smsiId === null) throw new HttpError(422, `« ${t.libelle} » se rattache à un périmètre : choisissez-le.`);
     if (!(await this.db.k.selectFrom('grc_smsis').select('id').where('id', '=', smsiId).executeTakeFirst()))
       throw new HttpError(422, 'Périmètre introuvable.');
+  }
+
+  /** Lot CVE-INC (ADR 0100) : configuration et secrets d'une instance réseau active, pour une demande de lecture remise à
+      l'exécutant par une file du module Vulnérabilités (contrôles Tenable qui citent une CVE). Même chemin de sortie que
+      `reclamer` (la CLI de l'exécutant, jamais une route) ; null si l'instance est inactive ou si un secret manque.
+      L'appelant journalise la remise (`vulnerabilites.cve_tenable.reclamee`), sans le secret. */
+  async pourExecutant(id: string): Promise<AccesExecutant | null> {
+    const i = await this.lire(id);
+    if (!i.actif || !typeConnu(i.type)) return null;
+    const t = typeIntegration(i.type);
+    if (!t.flux) return null;
+    const scelles = await this.lireScelles(i.id, this.db.k);
+    const secrets: Record<string, string> = {};
+    for (const s of t.secrets) {
+      const b = scelles[s.id];
+      if (!b) return null;
+      secrets[s.id] = this.vault.openSmall(Buffer.from(b, 'base64'), aad(i.id, s.id)).toString('utf8');
+    }
+    return { type: i.type, configuration: i.configuration, secrets };
   }
 
   private async lireScelles(id: string, k: Kdb): Promise<Record<string, string>> {

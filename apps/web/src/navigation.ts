@@ -4,9 +4,14 @@
    ce fichier ne fait que les regrouper. Le test navigation.test.ts vérifie qu'aucune rubrique n'est perdue ni doublée.
    Exception : la « Configuration du pilotage » (`/pilotage/configuration`) n'est plus une rubrique du menu Pilotage mais une
    carte de la page Plateforme (administration-droits.ts, ADR 0081) ; son adresse et son droit restent ceux d'origine. De
-   même, « Intégrations » est une carte de la page Plateforme (ADR 0076, addendum du 19/11/2026) ; /integrations y redirige. */
+   même, « Intégrations » est une carte de la page Plateforme (ADR 0076, addendum du 19/11/2026) ; /integrations y redirige.
+   « Mes rappels » (`/pilotage/rappels`) s'ouvre par la cloche de l'en-tête depuis la 7.6.1. */
 import type { Action, Module, OrdreMenu, Permission } from '@suivi/shared';
 import { PILOTAGE_NAV } from './pilotage-navigation';
+
+/** Rubriques du Pilotage ouvertes depuis l'en-tête plutôt que depuis le menu (7.6.1 : « Mes rappels », cloche à gauche
+    du compte). Leur adresse et leur droit restent ceux d'origine. */
+export const PILOTAGE_DANS_ENTETE = ['rappels'] as const;
 
 export type FamilleId = 'pilotage' | 'organisation' | 'risques' | 'conformite' | 'actions' | 'resilience' | 'documents';
 
@@ -27,6 +32,8 @@ export interface Rubrique {
   prefixe?: boolean;
   /** Adresses supplémentaires qui désignent la même rubrique. */
   alias?: string[];
+  /** Libellé court dans la rangée d'onglets de la destination (le libellé complet reste celui du menu et de la recherche). */
+  onglet?: string;
 }
 export interface Destination {
   id: string;
@@ -40,6 +47,14 @@ export interface Famille {
 }
 
 const pilotage = new Map(PILOTAGE_NAV.flatMap((g) => g.items.map((i) => [i.id, i] as const)));
+/** 7.6.1 (demande du RSSI du 23/11/2026) : les vues des objectifs et indicateurs sont les onglets de la page, la vue
+    compacte en premier (ouverte par défaut) ; plus de seconde rangée d'onglets dans la page. */
+const ONGLETS_PILOTAGE: Record<string, string> = {
+  indicateurs: 'Vue compacte',
+  processus: 'Par processus',
+  objectifs: 'Par objectif',
+  boites: 'Boîtes de pilotage',
+};
 /** Rubrique du Pilotage décrite dans pilotage-navigation.ts. */
 const p = (id: string): Rubrique => {
   const i = pilotage.get(id);
@@ -52,6 +67,7 @@ const p = (id: string): Rubrique => {
     action: 'lire',
     ...(id === 'carte' ? { aussi: ['pilotage', 'lire'] as [Module, Action] } : {}),
     ...(id === 'synthese' ? { alias: ['/pilotage'] } : {}),
+    ...(ONGLETS_PILOTAGE[id] ? { onglet: ONGLETS_PILOTAGE[id] } : {}),
   };
 };
 const page = (
@@ -96,9 +112,10 @@ export const FAMILLES: Famille[] = [
     destinations: [
       dest('synthese', 'Synthèse', [p('synthese')]),
       dest('parcours', 'Parcours guidé', [p('parcours-iso'), p('parcours')]),
-      dest('objectifs', 'Objectifs et indicateurs', [p('processus'), p('objectifs'), p('indicateurs')]),
+      dest('objectifs', 'Objectifs et indicateurs', [p('indicateurs'), p('processus'), p('objectifs'), p('boites')]),
       dest('revues', 'Revues de direction', [p('revues')]),
-      dest('rappels', 'Mes rappels', [p('rappels')]),
+      // 7.6.1 (demande du RSSI du 23/11/2026) : « Mes rappels » n'est plus au menu ; la cloche de l'en-tête
+      // (ClocheRappels.tsx) y mène, à la même adresse et avec le même droit.
       // Module Intégrations (ADR 0076) : plus de rubrique du Pilotage depuis l'addendum du 19/11/2026 ; les connecteurs se
       // configurent dans la carte « Intégrations » de la page Plateforme (administration-droits.ts).
     ],

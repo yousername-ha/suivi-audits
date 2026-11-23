@@ -1,13 +1,14 @@
 /* Module Vulnérabilités (ADR 0100, lot F1) : fréquence de synchronisation réglable, de bout en bout, sans capture de
-   référence (aucune n'est approuvée sans relecture). Écran « Veille » : fréquence d'une source changée par la liste
-   déroulante puis relue, NVD sans « toutes les heures » et son avertissement relié au champ, EPSS fixe ; carte
+   référence (aucune n'est approuvée sans relecture). Carte « Veille des vulnérabilités » de la Plateforme (lot
+   VEILLE-PLATEFORME : la configuration de la veille y a quitté l'écran « Veille ») : fréquence d'une source changée par la
+   liste déroulante puis relue, NVD sans « toutes les heures » et son avertissement relié au champ, EPSS fixe ; carte
    « Intégrations » de la Plateforme : avertissement d'un connecteur affiché AVANT tout enregistrement (rien n'est créé) ;
    accessibilité en clair et en sombre. Le flux de la veille n'est pas ouvert : aucune source réelle n'est jointe, et aucune
    assertion ne dépend d'une collecte (le tic de l'API passe chaque minute). La fréquence changée est remise à sa valeur par
    défaut dans `finally`. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { attendreFenetresStables, sessionAdmin, watchPage } from '../helpers';
 
 const KEV = 'Fréquence de la source Catalogue des failles exploitées (KEV)';
 const NVD = 'Fréquence de la source Base nationale des vulnérabilités (NVD)';
@@ -44,10 +45,15 @@ for (const [mode, scheme, largeur] of [
     const page = await ctx.newPage(),
       problems = watchPage(page);
     try {
-      // Veille : fréquence par source, avertissement de NVD, EPSS fixe, prochaine collecte (veille fermée : aucune).
+      // Veille : fréquence par source, avertissement de NVD, EPSS fixe, prochaine collecte (veille fermée : aucune), dans la
+      // carte de la Plateforme ; l'écran « Veille » n'a plus aucune liste de fréquence.
       await page.goto('/vulnerabilites/veille');
       await expect(page.getByRole('heading', { name: 'Veille', level: 1 })).toBeVisible();
-      const sources = page.getByRole('region', { name: 'Sources de la veille' });
+      await expect(page.getByRole('combobox', { name: KEV, exact: true })).toHaveCount(0);
+      await page.goto('/plateforme/veille-vulnerabilites');
+      const carte = page.getByRole('dialog', { name: 'Veille des vulnérabilités', exact: true });
+      await expect(carte).toBeVisible();
+      const sources = carte.getByRole('region', { name: 'Sources de la veille', exact: true });
       await expect(sources.getByRole('cell', { name: 'Fréquence', exact: true })).toBeVisible();
       const kev = sources.getByRole('combobox', { name: KEV, exact: true });
       await expect(kev).toHaveValue('2');
@@ -66,11 +72,16 @@ for (const [mode, scheme, largeur] of [
 
       await kev.selectOption('4');
       await expect(page.getByText('Catalogue des failles exploitées (KEV) : toutes les 4 heures.')).toBeVisible();
+      // L'adresse de la carte la rouvre après un rechargement.
       await page.reload();
       await expect(
-        page.getByRole('region', { name: 'Sources de la veille' }).getByRole('combobox', { name: KEV, exact: true }),
+        page
+          .getByRole('dialog', { name: 'Veille des vulnérabilités', exact: true })
+          .getByRole('region', { name: 'Sources de la veille', exact: true })
+          .getByRole('combobox', { name: KEV, exact: true }),
       ).toHaveValue('4');
       await page.waitForTimeout(400);
+      await attendreFenetresStables(page); // carte rouverte : fin de son fondu
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
 
       // Carte « Intégrations » : avertissement dès le choix, avant d'enregistrer ; rien n'est créé.
@@ -93,6 +104,7 @@ for (const [mode, scheme, largeur] of [
       // Avertissement, pas blocage : le bouton reste actif.
       await expect(ajout.getByRole('button', { name: 'Créer l’instance' })).toBeEnabled();
       await page.waitForTimeout(400);
+      await attendreFenetresStables(page); // fenêtre « Ajouter » ouverte : fin de son fondu
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
       await frequence.selectOption('168');
       await expect(ajout.getByText(/charge supplémentaire sur Security Center/)).toHaveCount(0);

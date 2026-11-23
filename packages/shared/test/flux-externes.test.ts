@@ -46,11 +46,10 @@ describe('registre des flux vers l’extérieur', () => {
       expect(f.porteur.services.length, f.id).toBeGreaterThan(0);
       if (f.porteur.type === 'conteneur') expect(f.porteur.profil, f.id).toBeTruthy();
       expect(f.donnees, f.id).not.toBe('');
-      // Page de réglage : Configuration système, Plateforme, rubrique Intégrations pour les connecteurs (ADR 0076), ou
-      // écran de la veille du module Vulnérabilités (ADR 0100), écran de la veille réglementaire (ADR 0110).
-      expect(f.reglage.lien, f.id).toMatch(
-        /^\/(systeme\/|plateforme\/|integrations$|vulnerabilites\/veille$|veille-reglementaire$)/,
-      );
+      // Page de réglage : Configuration système, Plateforme (dont les cartes « Intégrations », ADR 0076, et « Veille des
+      // vulnérabilités », ADR 0100, lot VEILLE-PLATEFORME), rubrique Intégrations pour les connecteurs, ou écran de la veille
+      // réglementaire (ADR 0110).
+      expect(f.reglage.lien, f.id).toMatch(/^\/(systeme\/|plateforme\/|integrations$|veille-reglementaire$)/);
       expect(f.pareFeu.length, f.id).toBeGreaterThan(0);
       expect(f.siFerme, f.id).not.toBe('');
     }
@@ -93,6 +92,10 @@ describe('registre des flux vers l’extérieur', () => {
       ['sortant', 'TCP 443 (HTTPS)', 'api.first.org'],
       ['sortant', 'TCP 443 (HTTPS)', 'cert.cyber.gouv.fr'],
       ['sortant', 'TCP 443 (HTTPS)', 'cyberveille.esante.gouv.fr'],
+      // Lot CVE-INC : trois hôtes nouveaux (cve.org sur clic ; sources facultatives désactivées au départ).
+      ['sortant', 'TCP 443 (HTTPS)', 'cveawg.mitre.org'],
+      ['sortant', 'TCP 443 (HTTPS)', 'radar.cloudflare.com'],
+      ['sortant', 'TCP 443 (HTTPS)', 'tldrcve.com'],
     ]);
     expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(/adresse IP du serveur et des demandes de lecture/);
     // Lot CPE-1 (décision du RSSI du 22/11/2026) : la demande des versions d'un produit choisi dans la saisie lui fait
@@ -101,8 +104,15 @@ describe('registre des flux vers l’extérieur', () => {
       /l’éditeur et le produit choisis pour en lire les versions/,
     );
     expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(
-      /Aucune donnée métier en dehors de ce produit : ni machine, ni version déclarée, ni contenu de la plateforme\./,
+      /Aucune donnée métier en dehors de ce produit et de cet identifiant : ni machine, ni adresse, ni domaine, ni périmètre, ni version déclarée, ni contenu de la plateforme\./,
     );
+    // Lot CVE-INC : seul l'identifiant de la CVE consultée sort, sur le clic d'une personne ; les flux facultatifs sont lus
+    // sans aucun paramètre (le filtre par produit surveillé est fait sur le serveur).
+    expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(/l’identifiant de cette CVE, vers cve\.org/);
+    expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(/sans aucun paramètre/);
+    for (const h of ['cveawg.mitre.org', 'radar.cloudflare.com', 'tldrcve.com'])
+      expect(fluxExterne('veille-vulnerabilites').pareFeu.join(' ')).toContain(h);
+    expect(fluxExterne('tenable').donnees).toMatch(/contrôles Tenable qui citent cette CVE, par son seul identifiant/);
     expect(fluxExterne('veille-vulnerabilites').pareFeu.join(' ')).toContain('cyberveille.esante.gouv.fr');
     expect(fluxExterne('mises-a-jour').destinations.map((d) => d.hote)).toEqual(
       expect.arrayContaining(['github.com et api.github.com (publications)', 'ghcr.io (registre des images)']),
@@ -122,6 +132,11 @@ describe('geste d’activation (précision du RSSI du 15/11/2026)', () => {
     expect(fluxExterne('veille-vulnerabilites').activation.geste).toBe('Bouton « Activer la veille »');
     expect(fluxExterne('veille-reglementaire').activation.geste).toBe('Bouton « Activer la veille réglementaire »');
     expect(fluxExterne('antivirus').reglage.lien).toBe('/systeme/securite');
+    // Lot VEILLE-PLATEFORME (décision du RSSI du 23/11/2026) : la veille se configure dans la carte de la Plateforme.
+    expect(fluxExterne('veille-vulnerabilites').reglage).toEqual({
+      libelle: 'Plateforme > Veille des vulnérabilités',
+      lien: '/plateforme/veille-vulnerabilites',
+    });
     // Activation globale (ADR 0019) : l'assistant, le module Intégrations (connecteur Tenable) et le module Vulnérabilités
     // (veille) sont des modules dont la désactivation referme le flux.
     expect(FLUX_EXTERNES.filter((f) => f.moduleActivation).map((f) => [f.id, f.moduleActivation])).toEqual([

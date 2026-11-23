@@ -46,13 +46,15 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await expect(page.getByText('Processus de management')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ouvrir le processus PR2', exact: true })).toBeVisible();
     await capture(page, '02-processus');
-    await page.getByRole('tab', { name: 'Par objectif' }).click();
+    // 7.6.1 : les vues des objectifs et indicateurs sont les onglets de la page (liens de rubrique).
+    const vues = page.getByRole('navigation', { name: 'Rubriques : Objectifs et indicateurs' });
+    await vues.getByRole('link', { name: 'Par objectif' }).click();
     await expect(page.getByText('Maîtriser les accès aux systèmes').first()).toBeVisible();
     await capture(page, '03-par-objectif');
-    await page.getByRole('tab', { name: 'Vue compacte' }).click();
+    await vues.getByRole('link', { name: 'Vue compacte' }).click();
     await expect(page.getByRole('button', { name: 'Ouvrir l’indicateur IND1', exact: true })).toBeVisible();
     await capture(page, '04-vue-compacte');
-    await page.getByRole('tab', { name: 'Boîtes de pilotage' }).click();
+    await vues.getByRole('link', { name: 'Boîtes de pilotage' }).click();
     const boite = page.getByLabel('Registre du processus PR4');
     await expect(boite).toContainText(/Actions ouvertes\s*2 dont 1 en retard/);
     await expect(page.getByLabel('Indicateurs du processus PR4').getByRole('listitem')).not.toHaveCount(0);

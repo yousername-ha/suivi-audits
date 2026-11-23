@@ -41,6 +41,7 @@ import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
 import { useLive } from '../realtime';
 import { canReadBusiness, useCan, useMe, usePreferences } from '../session';
+import { ClocheRappels } from './ClocheRappels';
 import { MarqueOrganisation } from './MarqueOrganisation';
 import { RechercheMenu } from './RechercheMenu';
 import type { PageMenu } from './recherche-menu';
@@ -49,6 +50,7 @@ import { FenetreAlerteCritique } from '../vulnerabilites/FenetreAlerteCritique';
 import { RappelAlertesCritiques } from '../vulnerabilites/Alertes';
 import { RechercheVulnerabilites } from '../vulnerabilites/RechercheVulnerabilites';
 import { appliquerStyleFenetres } from '../fenetres';
+import { appliquerPolice } from '../police';
 
 /** Identité d'une famille pour sa teinte et son pictogramme : la même quel que soit son rang dans le menu. */
 const IDENTITE_FAMILLE: Record<FamilleId, IdentiteMenu> = {
@@ -79,6 +81,8 @@ function useAffichage() {
     html.dataset.style = me.appearance.style;
     // Fenêtres : style à l'essai pour toute l'instance (Plateforme > Apparence, barre d'accent par défaut).
     appliquerStyleFenetres(html, me.appearance.fenetres);
+    // Police : à l'essai pour toute l'instance (Plateforme > Apparence, Lexend par défaut).
+    appliquerPolice(html, me.appearance.police);
     // Onglets de page : forme à l'essai (préférence « onglets », barre bleu nuit par défaut).
     html.dataset.onglets = prefs.onglets ?? 'barre';
     if (colorScheme !== SCHEME[theme]) setColorScheme(SCHEME[theme]);
@@ -87,6 +91,7 @@ function useAffichage() {
     densite,
     me.appearance.style,
     me.appearance.fenetres,
+    me.appearance.police,
     prefs.onglets,
     theme,
     colorScheme,
@@ -381,6 +386,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   <IconeTheme />
                 </ActionIcon>
               </Tooltip>
+              {can('pilotage', 'lire') && <ClocheRappels />}
               <Text size="sm" fw={600} visibleFrom="sm" className="header-user">
                 {me.user?.displayName || me.user?.username}
               </Text>
@@ -401,13 +407,17 @@ export function Layout({ children }: { children: ReactNode }) {
         <main className="shell-main app-main" data-module={moduleMaintenance}>
           <ErrorAlert error={logoutError} />
           <BandeauCrise />
-          <OngletsRubriques />
+          {/* Lot R1 : barre de recherche globale du module, en tête de toutes ses pages (droit de lire le module).
+              7.6.1 (« trop de menu tue le menu ») : réduite à sa loupe, elle se place au bout de la rangée des onglets
+              (conteneur commun, sans effet sur les autres pages). */}
+          <div className="entete-module">
+            <OngletsRubriques />
+            {familleDeLaPage && localiser(loc.pathname)?.destination.id === 'vulnerabilites' && (
+              <RechercheVulnerabilites />
+            )}
+          </div>
           {/* Module Vulnérabilités (lot V6) : rappel discret dans l'en-tête du module quand une alerte critique est en cours ;
               la Vue d'ensemble (lot PC1) a son propre bandeau, plus complet. */}
-          {/* Lot R1 : barre de recherche globale du module, en tête de toutes ses pages (droit de lire le module). */}
-          {familleDeLaPage && localiser(loc.pathname)?.destination.id === 'vulnerabilites' && (
-            <RechercheVulnerabilites />
-          )}
           {familleDeLaPage &&
             localiser(loc.pathname)?.destination.id === 'vulnerabilites' &&
             loc.pathname !== '/vulnerabilites/vue' && <RappelAlertesCritiques />}

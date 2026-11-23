@@ -10,6 +10,8 @@
   le mouvement réduit, l'onglet masqué et l'impression.
 - **Addendum du 19/11/2026** (fenêtres : style B et taille automatique, en fin de document) : remplace, pour le cadre et la
   hauteur des fenêtres, le « Biseau commun » et la « hauteur naturelle » de la décision 6.
+- **Addendum du 23/11/2026** (police à l'essai, en fin de document) : Lexend reste la police par défaut ; trois autres
+  polices au choix de la plateforme, le temps de choisir.
 - Rédaction : session « Refonte Neon suivi-audits » (`session_01EnWdzg9gxV5Kzkp9Y5WBcd`)
 - Remplace, pour la direction graphique, l'[ADR 0015](0015-refonte-visuelle-sauge.md) (palette Sauge). Les autres
   principes de l'ADR 0015 restent : Inter locale, styles partagés dans `packages/ui`, rayons de 6 à 12 px, mouvement réduit.
@@ -150,3 +152,24 @@ filtres et fonctions propres à la cible restent ; aucun module retiré n'est r�
 
 Conséquences : les captures de référence qui montrent une fenêtre ou un panneau changent (relecture du RSSI avant
 remplacement) ; les cartes et dessins qui ne sont pas des fenêtres (matrice SWOT biseautée, cartes Studio) ne changent pas.
+
+## Addendum du 23/11/2026 — Police à l'essai
+
+Contexte : le RSSI demande de revoir la police de la plateforme. Six polices ont été comparées sur onze écrans (données
+fictives) ; il retient trois candidates à essayer sur sa plateforme avant de choisir.
+
+Décision :
+
+1. **À l'essai, à réduire à une seule police une fois le choix fait** : Plateforme > Apparence, « Police (essai) », pour tous
+   les comptes de l'instance : Lexend (par défaut), Plex Sans, Figtree ou Public Sans. Réglage `police` facultatif de la
+   section d'apparence existante (absent ou `lexend` : Lexend ; `plex`, `figtree`, `public-sans` ; toute autre valeur refusée), dans le JSON des
+   réglages : aucune migration ; même droit que l'apparence (`parametres:modifier`), journal d'audit et If-Match ; appliqué
+   par l'attribut `data-police` de `<html>`, qui remplace `--mantine-font-family` et `--mantine-font-family-headings`
+   (feuille `packages/ui/src/polices-essai.css`). Aperçu immédiat dans le panneau tant que la section n'est pas enregistrée.
+2. **Polices hébergées avec l'application**, comme Lexend (CSP `font-src 'self'`) : fichiers variables woff2, latin et latin
+   étendu, sous licence SIL OFL 1.1, licence de chacune à côté (`fonts/LICENSE-*`, notice de copyright de l'auteur
+   conservée, comme l'exige la licence : accord du RSSI du 23/11/2026). Une police n'est téléchargée que si elle est
+   choisie.
+
+Conséquences : aucune capture de référence ne change tant que Lexend reste choisie ; le réglage disparaîtra avec les polices
+non retenues une fois le choix fait.

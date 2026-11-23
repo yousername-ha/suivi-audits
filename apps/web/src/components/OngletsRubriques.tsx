@@ -96,7 +96,7 @@ export function OngletsRubriques() {
         if (!presentation)
           return (
             <Link key={r.id} to={r.to} aria-current={active ? 'page' : undefined}>
-              {r.label}
+              {r.onglet ?? r.label}
             </Link>
           );
         const Icone = presentation.icone;

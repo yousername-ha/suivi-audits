@@ -5,6 +5,11 @@
    CSP (watchPage). */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import type {
+  DroitsVeilleReglementaireDto,
+  PagePublicationsDto,
+  PublicationReglementaireDto,
+} from '../../../packages/shared/src/veille-reglementaire';
 import { sessionAdmin, watchPage } from '../helpers';
 
 const PUBLICATION = {
@@ -21,7 +26,7 @@ const PUBLICATION = {
   qualifiePar: null,
   suites: { exigences: 0, actions: 0, documents: 0 },
   version: 4,
-};
+} satisfies PublicationReglementaireDto;
 
 test('Veille réglementaire : sources, validation du flux annulée', async ({ browser }) => {
   const ctx = await browser.newContext({
@@ -36,14 +41,37 @@ test('Veille réglementaire : sources, validation du flux annulée', async ({ br
     await page.goto('/veille-reglementaire');
     await expect(page.getByRole('heading', { name: 'Veille réglementaire', level: 1 })).toBeVisible();
     const sources = page.getByRole('region', { name: 'Sources de la veille réglementaire' });
-    for (const hote of ['www.cnil.fr', 'www.edpb.europa.eu', 'eur-lex.europa.eu', 'cyber.gouv.fr'])
+    for (const hote of [
+      'www.cnil.fr',
+      'www.edpb.europa.eu',
+      'eur-lex.europa.eu',
+      'cyber.gouv.fr',
+      'cyberveille.esante.gouv.fr',
+      'echanges.dila.gouv.fr',
+    ])
       await expect(sources).toContainText(hote);
-    // ANS et Légifrance : aucun flux, source affichée non disponible, hôte de l'ANS absent.
+    // ANS : aucun flux, source affichée non disponible, sans hôte (le CERT Santé, sur un autre hôte, est collecté).
     await expect(sources).toContainText('Non disponible : aucun flux public connu.');
-    await expect(sources).not.toContainText('esante.gouv.fr');
-    // Filtre d'EUR-Lex : liste par défaut, saisissable par l'administrateur (droit d'administrer le module).
+    await expect(sources).not.toContainText(/(^|[^.\w-])(www\.)?esante\.gouv\.fr/);
+    // Lot VR-2 : CERT Santé et Journal officiel désactivés au départ, activables par l'administrateur.
+    await expect(page.getByRole('switch', { name: 'Activer la source Actualités du CERT Santé' })).not.toBeChecked();
+    await expect(
+      page.getByRole('switch', { name: 'Activer la source Journal officiel (Légifrance)' }),
+    ).not.toBeChecked();
+    // Filtres d'EUR-Lex et du Journal officiel : listes par défaut, saisissables par l'administrateur (droit d'administrer
+    // le module), une carte chacun.
     await expect(page.getByRole('heading', { name: 'Filtre d’EUR-Lex' })).toBeVisible();
-    await expect(page.getByLabel('Mots du domaine « Sécurité de l’information »')).toHaveValue(/cybersecurity/);
+    await expect(
+      page
+        .getByRole('region', { name: 'Filtre d’EUR-Lex' })
+        .getByLabel('Mots du domaine « Sécurité de l’information »'),
+    ).toHaveValue(/cybersecurity/);
+    await expect(page.getByRole('heading', { name: 'Filtre du Journal officiel' })).toBeVisible();
+    await expect(
+      page
+        .getByRole('region', { name: 'Filtre du Journal officiel' })
+        .getByLabel('Mots du domaine « Données personnelles »'),
+    ).toHaveValue(/données à caractère personnel/);
     await expect(page.getByText('Aucune source n’est lue')).toBeVisible();
     await expect(page.getByText('Aucune publication ne correspond.')).toBeVisible();
     await page.waitForTimeout(400);
@@ -52,7 +80,8 @@ test('Veille réglementaire : sources, validation du flux annulée', async ({ br
     await page.getByRole('button', { name: 'Activer la veille réglementaire' }).click();
     const fenetre = page.getByRole('dialog', { name: /Veille réglementaire/ });
     await expect(fenetre).toContainText('www.cnil.fr');
-    await expect(fenetre).not.toContainText('esante.gouv.fr');
+    await expect(fenetre).toContainText('echanges.dila.gouv.fr');
+    await expect(fenetre).not.toContainText(/(^|[^.\w-])(www\.)?esante\.gouv\.fr/);
     await expect(fenetre).toContainText('Aucune donnée métier');
     await expect(fenetre.getByRole('button', { name: 'Confirmer' })).toBeDisabled();
     await fenetre.getByRole('button', { name: 'Annuler' }).click();
@@ -78,13 +107,19 @@ test('Veille réglementaire : qualification en un clic (données fictives)', asy
   const page = await ctx.newPage(),
     problems = watchPage(page);
   try {
-    let courante: Record<string, unknown> = { ...PUBLICATION };
+    // Réponses simulées typées par le contrat partagé (packages/shared/src/veille-reglementaire.ts).
+    let courante: PublicationReglementaireDto = { ...PUBLICATION };
     const envois: { statut: unknown; ifMatch: string | undefined }[] = [];
     await page.route('**/api/veille-reglementaire/droits', (r) =>
-      r.fulfill({ json: { administrer: true, qualifier: { securite: true, donneesPersonnelles: false } } }),
+      r.fulfill({
+        json: {
+          administrer: true,
+          qualifier: { securite: true, donneesPersonnelles: false },
+        } satisfies DroitsVeilleReglementaireDto,
+      }),
     );
     await page.route(/\/api\/veille-reglementaire\/publications(\?|$)/, (r) =>
-      r.fulfill({ json: { elements: [courante], total: 1, page: 1, parPage: 25 } }),
+      r.fulfill({ json: { elements: [courante], total: 1, page: 1, parPage: 25 } satisfies PagePublicationsDto }),
     );
     await page.route(`**/api/veille-reglementaire/publications/${PUBLICATION.id}`, (r) => {
       envois.push({ statut: r.request().postDataJSON().statut, ifMatch: r.request().headers()['if-match'] });

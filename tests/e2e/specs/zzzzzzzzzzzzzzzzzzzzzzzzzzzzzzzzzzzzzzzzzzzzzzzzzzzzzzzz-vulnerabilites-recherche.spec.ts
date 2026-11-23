@@ -1,14 +1,15 @@
 /* Module Vulnérabilités (ADR 0100, lot R1) : barre de recherche globale, de bout en bout, sans capture de référence. Lecture
    seule : le parcours n'écrit rien et la pile reste dans son état initial (les réponses remplacées sont retirées dans le bloc
    `finally`). Sur une pile vierge, la route est vérifiée sur ses refus, sur une recherche sans résultat et sur un
-   identifiant CVE inconnu (« CVE inconnue de la veille locale », aucun appel sortant) ; puis la barre est jouée avec une
+   identifiant CVE inconnu (« CVE inconnue de la veille locale », aucun appel sortant ; lot CVE-INC : sa fiche s'ouvre, la
+   consultation de cve.org et NVD y est proposée sur clic) ; puis la barre est jouée avec une
    réponse de lecture remplacée par des données fictives (`page.route`, rien n'atteint la base) : groupes, clavier (flèches,
    Échap, Entrée), « tout voir » vers la veille filtrée, fiche d'une CVE ouverte dans la veille, accessibilité en clair et en
    sombre, CSP. Il ne dépend d'aucun état qui change seul (le tic de l'API ne crée ni CVE ni machine). Droits, cloisonnement
    et échappement sur des données rangées : apps/api/test/vulnerabilites-recherche.test.ts. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { sessionAdmin, watchPage } from '../helpers';
+import { attendreFenetresStables, sessionAdmin, watchPage } from '../helpers';
 
 const CHAMP = 'Rechercher une CVE, une machine, une adresse IP ou une application';
 const ID = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
@@ -83,6 +84,7 @@ for (const [mode, scheme] of [
     const axe = async () => {
       // Après un changement de page ou l'ouverture d'une liste : même attente que zzzzz-accessibilite.
       await page.waitForTimeout(400);
+      await attendreFenetresStables(page); // fenêtre ouverte juste avant : fin de son fondu
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
     };
     try {
@@ -105,6 +107,31 @@ for (const [mode, scheme] of [
         page.getByRole('status').filter({ hasText: 'CVE-2026-99999 : CVE inconnue de la veille locale.' }),
       ).toHaveCount(1);
       await axe();
+      // Lot CVE-INC : sa fiche s'ouvre ; sur une pile vierge (veille inactive), la consultation de cve.org et NVD n'est pas
+      // possible et rien n'est appelé ; « Voir chez Tenable » n'est qu'un lien.
+      // L'ouverture de la fiche (notée par l'API) est remplacée : le parcours reste en lecture seule.
+      await page.route('**/api/vulnerabilites/cves/CVE-2026-99999/ouverture', (x) =>
+        x.fulfill({ json: { connue: false, tenable: 'sans_integration' } }),
+      );
+      // Relecture de la PR #369 : le bouton est atteint à la tabulation depuis le champ (le panneau reste ouvert), puis Entrée.
+      await champ.press('Tab');
+      const ouvrir = page.getByRole('button', { name: /^Ouvrir sa fiche/ });
+      await expect(ouvrir).toBeFocused();
+      await expect(ouvrir).toBeVisible();
+      await page.keyboard.press('Enter');
+      const ficheInconnue = page.getByRole('dialog', { name: 'CVE-2026-99999 (veille)' });
+      await expect(ficheInconnue).toBeVisible();
+      await expect(
+        ficheInconnue.getByText('CVE-2026-99999 : CVE inconnue de la veille', { exact: true }),
+      ).toBeVisible();
+      await expect(ficheInconnue.getByRole('button', { name: 'Consulter cve.org et NVD' })).toBeDisabled();
+      await expect(ficheInconnue.getByRole('link', { name: /^Voir chez Tenable/ })).toHaveAttribute(
+        'href',
+        'https://www.tenable.com/cve/CVE-2026-99999',
+      );
+      await axe();
+      await ficheInconnue.getByRole('button', { name: 'Fermer la fenêtre' }).click();
+      await expect(ficheInconnue).toBeHidden();
       await champ.fill('zz-aucun-resultat');
       await expect(
         page.getByText('Aucun résultat dans le module pour « zz-aucun-resultat ».', { exact: true }),

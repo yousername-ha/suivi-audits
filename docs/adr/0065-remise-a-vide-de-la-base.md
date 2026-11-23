@@ -20,3 +20,26 @@
 - Les journaux du conteneur et les archives de sauvegarde ne sont pas effacés.
 - Les réglages à valeur unique listés en 6 ne reviennent pas à leur valeur d'origine.
 - Fonction pensée pour un serveur de recette : sur un serveur de production, laisser l'interrupteur désactivé.
+
+## Addendum du 23/11/2026 — régénérer la démonstration depuis l'écran
+
+Demande du RSSI du 23/11/2026 : un bouton pour régénérer les jeux de test directement dans la plateforme. Choix du RSSI
+(23/11/2026) : **les protections de la remise à vide**.
+
+1. **Où.** Même panneau, même fenêtre : un troisième choix, « Les données de travail, puis recharger la démonstration »,
+   entre les deux portées. Il n'apparaît donc que si l'interrupteur est actif (désactivé par défaut, à laisser désactivé en
+   production).
+2. **Garde-fous.** Ceux de la portée « données de travail » (point 4) : interrupteur, **phrase propre**
+   `RÉGÉNÉRER LA DÉMONSTRATION` (celle des données de travail ne vaut pas pour elle, ni l'inverse), code de double
+   authentification, sauvegarde réussie de moins de 30 minutes, exploitation libre, administrateurs seulement. Le choix est
+   refusé avec la portée « tout » (les comptes seraient effacés avant le chargement).
+3. **Effet.** Effacement des données de travail (point 5, inchangé), amorçage comme au démarrage, puis chargement du jeu
+   de démonstration fictif : le même que `suivi jeu-de-test` et que la case de l'installation (`chargerJeuDeTest`, par
+   l'API publique, au nom de l'administrateur qui le demande), module Vulnérabilités compris, sans aucun appel vers
+   Tenable. Environ une minute, dans la même requête (comme à l'installation).
+4. **Journal.** `remise_a_vide.executee` (portée « travail »), puis `remise_a_vide.demonstration_chargee`, ou
+   `remise_a_vide.demonstration_echec` avec le message d'erreur. Un échec du chargement laisse la base vide : l'effacement
+   est déjà fait ; l'écran le dit et la régénération peut être relancée.
+5. **Contrat.** `RemiseAVideRequest.demonstration` (facultatif, portée « travail » seulement), `phrases.demonstration`
+   dans l'état, `demonstration: 'chargee' | 'echec'` dans le résultat. Aucune migration, aucun droit nouveau, aucune
+   dépendance.

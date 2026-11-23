@@ -37,6 +37,13 @@ export interface MandataireExecutant {
   autorite: string;
 }
 
+/** Détail d'un échec de collecte ou d'une exécution de connecteur par le mandataire (décision du RSSI du 23/11/2026, veille
+    puis lot ALH-MANDATAIRE) : l'hôte et le port du mandataire sortant, rapportés à part par l'exécutant, ne vont qu'au journal
+    d'audit (lu par l'administration) ; l'erreur rangée avec la collecte ou l'exécution et rendue à qui lit le module ne les
+    nomme pas. */
+export const detailMandataire = (r: { detail?: string | undefined }): { detail?: string } =>
+  r.detail ? { detail: r.detail } : {};
+
 /** Ce que le journal garde d'un réglage : ni mot de passe ni certificat entier. */
 const pourJournal = (v: ReglageMandataire) => ({
   actif: v.actif,

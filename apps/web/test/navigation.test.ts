@@ -2,7 +2,15 @@
 import { ETAPES_PARCOURS, type Action, type Module } from '@suivi/shared';
 import { describe, expect, it } from 'vitest';
 import { PILOTAGE_DANS_ADMINISTRATION } from '../src/administration-droits';
-import { deplacerDansMenu, FAMILLES, famillesVisibles, localiser, ordonnerMenu, placer } from '../src/navigation';
+import {
+  deplacerDansMenu,
+  FAMILLES,
+  famillesVisibles,
+  localiser,
+  ordonnerMenu,
+  PILOTAGE_DANS_ENTETE,
+  placer,
+} from '../src/navigation';
 import { resoudreDestination } from '../src/parcours-iso/destinations';
 import { PILOTAGE_NAV } from '../src/pilotage-navigation';
 
@@ -31,11 +39,11 @@ const INVENTAIRE = [
   'pilotage|synthese|synthese|/pilotage/synthese|pilotage|lire',
   'pilotage|parcours|parcours-iso|/pilotage/parcours-iso|pilotage|lire',
   'pilotage|parcours|parcours|/pilotage/parcours|pilotage|lire',
+  'pilotage|objectifs|indicateurs|/pilotage/indicateurs|pilotage|lire',
   'pilotage|objectifs|processus|/pilotage/processus|pilotage|lire',
   'pilotage|objectifs|objectifs|/pilotage/objectifs|pilotage|lire',
-  'pilotage|objectifs|indicateurs|/pilotage/indicateurs|pilotage|lire',
+  'pilotage|objectifs|boites|/pilotage/boites|pilotage|lire',
   'pilotage|revues|revues|/pilotage/revues|pilotage|lire',
-  'pilotage|rappels|rappels|/pilotage/rappels|pilotage|lire',
   'risques|risques|risques|/pilotage/risques|pilotage|lire',
   'risques|risques|etudes|/pilotage/etudes|pilotage|lire',
   'risques|risques|carte|/pilotage/carte|cartographie|lire',
@@ -103,8 +111,8 @@ describe('navigation', () => {
       'Documents',
     ]);
   });
-  it('reprend chaque rubrique du Pilotage une seule fois, avec son module (hors celles rangées dans l’Administration)', () => {
-    const rangees: readonly string[] = PILOTAGE_DANS_ADMINISTRATION;
+  it('reprend chaque rubrique du Pilotage une seule fois, avec son module (hors celles rangées dans l’Administration ou l’en-tête)', () => {
+    const rangees: readonly string[] = [...PILOTAGE_DANS_ADMINISTRATION, ...PILOTAGE_DANS_ENTETE];
     const attendu: { id: string; module: string }[] = PILOTAGE_NAV.flatMap((g) => [...g.items]).filter(
       (i) => !rangees.includes(i.id),
     );
@@ -154,21 +162,16 @@ describe('navigation', () => {
     expect(localiser('/cartographie/risques')?.famille.id).toBe('organisation');
     expect(localiser('/account')).toBeUndefined();
   });
-  it('« Mes rappels » est une destination du Pilotage ; la configuration du pilotage n’est plus au menu Pilotage', () => {
+  it('« Mes rappels » s’ouvre par la cloche de l’en-tête (7.6.1) ; la configuration du pilotage n’est plus au menu Pilotage', () => {
     const pilotage = FAMILLES.find((f) => f.id === 'pilotage');
-    const rappels = pilotage?.destinations.find((d) => d.id === 'rappels');
-    expect(rappels).toMatchObject({ label: 'Mes rappels' });
-    expect(rappels?.rubriques.map((r) => [r.id, r.to, r.module, r.action])).toEqual([
-      ['rappels', '/pilotage/rappels', 'pilotage', 'lire'],
-    ]);
-    expect(pilotage?.destinations.map((d) => d.id)).toEqual(['synthese', 'parcours', 'objectifs', 'revues', 'rappels']);
+    expect(pilotage?.destinations.find((d) => d.id === 'rappels')).toBeUndefined();
+    expect(pilotage?.destinations.map((d) => d.id)).toEqual(['synthese', 'parcours', 'objectifs', 'revues']);
+    expect(rubriques.some((r) => r.id === 'rappels' || r.to === '/pilotage/rappels')).toBe(false);
     // Intégrations (ADR 0076, addendum du 19/11/2026) : carte de la page Plateforme, plus au menu Pilotage.
     expect(rubriques.some((r) => r.id === 'integrations' || r.to === '/integrations')).toBe(false);
     expect(rubriques.some((r) => r.id === 'configuration' || r.to === '/pilotage/configuration')).toBe(false);
-    expect(localiser('/pilotage/rappels')).toMatchObject({
-      famille: { id: 'pilotage' },
-      destination: { id: 'rappels', label: 'Mes rappels' },
-    });
+    // Page ouverte par la cloche : hors des familles du menu, même adresse et même droit qu'avant.
+    expect(localiser('/pilotage/rappels')).toBeUndefined();
     // Page de l'Administration : hors des familles du menu (la surbrillance passe par « Plateforme »).
     expect(localiser('/pilotage/configuration')).toBeUndefined();
     // Le libellé de la page reste celui du Pilotage, et son droit celui d'origine.
@@ -177,11 +180,12 @@ describe('navigation', () => {
       label: 'Configuration du pilotage',
       module: 'pilotage',
     });
+    expect(items.find((i) => i.id === 'rappels')).toMatchObject({ label: 'Mes rappels', module: 'pilotage' });
   });
-  it('« Mes rappels » reste visible avec la lecture du Pilotage, sans destination « Rappels et configuration »', () => {
+  it('le menu du Pilotage n’a plus « Mes rappels » (cloche de l’en-tête) ni « Rappels et configuration »', () => {
     const seulementPilotage = (module: Module, a: Action) => module === 'pilotage' && a === 'lire';
     const pilotage = famillesVisibles(seulementPilotage).find((f) => f.famille.id === 'pilotage');
-    expect(pilotage?.destinations.map((d) => d.label)).toContain('Mes rappels');
+    expect(pilotage?.destinations.map((d) => d.label)).not.toContain('Mes rappels');
     expect(famillesVisibles(tout).flatMap((f) => f.destinations.map((d) => d.label))).not.toContain(
       'Rappels et configuration',
     );

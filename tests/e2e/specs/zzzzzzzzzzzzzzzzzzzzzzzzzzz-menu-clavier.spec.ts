@@ -51,7 +51,7 @@ for (const theme of ['light', 'dark'] as const) {
   });
 }
 
-test('Menu : « Mes rappels » au clavier dans le Pilotage ; la configuration du pilotage est dans la Plateforme', async ({
+test('En-tête : « Mes rappels » au clavier par la cloche ; la configuration du pilotage est dans la Plateforme', async ({
   browser,
 }) => {
   const ctx = await browser.newContext({
@@ -67,11 +67,17 @@ test('Menu : « Mes rappels » au clavier dans le Pilotage ; la configuration du
     const famille = nav.getByRole('link', { name: /^Pilotage/ }).first();
     await famille.focus();
     await page.keyboard.press('Enter');
-    const rappels = nav.getByRole('link', { name: 'Mes rappels' });
-    await expect(rappels).toBeVisible();
+    // 7.6.1 : « Mes rappels » quitte le menu du Pilotage pour une cloche dans l'en-tête, à gauche du compte.
+    await expect(nav.getByRole('link', { name: 'Mes rappels' })).toHaveCount(0);
     await expect(nav.getByRole('link', { name: 'Rappels et configuration' })).toHaveCount(0);
     await expect(nav.getByRole('link', { name: 'Configuration du pilotage' })).toHaveCount(0);
-    await rappels.focus();
+    const cloche = page.getByRole('button', { name: /^Mes rappels : / });
+    await cloche.focus();
+    expect(await focusVisible(page)).toBe(true);
+    await page.keyboard.press('Enter');
+    const tout = page.getByRole('dialog', { name: 'Mes rappels' }).getByRole('link', { name: 'Voir tous mes rappels' });
+    await expect(tout).toBeVisible();
+    await tout.focus();
     expect(await focusVisible(page)).toBe(true);
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/\/pilotage\/rappels$/);

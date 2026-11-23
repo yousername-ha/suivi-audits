@@ -34,6 +34,7 @@ import { ModulesPanel } from './AdminModules';
 import { MursPanel } from './AdminMurs';
 import { ReglagesAssistantPanel } from '../assistant/ReglagesAssistant';
 import { IntegrationsPanel } from '../integrations/IntegrationsPage';
+import { ConfigurationVeillePanel } from '../vulnerabilites/ConfigurationVeille';
 import { NotificationsPanel } from './AdminNotifications';
 import { OperationsPanel } from './AdminOperations';
 import { TypesProcessusPanel } from './AdminTypesProcessus';
@@ -253,6 +254,19 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     icone: 'reseau',
     teinte: 'bleu',
     detail: () => <IntegrationsPanel />,
+  },
+  {
+    // ADR 0100, lot VEILLE-PLATEFORME (décision du RSSI du 23/11/2026, « comme pour les intégrations ») : la veille se
+    // configure ici ; l'écran « Veille » du module n'en garde que l'état et un lien « Configurer ». Plusieurs tableaux :
+    // fenêtre à défilement, jamais découpée en parties.
+    id: 'veille-vulnerabilites',
+    cote: 'plateforme',
+    titre: 'Veille des vulnérabilités',
+    resume: 'Activation de la veille, sources et fréquences, dictionnaire des produits (CPE), sources facultatives.',
+    icone: 'bouclier',
+    teinte: 'rouge',
+    detail: () => <ConfigurationVeillePanel />,
+    consultation: true,
   },
   {
     id: 'import',
