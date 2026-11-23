@@ -18,10 +18,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   le groupe, marqué « fournisseur supprimé »). Écran « Machines » : bouton « Groupes de machines… » (création, nom,
   description, fournisseur, machines lues à cocher avec recherche par nom ou adresse IP, « Tout cocher (n trouvées) »,
   mention « aussi dans « X » », suppression avec confirmation) et menu « Groupe » des filtres (chaque groupe avec son
-  nombre de machines lues, « Sans groupe »), valable pour la liste et le parc, avec « maintenu par <fournisseur> ».
+  nombre de machines lues, « Sans groupe »), valable pour la liste et le parc, avec « maintenu par <fournisseur> » (lien vers sa fiche).
   Lecture avec `vulnerabilites:lire` et le cloisonnement des machines par périmètre (machines lues seulement, drapeau
-  « d'autres machines hors de votre lecture » sans nombre) ; écritures avec `vulnerabilites:modifier`, If-Match et
-  journal (`vulnerabilites.groupe.*`, sans nom ni adresse de machine) ; rattacher ou changer le fournisseur demande aussi
+  « d'autres machines hors de votre lecture » sans nombre) ; écritures avec `vulnerabilites:modifier` (suppression d'un groupe avec
+  `vulnerabilites:supprimer`), If-Match et journal (`vulnerabilites.groupe.*`, sans nom ni adresse de machine) ; rattacher ou changer le fournisseur demande aussi
   `fournisseurs:lire`. Route `GET /api/vulnerabilites/fournisseurs/:id/groupes` pour la fiche d'un fournisseur (groupes
   rattachés, machines lues, failles critiques ouvertes des seules machines lues, aucun détail de machine ;
   `vulnerabilites:lire` et `fournisseurs:lire`). Rien des groupes ne part chez l'assistant. (session « Module surveillance

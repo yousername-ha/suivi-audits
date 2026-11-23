@@ -298,6 +298,7 @@ function FicheGroupe({
   onSupprime: (id: string) => void;
 }) {
   const qc = useQueryClient();
+  const peutSupprimer = useCan()('vulnerabilites', 'supprimer');
   const [saisie, setSaisie] = useState('');
   const [recherche, setRecherche] = useState({ q: '', membres: '' as '' | 'oui' | 'non' });
   const [page, setPage] = useState(1);
@@ -501,13 +502,18 @@ function FicheGroupe({
             />
           )}
           <Group justify="space-between">
-            <ConfirmButton
-              variant="default"
-              message={`Supprimer le groupe « ${groupe.nom} » ? Les machines restent ; seul le groupe disparaît.`}
-              onConfirm={supprimer}
-            >
-              Supprimer le groupe
-            </ConfirmButton>
+            {/* Supprimer un enregistrement exige le droit « supprimer » du module (ADR 0068) ; le serveur reste seul juge. */}
+            {peutSupprimer ? (
+              <ConfirmButton
+                variant="default"
+                message={`Supprimer le groupe « ${groupe.nom} » ? Les machines restent ; seul le groupe disparaît.`}
+                onConfirm={supprimer}
+              >
+                Supprimer le groupe
+              </ConfirmButton>
+            ) : (
+              <span />
+            )}
             <Group>
               {aDesChangements(changements) && (
                 <Text size="sm" c="dimmed" role="status">

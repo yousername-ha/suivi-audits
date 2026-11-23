@@ -154,7 +154,7 @@ beforeAll(async () => {
   admin = await login(t, await makeUser(t, 'grp_admin', 'admin'));
   await t.svc.db.q(
     `INSERT INTO roles(id, name, permissions) VALUES
-       ('r_grp_gest', 'Groupes, gestion', ARRAY['vulnerabilites:lire','vulnerabilites:modifier','fournisseurs:lire']),
+       ('r_grp_gest', 'Groupes, gestion', ARRAY['vulnerabilites:lire','vulnerabilites:modifier','vulnerabilites:supprimer','fournisseurs:lire']),
        ('r_grp_gest_sf', 'Groupes, gestion sans fournisseurs', ARRAY['vulnerabilites:lire','vulnerabilites:modifier']),
        ('r_grp_lire', 'Groupes, lecture', ARRAY['vulnerabilites:lire','fournisseurs:lire']),
        ('r_grp_lire_sf', 'Groupes, lecture sans fournisseurs', ARRAY['vulnerabilites:lire'])`,
@@ -274,7 +274,7 @@ describe('migration 105', () => {
 });
 
 describe('droits', () => {
-  it('lecture avec vulnerabilites:lire, écritures avec vulnerabilites:modifier, CSRF, module désactivé', async () => {
+  it('lecture avec vulnerabilites:lire, écritures avec vulnerabilites:modifier, suppression avec vulnerabilites:supprimer, CSRF, module désactivé', async () => {
     expect((await sansDroit.get(G)).statusCode).toBe(403);
     expect((await sansDroit.get(`${V}/fournisseurs/${fournisseur}/groupes`)).statusCode).toBe(403);
     expect((await lecteurA.get(G)).statusCode).toBe(200);
@@ -284,6 +284,8 @@ describe('droits', () => {
     const g = await creer(gestA, { nom: 'Groupe fictif des droits' });
     expect((await lecteurA.patch(`${G}/${g.id}`, { nom: 'Autre' }, ifMatch(1))).statusCode).toBe(403);
     expect((await lecteurA.del(`${G}/${g.id}`, ifMatch(1))).statusCode).toBe(403);
+    // Supprimer un groupe exige `vulnerabilites:supprimer` (ADR 0068) ; modifier ses machines reste à `vulnerabilites:modifier`.
+    expect((await gestSansF.del(`${G}/${g.id}`, ifMatch(1))).statusCode).toBe(403);
     expect((await membres(lecteurA, g.id, 1, { ajouter: [id.get(1)] })).statusCode).toBe(403);
     await t.svc.db.q(
       "UPDATE module_activation SET disabled = ARRAY['vulnerabilites'], version = version + 1 WHERE id = 1",

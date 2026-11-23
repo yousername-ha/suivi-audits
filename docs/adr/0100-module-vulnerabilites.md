@@ -4506,7 +4506,8 @@ sortant, rien chez l'assistant ni chez l'exécutant.
 3. **Filtre par groupe** dans la liste et dans le parc : tous, un groupe, « Sans groupe ».
 4. **Droits** : lecture avec `vulnerabilites:lire` et le cloisonnement par périmètre habituel des machines (machines lues
    seulement, nombre lu, drapeau « d'autres machines hors de votre lecture » sans nombre) ; création, modification,
-   suppression et membres avec le droit qui modifie déjà les machines du module, `vulnerabilites:modifier` ; journal
+   et membres avec le droit qui modifie déjà les machines du module, `vulnerabilites:modifier` ; suppression d'un groupe
+   avec `vulnerabilites:supprimer` (règle du socle, ADR 0068, tranchée par la session Coeur le 23/11/2026) ; journal
    d'audit de chaque écriture ; If-Match et version.
 5. **Route pour la fiche du fournisseur** : groupes rattachés au fournisseur, sans détail de machine, avec le nombre de
    machines lues, le drapeau hors lecture et le nombre de failles critiques ouvertes comptées sur les seules machines lues.
@@ -4553,7 +4554,7 @@ Toutes par `route()` (session, double authentification, module « vulnerabilites
 | `GET /api/vulnerabilites/groupes/:id/machines` | `vulnerabilites:lire` | `RechercheMachinesGroupe` : `q` (100 car., nom partiel ou début de l'adresse IP), `membres` (`oui` \| `non`), `page` | `PageMachinesGroupe`, ETag version |
 | `POST /api/vulnerabilites/groupes` | `vulnerabilites:modifier` (+ `fournisseurs:lire` si fournisseur) | `GroupeMachinesBody` : `nom`, `description` (défaut `''`), `fournisseurRef` (défaut `null`), `machineIds` (500 au plus, défaut `[]`) | 201, `GroupeMachines` |
 | `PATCH /api/vulnerabilites/groupes/:id` | `vulnerabilites:modifier` (+ `fournisseurs:lire` si le fournisseur change) | If-Match ; `GroupeMachinesPatch` : `nom`, `description`, `fournisseurRef` (`null` : retiré), un au moins | `GroupeMachines` (inchangé, même version, si rien ne change) |
-| `DELETE /api/vulnerabilites/groupes/:id` | `vulnerabilites:modifier` | If-Match | 204 |
+| `DELETE /api/vulnerabilites/groupes/:id` | `vulnerabilites:supprimer` | If-Match | 204 |
 | `POST /api/vulnerabilites/groupes/:id/machines` | `vulnerabilites:modifier` | If-Match ; `MembresGroupeBody` : `ajouter`, `retirer` (uuid, 500 au plus en tout, sans doublon ni recouvrement) | `BilanMembresGroupe` : `ajoutees`, `retirees`, `groupe` ; ETag |
 | `GET /api/vulnerabilites/fournisseurs/:id/groupes` | `vulnerabilites:lire` **et** `fournisseurs:lire` | `id` : identifiant du fournisseur (`SUP-001`, 1 à 60 caractères sans espace) | `GroupesDuFournisseur` |
 
@@ -4589,25 +4590,30 @@ Toutes par `route()` (session, double authentification, module « vulnerabilites
 
 - **Suppression d'un groupe qui compte des machines hors de la lecture de la personne : refusée (409)**. Elle effacerait des
   rattachements qu'elle ne voit pas ; une personne qui lit toutes les machines du groupe (l'administration, par exemple)
-  peut le supprimer.
-- **Suppression avec `vulnerabilites:modifier`**, comme décidé (« le droit qui modifie déjà les machines ») ; le module a
-  aussi `vulnerabilites:supprimer`, exigé pour supprimer un produit surveillé : à trancher s'il doit l'être ici.
+  peut le supprimer. Gardé par la session Coeur le 23/11/2026.
+- **Suppression avec `vulnerabilites:supprimer`** (tranché par la session Coeur le 23/11/2026 : l'ADR 0068 réserve ce droit
+  à toute suppression d'enregistrement, comme pour un produit surveillé ou la matrice RACI ; le choix « simple et souple »
+  du RSSI ne portait pas sur les droits de suppression). Le bouton « Supprimer le groupe » n'apparaît qu'avec ce droit ;
+  ajouter ou retirer des machines reste à `vulnerabilites:modifier`.
 - **Retirer le fournisseur** d'un groupe exige aussi `fournisseurs:lire` (c'est un changement du fournisseur).
 - **Nom unique** à la casse près (menu « Groupe » et mention « aussi dans « X » » sans ambiguïté).
 - **Ajouter ou retirer une machine** exige de la lire (comme relier un produit surveillé à une machine), sans exiger
   l'écriture sur son périmètre.
 - **Groupes visibles de toute personne qui lit le module** (nom, description, fournisseur) ; seules les machines sont
   cloisonnées.
-- **Lien « maintenu par »** : vers la page des fournisseurs (`/pilotage/fournisseurs`) ; la fiche d'un fournisseur n'a pas
-  d'adresse propre aujourd'hui (fenêtre de la page). Constante `PAGE_FOURNISSEURS` de `apps/web/src/vulnerabilites/groupes.ts`
-  à changer si la session Coeur ajoute un lien direct.
+- **Lien « maintenu par »** : vers la fiche du fournisseur, `/pilotage/fournisseurs?fiche=<id>` (`lienFicheFournisseur`
+  de `apps/web/src/vulnerabilites/groupes.ts`), adresse directe ajoutée par la session Coeur ; tant qu'elle n'est pas en
+  place, le paramètre est ignoré et le lien mène à la page des fournisseurs.
 - **Fenêtre** : la création demande d'abord le nom (puis la fenêtre du groupe s'ouvre pour cocher les machines), la route
   des machines d'un groupe ayant besoin d'un groupe existant.
 - **Remise à vide** : données de travail (voir ci-dessus).
 - **Nom du fournisseur hors porte de lecture** (ADR 0083) : comme décidé, il est donné à toute personne qui lit le module ;
   il est lu par le mappeur du registre des fournisseurs (`LegacyStore.mapper('suppliers').read`), sans la rédaction par
-  droits de la porte, et seuls l'identifiant et le nom en sortent. Le garde-fou `architecture-acces.test.ts` ne détecte que
-  `recompose()` et les tables GRC : cet accès n'y figure donc pas ; à inscrire à sa liste blanche si la revue le souhaite.
+  droits de la porte, et seuls l'identifiant et le nom en sortent. Inscrit à la liste blanche du garde-fou
+  `architecture-acces.test.ts` (catégorie « agrégat ») à la demande de la session Coeur (23/11/2026) : les fournisseurs
+  appartiennent à l'organisation, pas à un périmètre (ADR 0032), comme pour `GET /api/suppliers`. Le garde-fou repère
+  désormais aussi la lecture d'une clé de l'état historique par son mappeur (`.mapper(`) : `routes/import.ts`, déjà inscrit,
+  est le seul autre fichier concerné.
 
 ### Tests
 

@@ -25,7 +25,7 @@ import {
   mentionAutresGroupes,
   mentionFournisseur,
   optionsFiltreGroupe,
-  PAGE_FOURNISSEURS,
+  lienFicheFournisseur,
   toutCocher,
   urlMachinesGroupe,
   vueMachines,
@@ -106,10 +106,12 @@ describe('filtre « Groupe » de la liste et du parc', () => {
   });
   it('« maintenu par » : lien pour qui lit les fournisseurs, nom seul sinon ; « fournisseur supprimé » sans lien', () => {
     const f = groupe().fournisseur;
+    // Adresse directe de la fiche (paramètre `fiche` de la page des fournisseurs).
+    expect(lienFicheFournisseur('SUP-001')).toBe('/pilotage/fournisseurs?fiche=SUP-001');
     expect(mentionFournisseur(f, true)).toEqual({
       texte: 'maintenu par',
       nom: 'Fournisseur fictif',
-      lien: PAGE_FOURNISSEURS,
+      lien: lienFicheFournisseur(f!.id),
     });
     expect(mentionFournisseur(f, false)).toEqual({ texte: 'maintenu par', nom: 'Fournisseur fictif', lien: null });
     const supprime = { id: 'SUP-009', ref: 'legacy:suppliers:SUP-009', nom: null, etat: 'supprime' as const };
@@ -117,7 +119,8 @@ describe('filtre « Groupe » de la liste et du parc', () => {
     expect(mentionFournisseur(null, true)).toBeNull();
     const avecLien = rendu(createElement(MentionFournisseurGroupe, { groupe: groupe(), lireFournisseurs: true }));
     expect(avecLien).toContain('maintenu par');
-    expect(avecLien).toMatch(/<a[^>]*href="\/pilotage\/fournisseurs"[^>]*>Fournisseur fictif<\/a>/);
+    expect(avecLien).toMatch(/<a[^>]*href="\/pilotage\/fournisseurs\?fiche=[^"]+"[^>]*>Fournisseur fictif<\/a>/);
+    expect(avecLien).toContain(`href="${lienFicheFournisseur(f!.id)}"`);
     const sansLien = rendu(createElement(MentionFournisseurGroupe, { groupe: groupe(), lireFournisseurs: false }));
     expect(sansLien).toContain('Fournisseur fictif');
     expect(sansLien).not.toContain('<a');

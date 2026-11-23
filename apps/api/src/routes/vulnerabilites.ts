@@ -804,7 +804,7 @@ export const vulnerabilitesRoutes = [
     summary:
       'Supprimer un groupe de machines (If-Match : version du groupe) ; refusé (409) s’il compte des machines hors de la lecture de la personne ; les machines restent ; journalisé',
     tags,
-    access: 'vulnerabilites:modifier',
+    access: 'vulnerabilites:supprimer',
     params: id,
     handler: async ({ svc, s, params, req, ip }) => {
       await svc.vulnerabilites.groupes.supprimer(params.id, requireIfMatch(req), (s as Session).user, ip);

@@ -19,8 +19,10 @@ import {
 /** Clé de la liste des groupes (`GET /api/vulnerabilites/groupes`) ; les lectures d'un groupe la prolongent. */
 export const CLE_GROUPES = ['vulnerabilites', 'groupes'] as const;
 export const URL_GROUPES = '/api/vulnerabilites/groupes';
-/** Page des fournisseurs (Pilotage) : la fiche d'un fournisseur n'a pas d'adresse propre ; le lien mène au registre. */
+/** Page des fournisseurs (Pilotage) ; `?fiche=<id>` y ouvre la fiche d'un fournisseur (adresse directe ajoutée par la
+    session Coeur ; ignorée tant qu'elle n'est pas en place, le lien mène alors au registre). */
 export const PAGE_FOURNISSEURS = '/pilotage/fournisseurs';
+export const lienFicheFournisseur = (id: string) => `${PAGE_FOURNISSEURS}?fiche=${encodeURIComponent(id)}`;
 
 /** Présentation de l'écran « Machines » : la préférence mémorisée si elle est connue, sinon « Parc ». */
 export const vueMachines = (memorisee: unknown): VueMachines =>
@@ -57,7 +59,7 @@ export function mentionFournisseur(
 ): { texte: string; nom: string | null; lien: string | null } | null {
   if (!f) return null;
   if (f.etat === 'supprime' || f.nom === null) return { texte: LIBELLE_FOURNISSEUR_SUPPRIME, nom: null, lien: null };
-  return { texte: 'maintenu par', nom: f.nom, lien: lireFournisseurs ? PAGE_FOURNISSEURS : null };
+  return { texte: 'maintenu par', nom: f.nom, lien: lireFournisseurs ? lienFicheFournisseur(f.id) : null };
 }
 
 /** « aussi dans « X » » (ou « aussi dans « X » et « Y » ») ; rien si la machine n'est dans aucun autre groupe. */
