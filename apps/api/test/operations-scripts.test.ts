@@ -11,8 +11,12 @@ it('exécute le protocole hôte, les sauvegardes de sécurité, les interruption
   // Lot CVE-INC : neuf de plus (file des CVE inconnues au passage court et complet, témoin commun, rapport refusé clos en
   // échec, contrôles Tenable, troisième file de la veille). Relecture de la PR #369 : six de plus (chiffres Unicode refusés,
   // script illisible, délai, privilèges et sortie trop grosse pour les deux scripts, budget des recherches Tenable, file des
-  // CVE après une panne de celle des versions, mesure d'un passage court complet avec cve.org muet).
-  expect(r.stderr).toContain('Ran 98 tests');
+  // CVE après une panne de celle des versions, mesure d'un passage court complet avec cve.org muet). Décisions du RSSI du
+  // 23/11/2026 : six de plus (deux files chargées servies tour à tour, jamais un second script quand la clôture de la
+  // première demande échoue, une seule file chargée servie à chaque passage, même règle au passage complet, mémoire de
+  // l'alternance illisible ou remplacée par un lien, détail du mandataire injoignable remis à part de l'erreur dans les
+  // trois files de la veille).
+  expect(r.stderr).toContain('Ran 104 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);
 it('exécute le script isolé des connecteurs contre un faux service HTTPS local (module Intégrations, ADR 0076)', async () => {
@@ -46,7 +50,8 @@ it('exécute le script isolé de la veille contre un faux service HTTPS local (m
   const r = await promisify(execFile)('python3', [path.join(REPO, 'scripts/tests/test_veille_vulnerabilites.py')], {
     timeout: 60000,
   });
-  // Relecture de la PR #369 (lot CVE-INC) : un de plus (borne de profondeur JSON linéaire sur un Mio hostile).
-  expect(r.stderr).toContain('Ran 40 tests');
+  // Relecture de la PR #369 (lot CVE-INC) : un de plus (borne de profondeur JSON linéaire sur un Mio hostile). Décision du
+  // RSSI du 23/11/2026 : un de plus (mandataire injoignable jamais nommé dans l'erreur, pour chaque source et chaque cause).
+  expect(r.stderr).toContain('Ran 41 tests');
   expect(r.stderr).toMatch(/\nOK\n/);
 }, 65000);

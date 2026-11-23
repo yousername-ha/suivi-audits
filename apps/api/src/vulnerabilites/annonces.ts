@@ -11,6 +11,10 @@
    - Résumés de tldrcve : rangés tels que le flux les publie (texte simple borné) ; les cartes de l'interface y ajoutent les
      faits de la plateforme (exploitation, KEV, EPSS, présence, exposition, produit surveillé), les mêmes pour tout le monde.
    - Purge : annonces non revues depuis 90 jours, journal des collectes de plus de 90 jours.
+   - Journal d'audit (décision du RSSI du 23/11/2026) : une seule entrée par collecte, à sa fin, avec son résultat
+     (`vulnerabilites.annonces.collecte.terminee` : reçue avec ses nombres, ou échec ou expiration avec l'erreur) ; ni la
+     demande planifiée ni la réclamation par l'exécutant n'y sont inscrites (à 15 minutes, trois entrées par collecte
+     faisaient près de 300 lignes par jour). Le journal des collectes (une ligne par collecte) est purgé à 90 jours.
    Réglages avec `vulnerabilites:administrer`, If-Match, journal `vulnerabilites.annonces.reglage`. Kysely (ADR 0062). */
 import {
   ANNONCES_BORNES,
@@ -40,11 +44,11 @@ import {
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import { z } from 'zod';
-import type { Actor, Db, Kdb } from '../db/db.js';
+import type { Actor, Client, Db, Kdb } from '../db/db.js';
 import type { FluxExternes } from '../flux-externes.js';
 import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
-import type { Mandataire } from '../mandataire.js';
+import { detailMandataire, type Mandataire } from '../mandataire.js';
 import { nonRemplacee } from './cve-inconnue.js';
 import { cvesExploitees } from './sources.js';
 import type { SurfaceExterneAlh } from './surface-externe.js';
@@ -57,6 +61,8 @@ const ABANDON_EN_COURS = sql<Date>`now() - interval '10 minutes'`;
 const EXECUTANT = { username: 'exécutant serveur' };
 const PLANIFICATION = { username: 'planification' };
 const iso = (d: Date | null | undefined) => d?.toISOString() ?? null;
+/** Colonnes d'une collecte close, pour son entrée unique au journal d'audit. */
+const FIN = ['id', 'source', 'etat', 'elements', 'gardes', 'erreur'] as const;
 const minutes = (s: SourceAnnonce, reglee: number | null | undefined) => frequenceAnnonces(s, reglee);
 
 export class AnnoncesVeille {
@@ -155,7 +161,7 @@ export class AnnoncesVeille {
     if (!(await this.flux.ouvert(FLUX))) return [];
     return this.db.tx(async (c, k) => {
       await verrouFile(k);
-      await this.menage(k);
+      await this.menage(k, c);
       const etats = await k
         .selectFrom('vulnerabilites_veille_annonces_sources')
         .select(['source', 'frequence_minutes', 'planifiee_le'])
@@ -180,26 +186,42 @@ export class AnnoncesVeille {
           .where('etat', 'in', ['en_file', 'en_cours'])
           .executeTakeFirst();
         if (attend) continue;
+        // Aucune entrée au journal d'audit à la demande : la collecte y est inscrite une fois, à sa fin.
         const r = await k
           .insertInto('vulnerabilites_veille_annonces_collectes')
           .values({ source: s, origine: 'planifie', demande_par: PLANIFICATION.username })
           .returning('id')
           .executeTakeFirstOrThrow();
-        await this.db.audit(
-          PLANIFICATION,
-          null,
-          'vulnerabilites.annonces.collecte.demandee',
-          r.id,
-          { source: s, origine: 'planifie' },
-          c,
-        );
         ids.push(r.id);
       }
       return ids;
     });
   }
 
-  private async menage(k: Kdb) {
+  /** Seule entrée du journal d'audit pour une collecte, à sa fin : source, état, nombres reçus, erreur (et, pour un
+      mandataire sortant injoignable, le détail de l'exécutant). */
+  private async journaliserFin(
+    c: Client,
+    l: { id: string; source: string; etat: string; elements: number; gardes: number; erreur: string | null },
+    detail: { detail?: string } = {},
+  ) {
+    await this.db.audit(
+      EXECUTANT,
+      null,
+      'vulnerabilites.annonces.collecte.terminee',
+      l.id,
+      {
+        source: l.source,
+        etat: l.etat,
+        elements: l.elements,
+        gardes: l.gardes,
+        ...(l.erreur ? { erreur: l.erreur, ...detail } : {}),
+      },
+      c,
+    );
+  }
+
+  private async menage(k: Kdb, c: Client) {
     const echouees = await k
       .updateTable('vulnerabilites_veille_annonces_collectes')
       .set({
@@ -209,16 +231,19 @@ export class AnnoncesVeille {
       })
       .where('etat', '=', 'en_file')
       .where('demande_le', '<', EXPIRATION_FILE)
-      .returning(['source', 'erreur'])
+      .returning(FIN)
       .execute();
     const interrompues = await k
       .updateTable('vulnerabilites_veille_annonces_collectes')
       .set({ etat: 'echec', termine_le: sql<Date>`now()`, erreur: 'Exécutant interrompu : aucun résultat reçu.' })
       .where('etat', '=', 'en_cours')
       .where('debute_le', '<', ABANDON_EN_COURS)
-      .returning(['source', 'erreur'])
+      .returning(FIN)
       .execute();
-    for (const r of [...echouees, ...interrompues]) await this.noterEchec(k, r.source as SourceAnnonce, r.erreur!);
+    for (const r of [...echouees, ...interrompues]) {
+      await this.noterEchec(k, r.source as SourceAnnonce, r.erreur!);
+      await this.journaliserFin(c, r);
+    }
     const jours = sql<Date>`now() - make_interval(days => ${ANNONCES_BORNES.conservationJours})`;
     await k.deleteFrom('vulnerabilites_veille_annonces').where('maj_le', '<', jours).execute();
     await k
@@ -245,7 +270,7 @@ export class AnnoncesVeille {
     const mandataire = ouvert ? await this.mandataire.pourExecutant() : null;
     return this.db.tx(async (c, k) => {
       await verrouFile(k);
-      await this.menage(k);
+      await this.menage(k, c);
       if (!ouvert || mandataire === 'illisible') {
         const closes = await k
           .updateTable('vulnerabilites_veille_annonces_collectes')
@@ -257,9 +282,12 @@ export class AnnoncesVeille {
               : 'Réglage du mandataire sortant illisible : la collecte n’a pas été transmise (Configuration système, Mandataire sortant).',
           })
           .where('etat', '=', 'en_file')
-          .returning(['source', 'erreur'])
+          .returning(FIN)
           .execute();
-        for (const x of closes) await this.noterEchec(k, x.source as SourceAnnonce, x.erreur!);
+        for (const x of closes) {
+          await this.noterEchec(k, x.source as SourceAnnonce, x.erreur!);
+          await this.journaliserFin(c, x);
+        }
         return null;
       }
       const r = await k
@@ -282,7 +310,7 @@ export class AnnoncesVeille {
         .values({ source: r.source, dernier_essai: sql<Date>`now()` })
         .onConflict((oc) => oc.column('source').doUpdateSet({ dernier_essai: sql<Date>`now()` }))
         .execute();
-      await this.db.audit(EXECUTANT, null, 'vulnerabilites.annonces.collecte.reclamee', r.id, { source: r.source }, c);
+      // Aucune entrée au journal d'audit à la réclamation : la collecte y est inscrite une fois, à sa fin.
       return { id: r.id, source: r.source, parametres: {}, ...(mandataire ? { mandataire } : {}) };
     });
   }
@@ -440,19 +468,18 @@ export class AnnoncesVeille {
           .onConflict((oc) => oc.column('source').doUpdateSet({ derniere_reussite: sql<Date>`now()`, erreur: null }))
           .execute();
       else await this.noterEchec(k, source, erreur!);
-      await this.db.audit(
-        EXECUTANT,
-        null,
-        'vulnerabilites.annonces.collecte.terminee',
-        id,
+      // Mandataire sortant injoignable (décision du RSSI du 23/11/2026) : hôte et port au seul journal d'audit.
+      await this.journaliserFin(
+        c,
         {
+          id,
           source,
           etat: ok ? 'recu' : 'echec',
           elements: cur.elements,
           gardes: cur.gardes,
-          ...(ok ? {} : { erreur }),
+          erreur: ok ? null : erreur,
         },
-        c,
+        detailMandataire(p),
       );
     });
   }

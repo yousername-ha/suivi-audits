@@ -67,7 +67,7 @@ import type { VeilleReglementaireCollectes } from './db/types.generated.js';
 import type { FluxExternes } from './flux-externes.js';
 import { conflict } from './http/concurrency.js';
 import { HttpError } from './http/errors.js';
-import type { Mandataire } from './mandataire.js';
+import { detailMandataire, type Mandataire } from './mandataire.js';
 import { loadGrants } from './rights.js';
 
 type LigneCollecte = Selectable<VeilleReglementaireCollectes>;
@@ -753,7 +753,8 @@ export class VeilleReglementaire {
           etat: fin.etat,
           elements: fin.elements,
           lots: fin.lots,
-          ...(ok ? { ecartes: fin.ecartes, tronque: fin.tronque } : { erreur: fin.erreur }),
+          // Mandataire sortant injoignable (décision du RSSI du 23/11/2026) : hôte et port au seul journal d'audit.
+          ...(ok ? { ecartes: fin.ecartes, tronque: fin.tronque } : { erreur: fin.erreur, ...detailMandataire(p) }),
         },
         c,
       );

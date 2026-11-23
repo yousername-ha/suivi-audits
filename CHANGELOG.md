@@ -32,7 +32,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   est atteinte ou quand une demande n'a pas été prise en charge à temps (« indisponible », redemandable) ; la remise des
   clés de l'instance à l'exécutant est journalisée, sans les clés. Une CVE citée seulement par une alerte close ou par une
   technologie qui n'est plus détectée est traitée comme inconnue (même règle que sa fiche) ; si cve.org ne répond pas, la
-  réponse de NVD est tout de même obtenue (session « Module surveillance vulnérabilités SMSI »).
+  réponse de NVD est tout de même obtenue. Les consultations et les recherches de versions CPE sont servies tour à tour
+  quand les deux attendent (décision du RSSI du 23/11/2026), toujours une seule par passage, pour qu'aucune ne bloque
+  l'autre (session « Module surveillance vulnérabilités SMSI »).
 - Vulnérabilités, **sources facultatives de la veille** (lot CVE-INC, décisions du RSSI du 22/11/2026, migration `103`),
   désactivées au départ et réglables par qui administre le module : « Préavis des CVE (Cloudflare Radar) », lu toutes les
   15 minutes par défaut (avertissement en dessous d'une heure), qui ne garde que les CVE critiques et celles dont le titre
@@ -43,7 +45,12 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   concerné ? » : présence sur le parc, exposition, produit surveillé ; « Que faire ? » : résumé du flux cité et lien vers
   tldrcve), sans effet sur la priorité. La fiche d'une CVE porte les marques de ces sources ; la gravité annoncée est
   affichée en français, un élément au nombre ou à la date hors bornes est écarté sans faire échouer la collecte, et la page
-  des préavis reste rapide quel que soit le nombre d'avis des CERT (session « Module surveillance vulnérabilités SMSI »).
+  des préavis reste rapide quel que soit le nombre d'avis des CERT. Décisions du RSSI du 23/11/2026 : une seule ligne au
+  journal d'audit par collecte de ces sources, à sa fin, avec son résultat (au lieu de trois) ; la remise à vide du travail
+  garde leur activation et leur fréquence, comme les fréquences de la veille ; pour toutes les sources de la veille (veille
+  des vulnérabilités, veille réglementaire, sources facultatives, CVE inconnue, dictionnaire CPE), l'erreur affichée quand
+  le mandataire sortant est injoignable ne donne plus son nom ni son port, gardés au seul journal d'audit de la collecte
+  (session « Module surveillance vulnérabilités SMSI »).
 
 ## [7.6.0] — 2026-11-22
 

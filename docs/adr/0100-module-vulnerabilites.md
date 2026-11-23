@@ -4140,12 +4140,12 @@ C. **tldrcve** : source facultative, désactivée au départ, une ou deux fois p
     routine que la veille (aucun code nouveau) ;
   - file des CVE inconnues (`cve-inconnue-claim | -finish`, réponse toujours `{ actif, demande }`) : **même passage court**
     que la file des versions CPE (le poller ne connaît que le mode `cpe-versions` : `MODES_COURTS` inchangé), une
-    consultation au plus, seulement si aucune demande de versions n'a été traitée dans ce passage (débit de la NVD partagé,
-    `CPE_DEBIT`), script borné à `CVE_DELAI_COURT` (12 s) ; au passage complet, une au plus, jamais d'attente du débit
-    (`CVE_DELAI`, 40 s) ; **dans un passage court, la file des versions CPE passe avant celle des CVE inconnues** : une
-    demande de versions traitée renvoie la consultation au passage court suivant, et une panne de la file des versions
-    (commande en échec, réponse illisible) n'empêche pas la consultation (priorité CPE documentée, à confirmer par le
-    RSSI) ;
+    consultation au plus, un seul script par passage pour les deux files (débit de la NVD partagé, `CPE_DEBIT`), script
+    borné à `CVE_DELAI_COURT` (12 s) ; au passage complet, une au plus, jamais d'attente du débit (`CVE_DELAI`, 40 s) ;
+    **les deux files sont servies en alternance** (décision du RSSI du 23/11/2026, ci-dessous, qui remplace la priorité
+    CPE de la première réalisation) : chaque passage, court ou complet, essaie d'abord la file qui n'a pas été servie la
+    dernière fois, puis l'autre si la première n'avait rien à traiter ou est en panne avant toute réclamation (commande en
+    échec, réponse illisible) ;
   - témoin `cpe-chaud` commun : posé si l'une des deux files dit `actif`, retiré si les deux ont répondu sans `actif`,
     inchangé si l'une n'a pas été réclamée (il expire alors seul, sa validité étant de deux minutes) ;
   - recherches Security Center (`cve-tenable-claim | -finish`) : passage complet seulement, flux « tenable » exigé, trois au
@@ -4157,7 +4157,7 @@ C. **tldrcve** : source facultative, désactivée au départ, une ou deux fois p
   `GET /api/vulnerabilites/veille/annonces/sources` et `GET /api/vulnerabilites/veille/annonces?source=&page=` (`lire`),
   `PATCH /api/vulnerabilites/veille/annonces/sources/:source` (`administrer`, If-Match). Journal :
   `vulnerabilites.cve_inconnue.consultation` (la CVE seulement), `vulnerabilites.annonces.reglage`,
-  `vulnerabilites.annonces.collecte.*`. La réponse de NVD est rangée par la routine de la veille (`rangerNvdConsultee`), puis
+  `vulnerabilites.annonces.collecte.terminee` (une ligne par collecte, décision du RSSI du 23/11/2026). La réponse de NVD est rangée par la routine de la veille (`rangerNvdConsultee`), puis
   rapprochement et évaluation des alertes, comme à la fin d'une collecte NVD. Le préavis est « remplacé » dès que la CVE a
   une réponse de NVD (`nvd_le`), une fiche de cve.org ou un avis d'un CERT qui la cite. Les secrets de l'instance Tenable sont
   remis à l'exécutant par la seule CLI (`Integrations.pourExecutant`, même chemin que `integrations-claim`).
@@ -4177,7 +4177,8 @@ C. **tldrcve** : source facultative, désactivée au départ, une ou deux fois p
 `vulnerabilites_veille_annonces_sources` (activation, fréquence en minutes en liste fermée par source, état),
 `vulnerabilites_veille_annonces_collectes` (file des collectes), `vulnerabilites_veille_annonces` (annonces gardées, lien
 contrôlé par source, un seul CVE par préavis, verdict de tldrcve en liste fermée). Toutes rangées « avec le travail » dans la
-remise à vide.
+remise à vide ; l'activation et la fréquence des sources facultatives y sont remises après l'effacement (décision du RSSI du
+23/11/2026).
 
 ### Ce qui sort
 
@@ -4217,7 +4218,7 @@ Rien d'identifiant : ni machine, ni adresse IP, ni domaine, ni périmètre, ni p
 
 Corrections demandées par la session Coeur, réalisées par le sous-agent développeur ; décisions en attente du RSSI non
 touchées (nom et port du mandataire dans l'erreur, priorité CPE, volume du journal des collectes d'annonces, remise à vide des
-réglages des sources facultatives).
+réglages des sources facultatives ; tranchées le 23/11/2026, voir la section suivante).
 
 1. **Une seule définition de « connue »** : `cveAUneFiche` (`apps/api/src/vulnerabilites/fiches.ts`), celle de la fiche d'une
    faille (veille, contrôle de Tenable, rapprochement proposé, rattaché ou confirmé, exposition sur Internet), employée par la
@@ -4265,6 +4266,54 @@ CLI, 10,9 s avec 1,5 s par commande (mesure à la main, valeur proche d'un `dock
 commandes de la CLI, 4,2 s d'attente de cve.org, la lecture de NVD. Quand le débit de la NVD impose une attente (jusqu'à
 6,5 s) avant la réclamation des versions, le temps restant peut ne plus suffire à la consultation (`restant` < 19 s) : elle
 part alors au passage court suivant. Non mesuré sur une pile avec le poller.
+
+### Décisions du RSSI du 23/11/2026
+
+Quatre décisions sur les points laissés en attente par la relecture de la PR #369, réalisées par le sous-agent développeur
+(session « Module surveillance vulnérabilités SMSI », `session_01EnWdzdnc8fBi6Yrc154Jy6`) ; aucune migration, aucune
+dépendance ; `scripts/update-worker.py`, `MODES_COURTS`, `docker*` et `apps/*/src/assistant/*` inchangés.
+
+1. **Mandataire masqué dans l'erreur lue par les lecteurs.** Le script de la veille (`scripts/veille-vulnerabilites.py`,
+   `MandataireInjoignable`, `ouvrir_tunnel`) dit « Mandataire sortant injoignable » avec la cause (nom introuvable,
+   connexion refusée, délai dépassé, erreur du réseau), sans nom ni port ; l'hôte et le port sortent à part, dans le champ
+   `detail` de sa sortie. Même chemin de code pour toutes les sources qui passent par le mandataire : veille des
+   vulnérabilités, veille réglementaire, sources facultatives, dictionnaire CPE et CVE inconnue. Aucun journal technique
+   de l'API ne reçoit les erreurs du script (le journal technique est celui du processus de l'API, en mémoire ; la CLI de
+   l'exécutant est un autre processus) : le détail reste là où l'exécutant journalise déjà ces erreurs, le **journal
+   d'audit** (lu avec `administration:lire`). L'exécutant le remet avec le rapport d'échec (`veille_echec`, champ `detail`,
+   une ligne bornée) des trois files de la veille ; `RapportCollecte` l'admet avec un échec seulement ; l'API l'ajoute à
+   l'entrée `*.collecte.terminee` (veille, veille réglementaire, sources facultatives) et ne le range ni avec la collecte
+   ni avec l'état de la source. Pour le dictionnaire CPE et la CVE inconnue, dont la fin n'écrit aujourd'hui aucune
+   erreur au journal d'audit, le détail n'est pas transmis : l'erreur rendue est masquée, l'hôte et le port ne sont
+   écrits nulle part. Le connecteur AlgoLightHouse (`scripts/integration-http.py`, autre script) n'est pas touché.
+2. **Alternance des files dans le passage court.** `Worker.files_courtes` (`scripts/exploitation-worker.py`), employé par
+   `cpe_court` et par `cpe` (passage complet, même règle) : la file qui n'a pas été servie la dernière fois est essayée
+   d'abord, l'autre ensuite si la première n'a rien réclamé ; mémoire de la dernière file servie dans le dossier privé,
+   `cpe-alternance.json` (`{"dernier": "cpe" | "cve"}`, écrit par `atomic`, 0600, un lien posé à sa place n'est jamais
+   suivi ; absente ou illisible : la file des versions d'abord). Toujours un seul script par passage : une demande
+   réclamée compte comme servie même si sa clôture échoue ensuite. Budget de 27 s, délais, témoin `cpe-chaud` et débit de
+   la NVD inchangés.
+3. **Une ligne par collecte d'annonces.** Les trois lignes venaient du journal d'audit : `vulnerabilites.annonces.collecte.
+   demandee` (planification), `.reclamee` (exécutant) et `.terminee`. Seule reste `vulnerabilites.annonces.collecte.terminee`,
+   écrite à la fin de chaque collecte avec son résultat (source, état `recu`, `echec` ou `expire`, éléments reçus et gardés,
+   erreur, et le détail du point 1) ; elle est désormais écrite aussi pour une collecte close sans être transmise (flux
+   fermé, mandataire illisible), expirée ou interrompue, qui n'avait jusqu'ici que sa ligne « demandée ». Le journal des
+   collectes (`vulnerabilites_veille_annonces_collectes`, une ligne par collecte) reste purgé à 90 jours ; le journal
+   d'audit, en ajout seul, n'est jamais purgé (une ligne par collecte au lieu de trois, soit 96 par jour à 15 minutes).
+   La veille des vulnérabilités et la veille réglementaire gardent leurs trois entrées.
+4. **Remise à vide : réglages des sources facultatives gardés.** `apps/api/src/remise-a-vide.ts` : comme les fréquences de
+   la veille, la portée « travail » relit l'activation et la fréquence de chaque source facultative réglée (activée ou
+   fréquence choisie) avant l'effacement et les remet ensuite ; l'état (dernière collecte, dernier essai, erreur,
+   référence de planification, version) repart de zéro, les annonces et le journal des collectes sont effacés. La portée
+   « tout » efface aussi ces réglages, comme les fréquences de la veille. La veille réglementaire, autre module, efface
+   toujours activation et fréquence de ses sources à la remise à vide du travail (non touchée).
+
+Tests : Python (`test_veille_vulnerabilites.py` : aucune source, aucune cause ne nomme le mandataire dans l'erreur ;
+`test_exploitation.py` : détail remis à part dans les trois files, deux files chargées servies tour à tour, une seule servie
+à chaque passage, même règle au passage complet, jamais un second script, mémoire illisible ou lien) ; API sur PostgreSQL
+(`vulnerabilites-cve-inconnue.test.ts` : ni nom ni port dans l'état de la veille, de la veille réglementaire et des sources
+facultatives, détail au seul journal d'audit, refusé avec un succès par la vraie CLI ; une collecte d'annonces, une ligne ;
+`remise-a-vide.test.ts` : réglages conservés, données effacées).
 
 ### Non vérifié
 

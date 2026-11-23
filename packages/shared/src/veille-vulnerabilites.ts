@@ -323,13 +323,22 @@ export const BilanCollecte = z
   .strict();
 export type BilanCollecte = z.infer<typeof BilanCollecte>;
 
-/** Entrée de `suivi veille-finish <id>` : succès avec son bilan, ou échec avec une erreur sur une ligne. */
+/** Entrée de `suivi veille-finish <id>` (et des fins de la veille réglementaire et des sources facultatives) : succès avec
+    son bilan, ou échec avec une erreur sur une ligne. `detail` (échec seulement ; décision du RSSI du 23/11/2026) : hôte et
+    port du mandataire sortant injoignable, consignés au seul journal d'audit (lu par l'administration), jamais rangés avec la
+    collecte ni rendus à qui lit le module. */
 export const RapportCollecte = z
-  .object({ ok: z.boolean(), bilan: BilanCollecte.nullable(), erreur: ErreurCourte.nullable() })
+  .object({
+    ok: z.boolean(),
+    bilan: BilanCollecte.nullable(),
+    erreur: ErreurCourte.nullable(),
+    detail: ErreurCourte.optional(),
+  })
   .strict()
   .refine((r) => (r.ok ? r.bilan !== null && r.erreur === null : r.bilan === null && r.erreur !== null), {
     message: 'Un succès porte un bilan sans erreur ; un échec, une erreur sans bilan.',
-  });
+  })
+  .refine((r) => !r.ok || r.detail === undefined, { message: 'Le détail accompagne un échec seulement.' });
 export type RapportCollecte = z.infer<typeof RapportCollecte>;
 
 /* ------------------------------------------------------------------ API */

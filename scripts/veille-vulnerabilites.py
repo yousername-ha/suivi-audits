@@ -9,7 +9,9 @@ Bibliothèque standard seule.
 Entrée : un objet JSON sur l'entrée standard {source, parametres, mandataire?, delai?} (« delai » : source « cve-inconnue »
 seulement, temps après lequel l'exécutant interrompt le script). Sortie : un objet JSON {ok, elements, bilan, erreur} sur
 la sortie standard ; les éléments sont normalisés en champs structurés et bornés, l'erreur tient sur une ligne et ne
-reprend jamais un contenu de réponse.
+reprend jamais un contenu de réponse. Mandataire sortant injoignable (décision du RSSI du 23/11/2026) : l'erreur, lue par
+toute personne qui lit le module, ne nomme ni l'hôte ni le port du mandataire ; ils ne sont donnés qu'à part, dans
+« detail » (une ligne), que l'exécutant remet au seul journal d'audit, lu par l'administration.
 
 Règles :
 - liste fermée des hôtes et des chemins, écrite ici (SOURCES), recopiée de packages/shared/src/veille-vulnerabilites.ts et
@@ -212,6 +214,16 @@ class Introuvable(Refus):
     """cve.org ne connaît pas l'identifiant demandé (code 404) : ce n'est pas un échec de la lecture."""
 
 
+class MandataireInjoignable(Refus):
+    """Mandataire sortant injoignable (décision du RSSI du 23/11/2026) : le message, rendu à toute personne qui lit le module,
+    ne nomme ni l'hôte ni le port du mandataire ; `detail` (hôte, port et cause) ne sort que dans le champ « detail » de la
+    sortie, remis par l'exécutant au seul journal d'audit."""
+
+    def __init__(self, message, detail):
+        super().__init__(message)
+        self.detail = detail
+
+
 class ElementHostile(Refus):
     """Nombre ou date hors des bornes de Python (OverflowError) dans un élément : l'élément est écarté et compté, la collecte
     continue."""
@@ -357,16 +369,22 @@ def lire_reponse_tunnel(sock):
 def ouvrir_tunnel(m, hote, port, delai):
     """Tunnel CONNECT vers hote:port à travers le mandataire ; l'authentification simple n'est envoyée qu'au mandataire.
     Renvoie la connexion ouverte, prête pour TLS vers la source. Chaque échec est expliqué sur une ligne, sans secret."""
+    # Message sans nom ni port du mandataire (lu par toute personne qui lit le module) ; hôte et port dans le détail seulement.
     try:
         sock = socket.create_connection((m["hote"], m["port"]), timeout=delai)
     except socket.gaierror:
-        raise Refus("Mandataire injoignable : nom %s introuvable depuis le serveur (DNS)." % m["hote"]) from None
+        raise MandataireInjoignable("Mandataire sortant injoignable : nom introuvable depuis le serveur (DNS).",
+                                    "Mandataire %s : nom introuvable depuis le serveur (DNS)." % nom_mandataire(m)) from None
     except ConnectionRefusedError:
-        raise Refus("Mandataire injoignable : connexion refusée sur %s (le mandataire n'écoute pas, ou un pare-feu la refuse)." % nom_mandataire(m)) from None
+        raise MandataireInjoignable("Mandataire sortant injoignable : connexion refusée (le mandataire n'écoute pas, ou un pare-feu la refuse).",
+                                    "Mandataire %s : connexion refusée." % nom_mandataire(m)) from None
     except (TimeoutError, socket.timeout):
-        raise Refus("Mandataire injoignable : délai dépassé vers %s (pare-feu ou mandataire indisponible)." % nom_mandataire(m)) from None
+        raise MandataireInjoignable("Mandataire sortant injoignable : délai dépassé (pare-feu ou mandataire indisponible).",
+                                    "Mandataire %s : délai dépassé." % nom_mandataire(m)) from None
     except OSError as e:
-        raise Refus("Mandataire injoignable : %s (%s)." % (nom_mandataire(m), e.strerror or type(e).__name__)) from None
+        cause = e.strerror or type(e).__name__
+        raise MandataireInjoignable("Mandataire sortant injoignable (%s)." % cause,
+                                    "Mandataire %s : %s." % (nom_mandataire(m), cause)) from None
     try:
         cible = ("[%s]:%d" if ":" in hote else "%s:%d") % (hote, port)
         lignes = ["CONNECT %s HTTP/1.1" % cible, "Host: %s" % cible, "User-Agent: suivi-audits-veille"]
@@ -1610,7 +1628,11 @@ def executer(p):
         return {"ok": True, "elements": elements, "erreur": None,
                 "bilan": {"elements": len(elements), "ecartes": bilan.ecartes, "tronque": bilan.tronque, "detailsEchoues": bilan.details_echoues}}
     except Exception as erreur:  # noqa: BLE001 - tout échec est expliqué, jamais propagé avec ses détails
-        return {"ok": False, "elements": [], "bilan": None, "erreur": une_ligne(explication(erreur))}
+        sortie = {"ok": False, "elements": [], "bilan": None, "erreur": une_ligne(explication(erreur))}
+        if isinstance(erreur, MandataireInjoignable):
+            # Hôte et port du mandataire : à part, pour le seul journal d'audit (jamais dans l'erreur affichée).
+            sortie["detail"] = une_ligne(erreur.detail)
+        return sortie
 
 
 def main():

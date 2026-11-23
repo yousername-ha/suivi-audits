@@ -196,8 +196,9 @@ export const TABLES_TRAVAIL = [
   'vulnerabilites_cpe_demandes',
   'vulnerabilites_cpe_dictionnaire',
   // Lot CVE-INC (ADR 0100) : consultations de cve.org et NVD, ouverture d'une fiche, contrôles Tenable cités par une CVE,
-  // sources facultatives de la veille (réglages, collectes, annonces) ; données publiques recalculables, effacées avec le
-  // travail (les sources reviennent désactivées).
+  // sources facultatives de la veille (état, collectes, annonces) ; données publiques recalculables, effacées avec le
+  // travail. Décision du RSSI du 23/11/2026 : comme les fréquences de la veille, l'activation et la fréquence des sources
+  // facultatives sont remises après l'effacement du travail (voir `executer`) ; la portée « tout » les efface.
   'vulnerabilites_cve_consultations',
   'vulnerabilites_cve_ouverture',
   'vulnerabilites_cve_tenable',
@@ -363,9 +364,22 @@ export class RemiseAVide {
               .where('frequence_heures', 'is not', null)
               .execute()
           : [];
+      // Décision du RSSI du 23/11/2026 : même règle pour les sources facultatives de la veille (Cloudflare Radar, tldrcve) ;
+      // activation et fréquence gardées, état (dernière collecte, erreur, référence de planification) reparti de zéro. Une
+      // source jamais réglée (désactivée, fréquence par défaut) n'est pas recréée.
+      const reglagesAnnonces =
+        portee === 'travail'
+          ? await k
+              .selectFrom('vulnerabilites_veille_annonces_sources')
+              .select(['source', 'activee', 'frequence_minutes'])
+              .where((eb) => eb.or([eb('activee', '=', true), eb('frequence_minutes', 'is not', null)]))
+              .execute()
+          : [];
       for (const t of touchees) await sql`ALTER TABLE ${sql.table(t)} DISABLE TRIGGER USER`.execute(k);
       await sql`TRUNCATE ${sql.join(aVider.map((t) => sql.table(t)))} RESTART IDENTITY`.execute(k);
       if (frequences.length) await k.insertInto('vulnerabilites_veille_sources').values(frequences).execute();
+      if (reglagesAnnonces.length)
+        await k.insertInto('vulnerabilites_veille_annonces_sources').values(reglagesAnnonces).execute();
       if (portee === 'tout') {
         await k.deleteFrom('users').execute();
         await k.deleteFrom('roles').where('system', '=', false).execute();
