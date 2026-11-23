@@ -2,6 +2,39 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+Aucune action : changements d'affichage, ni migration ni commande sur le serveur. Une nouvelle adresse,
+`/pilotage/boites` (vue « Boîtes de pilotage » des objectifs et indicateurs), avec le droit de lecture du Pilotage.
+
+### Modifié
+
+- Retours du RSSI du 23/11/2026 sur la 7.6.0, rendus validés le même jour (session « Refonte Neon ») :
+  - **Tailles** : la densité « normale » reprend l'échelle de la 7.5 (champs et boutons de 2,25 rem, titres de page
+    1,625 rem, libellés des champs plus grands) ; les tailles de la 7.6.0 deviennent la densité « compacte ».
+  - **SWOT et PESTEL** plus compacts (matrice, cercle central et grandes lettres du SWOT ; constellation et panneau du
+    facteur du PESTEL ; un libellé de facteur ne se coupe plus au milieu d'un mot).
+  - **Recherche réduite à une loupe** dans les boîtes d'outils et sous les onglets du module Vulnérabilités : elle
+    s'ouvre au clic, au toucher ou au clavier et reste ouverte tant qu'elle porte un texte. Dans le module, la loupe se
+    place au bout de la rangée des onglets. Le bouton qui lance une recherche porte une flèche au lieu d'une seconde
+    loupe ; noms des champs et des boutons inchangés.
+  - **Cloche des rappels** dans l'en-tête, à gauche du compte : nombre de rappels non lus, les cinq derniers au clic et
+    « Voir tous mes rappels ». « Mes rappels » quitte le menu du Pilotage ; l'adresse `/pilotage/rappels` et les liens
+    des notifications et des courriels ne changent pas.
+  - **Objectifs et indicateurs** : une seule rangée d'onglets (Vue compacte, ouverte par défaut, Par processus, Par
+    objectif, Boîtes de pilotage) au lieu de deux.
+  - Registres du Pilotage : les deux exports deviennent deux petits boutons alignés à droite.
+
+### Corrigé
+
+- **Revue de direction** : la préparation n'affichait que 4 entrées sur 10. Elle rangeait les entrées par les
+  identifiants de l'ISO 9001 alors que l'API rend ceux de l'ISO/IEC 27001:2022 (9.3.2 a à g, d1 à d4) ; les points c,
+  d1 à d4 et g, dont tout le temps « Performance de sécurité », n'apparaissaient pas. Chaque entrée se range désormais
+  par la lettre de son point, une entrée inconnue reste visible, et les trois temps sont présentés côte à côte (test
+  `preparation-revue.test.ts`).
+
 ## [7.6.1] — 2026-11-23
 
 ### Notes de mise à jour
