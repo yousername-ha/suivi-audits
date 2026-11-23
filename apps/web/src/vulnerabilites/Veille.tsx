@@ -15,7 +15,10 @@ import { BarreFiltres } from '../components/BarreFiltres';
    Lot F1 : fréquence de chaque source (liste déroulante pour qui administre le module, texte sinon ; EPSS fixe), avertissement
    de NVD et d'EPSS, prochaine collecte prévue.
    Lot CPE-1 : source « Dictionnaire des produits (CPE) » sous le tableau des sources (DictionnaireCpe.tsx) : explication de
-   la place, état du chargement par lots, fréquence des nouveautés, activation, copie complète facultative. */
+   la place, état du chargement par lots, fréquence des nouveautés, activation, copie complète facultative.
+   Lot CVE-INC : sources facultatives (préavis de Cloudflare Radar, résumés de tldrcve ; AnnoncesVeille.tsx) ; la fiche d'une
+   CVE (FicheCve.tsx) montre leurs marques, et, pour une CVE inconnue de la veille, la consultation de cve.org et NVD sur
+   clic, les contrôles Tenable et le lien « Voir chez Tenable ». */
 import {
   Alert,
   Anchor,
@@ -61,7 +64,8 @@ import { ChampFrequence } from '../components/ChampFrequence';
 import { CLE_FLUX_EXTERNES } from '../components/FluxExternes';
 import { Destinations, useValidationFlux } from '../components/ValidationFlux';
 import { useCan } from '../session';
-import { FicheFaille } from './FicheFaille';
+import { FicheCve } from './FicheCve';
+import { AnnoncesVeilleSection } from './AnnoncesVeille';
 import { ouvertureVeille } from './recherche';
 import { resumeFichesCertSante, resumePublications } from './sources';
 import { PictoSource, PictosSources } from './PictoSource';
@@ -727,6 +731,11 @@ export function VeillePage() {
             onSupprimerCopie={() => void actionCpe('DELETE', URL_COPIE_CPE)}
           />
         )}
+        <AnnoncesVeilleSection
+          fluxOuvert={!!etat.data?.flux.ouvert}
+          peutRegler={administrer}
+          onOuvrirCve={setCveOuverte}
+        />
         <form onSubmit={chercher} role="search">
           <BarreFiltres label="Veille des vulnérabilités">
             <TextInput
@@ -787,7 +796,7 @@ export function VeillePage() {
         centered
         lockScroll={false}
       >
-        {cveOuverte && <FicheFaille nature="cve" id={cveOuverte} />}
+        {cveOuverte && <FicheCve cve={cveOuverte} />}
       </Modal>
       <Modal
         closeButtonProps={{ 'aria-label': 'Fermer la fenêtre' }}

@@ -20,6 +20,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from unittest.mock import patch
 
@@ -85,6 +86,24 @@ class Veille(unittest.TestCase):
         # Crochets et accolades écrits dans une chaîne, guillemet échappé compris : ils ne comptent pas.
         self.assertFalse(v.trop_imbrique(b'{"texte": "' + b"[{" * 500 + b' \\" [[[", "n": [1, 2]}'))
         self.assertFalse(v.trop_imbrique(b""))
+
+    def test_borne_de_profondeur_lineaire_sur_un_mega_octet_hostile(self):
+        # Relecture de la PR #369 : l'ancienne expression des chaînes reprenait l'analyse à chaque guillemet d'une chaîne non
+        # fermée (quadratique : 5,9 s pour 40 Kio de « \" »). Contrôle linéaire : moins d'une seconde par Mio hostile.
+        mio = 1024 * 1024
+        for nom, brut, attendu in (
+                ("guillemets échappés", b'\\"' * (mio // 2), False),
+                ("chaîne ouverte puis échappements", b'"' + b'\\"' * (mio // 2), False),
+                ("guillemets seuls", b'"' * mio, False),
+                ("chaînes vides", b'"",' * (mio // 3), False),
+                ("barres obliques inverses", b'\\' * mio, False),
+                ("crochets appariés", b"[]" * (mio // 2), False),
+                ("accolades et chaînes", b'{"a":"\\"[",' * (mio // 12), True),
+                ("crochets ouvrants", b"[" * mio, True)):
+            with self.subTest(nom=nom):
+                debut = time.monotonic()
+                self.assertIs(v.trop_imbrique(brut), attendu)
+                self.assertLess(time.monotonic() - debut, 1.0)
 
     @classmethod
     def setUpClass(cls):
@@ -788,10 +807,53 @@ class Mandataire(unittest.TestCase):
         libre.bind(("127.0.0.1", 0))
         port_ferme = libre.getsockname()[1]
         libre.close()
-        self.echec(self.collecter(self.parametres(port=port_ferme)), "Mandataire injoignable", "connexion refusée",
-                   "127.0.0.1:%d" % port_ferme)
-        self.echec(self.collecter(self.parametres(hote="mandataire.invalid")), "Mandataire injoignable", "mandataire.invalid")
+        # Décision du RSSI du 23/11/2026 : l'erreur (lue par qui lit le module) ne nomme ni l'hôte ni le port du mandataire ;
+        # ils sont dans le détail, à part.
+        sortie = self.collecter(self.parametres(port=port_ferme))
+        self.echec(sortie, "Mandataire sortant injoignable", "connexion refusée")
+        self.assertNotIn("127.0.0.1", sortie["erreur"])
+        self.assertNotIn(str(port_ferme), sortie["erreur"])
+        self.assertEqual(sortie["detail"], "Mandataire 127.0.0.1:%d : connexion refusée." % port_ferme)
+        sortie = self.collecter(self.parametres(hote="mandataire.invalid"))
+        self.echec(sortie, "Mandataire sortant injoignable", "nom introuvable")
+        self.assertNotIn("mandataire.invalid", sortie["erreur"])
+        self.assertIn("mandataire.invalid:%d" % self.mandataire.server_address[1], sortie["detail"])
         self.assertEqual(Faux.recues, [])
+
+    def test_unreachable_proxy_never_names_its_host_or_port_in_the_error_of_any_source(self):
+        """Décision du RSSI du 23/11/2026, pour toutes les sources qui passent par le mandataire (veille, veille
+        réglementaire, sources facultatives, CVE inconnue) et pour chaque cause (nom introuvable, connexion refusée, délai
+        dépassé, autre erreur du réseau) : l'erreur dit « Mandataire sortant injoignable » sans nom ni port ; le détail (une
+        ligne) les donne, sauf pour la CVE inconnue, dont l'exécutant ne remet aucun détail."""
+        hote, port = "mandataire-interne.exemple.test", 3129
+        causes = ((socket.gaierror(-2, "Name or service not known"), "nom introuvable"),
+                  (ConnectionRefusedError(111, "Connection refused"), "connexion refusée"),
+                  (TimeoutError(), "délai dépassé"),
+                  (OSError(101, "Network is unreachable"), "Network is unreachable"))
+        demandes = [{"source": s, "parametres": {}} for s in ("cisa-kev", "nvd", "cnil", "eur-lex", "cloudflare-radar", "tldrcve")]
+        demandes[1]["parametres"] = {"depuis": "2026-11-13T00:00:00.000Z", "jusqua": "2026-11-14T00:00:00.000Z"}
+        demandes[3]["parametres"] = {"motsCles": [{"mot": "données", "domaine": v.DOMAINES_REGLEMENTAIRES[0]}]}
+        demandes.append({"source": "cve-inconnue", "parametres": {"cve": "CVE-2026-90001"}, "delai": 12})
+        for erreur, attendu in causes:
+            for demande in demandes:
+                with self.subTest(source=demande["source"], cause=type(erreur).__name__), \
+                        patch.object(v.socket, "create_connection", side_effect=erreur):
+                    sortie = v.executer({**demande, "mandataire": self.parametres(hote=hote, port=port)})
+                    self.assertFalse(sortie["ok"], sortie)
+                    self.assertIn("Mandataire sortant injoignable", sortie["erreur"])
+                    self.assertIn(attendu, sortie["erreur"])
+                    for interdit in (hote, str(port), "mandataire-interne"):
+                        self.assertNotIn(interdit, sortie["erreur"])
+                    if demande["source"] == "cve-inconnue":
+                        self.assertNotIn("detail", sortie)
+                        self.assertIn("cve.org : Mandataire sortant injoignable", sortie["erreur"])
+                    else:
+                        self.assertIn("%s:%d" % (hote, port), sortie["detail"])
+                        self.assertNotIn("\n", sortie["detail"])
+                        self.assertLessEqual(len(sortie["detail"]), v.ERREUR_MAX)
+        # Les autres échecs n'ont pas de détail.
+        self.mandataire.forcee = "403 Forbidden"
+        self.assertNotIn("detail", self.collecter(self.parametres()))
 
     def test_closed_list_get_only_and_no_redirect_still_apply_through_the_proxy(self):
         Faux.reponses[v.SOURCES["cisa-kev"]["chemins"][0]] = (301, b"", (("Location", "https://ailleurs.exemple.test/"),))
@@ -811,7 +873,7 @@ class Mandataire(unittest.TestCase):
         self.assertEqual(self.mandataire.demandes, [])
         self.assertEqual(Faux.recues, [])
         # Adresse IPv6 admise (forme) : le mandataire n'écoute pas là, l'échec est celui de la connexion.
-        self.assertIn("Mandataire injoignable", self.collecter(self.parametres(hote="::1", port=9))["erreur"])
+        self.assertIn("Mandataire sortant injoignable", self.collecter(self.parametres(hote="::1", port=9))["erreur"])
 
     def test_without_proxy_the_source_is_joined_directly(self):
         """Non-régression : sans paramètres de mandataire, le mandataire n'est pas contacté (connexion directe)."""

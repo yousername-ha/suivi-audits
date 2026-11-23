@@ -133,6 +133,9 @@ describe('formes contrôlées', () => {
       'CVE-2026-0001 ',
       'CVE-2026-0001<x>',
       'XCVE-2026-0001',
+      // Chiffres Unicode (pleine chasse, arabes-indiens) : refusés, ici comme dans les scripts (relecture de la PR #369).
+      'CVE-２０２６-0001',
+      'CVE-2026-٠٠٠١',
     ])
       expect(CVE_ID.test(ko), ko).toBe(false);
     for (const ok of ['CERTFR-2026-AVI-1500', 'CERTFR-2015-ALE-009', 'CERTFR-2026-ALE-015'])
@@ -279,6 +282,15 @@ describe('protocole de l’exécutant', () => {
     expect(RapportCollecte.safeParse({ ok: true, bilan: null, erreur: null }).success).toBe(false);
     expect(RapportCollecte.safeParse({ ok: false, bilan: null, erreur: 'ligne 1\nligne 2' }).success).toBe(false);
     expect(RapportCollecte.safeParse({ ok: true, bilan, erreur: null, elements: [] }).success).toBe(false);
+    // Décision du RSSI du 23/11/2026 : détail du mandataire injoignable (pour le journal d'audit), avec un échec seulement,
+    // sur une ligne bornée.
+    const echec = { ok: false, bilan: null, erreur: 'Mandataire sortant injoignable : délai dépassé.' };
+    const detail = 'Mandataire mandataire.exemple.invalid:3128 : délai dépassé.';
+    expect(RapportCollecte.safeParse({ ...echec, detail }).success).toBe(true);
+    expect(RapportCollecte.safeParse({ ok: true, bilan, erreur: null, detail }).success).toBe(false);
+    expect(RapportCollecte.safeParse({ ...echec, detail: 'ligne 1\nligne 2' }).success).toBe(false);
+    expect(RapportCollecte.safeParse({ ...echec, detail: '' }).success).toBe(false);
+    expect(RapportCollecte.safeParse({ ...echec, detail: 'x'.repeat(301) }).success).toBe(false);
     expect(BilanCollecte.safeParse({ ...bilan, elements: VEILLE_BORNES.lot * VEILLE_BORNES.lots + 1 }).success).toBe(
       false,
     );

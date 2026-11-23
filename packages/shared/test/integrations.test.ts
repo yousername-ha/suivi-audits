@@ -85,8 +85,13 @@ describe('catalogue des connecteurs', () => {
       { methode: 'GET', chemin: '/rest/hosts', parametres: ['limit', 'offset'] },
       { methode: 'GET', chemin: '/rest/hosts/{uuid}' },
       { methode: 'GET', chemin: '/rest/system' },
+      // Lot CVE-INC : contrôles qui citent une CVE inconnue de la veille (lecture seule, requête fixe du script).
+      { methode: 'GET', chemin: '/rest/plugin' },
     ]);
     expect(pointAccesAdmis('tenable', 'GET', '/rest/system')).toBe(true);
+    expect(pointAccesAdmis('tenable', 'GET', '/rest/plugin')).toBe(true);
+    expect(pointAccesAdmis('tenable', 'GET', '/rest/plugin/123')).toBe(false);
+    expect(pointAccesAdmis('tenable', 'POST', '/rest/plugin')).toBe(false);
     expect(pointAccesAdmis('tenable', 'GET', `/rest/hosts/${UUID}`)).toBe(true);
     expect(pointAccesAdmis('tenable', 'POST', '/rest/analysis')).toBe(true);
     for (const [m, c] of [

@@ -93,6 +93,10 @@ describe('registre des flux vers l’extérieur', () => {
       ['sortant', 'TCP 443 (HTTPS)', 'api.first.org'],
       ['sortant', 'TCP 443 (HTTPS)', 'cert.cyber.gouv.fr'],
       ['sortant', 'TCP 443 (HTTPS)', 'cyberveille.esante.gouv.fr'],
+      // Lot CVE-INC : trois hôtes nouveaux (cve.org sur clic ; sources facultatives désactivées au départ).
+      ['sortant', 'TCP 443 (HTTPS)', 'cveawg.mitre.org'],
+      ['sortant', 'TCP 443 (HTTPS)', 'radar.cloudflare.com'],
+      ['sortant', 'TCP 443 (HTTPS)', 'tldrcve.com'],
     ]);
     expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(/adresse IP du serveur et des demandes de lecture/);
     // Lot CPE-1 (décision du RSSI du 22/11/2026) : la demande des versions d'un produit choisi dans la saisie lui fait
@@ -101,8 +105,15 @@ describe('registre des flux vers l’extérieur', () => {
       /l’éditeur et le produit choisis pour en lire les versions/,
     );
     expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(
-      /Aucune donnée métier en dehors de ce produit : ni machine, ni version déclarée, ni contenu de la plateforme\./,
+      /Aucune donnée métier en dehors de ce produit et de cet identifiant : ni machine, ni adresse, ni domaine, ni périmètre, ni version déclarée, ni contenu de la plateforme\./,
     );
+    // Lot CVE-INC : seul l'identifiant de la CVE consultée sort, sur le clic d'une personne ; les flux facultatifs sont lus
+    // sans aucun paramètre (le filtre par produit surveillé est fait sur le serveur).
+    expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(/l’identifiant de cette CVE, vers cve\.org/);
+    expect(fluxExterne('veille-vulnerabilites').donnees).toMatch(/sans aucun paramètre/);
+    for (const h of ['cveawg.mitre.org', 'radar.cloudflare.com', 'tldrcve.com'])
+      expect(fluxExterne('veille-vulnerabilites').pareFeu.join(' ')).toContain(h);
+    expect(fluxExterne('tenable').donnees).toMatch(/contrôles Tenable qui citent cette CVE, par son seul identifiant/);
     expect(fluxExterne('veille-vulnerabilites').pareFeu.join(' ')).toContain('cyberveille.esante.gouv.fr');
     expect(fluxExterne('mises-a-jour').destinations.map((d) => d.hote)).toEqual(
       expect.arrayContaining(['github.com et api.github.com (publications)', 'ghcr.io (registre des images)']),

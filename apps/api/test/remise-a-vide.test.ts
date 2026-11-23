@@ -154,6 +154,22 @@ describe('remise à vide : effacement', () => {
        ON CONFLICT (source) DO UPDATE SET frequence_heures = EXCLUDED.frequence_heures,
          derniere_reussite = EXCLUDED.derniere_reussite, planifiee_le = EXCLUDED.planifiee_le`,
     );
+    // Décision du RSSI du 23/11/2026 : réglages des sources facultatives (activation, fréquence) à garder, état à effacer ;
+    // une source jamais réglée n'est pas recréée ; annonces et journal des collectes effacés.
+    await t.svc.db.q(
+      `INSERT INTO vulnerabilites_veille_annonces_sources
+         (source, activee, frequence_minutes, planifiee_le, derniere_reussite, dernier_essai, erreur, version)
+       VALUES ('cloudflare-radar', true, 30, now(), now(), now(), 'Erreur fictive.', 4), ('tldrcve', false, NULL, now(), NULL, now(), NULL, 2)
+       ON CONFLICT (source) DO UPDATE SET activee = EXCLUDED.activee, frequence_minutes = EXCLUDED.frequence_minutes`,
+    );
+    await t.svc.db.q(
+      `INSERT INTO vulnerabilites_veille_annonces (source, identifiant, cves, titre)
+       VALUES ('cloudflare-radar', 'cf-fictif', '{CVE-2026-90001}', 'Préavis fictif')`,
+    );
+    await t.svc.db.q(
+      `INSERT INTO vulnerabilites_veille_annonces_collectes (source, origine, etat, demande_par, demande_le, debute_le, termine_le)
+       VALUES ('cloudflare-radar', 'planifie', 'recu', 'planification', now(), now(), now())`,
+    );
     await autoriser(true);
     await sauvegardeRecente();
 
@@ -170,6 +186,31 @@ describe('remise à vide : effacement', () => {
     ).toEqual([
       { source: 'cisa-kev', frequence_heures: 12, derniere_reussite: null, planifiee_le: null },
       { source: 'nvd', frequence_heures: 4, derniere_reussite: null, planifiee_le: null },
+    ]);
+    // Sources facultatives : activation et fréquence gardées, état reparti de zéro ; données collectées effacées.
+    expect(
+      (
+        await t.svc.db.q(
+          `SELECT source, activee, frequence_minutes, planifiee_le, derniere_reussite, dernier_essai, erreur
+           FROM vulnerabilites_veille_annonces_sources ORDER BY source`,
+        )
+      ).rows,
+    ).toEqual([
+      {
+        source: 'cloudflare-radar',
+        activee: true,
+        frequence_minutes: 30,
+        planifiee_le: null,
+        derniere_reussite: null,
+        dernier_essai: null,
+        erreur: null,
+      },
+    ]);
+    expect(await compte('vulnerabilites_veille_annonces')).toBe(0);
+    expect(await compte('vulnerabilites_veille_annonces_collectes')).toBe(0);
+    expect((await t.svc.vulnerabilites.annonces.etat()).map((e) => [e.source, e.activee, e.frequenceMinutes])).toEqual([
+      ['cloudflare-radar', true, 30],
+      ['tldrcve', false, 1440],
     ]);
 
     for (const table of [
@@ -220,11 +261,17 @@ describe('remise à vide : effacement', () => {
       `INSERT INTO vulnerabilites_veille_sources (source, frequence_heures) VALUES ('cisa-kev', 12)
        ON CONFLICT (source) DO UPDATE SET frequence_heures = EXCLUDED.frequence_heures`,
     );
+    await t.svc.db.q(
+      `INSERT INTO vulnerabilites_veille_annonces_sources (source, activee, frequence_minutes) VALUES ('cloudflare-radar', true, 60)
+       ON CONFLICT (source) DO UPDATE SET activee = EXCLUDED.activee, frequence_minutes = EXCLUDED.frequence_minutes`,
+    );
     const res = await a.post('/api/admin/remise-a-vide', await requete('tout'));
     expect(res.statusCode).toBe(200);
     expect(res.json()).toMatchObject({ portee: 'tout', jeton: true });
     // Lot PRIO-1 : la portée « tout » efface aussi la configuration, fréquences de la veille comprises.
     expect(await compte('vulnerabilites_veille_sources')).toBe(0);
+    // Décision du RSSI du 23/11/2026 : réglages des sources facultatives effacés aussi par la portée « tout ».
+    expect(await compte('vulnerabilites_veille_annonces_sources')).toBe(0);
 
     expect(await compte('users')).toBe(0);
     expect(await compte('sessions')).toBe(0);

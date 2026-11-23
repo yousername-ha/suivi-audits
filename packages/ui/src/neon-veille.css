@@ -402,3 +402,45 @@
 .champ-frequence-avertissement strong {
   color: var(--carte-orange-accent);
 }
+
+/* ------------------------------------------------------------------ Lot CVE-INC : CVE inconnue, sources facultatives */
+/* Préavis de Cloudflare Radar : liseré orange (annonce à confirmer), jamais la couleur seule (marque « Annonce précoce »). */
+.vn-preavis {
+  border-inline-start-color: var(--carte-orange-accent);
+}
+/* Résumé de tldrcve : carte en verre, trois blocs côte à côte, l'un sous l'autre sur un écran étroit. */
+.vn-carte {
+  border-inline-start-color: var(--carte-bleu-accent);
+}
+.vn-blocs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16em), 1fr));
+  gap: var(--mantine-spacing-sm);
+}
+.vn-bloc {
+  display: grid;
+  align-content: start;
+  gap: var(--mantine-spacing-2xs);
+  min-inline-size: 0;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid var(--suivi-trait);
+  border-radius: var(--mantine-radius-sm);
+  background: color-mix(in srgb, var(--carte-bleu-accent) 6%, transparent);
+  overflow-wrap: anywhere;
+}
+.vn-lignes {
+  margin: 0;
+  padding-inline-start: var(--mantine-spacing-lg);
+  font-size: var(--mantine-font-size-sm);
+}
+.vn-lignes li + li {
+  margin-block-start: var(--mantine-spacing-2xs);
+}
+.vn-references {
+  overflow-wrap: anywhere;
+}
+.vn-fiche,
+.vn-marques {
+  display: grid;
+  gap: var(--mantine-spacing-sm);
+}

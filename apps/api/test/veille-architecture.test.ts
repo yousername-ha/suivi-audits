@@ -5,6 +5,12 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
+  ANNONCES_BORNES,
+  CVE_INCONNUE_BORNES,
+  HOTES_VEILLE_COMPLEMENTAIRES,
+  SOURCE_CVE_ORG,
+  SOURCES_ANNONCES,
+  SOURCES_ANNONCES_DEFINITIONS,
   ADRESSE_CERTSANTE,
   CERTFR_ID,
   CERTSANTE_ID,
@@ -59,7 +65,19 @@ describe('architecture : veille des vulnérabilités', () => {
 
   it('le flux « veille-vulnerabilites » déclare exactement ces hôtes, en TCP 443, porté par l’exécutant', () => {
     const f = fluxExterne('veille-vulnerabilites');
-    expect(f.destinations.map((d) => d.hote.split(' ')[0])).toEqual(SOURCES_VEILLE_DEFINITIONS.map((s) => s.hote));
+    // Lot CVE-INC : trois hôtes nouveaux à la suite des cinq sources (cve.org, Cloudflare Radar, tldrcve).
+    expect(f.destinations.map((d) => d.hote.split(' ')[0])).toEqual([
+      ...SOURCES_VEILLE_DEFINITIONS.map((s) => s.hote),
+      'cveawg.mitre.org',
+      'radar.cloudflare.com',
+      'tldrcve.com',
+    ]);
+    expect(HOTES_VEILLE_COMPLEMENTAIRES.map((h) => h.hote)).toEqual([
+      'cveawg.mitre.org',
+      'radar.cloudflare.com',
+      'tldrcve.com',
+    ]);
+    for (const h of HOTES_VEILLE_COMPLEMENTAIRES) expect(f.pareFeu.join(' ')).toContain(h.hote);
     for (const d of f.destinations) expect(d).toMatchObject({ sens: 'sortant', ports: 'TCP 443 (HTTPS)' });
     expect(f.porteur.services).toEqual(['updater']);
     expect(f.moduleActivation).toBe('vulnerabilites');
@@ -114,6 +132,61 @@ describe('architecture : veille des vulnérabilités', () => {
     expect(SCRIPT).not.toMatch(/CPE_PAUSE/);
     expect(CPE_BORNES.pagesParPassage).toBe(1);
     expect(/^MODES_COURTS = \("cpe-versions",\)$/m.test(EXECUTANT)).toBe(true);
+  });
+
+  it('CVE inconnue et sources facultatives (lot CVE-INC) : listes fermées, bornes et files identiques au paquet partagé', () => {
+    expect(constante(SCRIPT, 'SOURCES_CVE_INCONNUE')).toEqual({
+      [SOURCE_CVE_ORG.id]: { hote: SOURCE_CVE_ORG.hote, chemins: [...SOURCE_CVE_ORG.chemins] },
+    });
+    expect(constante(SCRIPT, 'SOURCES_ANNONCES')).toEqual(
+      Object.fromEntries(SOURCES_ANNONCES_DEFINITIONS.map((s) => [s.id, { hote: s.hote, chemins: [...s.chemins] }])),
+    );
+    expect(constante(SCRIPT, 'REQUETES_ANNONCES')).toEqual(
+      Object.fromEntries(SOURCES_ANNONCES_DEFINITIONS.map((s) => [s.id, s.requete])),
+    );
+    const b = CVE_INCONNUE_BORNES;
+    expect(constante(SCRIPT, 'BORNES_CVE_INCONNUE')).toEqual({
+      titre: b.titre,
+      description: b.description,
+      cna: b.cna,
+      references: b.references,
+      reference: b.reference,
+      nomReference: b.nomReference,
+      produits: b.produits,
+      editeur: b.editeur,
+      produit: b.produit,
+      versionsParProduit: b.versionsParProduit,
+    });
+    const a = ANNONCES_BORNES;
+    expect(constante(SCRIPT, 'BORNES_ANNONCES')).toEqual({
+      identifiant: a.identifiant,
+      titre: a.titre,
+      resume: a.resume,
+      lien: a.lien,
+      verdict: a.verdict,
+      cvesParAnnonce: a.cvesParAnnonce,
+      items: a.items,
+    });
+    // L'exécutant : file propre des sources facultatives, sous le flux de la veille ; file des CVE inconnues sous le même flux.
+    expect(constante(EXECUTANT, 'VEILLE_ANNONCES_SOURCES')).toEqual([...SOURCES_ANNONCES]);
+    expect(EXECUTANT).toMatch(/\("veille-annonces", VEILLE_FLUX, VEILLE_ANNONCES_SOURCES\)\)$/m);
+    expect(/^CVE_FLUX = VEILLE_FLUX$/m.test(EXECUTANT)).toBe(true);
+    expect(/^CVE_TENABLE_FLUX = "tenable"$/m.test(EXECUTANT)).toBe(true);
+    expect(entier(EXECUTANT, 'CVE_TENABLE_CONTROLES_MAX')).toBe(CVE_INCONNUE_BORNES.controles);
+    // Le poller ne connaît qu'un mode court : la file des CVE inconnues le partage, aucun mode n'est ajouté.
+    expect(/^MODES_COURTS = \("cpe-versions",\)$/m.test(EXECUTANT)).toBe(true);
+    // Les collecteurs des sources facultatives ne lisent aucun paramètre : aucun nom de produit n'est remis au script.
+    expect(SCRIPT).toMatch(/^def preavis_cloudflare\(client, _parametres, bilan\):$/m);
+    expect(SCRIPT).toMatch(/^def resumes_tldrcve\(client, _parametres, bilan\):$/m);
+    // Les « briefings » de Cloudflare ne sont jamais lus.
+    expect(SCRIPT).not.toMatch(/\/zero-wire\/briefings/);
+    expect(SOURCES_ANNONCES_DEFINITIONS.flatMap((s) => s.chemins).join(' ')).not.toMatch(/briefing/);
+    // La recherche Security Center ne passe jamais par le mandataire.
+    const corps = /def cve_tenable\(self, voulus\):([\s\S]*?)\n {4}def /.exec(EXECUTANT)![1]!;
+    expect(corps).toContain(
+      'demande = {"type": "tenable", "operation": "controles-cve", "configuration": job["configuration"],',
+    );
+    expect(corps).not.toMatch(/demande\["mandataire"\]|"mandataire" in job/);
   });
 
   it('le script n’utilise que la bibliothèque standard, ne lit qu’en GET et ne suit aucune redirection', () => {

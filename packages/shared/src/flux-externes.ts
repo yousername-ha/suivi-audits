@@ -6,7 +6,19 @@
 import { z } from 'zod';
 import type { Module } from './permissions.js';
 import { SOURCES_REGLEMENTAIRES_JOINTES } from './veille-reglementaire.js';
+import { SOURCES_ANNONCES_DEFINITIONS } from './annonces-veille.js';
+import { SOURCE_CVE_ORG } from './cve-inconnue.js';
 import { SOURCES_VEILLE_DEFINITIONS } from './veille-vulnerabilites.js';
+
+/** Lot CVE-INC (ADR 0100, addendum « lot CVE-INC », tableau « Hôtes nouveaux autorisés par le RSSI ») : hôtes nouveaux du
+    flux « veille-vulnerabilites », joints seulement sur le clic d'une personne (cve.org, décision du RSSI du 19/11/2026) ou si
+    la source facultative est activée (Cloudflare Radar, décision du 20/11/2026 ; tldrcve, décision du 20/11/2026 ; lot retenu
+    le 22/11/2026). */
+export const HOTES_VEILLE_COMPLEMENTAIRES: readonly { hote: string; organisme: string }[] = [
+  { hote: SOURCE_CVE_ORG.hote, organisme: SOURCE_CVE_ORG.organisme },
+  ...SOURCES_ANNONCES_DEFINITIONS.map((s) => ({ hote: s.hote, organisme: s.organisme })),
+];
+const HOTES_VEILLE = [...SOURCES_VEILLE_DEFINITIONS, ...HOTES_VEILLE_COMPLEMENTAIRES];
 
 /** Identifiants stables (base, journal d'audit, CLI de l'exécutant) : ne jamais renommer. */
 export const FLUX_MODULES = [
@@ -222,7 +234,7 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
       libelle: 'Exécutant d’exploitation du serveur (service « updater »), par un script isolé sans privilège',
     },
     donnees:
-      'Les clés d’API du compte de consultation Tenable (clé d’accès et clé secrète) et des requêtes de lecture (version du service, failles, machines). Aucune donnée de la plateforme n’est envoyée.',
+      'Les clés d’API du compte de consultation Tenable (clé d’accès et clé secrète) et des requêtes de lecture (version du service, failles, machines ; à l’ouverture de la fiche d’une CVE inconnue de la veille, les contrôles Tenable qui citent cette CVE, par son seul identifiant). Aucune autre donnée de la plateforme n’est envoyée.',
     reglage: { libelle: 'Plateforme > Intégrations', lien: '/plateforme/integrations' },
     activation: { par: 'module', geste: 'Bouton « Activer » de la tuile du connecteur Tenable Security Center' },
     moduleActivation: 'integrations',
@@ -235,8 +247,8 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
     // de la liste fermée du module (veille-vulnerabilites.ts), recopiée dans le script de l'exécutant.
     id: 'veille-vulnerabilites',
     libelle: 'Veille sur les vulnérabilités',
-    role: 'Lire les catalogues et flux publics de vulnérabilités (CISA KEV, NVD, EPSS, CERT-FR, CERT Santé) pour le module Vulnérabilités.',
-    destinations: SOURCES_VEILLE_DEFINITIONS.map((s) => ({
+    role: 'Lire les catalogues et flux publics de vulnérabilités (CISA KEV, NVD, EPSS, CERT-FR, CERT Santé ; sur clic, cve.org ; sources facultatives : Cloudflare Radar, tldrcve) pour le module Vulnérabilités.',
+    destinations: HOTES_VEILLE.map((s) => ({
       sens: 'sortant' as const,
       hote: `${s.hote} (${s.organisme})`,
       ports: 'TCP 443 (HTTPS)',
@@ -247,11 +259,11 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
       libelle: 'Exécutant d’exploitation du serveur (service « updater »), par un script isolé sans privilège',
     },
     donnees:
-      'L’adresse IP du serveur et des demandes de lecture : le catalogue KEV, une fenêtre de dates pour NVD, les identifiants CVE déjà publiés par ces sources pour EPSS, les flux RSS et les avis du CERT-FR, le flux RSS du CERT Santé et la page de ses publications nouvelles ou modifiées qui citent une CVE (30 au plus par collecte). Si la source « Dictionnaire des produits (CPE) » est activée : les pages du dictionnaire CPE de la NVD, et, quand une personne choisit un produit dans la saisie d’un produit surveillé, l’éditeur et le produit choisis pour en lire les versions (la NVD voit alors ce produit ; rien de tel avec la copie complète du dictionnaire). Aucune donnée métier en dehors de ce produit : ni machine, ni version déclarée, ni contenu de la plateforme.',
+      'L’adresse IP du serveur et des demandes de lecture : le catalogue KEV, une fenêtre de dates pour NVD, les identifiants CVE déjà publiés par ces sources pour EPSS, les flux RSS et les avis du CERT-FR, le flux RSS du CERT Santé et la page de ses publications nouvelles ou modifiées qui citent une CVE (30 au plus par collecte). Si la source « Dictionnaire des produits (CPE) » est activée : les pages du dictionnaire CPE de la NVD, et, quand une personne choisit un produit dans la saisie d’un produit surveillé, l’éditeur et le produit choisis pour en lire les versions (la NVD voit alors ce produit ; rien de tel avec la copie complète du dictionnaire). Sur le clic d’une personne qui ouvre la fiche d’une CVE inconnue de la veille : l’identifiant de cette CVE, vers cve.org (cveawg.mitre.org) et NVD. Si les sources facultatives sont activées : la lecture du flux des CVE annoncées de Cloudflare Radar et du flux RSS de tldrcve, sans aucun paramètre (le filtre par produit surveillé est fait sur le serveur ; rien n’est envoyé). Aucune donnée métier en dehors de ce produit et de cet identifiant : ni machine, ni adresse, ni domaine, ni périmètre, ni version déclarée, ni contenu de la plateforme.',
     reglage: { libelle: 'Risques > Vulnérabilités > Veille', lien: '/vulnerabilites/veille' },
     activation: { par: 'flux', geste: 'Bouton « Activer la veille »' },
     moduleActivation: 'vulnerabilites',
-    pareFeu: [`Sortie TCP 443 du serveur vers ${SOURCES_VEILLE_DEFINITIONS.map((s) => s.hote).join(', ')}.`],
+    pareFeu: [`Sortie TCP 443 du serveur vers ${HOTES_VEILLE.map((s) => s.hote).join(', ')}.`],
     siFerme:
       'Aucune source n’est jointe : aucune collecte n’est inscrite ni réclamée, une demande en file est close sans appel ; les failles et avis déjà collectés restent consultables.',
   },

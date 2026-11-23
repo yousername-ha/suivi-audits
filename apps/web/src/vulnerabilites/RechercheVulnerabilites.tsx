@@ -3,17 +3,19 @@
    groupés : CVE (y compris celles de la veille non détectées sur le parc), machines internes, actifs exposés, applications.
    Chaque résultat ouvre la page existante ; « tout voir », la liste existante filtrée. Clavier : flèches haut et bas,
    Entrée (Début et Fin restent au champ) ; Échap ferme la liste (une seconde fois, efface la saisie). Résultats annoncés par une zone de statut. Aucun
-   appel sortant : une CVE inconnue de la veille locale est seulement signalée. */
+   appel sortant : une CVE inconnue de la veille locale est signalée, et sa fiche s'ouvre (bouton, ou Entrée) ; c'est là, sur
+   le clic de la personne, que cve.org et NVD peuvent être consultés (lot CVE-INC). */
 import { useDebouncedValue } from '@mantine/hooks';
 import { RECHERCHE_GLOBALE_BORNES, type RechercheGlobaleDto } from '@suivi/shared';
 import { useQuery } from '@tanstack/react-query';
-import { type KeyboardEvent, useId, useMemo, useState } from 'react';
+import { type FocusEvent, type KeyboardEvent, useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { api, errorMessage } from '../api';
 import { useCan } from '../session';
 import {
   annonceRecherche,
   DELAI_FRAPPE,
+  lienFicheCve,
   type GroupeOptions,
   type OptionRecherche,
   optionsRecherche,
@@ -50,6 +52,14 @@ export function deplacerOption(actif: number, touche: string, n: number): number
       return null;
   }
 }
+
+/** Le focus quitte la barre de recherche (la liste se ferme) : pas quand il passe du champ au bouton « Ouvrir sa fiche » d'une
+    CVE inconnue, ou de ce bouton au champ (tabulation), sans quoi le bouton disparaîtrait avant d'être atteint. */
+export function focusQuitteRecherche(conteneur: Pick<Node, 'contains'> | null, suivant: Node | null): boolean {
+  return !(conteneur && suivant && conteneur.contains(suivant));
+}
+const quitte = (e: FocusEvent<HTMLElement>) =>
+  focusQuitteRecherche(e.currentTarget.closest('.rv'), e.relatedTarget instanceof Node ? e.relatedTarget : null);
 
 /** Présentation (sans état) : champ combobox, panneau des résultats groupés, zone de statut. */
 export function RechercheVulnerabilitesVue({
@@ -112,7 +122,9 @@ export function RechercheVulnerabilitesVue({
           onChange={(e) => onSaisie(e.currentTarget.value)}
           onKeyDown={onTouche}
           onFocus={onFocus}
-          onBlur={onBlur}
+          onBlur={(e) => {
+            if (quitte(e)) onBlur();
+          }}
         />
       </label>
       <span id={`${id}-aide`} className="sr-only">
@@ -128,7 +140,27 @@ export function RechercheVulnerabilitesVue({
           <p className="rv__inconnue">
             <strong>{reponse.cveInconnue.cve}</strong> : CVE inconnue de la veille locale. Aucune source collectée ne la
             cite et elle n’est détectée sur aucune machine ni aucun actif exposé. La plateforme ne consulte aucun
-            service extérieur depuis cette recherche.
+            service extérieur depuis cette recherche.{' '}
+            {/* Lot CVE-INC : sa fiche propose la consultation de cve.org et NVD, sur clic (Entrée l'ouvre aussi). */}
+            <button
+              type="button"
+              className="rv__ouvrir"
+              onMouseDown={(e) => e.preventDefault()}
+              // Atteint à la tabulation depuis le champ : la liste reste ouverte tant que le focus reste dans la recherche.
+              onBlur={(e) => {
+                if (quitte(e)) onBlur();
+              }}
+              onClick={() =>
+                onChoisir({
+                  cle: `inconnue-${reponse.cveInconnue!.cve}`,
+                  titre: reponse.cveInconnue!.cve,
+                  detail: 'CVE inconnue de la veille locale',
+                  to: lienFicheCve(reponse.cveInconnue!.cve),
+                })
+              }
+            >
+              Ouvrir sa fiche (consultation de cve.org et NVD sur votre clic)
+            </button>
           </p>
         )}
         {montrer && !erreur && reponse && !groupes.length && !reponse.cveInconnue && (
@@ -226,6 +258,11 @@ export function RechercheVulnerabilites() {
       if (ouvert && o) {
         e.preventDefault();
         choisir(o);
+      } else if (ouvert && actif < 0 && !options.length && reponse?.cveInconnue) {
+        // Lot CVE-INC : une CVE inconnue de la veille, seul résultat : Entrée ouvre sa fiche.
+        e.preventDefault();
+        setOuvert(false);
+        navigate(lienFicheCve(reponse.cveInconnue.cve));
       }
       return;
     }

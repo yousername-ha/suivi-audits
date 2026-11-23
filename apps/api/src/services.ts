@@ -1,5 +1,5 @@
 /* Services partagés par les routes (injectés : chaque test construit les siens avec sa propre base). */
-import { CPE_BORNES, NESSUS_BORNES } from '@suivi/shared';
+import { CPE_BORNES, CVE_INCONNUE_BORNES, NESSUS_BORNES } from '@suivi/shared';
 import type { Logger } from 'pino';
 import { Auth } from './auth.js';
 import { Backups } from './backups.js';
@@ -47,6 +47,8 @@ import { FluxExternes } from './flux-externes.js';
 import { ProduitsSurveilles } from './vulnerabilites/produits.js';
 import { VeilleVulnerabilites } from './vulnerabilites/veille.js';
 import { DictionnaireCpe } from './vulnerabilites/dictionnaire-cpe.js';
+import { CveInconnues } from './vulnerabilites/cve-inconnue.js';
+import { AnnoncesVeille } from './vulnerabilites/annonces.js';
 import { VeilleReglementaire } from './veille-reglementaire.js';
 import { PurgeJournaux } from './vulnerabilites/purge-journaux.js';
 import { FaillesDetectees } from './vulnerabilites/failles.js';
@@ -136,6 +138,13 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   /* Lot ALH2 : la veille dit sur combien d'actifs exposés lisibles une CVE est vue. */
   veille.surface = surfaceExterne;
   veille.apresCollecte = () => rapprochements.recalculerTout();
+  /* Lot CVE-INC : CVE inconnue de la veille (cve.org et NVD sur clic, contrôles Tenable à l'ouverture de la fiche), et
+     sources facultatives de la veille (préavis de Cloudflare Radar, résumés de tldrcve). */
+  const cveInconnues = new CveInconnues(db, flux, mandataire, integrations, surfaceExterne);
+  cveInconnues.veille = veille;
+  const annonces = new AnnoncesVeille(db, flux, mandataire);
+  annonces.veille = veille;
+  annonces.surface = surfaceExterne;
   /* Lot V4b : suivi des failles, prévenu par la synchronisation de Tenable et par le recalcul des rapprochements. */
   const suivi = new SuiviFailles(db, grc);
   /* Lot ALH3 : actifs exposés reliés aux machines internes ; propositions recalculées à la fin de chaque synchronisation
@@ -240,6 +249,9 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       /** Lot CPE-1 : liste locale des produits du dictionnaire CPE de la NVD (chargée par tranches par l'exécutant),
           versions d'un produit (file dédiée, cache, copie complète facultative), saisie en cours. */
       dictionnaireCpe: new DictionnaireCpe(db, flux, mandataire),
+      /** Lot CVE-INC : CVE inconnue de la veille (files dédiées traitées par l'exécutant) et sources facultatives. */
+      cveInconnues,
+      annonces,
       tenable,
       /** Lot N1 : import de scans Nessus (connecteur « nessus-fichier »), lancé depuis la carte « Intégrations ». */
       importNessus,
@@ -328,6 +340,10 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       veilleCollecte: limiter(4, 60 * 60e3),
       /** Lot CPE-1 : demandes de versions à la NVD (nouvelles demandes seulement, pas les réponses du cache). */
       cpeVersions: limiter(CPE_BORNES.demandesParHeure, 60 * 60e3),
+      /** Lot CVE-INC : consultations de cve.org et NVD (nouvelles demandes seulement) et recherches Security Center
+          déclenchées par l'ouverture d'une fiche, par personne. */
+      cveConsultation: limiter(CVE_INCONNUE_BORNES.demandesParHeure, 60 * 60e3),
+      cveTenable: limiter(CVE_INCONNUE_BORNES.tenableParHeure, 60 * 60e3),
       loginByIp: limiter(20, 15 * 60e3),
       loginByUser: limiter(10, 15 * 60e3),
       mfaBySession: limiter(8, 10 * 60e3),
