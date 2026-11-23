@@ -1312,3 +1312,29 @@
     background: CanvasText;
   }
 }
+
+/* 7.6.1 (retour du RSSI du 23/11/2026 : PESTEL trop grand) : lecture resserrée, mêmes formes. Constellation, facteurs,
+   panneau du facteur choisi et compteurs réduits. */
+.pestel-studio .pestel-overview {
+  padding-block: 0.625rem;
+}
+.pestel-studio .pestel-stage {
+  padding: 0.875rem 1.125rem 0.75rem;
+}
+.pestel-studio .pestel-explorer {
+  grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.2fr);
+  gap: 1.25rem;
+  padding-block: 0.5rem;
+}
+.pestel-studio .pestel-constellation {
+  width: min(100%, 25rem);
+}
+.pestel-studio .pestel-factor-node strong {
+  overflow-wrap: normal;
+}
+.pestel-studio .pestel-factor-node {
+  min-height: 3.25rem;
+}
+.pestel-studio .pestel-factor-focus {
+  padding: 1rem;
+}

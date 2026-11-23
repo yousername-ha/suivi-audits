@@ -27,11 +27,13 @@ test('Pilotage : DdA historique, objectifs par processus, plans et graphiques de
     await page.goto('/pilotage/applicabilite');
     await expect(page.getByText(dda.items[0].name).first()).toBeVisible();
 
-    // Objectifs : vues « Par processus » et « Vue compacte ».
+    // Objectifs : vues « Par processus » et « Vue compacte », onglets de la page depuis la 7.6.1.
     await page.goto('/pilotage/objectifs');
-    await expect(page.getByRole('tab', { name: 'Par processus' })).toBeVisible();
+    const vues = page.getByRole('navigation', { name: 'Rubriques : Objectifs et indicateurs' });
+    await expect(vues.getByRole('link', { name: 'Par processus' })).toBeVisible();
     if ((etat.objectives ?? []).length) {
-      await page.getByRole('tab', { name: 'Vue compacte' }).click();
+      await vues.getByRole('link', { name: 'Vue compacte' }).click();
+      await expect(page).toHaveURL(/\/pilotage\/indicateurs$/);
       const compacte = page.getByRole('region', { name: 'Objectifs, vue compacte' });
       for (const o of etat.objectives) await expect(compacte).toContainText(o.id);
     }

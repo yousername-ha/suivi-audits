@@ -4474,11 +4474,22 @@ tr[data-importe='oui'] {
   color: var(--retex-secondaire);
 }
 
-/* Dalles : colonnes selon la largeur disponible (menu latéral compris). */
-.revue-dalles {
+/* 7.6.1 (retour du RSSI du 23/11/2026) : les trois temps côte à côte, chacun en colonne ; ils passent l'un sous l'autre
+   quand la place manque (menu latéral compris). Les dalles d'un temps s'empilent dans sa colonne. */
+.revue-temps-grille {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20em), 1fr));
-  gap: var(--mantine-spacing-md);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19em), 1fr));
+  align-items: start;
+  gap: var(--mantine-spacing-lg);
+}
+.revue-temps-grille .revue-temps {
+  padding-block-start: var(--mantine-spacing-sm);
+  border-block-start: calc(var(--retex-trait) * 1.5) solid var(--c);
+}
+.revue-dalles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
 }
 .revue-dalle {
   gap: var(--mantine-spacing-xs);

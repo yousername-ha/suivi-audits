@@ -3029,6 +3029,17 @@ du SI → machine interne » ; termes techniques précis ; priorité et alertes 
   correspond. S'ajoute aux autres filtres, dans les trois regroupements ; nombre de noms et d'adresses retenus annoncé
   (`role="status"`, `aria-live="polite"`) ; bouton « Effacer le filtre par nom ». Pas dans l'adresse de la page : les autres
   filtres de la carte n'y sont pas.
+- **Mise à jour du 23/11/2026 : un seul filtre** (décision du RSSI, « trop de menu tue le menu ») : le champ « Nom de domaine
+  ou adresse IP » et la barre « Filtrer la carte » placée au-dessus de la carte sont réunis en **un seul champ « Filtrer la
+  carte »** (indication « Nom, adresse, CVE, port… »), dans la barre collante. `filtreTexte` remplace `filtreNom`
+  (`FiltresCarte.nom` retiré) : le texte retient une ligne entière s'il paraît dans un de ses noms, son adresse, une CVE
+  d'une alerte retenue ou un service (« 443 », « 443/tcp », nom du service, produit) ; sur une ligne retenue, s'il est une
+  partie d'un nom et pas le début de l'adresse, seuls les noms qui le contiennent restent (les autres comptés) ; le début de
+  l'adresse, une CVE ou un service gardent tous les noms. Comparaison littérale, casse ignorée, inchangées. Annonce
+  (`annonceFiltre`) gardée ; bouton « Effacer le filtre ». Regroupement, périmètre, type d'alerte, criticité et « Branches
+  en alerte seulement » passent dans le panneau de filtres de cette barre : la dernière phrase du point « Collants »
+  ci-dessous ne vaut plus. Le texte reste dans la vue de la carte (`VueCarte`), gardée en changeant d'onglet. Aucun
+  changement d'API.
 - **Repli par défaut** (`replisParDefaut`, `SEUIL_DEPLIE`) : jusqu'à 30 lignes, tout est déplié ; au-delà, seules les
   branches qui portent une alerte retenue (douze au plus, les plus graves d'abord), leurs lignes sans alerte en faisceau.
   « Tout déplier » reste borné à 250 lignes (`LIGNES_MAX`). La vue (regroupement, filtres, replis par regroupement) est tenue

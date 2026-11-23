@@ -41,6 +41,7 @@ import { UpdateNotice } from './Updates';
 import { ErrorAlert } from './common';
 import { useLive } from '../realtime';
 import { canReadBusiness, useCan, useMe, usePreferences } from '../session';
+import { ClocheRappels } from './ClocheRappels';
 import { MarqueOrganisation } from './MarqueOrganisation';
 import { RechercheMenu } from './RechercheMenu';
 import type { PageMenu } from './recherche-menu';
@@ -385,6 +386,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   <IconeTheme />
                 </ActionIcon>
               </Tooltip>
+              {can('pilotage', 'lire') && <ClocheRappels />}
               <Text size="sm" fw={600} visibleFrom="sm" className="header-user">
                 {me.user?.displayName || me.user?.username}
               </Text>
@@ -405,13 +407,17 @@ export function Layout({ children }: { children: ReactNode }) {
         <main className="shell-main app-main" data-module={moduleMaintenance}>
           <ErrorAlert error={logoutError} />
           <BandeauCrise />
-          <OngletsRubriques />
+          {/* Lot R1 : barre de recherche globale du module, en tête de toutes ses pages (droit de lire le module).
+              7.6.1 (« trop de menu tue le menu ») : réduite à sa loupe, elle se place au bout de la rangée des onglets
+              (conteneur commun, sans effet sur les autres pages). */}
+          <div className="entete-module">
+            <OngletsRubriques />
+            {familleDeLaPage && localiser(loc.pathname)?.destination.id === 'vulnerabilites' && (
+              <RechercheVulnerabilites />
+            )}
+          </div>
           {/* Module Vulnérabilités (lot V6) : rappel discret dans l'en-tête du module quand une alerte critique est en cours ;
               la Vue d'ensemble (lot PC1) a son propre bandeau, plus complet. */}
-          {/* Lot R1 : barre de recherche globale du module, en tête de toutes ses pages (droit de lire le module). */}
-          {familleDeLaPage && localiser(loc.pathname)?.destination.id === 'vulnerabilites' && (
-            <RechercheVulnerabilites />
-          )}
           {familleDeLaPage &&
             localiser(loc.pathname)?.destination.id === 'vulnerabilites' &&
             loc.pathname !== '/vulnerabilites/vue' && <RappelAlertesCritiques />}

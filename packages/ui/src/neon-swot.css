@@ -1365,3 +1365,27 @@ button.swot-process-hub:hover {
     background: CanvasText;
   }
 }
+
+/* 7.6.1 (retour du RSSI du 23/11/2026 : SWOT trop grand) : matrice resserrée, mêmes formes. Bandeau du processus, quadrants,
+   lettre de fond et cercle central réduits ; le dégagement autour du cercle suit sa taille. */
+.swot-studio .swot-process-hero {
+  margin-bottom: 0.75rem;
+  padding: 0.875rem 1.125rem;
+}
+.swot-studio .swot-matrix-wrap {
+  --swot-centre: max(8.5rem, 136px);
+  --swot-ecart: 2.5rem;
+  --swot-pad-x: 1.125rem;
+  --swot-pad-y: 0.875rem;
+}
+.swot-studio .swot-matrix-surface {
+  padding: 0.875rem 1.125rem 0.75rem;
+}
+.swot-studio .swot-sector {
+  min-height: 9rem;
+}
+.swot-studio .swot-sector-letter {
+  top: 2rem;
+  right: 3rem;
+  font-size: 4.5rem;
+}

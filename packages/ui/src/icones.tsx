@@ -76,6 +76,14 @@ export const IconeCarte = () => (
     <path d="M9 4v13.5M15 6.5V20" />
   </Icone>
 );
+/** Cloche des rappels, dans l'en-tête à gauche du compte (7.6.1). */
+export const IconeCloche = () => (
+  <Icone>
+    <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9" />
+    <path d="M10.3 19a1.9 1.9 0 0 0 3.4 0" />
+  </Icone>
+);
+
 export const IconeTheme = () => (
   <Icone>
     <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />

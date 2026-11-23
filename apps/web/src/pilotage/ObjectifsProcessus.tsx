@@ -196,10 +196,9 @@ function EtatIndicateurBloc({ etat, compacte = false }: { etat: EtatIndicateur; 
   );
 }
 
-export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { smsi: string; vue?: Vue }) {
+export function ObjectifsProcessus({ smsi, vue = 'processus' }: { smsi: string; vue?: Vue }) {
   const can = useCan(),
     modifiable = can('pilotage', 'modifier'),
-    [vue, setVue] = useState<Vue>(vueInitiale),
     [ouvert, setOuvert] = useState<Ouvert>(null),
     [etat, setEtat] = useState('all'),
     { ecrire, erreur } = useEcriture(smsi);
@@ -435,18 +434,9 @@ export function ObjectifsProcessus({ smsi, vue: vueInitiale = 'processus' }: { s
               <h2>Les objectifs et leurs indicateurs</h2>
             </div>
           </header>
-          <Tabs
-            className="objectifs-vues"
-            value={vue}
-            onChange={(v) => setVue((v as Vue) ?? 'processus')}
-            keepMounted={false}
-          >
-            <Tabs.List>
-              <Tabs.Tab value="processus">Par processus</Tabs.Tab>
-              <Tabs.Tab value="objectif">Par objectif</Tabs.Tab>
-              <Tabs.Tab value="compacte">Vue compacte</Tabs.Tab>
-              <Tabs.Tab value="boites">Boîtes de pilotage</Tabs.Tab>
-            </Tabs.List>
+          {/* 7.6.1 (demande du RSSI du 23/11/2026) : chaque vue est un onglet de la page (rubriques de la destination
+              « Objectifs et indicateurs », vue compacte par défaut) ; plus de seconde rangée d'onglets ici. */}
+          <Tabs className="objectifs-vues" value={vue} keepMounted={false}>
             <div className="objectifs-outils">
               <Group
                 gap="2xs"

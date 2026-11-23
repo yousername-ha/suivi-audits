@@ -263,7 +263,9 @@ describe('carte : rendu', () => {
       'aria-label="Service 22/tcp · SSH, OpenSSH 9.6, vu par AlgoLightHouse : ouvrir la fiche de 192.0.2.10"',
       'seuls les services portés par une alerte sont connus',
       'AlgoLightHouse ne publie pas la liste des ports ouverts',
-      'Domaine, adresse, CVE, port (443, 443/tcp) ou produit.',
+      // Le champ unique de la carte (décision du RSSI du 23/11/2026) dit qu'il cherche aussi le port et le produit.
+      'Partie d’un nom de domaine (seuls les noms qui correspondent restent), début d’adresse IP (192.0.2.), CVE, port (443, 443/tcp), service ou produit.',
+      'placeholder="Nom, adresse, CVE, port…"',
       // Typosquatting : le nom long sur deux lignes, coupé après un tiret ; IPv6 sur deux lignes.
       '>portail-patients-<',
       '>2001:db8:4000:<',
