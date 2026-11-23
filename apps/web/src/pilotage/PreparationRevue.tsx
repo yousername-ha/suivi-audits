@@ -9,27 +9,33 @@ import { get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 
-/** Trois temps de lecture, dans l'ordre de 9.3.2 (a et b, puis c, puis d à f), chacun dans une teinte de la charte. */
-const TEMPS: readonly { titre: string; resume: string; teinte: string; ids: readonly string[] }[] = [
+/** Trois temps de lecture, dans l'ordre de 9.3.2 de l'ISO/IEC 27001:2022 (a à c, puis d, puis e à g), chacun dans une
+    teinte de la charte. Une entrée se range par la lettre de son point (`c`, `d1`…) : aucune n'est masquée, même si la
+    liste des entrées évolue côté serveur (7.6.1 : les entrées c, d1 à d4 et g n'apparaissaient plus). */
+export const TEMPS: readonly { titre: string; resume: string; teinte: string; lettres: string }[] = [
   {
     titre: 'Suites et contexte',
-    resume: 'Ce qui a été décidé la dernière fois, et ce qui a changé autour de l’organisation.',
+    resume: 'Les décisions passées, le contexte et les attentes.',
     teinte: 'bleu',
-    ids: ['a', 'b'],
+    lettres: 'abc',
   },
   {
-    titre: 'Performance et efficacité',
-    resume: 'Clients, objectifs, processus, écarts, mesures, audits et prestataires.',
+    titre: 'Performance de sécurité',
+    resume: 'Écarts, mesures, audits et objectifs.',
     teinte: 'vert',
-    ids: ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'],
+    lettres: 'd',
   },
   {
-    titre: 'Ressources, risques et amélioration',
-    resume: 'Les moyens, les risques et opportunités, et les pistes de progrès.',
+    titre: 'Retours, risques et amélioration',
+    resume: 'Les retours, les risques et les pistes de progrès.',
     teinte: 'violet',
-    ids: ['d', 'e', 'f'],
+    lettres: 'efg',
   },
 ];
+export const tempsDe = (id: string) => {
+  const n = TEMPS.findIndex((t) => t.lettres.includes(id.charAt(0)));
+  return n < 0 ? TEMPS.length - 1 : n;
+};
 
 /** Dates et nombres d'un fait (hors identifiants comme IND-001) : mis en évidence sans rien recalculer. */
 const CHIFFRE = /(?<![\p{L}\d-])(\d{2}\/\d{2}\/\d{4}|\d+(?:[.,]\d+)?(?:\/\d+)?(?:\s?%)?)(?![\p{L}\d-])/u;
@@ -49,6 +55,13 @@ function Fait({ texte }: { texte: string }) {
   );
 }
 
+/** Dans la colonne « Performance de sécurité », le titre d'une entrée ne répète pas le nom de la colonne (le nom accessible de
+    la dalle garde le titre complet). */
+export const titreCourt = (titre: string) => {
+  const reste = titre.replace(/^Performance de sécurité\s*:\s*/u, '');
+  return reste === titre ? titre : reste.charAt(0).toLocaleUpperCase('fr') + reste.slice(1);
+};
+
 function DalleEntree({ entree, teinte }: { entree: EntreeRevue; teinte: string }) {
   return (
     <article
@@ -64,7 +77,7 @@ function DalleEntree({ entree, teinte }: { entree: EntreeRevue; teinte: string }
           </span>
         )}
       </div>
-      <h4 className="revue-dalle__titre">{entree.titre}</h4>
+      <h4 className="revue-dalle__titre">{titreCourt(entree.titre)}</h4>
       <span className="revue-dalle__souligne" aria-hidden="true" />
       {entree.faits.length > 0 && (
         <ul className="revue-faits">
@@ -110,8 +123,8 @@ export function PreparationRevue({
           </span>
           <h2 className="retex-bandeau__nom">Préparer la prochaine revue</h2>
           <p className="revue-bandeau__texte">
-            Des faits tirés de vos données, sans interprétation : une donnée absente est signalée telle quelle. La
-            direction apprécie, conclut et décide ; les sorties (9.3.3) se saisissent dans la fiche de revue.
+            Des faits tirés de vos données, sans interprétation. La direction apprécie et décide dans la fiche de revue
+            (9.3.3).
           </p>
         </div>
         <div className="revue-bandeau__droite">
@@ -139,32 +152,35 @@ export function PreparationRevue({
         </div>
       </header>
       <ErrorAlert error={q.error} />
-      {entrees.length > 0 &&
-        TEMPS.map((t, n) => {
-          const dalles = entrees.filter((e) => t.ids.includes(e.id));
-          if (!dalles.length) return null;
-          return (
-            <section key={t.titre} className={`revue-temps retex-c-${t.teinte}`} aria-labelledby={`revue-temps-${n}`}>
-              <div className="revue-temps__tete">
-                <span className="verre-pilule revue-temps__anneau" aria-hidden="true">
-                  {n + 1}
-                </span>
-                <div>
-                  <span className="revue-temps__sur">Temps {n + 1}</span>
-                  <h3 id={`revue-temps-${n}`} className="revue-temps__titre">
-                    {t.titre}
-                  </h3>
-                  <p className="revue-temps__resume">{t.resume}</p>
+      {entrees.length > 0 && (
+        <div className="revue-temps-grille">
+          {TEMPS.map((t, n) => {
+            const dalles = entrees.filter((e) => tempsDe(e.id) === n);
+            if (!dalles.length) return null;
+            return (
+              <section key={t.titre} className={`revue-temps retex-c-${t.teinte}`} aria-labelledby={`revue-temps-${n}`}>
+                <div className="revue-temps__tete">
+                  <span className="verre-pilule revue-temps__anneau" aria-hidden="true">
+                    {n + 1}
+                  </span>
+                  <div>
+                    <span className="revue-temps__sur">Temps {n + 1}</span>
+                    <h3 id={`revue-temps-${n}`} className="revue-temps__titre">
+                      {t.titre}
+                    </h3>
+                    <p className="revue-temps__resume">{t.resume}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="revue-dalles">
-                {dalles.map((e) => (
-                  <DalleEntree key={e.id} entree={e} teinte={t.teinte} />
-                ))}
-              </div>
-            </section>
-          );
-        })}
+                <div className="revue-dalles">
+                  {dalles.map((e) => (
+                    <DalleEntree key={e.id} entree={e} teinte={t.teinte} />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }

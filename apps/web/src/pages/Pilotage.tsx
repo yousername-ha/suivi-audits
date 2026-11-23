@@ -874,15 +874,19 @@ function ExportRegister({ smsi, kind }: { smsi: string; kind: GrcKind }) {
       setError(e);
     }
   };
+  // 7.6.1 (retour du RSSI du 23/11/2026) : deux boutons discrets alignés à droite, sous le registre, au lieu de deux barres
+  // pleine largeur.
   return (
-    <Stack>
+    <Stack gap="xs">
       <ErrorAlert error={error} />
-      <Button variant="default" onClick={() => void download(false)}>
-        Exporter le registre et ses décisions
-      </Button>
-      <Button variant="light" onClick={() => void download(true)}>
-        Télécharger le rapport imprimable
-      </Button>
+      <Group justify="flex-end" gap="xs" className="registre-exports">
+        <Button variant="default" size="xs" onClick={() => void download(false)}>
+          Exporter le registre et ses décisions
+        </Button>
+        <Button variant="default" size="xs" onClick={() => void download(true)}>
+          Télécharger le rapport imprimable
+        </Button>
+      </Group>
     </Stack>
   );
 }
