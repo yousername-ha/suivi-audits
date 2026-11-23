@@ -50,6 +50,26 @@ export function IconeLoupe() {
   );
 }
 
+/** Flèche du bouton qui lance une recherche ou un filtrage (7.6.1) : distincte de la loupe du champ, réduit à une loupe
+    quand il est vide (décorative : le bouton garde son texte, masqué à l'écran). */
+export function IconeLancer() {
+  return (
+    <svg
+      className="barre-lancer"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M5 12h13" />
+      <path d="m13 6.5 5.5 5.5-5.5 5.5" />
+    </svg>
+  );
+}
+
 /** Le raccourci « / » ne s'applique qu'en dehors d'une saisie, sans touche de modification ni fenêtre ouverte. */
 export function doitOuvrirRecherche(
   e: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'altKey' | 'defaultPrevented'>,

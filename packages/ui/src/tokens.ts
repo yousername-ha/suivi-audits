@@ -297,7 +297,42 @@ export const RAYONS = { xs: '6px', sm: '8px', md: '10px', lg: '12px', xl: '12px'
 /** Densités de travail (21/11/2026). Le normal est plus resserré que l'ancien compact : les grandes marges,
     commandes et lignes suivent maintenant le même réglage. La taille d'affichage reste une préférence distincte. */
 export const DENSITES = {
+  /* 7.6.1 (retour du RSSI du 23/11/2026 : la 7.6.0 « trop compacte et trop petite ») : la densité normale retrouve les
+     espacements de la 7.5 et des commandes à la hauteur par défaut de la charte ; l'ancienne densité normale de la 7.6.0
+     devient la densité compacte, au choix de chacun. */
   normale: {
+    espacements: {
+      '2xs': '0.25rem',
+      xs: '0.5rem',
+      sm: '0.75rem',
+      md: '1rem',
+      lg: '1.5rem',
+      xl: '2rem',
+      '2xl': '3rem',
+    },
+    variables: {
+      '--suivi-entete-h': '3.25rem',
+      '--suivi-nav-l': '15rem',
+      '--suivi-marge-page': 'clamp(0.75rem, 1vw, 1.5rem)',
+      '--suivi-controle-h': '2.25rem',
+      '--suivi-petit-controle-h': '1.875rem',
+      '--suivi-controle-px': '0.875rem',
+      '--suivi-ligne-h': '2.75rem',
+      '--suivi-ligne-riche-h': '5.5rem',
+      '--suivi-nav-ligne-h': '2.5rem',
+      '--suivi-nav-enfant-h': '2.25rem',
+      '--suivi-carte-padding': '1rem',
+      '--suivi-cellule-py': '0.5rem',
+      '--suivi-section-gap': '1rem',
+      '--suivi-titre-page': '1.625rem',
+      '--suivi-titre-section': '1.1875rem',
+      '--suivi-chiffre': '1.75rem',
+      '--suivi-graphique-h': '17rem',
+      '--suivi-padding-dialogue': '1rem',
+      '--suivi-statut-h': '1.5rem',
+    },
+  },
+  compacte: {
     espacements: {
       '2xs': '0.125rem',
       xs: '0.25rem',
@@ -327,38 +362,6 @@ export const DENSITES = {
       '--suivi-graphique-h': '15rem',
       '--suivi-padding-dialogue': '0.875rem',
       '--suivi-statut-h': '1.375rem',
-    },
-  },
-  compacte: {
-    espacements: {
-      '2xs': '0.125rem',
-      xs: '0.1875rem',
-      sm: '0.25rem',
-      md: '0.375rem',
-      lg: '0.5rem',
-      xl: '0.75rem',
-      '2xl': '1rem',
-    },
-    variables: {
-      '--suivi-entete-h': '2.5rem',
-      '--suivi-nav-l': '13rem',
-      '--suivi-marge-page': 'clamp(0.5rem, 0.65vw, 1rem)',
-      '--suivi-controle-h': '1.625rem',
-      '--suivi-petit-controle-h': '1.5rem',
-      '--suivi-controle-px': '0.5rem',
-      '--suivi-ligne-h': '1.875rem',
-      '--suivi-ligne-riche-h': '4rem',
-      '--suivi-nav-ligne-h': '1.875rem',
-      '--suivi-nav-enfant-h': '1.625rem',
-      '--suivi-carte-padding': '0.5rem',
-      '--suivi-cellule-py': '0.25rem',
-      '--suivi-section-gap': '0.5rem',
-      '--suivi-titre-page': '1.3125rem',
-      '--suivi-titre-section': '1rem',
-      '--suivi-chiffre': '1.375rem',
-      '--suivi-graphique-h': '13rem',
-      '--suivi-padding-dialogue': '0.625rem',
-      '--suivi-statut-h': '1.25rem',
     },
   },
   confortable: {

@@ -55,6 +55,31 @@
 .rv__champ input::placeholder {
   color: var(--rv-doux);
 }
+/* 7.6.1 (retour du RSSI du 23/11/2026) : sous les onglets du module, la recherche ne montre que sa loupe ; elle s'ouvre
+   sur toute la largeur au clic ou au clavier, et reste ouverte tant qu'elle porte un texte. Le champ et son nom ne
+   changent pas. */
+.rv:not(:focus-within):not(:has(.rv__champ input:not(:placeholder-shown))) {
+  inline-size: fit-content;
+}
+.rv:not(:focus-within):not(:has(.rv__champ input:not(:placeholder-shown))) .rv__champ {
+  justify-content: center;
+  gap: 0;
+  min-inline-size: var(--suivi-controle-h);
+  padding-inline: var(--mantine-spacing-xs);
+  cursor: pointer;
+}
+.rv:not(:focus-within):not(:has(.rv__champ input:not(:placeholder-shown))) .rv__etiquette {
+  display: none;
+}
+.rv:not(:focus-within):not(:has(.rv__champ input:not(:placeholder-shown))) .rv__champ input {
+  /* Jamais une largeur nulle : le champ reste visible (et remplissable) pour les outils d'assistance et les tests. */
+  flex: 0 0 auto;
+  inline-size: 0.125em;
+  cursor: pointer;
+}
+.rv:not(:focus-within):not(:has(.rv__champ input:not(:placeholder-shown))) .rv__champ input::placeholder {
+  color: transparent;
+}
 .rv__panneau {
   position: absolute;
   inset-inline: 0;
