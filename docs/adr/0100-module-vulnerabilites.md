@@ -4142,11 +4142,15 @@ C. **tldrcve** : source facultative, désactivée au départ, une ou deux fois p
     que la file des versions CPE (le poller ne connaît que le mode `cpe-versions` : `MODES_COURTS` inchangé), une
     consultation au plus, seulement si aucune demande de versions n'a été traitée dans ce passage (débit de la NVD partagé,
     `CPE_DEBIT`), script borné à `CVE_DELAI_COURT` (12 s) ; au passage complet, une au plus, jamais d'attente du débit
-    (`CVE_DELAI`, 40 s) ;
+    (`CVE_DELAI`, 40 s) ; **dans un passage court, la file des versions CPE passe avant celle des CVE inconnues** : une
+    demande de versions traitée renvoie la consultation au passage court suivant, et une panne de la file des versions
+    (commande en échec, réponse illisible) n'empêche pas la consultation (priorité CPE documentée, à confirmer par le
+    RSSI) ;
   - témoin `cpe-chaud` commun : posé si l'une des deux files dit `actif`, retiré si les deux ont répondu sans `actif`,
     inchangé si l'une n'a pas été réclamée (il expire alors seul, sa validité étant de deux minutes) ;
   - recherches Security Center (`cve-tenable-claim | -finish`) : passage complet seulement, flux « tenable » exigé, trois au
-    plus par passage, script du connecteur sous le compte 65534, sans mandataire ; erreurs avalées comme ailleurs.
+    plus par passage et aucune nouvelle passé `CVE_TENABLE_BUDGET_SECONDES` (60 s, même règle que les exécutions des
+    connecteurs), script du connecteur sous le compte 65534, sans mandataire ; erreurs avalées comme ailleurs.
 - **API** : `apps/api/src/vulnerabilites/cve-inconnue.ts` (`CveInconnues`) et `apps/api/src/vulnerabilites/annonces.ts`
   (`AnnoncesVeille`, sur le modèle de la veille réglementaire) ; routes `GET /api/vulnerabilites/cves/:cve/complements`,
   `POST /api/vulnerabilites/cves/:cve/ouverture`, `POST /api/vulnerabilites/cves/:cve/consultation` (`lire`),
@@ -4167,8 +4171,8 @@ C. **tldrcve** : source facultative, désactivée au départ, une ou deux fois p
 
 ### Tables (migration `103`)
 
-`vulnerabilites_cve_consultations` (file et résultat par CVE : état, jeton de la demande, fiche de cve.org en jsonb borné,
-états des deux parties), `vulnerabilites_cve_ouverture` (une ligne : dernière ouverture de la fiche d'une CVE inconnue),
+`vulnerabilites_cve_consultations` (file et résultat par CVE : état, jeton de la demande, fiche de cve.org en jsonb borné à
+`CVE_INCONNUE_BORNES.ficheOctets`, 262 144 octets, états des deux parties), `vulnerabilites_cve_ouverture` (une ligne : dernière ouverture de la fiche d'une CVE inconnue),
 `vulnerabilites_cve_tenable` (file et résultat par instance et par CVE, 50 contrôles au plus),
 `vulnerabilites_veille_annonces_sources` (activation, fréquence en minutes en liste fermée par source, état),
 `vulnerabilites_veille_annonces_collectes` (file des collectes), `vulnerabilites_veille_annonces` (annonces gardées, lien
@@ -4192,11 +4196,13 @@ Rien d'identifiant : ni machine, ni adresse IP, ni domaine, ni périmètre, ni p
   veille active pendant deux minutes. **Security Center reste au passage normal** (toutes les 15 s environ) : le poller ne
   lance de passage court que si le flux de la veille est ouvert, et la recherche suit le flux de l'intégration.
 - **Délais** : une CVE n'est pas redemandée moins de 24 heures après une réponse, 15 minutes après un échec ; résultats
-  purgés après 90 jours ; demande non réclamée close après 10 minutes, en cours sans fin après 3 minutes.
+  purgés après 90 jours ; demande non réclamée close après 10 minutes, en cours sans fin après 3 minutes (lue
+  « indisponible » dès ces délais passés, même sans réclamation de l'exécutant, et redemandable).
 - **Références de cve.org** affichées en texte, jamais en lien (hôtes hors de la liste fermée) ; seuls les liens vers
   Tenable, cve.org, Cloudflare et tldrcve sont cliquables, contrôlés côté interface.
 - **Une réponse partielle** (cve.org ou NVD en échec, l'autre lue) est un succès : chaque partie a son état ; un échec de
-  cve.org garde la fiche obtenue avant.
+  cve.org garde la fiche obtenue avant. L'exécutant donne au script le délai après lequel il l'interrompt ; cve.org en a
+  40 % au plus, NVD le reste, pour qu'un cve.org muet laisse lire NVD dans les deux passages.
 - **Préavis** : tous les éléments lisibles remontent au serveur, qui ne garde que les critiques et ceux qui citent le nom d'un
   produit surveillé (mots entiers, sans casse ni accent, nom de trois caractères au moins, dix noms au plus par préavis) ; la
   correspondance est faite à la réception (un produit ajouté ensuite ne rattrape pas un préavis déjà écarté). Les CVE des
@@ -4207,6 +4213,59 @@ Rien d'identifiant : ni machine, ni adresse IP, ni domaine, ni périmètre, ni p
   ne sont montrées que dans l'écran « Veille » (la fiche des autres écrans est inchangée).
 - **Assistant** : l'outil `evaluer_cve` n'a pas été touché (l'évaluation SSVC ne lui est pas transmise).
 
+### Relecture de la PR #369 (session Coeur, 22/11/2026) : ce qui a changé
+
+Corrections demandées par la session Coeur, réalisées par le sous-agent développeur ; décisions en attente du RSSI non
+touchées (nom et port du mandataire dans l'erreur, priorité CPE, volume du journal des collectes d'annonces, remise à vide des
+réglages des sources facultatives).
+
+1. **Une seule définition de « connue »** : `cveAUneFiche` (`apps/api/src/vulnerabilites/fiches.ts`), celle de la fiche d'une
+   faille (veille, contrôle de Tenable, rapprochement proposé, rattaché ou confirmé, exposition sur Internet), employée par la
+   fiche (404 sinon) et par `CveInconnues.connue` (compléments, ouverture, consultation). Une CVE citée seulement par une
+   alerte d'AlgoLightHouse close ou par une technologie qui n'est plus détectée est inconnue des deux côtés : l'écran
+   montre la CVE inconnue et le clic part (avant : « connue » d'un côté, 404 de l'autre, 409 au clic).
+2. **Index servis** : les CVE citées sont cherchées par `cves @> ARRAY[…]` (annonces, avis des CERT), jamais
+   `= ANY (cves)`. La page des préavis de l'écran « Veille » emploie `nonRemplacee` (trois `NOT EXISTS` joints par ET,
+   changés en anti-jointures ; les avis par leur index GIN, une recherche par préavis) ; la fiche d'une CVE, `remplacee`
+   (calculée une fois, compte des avis par l'index). Vérifié par EXPLAIN dans
+   `apps/api/test/vulnerabilites-cve-inconnue.test.ts` (5 000 avis, 500 préavis, aucun réglage du planificateur) et relevé à la
+   main (100 000 avis de vingt CVE, 3 000 préavis, après VACUUM ANALYZE) : 117,8 s pour la page avec l'ancienne écriture
+   (`NOT (… OR …)`, parcours complet des avis pour chaque préavis), 11,5 ms avec la nouvelle ; 0,07 ms pour les annonces
+   d'une CVE.
+3. **Remise des clés Tenable journalisée** : `vulnerabilites.cve_tenable.reclamee` (cible : la demande ; détails : instance,
+   opération `controles-cve`, CVE ; jamais un secret ni la configuration), sur le modèle de `integration.execution.reclamee`.
+   Le commentaire de `Integrations.reclamer` nomme les deux chemins par lesquels un secret quitte l'API (tous deux par la CLI
+   de l'exécutant, journalisés).
+4. **« En attente » seulement pour une demande inscrite** : nouveaux états de la recherche Security Center `non_demandee`
+   (instance active, rien d'inscrit) et `indisponible` (demande périmée) ; l'ouverture rend `tenable` (`inscrite`, `inutile`,
+   `limite`, `sans_integration`) ; l'interface dit la limite horaire atteinte ou l'ouverture en échec et n'interroge l'API que
+   pour une demande réellement inscrite.
+5. **Délai par source** (`scripts/veille-vulnerabilites.py`) : la demande porte `delai` (secondes entières de 1 à 120, 40
+   s'il est absent), le délai d'interruption de l'exécutant ; budget = délai − 1,5 s, cve.org 40 % au plus, NVD le reste ;
+   chaque opération réseau (connexion, envoi, chaque réception) est bornée par le temps qui reste à sa lecture.
+   Passage court (12 s) : 4,2 s pour cve.org, au moins 6,3 s pour NVD ; passage complet (40 s) : 15,4 s et 23,1 s.
+6. **Borne de profondeur JSON linéaire** (`trop_imbrique`, veille et connecteurs) : une recherche qui avance toujours, une
+   chaîne non fermée arrête le balayage ; même refus qu'avant ; moins d'une seconde pour 1 Mio hostile (test de durée dans
+   les deux fichiers de tests).
+
+Mineurs : identifiants CVE en chiffres ASCII seulement (`[0-9]`, les trois scripts) ; nombre ou date hors bornes d'un
+préavis (`OverflowError`) : élément écarté et compté, la collecte continue (une date RSS hors bornes est illisible) ; lecture
+du script de la veille dans le `try` (demande close en échec, jamais laissée « en cours ») ; budget des recherches Security
+Center par passage ; `GET /rest/plugin` admis seulement avec la requête fixe, dont la forme est construite à partir des champs
+admis ; fiche de cve.org : borne de la base portée à 262 144 octets (migration 103, non publiée ; une fiche valide en fait
+environ 140 000 au plus, 138 307 relevés en base ; l'API refuse avant l'écriture une fiche plus grosse en gardant la
+partie NVD) ; expiration lue à la lecture (« indisponible ») ; gravité des préavis en français ; clés React uniques ; bouton
+« Ouvrir sa fiche » atteint à la tabulation (le panneau reste ouvert tant que le focus reste dans la recherche).
+
+**Mesure d'un passage court complet côté exécutant** (test
+`test_cve_short_pass_measured_end_to_end_with_a_mute_cve_org_gives_a_partial_answer_within_budget`, faux service HTTPS local
+où cve.org ne répond pas et où NVD répond, vrai script de la veille, CLI fictive) : 5,7 s avec 0,25 s par commande de la
+CLI, 10,9 s avec 1,5 s par commande (mesure à la main, valeur proche d'un `docker compose exec`), réponse partielle obtenue
+(NVD trouvée, cve.org en échec), sous le budget du passage court (`CPE_BUDGET_COURT`, 27 s). Décomposition : quatre
+commandes de la CLI, 4,2 s d'attente de cve.org, la lecture de NVD. Quand le débit de la NVD impose une attente (jusqu'à
+6,5 s) avant la réclamation des versions, le temps restant peut ne plus suffire à la consultation (`restant` < 19 s) : elle
+part alors au passage court suivant. Non mesuré sur une pile avec le poller.
+
 ### Non vérifié
 
 Aucun appel réel : cve.org, NVD (`cveId`), Cloudflare Radar, tldrcve et `GET /rest/plugin` sont vérifiés sur des réponses
@@ -4215,7 +4274,9 @@ options SSVC, `kev`), la forme de `kev_added` chez Cloudflare (booléen ou date,
 de tldrcve (reconnue seulement sous les quatre formes décrites), la forme de `response` de `GET /rest/plugin` (une liste est
 attendue) et de `xrefs` (chaîne ou liste admises). Délais de la veille active pour une consultation : à mesurer sur une pile
 avec le poller. Pile Docker, Node 26, CSP du serveur de production : non vérifiés ; parcours e2e de la recherche adapté, non
-exécuté localement.
+exécuté localement. Relecture de la PR #369 : le même parcours ouvre désormais la fiche au clavier (tabulation depuis le
+champ, puis Entrée), non exécuté localement ; la mesure du passage court est faite avec une CLI fictive, sans le poller ni
+Docker.
 
 ### Ce qui n'est pas fait
 

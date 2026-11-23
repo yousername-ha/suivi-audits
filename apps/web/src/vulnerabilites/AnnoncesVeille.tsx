@@ -37,7 +37,7 @@ import {
   verdictCite,
 } from './cve-inconnue';
 import { NOMS_PAGINATION } from './pagination';
-import { nombrePages } from './veille';
+import { GRAVITE_LIBELLES, nombrePages } from './veille';
 
 const CLE_ANNONCES_SOURCES = ['vulnerabilites', 'veille', 'annonces-sources'] as const;
 
@@ -174,7 +174,7 @@ export function ListePreavis({
             <span className="va-id">{a.cves.join(', ')}</span>
             {a.gravite && (
               <Badge variant="light" color={a.gravite === 'CRITICAL' ? 'red' : 'gray'}>
-                Gravité annoncée : {a.gravite === 'CRITICAL' ? 'critique' : a.gravite.toLowerCase()}
+                Gravité annoncée : {GRAVITE_LIBELLES[a.gravite].toLowerCase()}
                 {a.score !== null ? ` (${String(a.score).replace('.', ',')})` : ''}
               </Badge>
             )}
@@ -232,8 +232,8 @@ export function CarteTldrcve({ a, onOuvrirCve }: { a: AnnonceDto; onOuvrirCve?: 
           <p className="va-etiquette">Est-ce grave ?</p>
           <Text size="sm">{verdict ?? 'tldrcve ne donne pas de verdict pour cette publication.'}</Text>
           <ul className="vn-lignes" aria-label="Faits de la plateforme">
-            {a.faits.map((f) => (
-              <li key={f.cve}>
+            {a.faits.map((f, i) => (
+              <li key={`${i}-${f.cve}`}>
                 <span className="veille-code">{f.cve}</span> : {faitsGravite(f).join(' ; ')}
               </li>
             ))}
@@ -242,8 +242,8 @@ export function CarteTldrcve({ a, onOuvrirCve }: { a: AnnonceDto; onOuvrirCve?: 
         <section className="vn-bloc" aria-label="Êtes-vous concerné ?">
           <p className="va-etiquette">Êtes-vous concerné ?</p>
           <ul className="vn-lignes">
-            {a.faits.map((f) => (
-              <li key={f.cve}>
+            {a.faits.map((f, i) => (
+              <li key={`${i}-${f.cve}`}>
                 <span className="veille-code">{f.cve}</span> : {faitsConcerne(f).join(' ; ')}
               </li>
             ))}

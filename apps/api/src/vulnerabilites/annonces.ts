@@ -45,7 +45,7 @@ import type { FluxExternes } from '../flux-externes.js';
 import { conflict } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import type { Mandataire } from '../mandataire.js';
-import { remplacee } from './cve-inconnue.js';
+import { nonRemplacee } from './cve-inconnue.js';
 import { cvesExploitees } from './sources.js';
 import type { SurfaceExterneAlh } from './surface-externe.js';
 import type { VeilleVulnerabilites } from './veille.js';
@@ -461,10 +461,7 @@ export class AnnoncesVeille {
   /** Annonces d'une source, les plus récentes d'abord. Préavis : seulement ceux qui ne sont pas remplacés. Chaque CVE citée
       porte les faits de la plateforme, lus en quelques requêtes d'ensemble pour toute la page. */
   async liste(q: RechercheAnnonces): Promise<PageAnnoncesDto> {
-    const base = this.db.k
-      .selectFrom('vulnerabilites_veille_annonces as a')
-      .where('a.source', '=', q.source)
-      .where((eb) => (q.source === 'cloudflare-radar' ? eb.not(remplacee(sql`a.cves[1]`)) : eb.val(true)));
+    const base = annoncesDeLaSource(this.db.k, q.source);
     const { n } = await base.select(sql<number>`count(*)::int`.as('n')).executeTakeFirstOrThrow();
     const lignes = await base
       .selectAll('a')
@@ -533,6 +530,13 @@ export class AnnoncesVeille {
       });
     return out;
   }
+}
+
+/** Annonces d'une source montrées par l'écran « Veille » : préavis non remplacés (anti-jointures servies par l'index GIN des
+    avis, cve-inconnue.ts), tous les résumés de tldrcve. Exportée pour la vérification du plan par EXPLAIN. */
+export function annoncesDeLaSource(k: Kdb, source: SourceAnnonce) {
+  const base = k.selectFrom('vulnerabilites_veille_annonces as a').where('a.source', '=', source);
+  return source === 'cloudflare-radar' ? base.where(nonRemplacee(sql`a.cves[1]`)) : base;
 }
 
 function dernierParCle<T>(elements: T[], cle: (e: T) => string): T[] {

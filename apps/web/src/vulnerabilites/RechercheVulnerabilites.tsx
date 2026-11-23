@@ -8,7 +8,7 @@
 import { useDebouncedValue } from '@mantine/hooks';
 import { RECHERCHE_GLOBALE_BORNES, type RechercheGlobaleDto } from '@suivi/shared';
 import { useQuery } from '@tanstack/react-query';
-import { type KeyboardEvent, useId, useMemo, useState } from 'react';
+import { type FocusEvent, type KeyboardEvent, useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { api, errorMessage } from '../api';
 import { useCan } from '../session';
@@ -52,6 +52,14 @@ export function deplacerOption(actif: number, touche: string, n: number): number
       return null;
   }
 }
+
+/** Le focus quitte la barre de recherche (la liste se ferme) : pas quand il passe du champ au bouton « Ouvrir sa fiche » d'une
+    CVE inconnue, ou de ce bouton au champ (tabulation), sans quoi le bouton disparaîtrait avant d'être atteint. */
+export function focusQuitteRecherche(conteneur: Pick<Node, 'contains'> | null, suivant: Node | null): boolean {
+  return !(conteneur && suivant && conteneur.contains(suivant));
+}
+const quitte = (e: FocusEvent<HTMLElement>) =>
+  focusQuitteRecherche(e.currentTarget.closest('.rv'), e.relatedTarget instanceof Node ? e.relatedTarget : null);
 
 /** Présentation (sans état) : champ combobox, panneau des résultats groupés, zone de statut. */
 export function RechercheVulnerabilitesVue({
@@ -114,7 +122,9 @@ export function RechercheVulnerabilitesVue({
           onChange={(e) => onSaisie(e.currentTarget.value)}
           onKeyDown={onTouche}
           onFocus={onFocus}
-          onBlur={onBlur}
+          onBlur={(e) => {
+            if (quitte(e)) onBlur();
+          }}
         />
       </label>
       <span id={`${id}-aide`} className="sr-only">
@@ -136,6 +146,10 @@ export function RechercheVulnerabilitesVue({
               type="button"
               className="rv__ouvrir"
               onMouseDown={(e) => e.preventDefault()}
+              // Atteint à la tabulation depuis le champ : la liste reste ouverte tant que le focus reste dans la recherche.
+              onBlur={(e) => {
+                if (quitte(e)) onBlur();
+              }}
               onClick={() =>
                 onChoisir({
                   cle: `inconnue-${reponse.cveInconnue!.cve}`,

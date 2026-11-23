@@ -11,6 +11,7 @@
 -- (« suivi cve-inconnue-finish »). `jeton` : identifiant de la demande remise, seul accepté à la clôture. `cveorg` : la
 -- fiche gardée de cve.org (liste blanche, revalidée par l'API) ; la réponse de NVD est rangée dans la veille
 -- (vulnerabilites_veille_cve), comme une collecte NVD. Une CVE n'est pas redemandée moins de 24 heures après une réponse.
+-- Borne de `cveorg` : CVE_INCONNUE_BORNES.ficheOctets (une fiche valide en fait environ 140 000 au plus, 138 307 relevés).
 CREATE TABLE vulnerabilites_cve_consultations (
   cve          text PRIMARY KEY CHECK (cve ~ '^CVE-[12][0-9]{3}-[0-9]{4,9}$'),
   etat         text NOT NULL CHECK (etat IN ('en_file', 'en_cours', 'recu', 'echec')),
@@ -19,7 +20,7 @@ CREATE TABLE vulnerabilites_cve_consultations (
   debute_le    timestamptz,
   termine_le   timestamptz,
   erreur       text CHECK (erreur IS NULL OR (char_length(erreur) BETWEEN 1 AND 300 AND erreur !~ '[[:cntrl:]]')),
-  cveorg       jsonb CHECK (cveorg IS NULL OR (jsonb_typeof(cveorg) = 'object' AND octet_length(cveorg::text) <= 65536)),
+  cveorg       jsonb CHECK (cveorg IS NULL OR (jsonb_typeof(cveorg) = 'object' AND octet_length(cveorg::text) <= 262144)),
   cveorg_etat  text CHECK (cveorg_etat IS NULL OR cveorg_etat IN ('trouvee', 'absente', 'echec')),
   nvd_etat     text CHECK (nvd_etat IS NULL OR nvd_etat IN ('trouvee', 'absente', 'echec')),
   obtenu_le    timestamptz,

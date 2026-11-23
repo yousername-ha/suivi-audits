@@ -133,6 +133,9 @@ describe('formes contrôlées', () => {
       'CVE-2026-0001 ',
       'CVE-2026-0001<x>',
       'XCVE-2026-0001',
+      // Chiffres Unicode (pleine chasse, arabes-indiens) : refusés, ici comme dans les scripts (relecture de la PR #369).
+      'CVE-２０２６-0001',
+      'CVE-2026-٠٠٠١',
     ])
       expect(CVE_ID.test(ko), ko).toBe(false);
     for (const ok of ['CERTFR-2026-AVI-1500', 'CERTFR-2015-ALE-009', 'CERTFR-2026-ALE-015'])

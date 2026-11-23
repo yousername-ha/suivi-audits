@@ -110,9 +110,14 @@ for (const [mode, scheme] of [
       // possible et rien n'est appelé ; « Voir chez Tenable » n'est qu'un lien.
       // L'ouverture de la fiche (notée par l'API) est remplacée : le parcours reste en lecture seule.
       await page.route('**/api/vulnerabilites/cves/CVE-2026-99999/ouverture', (x) =>
-        x.fulfill({ json: { connue: false } }),
+        x.fulfill({ json: { connue: false, tenable: 'sans_integration' } }),
       );
-      await page.getByRole('button', { name: /^Ouvrir sa fiche/ }).click();
+      // Relecture de la PR #369 : le bouton est atteint à la tabulation depuis le champ (le panneau reste ouvert), puis Entrée.
+      await champ.press('Tab');
+      const ouvrir = page.getByRole('button', { name: /^Ouvrir sa fiche/ });
+      await expect(ouvrir).toBeFocused();
+      await expect(ouvrir).toBeVisible();
+      await page.keyboard.press('Enter');
       const ficheInconnue = page.getByRole('dialog', { name: 'CVE-2026-99999 (veille)' });
       await expect(ficheInconnue).toBeVisible();
       await expect(

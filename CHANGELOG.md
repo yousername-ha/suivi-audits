@@ -28,7 +28,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   seulement). Si une intégration Tenable Security Center est active et son flux ouvert, les contrôles Tenable qui citent la
   CVE sont cherchés à l'ouverture de la fiche, sans clic, en lecture seule (`GET /rest/plugin`, ajouté à la liste fermée du
   connecteur) : « Tenable a N contrôle(s) pour cette CVE », avec numéro, nom, famille et exploit disponible, jamais de
-  détail de machine (session « Module surveillance vulnérabilités SMSI »).
+  détail de machine ; l'écran n'attend cette recherche que si elle est réellement demandée, et dit quand la limite horaire
+  est atteinte ou quand une demande n'a pas été prise en charge à temps (« indisponible », redemandable) ; la remise des
+  clés de l'instance à l'exécutant est journalisée, sans les clés. Une CVE citée seulement par une alerte close ou par une
+  technologie qui n'est plus détectée est traitée comme inconnue (même règle que sa fiche) ; si cve.org ne répond pas, la
+  réponse de NVD est tout de même obtenue (session « Module surveillance vulnérabilités SMSI »).
 - Vulnérabilités, **sources facultatives de la veille** (lot CVE-INC, décisions du RSSI du 22/11/2026, migration `103`),
   désactivées au départ et réglables par qui administre le module : « Préavis des CVE (Cloudflare Radar) », lu toutes les
   15 minutes par défaut (avertissement en dessous d'une heure), qui ne garde que les CVE critiques et celles dont le titre
@@ -37,8 +41,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   CERT, sans notification ni alerte ; « Résumés des CVE (tldrcve) », lu une ou deux fois par jour, présenté en cartes de la
   plateforme en trois blocs (« Est-ce grave ? » : verdict de tldrcve cité et faits de la plateforme ; « Êtes-vous
   concerné ? » : présence sur le parc, exposition, produit surveillé ; « Que faire ? » : résumé du flux cité et lien vers
-  tldrcve), sans effet sur la priorité. La fiche d'une CVE porte les marques de ces sources
-  (session « Module surveillance vulnérabilités SMSI »).
+  tldrcve), sans effet sur la priorité. La fiche d'une CVE porte les marques de ces sources ; la gravité annoncée est
+  affichée en français, un élément au nombre ou à la date hors bornes est écarté sans faire échouer la collecte, et la page
+  des préavis reste rapide quel que soit le nombre d'avis des CERT (session « Module surveillance vulnérabilités SMSI »).
 
 ## [7.6.0] — 2026-11-22
 

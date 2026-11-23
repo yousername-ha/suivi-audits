@@ -88,20 +88,30 @@ SEULE_BASIC = "Seule l'authentification simple (Basic) est prise en charge ; NTL
 # imbriqué est refusé par l'analyseur (RecursionError) ou accepté : la borne est donc posée ici, avant l'analyse, pour que
 # le refus ne dépende pas de l'environnement. Les sources lues n'approchent pas cette profondeur.
 PROFONDEUR_JSON_MAX = 64
-CHAINE_JSON = re.compile(rb'"(?:[^"\\]|\\.)*"')
+# Une chaîne JSON entière (échappements compris), ou un guillemet ouvrant sans fin. Contrôle linéaire et total (relecture de
+# la PR #369 : l'ancienne expression, appliquée par substitution, reprenait l'analyse à chaque guillemet d'une chaîne non
+# fermée et devenait quadratique, 5,9 s pour 40 Kio de « \" ») : la recherche avance toujours ; une chaîne non fermée
+# arrête le balayage (pour l'analyseur, tout ce qui suit est dans la chaîne, et il refusera la réponse).
+CHAINE_JSON = re.compile(rb'"[^"\\]*(?:\\.[^"\\]*)*"|"', re.S)
 HORS_CROCHETS = bytes(c for c in range(256) if c not in b"[]{}")
 
 
 def trop_imbrique(brut):
-    """Vrai si le JSON dépasse PROFONDEUR_JSON_MAX niveaux. Les crochets et accolades écrits dans une chaîne ne comptent pas."""
-    profondeur = 0
-    for c in CHAINE_JSON.sub(b"", brut).translate(None, HORS_CROCHETS):
-        if c in (91, 123):
-            profondeur += 1
-            if profondeur > PROFONDEUR_JSON_MAX:
-                return True
-        elif profondeur:
-            profondeur -= 1
+    """Vrai si le JSON dépasse PROFONDEUR_JSON_MAX niveaux. Les crochets et accolades écrits dans une chaîne ne comptent pas.
+    Un seul passage sur la réponse : entre deux chaînes, seuls les crochets et accolades sont comptés."""
+    profondeur, pos, n = 0, 0, len(brut)
+    while pos <= n:
+        m = CHAINE_JSON.search(brut, pos)
+        for c in brut[pos: m.start() if m else n].translate(None, HORS_CROCHETS):
+            if c in (91, 123):
+                profondeur += 1
+                if profondeur > PROFONDEUR_JSON_MAX:
+                    return True
+            elif profondeur:
+                profondeur -= 1
+        if m is None or m.end() - m.start() == 1:
+            return False
+        pos = m.end()
     return False
 
 
@@ -337,6 +347,10 @@ class Client:
         if not point_admis(self.type, methode, chemin):
             raise Refus("Appel refusé : %s %s hors de la liste fermée du connecteur." % (methode, chemin[:80]))
         cible = chemin
+        # GET /rest/plugin n'est admis qu'avec la requête fixe des contrôles d'une CVE (jamais nu, jamais avec d'autres
+        # paramètres) : sans filtre, Security Center rendrait tout son catalogue.
+        if (self.type, methode, chemin) == ("tenable", "GET", "/rest/plugin") and fixe is None:
+            raise Refus("Appel refusé : requête hors de la liste fermée du connecteur.")
         if fixe is not None:
             # Lot CVE-INC : requête écrite dans ce script (REQUETE_CONTROLES_CVE), seule l'identifiant de la CVE y varie.
             if (self.type, methode, chemin) != ("tenable", "GET", "/rest/plugin") or parametres or not REQUETE_CONTROLES_CVE_FORME.fullmatch(fixe):
@@ -422,7 +436,9 @@ CHAMPS_CONTROLES_CVE = ("id", "name", "family", "type", "xrefs", "exploitAvailab
                         "riskFactor", "vulnPubDate", "patchPubDate", "pluginPubDate")
 CONTROLES_CVE_MAX = 50
 REQUETE_CONTROLES_CVE = "filterField=xrefs&op=like&value=%s&fields=" + ",".join(CHAMPS_CONTROLES_CVE) + "&startOffset=0&endOffset=50"
-REQUETE_CONTROLES_CVE_FORME = re.compile(r"^filterField=xrefs&op=like&value=CVE-[12]\d{3}-\d{4,9}&fields=[A-Za-z,]{1,300}&startOffset=0&endOffset=50$")
+# Forme admise, construite à partir des champs admis : seul l'identifiant de la CVE (chiffres ASCII) varie.
+REQUETE_CONTROLES_CVE_FORME = re.compile("^" + re.escape("filterField=xrefs&op=like&value=") + "CVE-[12][0-9]{3}-[0-9]{4,9}"
+                                         + re.escape("&fields=" + ",".join(CHAMPS_CONTROLES_CVE) + "&startOffset=0&endOffset=50") + "$")
 RISQUES_TENABLE = ("None", "Low", "Medium", "High", "Critical")
 NOM_CONTROLE_MAX = 300
 FAMILLE_MAX = 100
@@ -495,7 +511,7 @@ GRAVITE_DE_ID = {v: k for k, v in GRAVITES.items()}
 GRAVITES_DEFAUT = ["critique", "elevee"]
 PLUGIN_ID = re.compile(r"^[1-9]\d{0,8}$")
 DEPOT_TENABLE = re.compile(r"^[1-9]\d{0,8}$")
-CVE_ID = re.compile(r"^CVE-[12]\d{3}-\d{4,9}$")
+CVE_ID = re.compile(r"^CVE-[12][0-9]{3}-[0-9]{4,9}$")
 UUID_STRICT = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 ADRESSE_IP = re.compile(r"^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|(?=[0-9a-f:.]*:)[0-9a-f:.]{2,45})$")
 NOM_MACHINE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,254}$")

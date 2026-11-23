@@ -89,8 +89,9 @@ export const sourceVeille = (id: SourceVeille): SourceVeilleDefinition =>
   SOURCES_VEILLE_DEFINITIONS.find((s) => s.id === id)!;
 
 /* ------------------------------------------------------------------ Formes contrôlées */
-/** Identifiant CVE (« CVE-AAAA-NNNN », quatre chiffres ou plus). */
-export const CVE_ID = /^CVE-[12]\d{3}-\d{4,9}$/;
+/** Identifiant CVE (« CVE-AAAA-NNNN », quatre chiffres ou plus). Chiffres écrits `[0-9]` : recopié tel quel dans les scripts
+    Python (comparé par les tests d'architecture), où `\d` admettrait aussi les chiffres Unicode (relecture de la PR #369). */
+export const CVE_ID = /^CVE-[12][0-9]{3}-[0-9]{4,9}$/;
 /** Identifiant d'une alerte ou d'un avis du CERT-FR (forme publiée par son API, depuis 2010). */
 export const CERTFR_ID = /^CERTFR-20\d{2}-(?:ALE|AVI)-\d{2,4}$/;
 /** Identifiant d'une alerte du CERT Santé : numéro de l'élément du flux (guid). */

@@ -19,6 +19,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from unittest.mock import patch
 
@@ -180,6 +181,24 @@ class IntegrationHttp(unittest.TestCase):
         # Crochets et accolades écrits dans une chaîne, guillemet échappé compris : ils ne comptent pas.
         self.assertFalse(h.trop_imbrique(b'{"texte": "' + b"[{" * 500 + b' \\" [[[", "n": [1, 2]}'))
         self.assertFalse(h.trop_imbrique(b""))
+
+    def test_borne_de_profondeur_lineaire_sur_un_mega_octet_hostile(self):
+        # Relecture de la PR #369 : l'ancienne expression des chaînes reprenait l'analyse à chaque guillemet d'une chaîne non
+        # fermée (quadratique : 5,9 s pour 40 Kio de « \" »). Contrôle linéaire : moins d'une seconde par Mio hostile.
+        mio = 1024 * 1024
+        for nom, brut, attendu in (
+                ("guillemets échappés", b'\\"' * (mio // 2), False),
+                ("chaîne ouverte puis échappements", b'"' + b'\\"' * (mio // 2), False),
+                ("guillemets seuls", b'"' * mio, False),
+                ("chaînes vides", b'"",' * (mio // 3), False),
+                ("barres obliques inverses", b'\\' * mio, False),
+                ("crochets appariés", b"[]" * (mio // 2), False),
+                ("accolades et chaînes", b'{"a":"\\"[",' * (mio // 12), True),
+                ("crochets ouvrants", b"[" * mio, True)):
+            with self.subTest(nom=nom):
+                debut = time.monotonic()
+                self.assertIs(h.trop_imbrique(brut), attendu)
+                self.assertLess(time.monotonic() - debut, 1.0)
 
     @classmethod
     def setUpClass(cls):

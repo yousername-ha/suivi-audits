@@ -140,7 +140,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   veille.apresCollecte = () => rapprochements.recalculerTout();
   /* Lot CVE-INC : CVE inconnue de la veille (cve.org et NVD sur clic, contrôles Tenable à l'ouverture de la fiche), et
      sources facultatives de la veille (préavis de Cloudflare Radar, résumés de tldrcve). */
-  const cveInconnues = new CveInconnues(db, flux, mandataire, integrations);
+  const cveInconnues = new CveInconnues(db, flux, mandataire, integrations, surfaceExterne);
   cveInconnues.veille = veille;
   const annonces = new AnnoncesVeille(db, flux, mandataire);
   annonces.veille = veille;

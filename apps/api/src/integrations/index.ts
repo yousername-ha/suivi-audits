@@ -549,7 +549,10 @@ export class Integrations {
 
   /* ---------------------------------------------------------------- CLI de l'exécutant */
   /** `suivi integrations-claim` : réclame l'exécution en file la plus ancienne dont le type a son flux ouvert et l'instance
-      active ; rend ce qu'il faut pour l'exécuter, secrets compris (seul chemin par lequel un secret quitte l'API). Une
+      active ; rend ce qu'il faut pour l'exécuter, secrets compris. Avec `pourExecutant` (recherche des contrôles Tenable
+      d'une CVE, lot CVE-INC, remise par `suivi cve-tenable-claim`), ce sont les deux seuls chemins par lesquels un secret
+      quitte l'API : tous deux par la CLI de l'exécutant, jamais par une route, et journalisés à la remise
+      (`integration.execution.reclamee`, `vulnerabilites.cve_tenable.reclamee`), sans le secret. Une
       demande dont le flux est fermé ou l'instance désactivée est close sans appel. Le module désactivé : rien n'est
       réclamé et les demandes en file sont closes. Une opération dont le module destinataire est désactivé
       (`modulesInactifs`) est close de même. */
@@ -782,7 +785,8 @@ export class Integrations {
 
   /** Lot CVE-INC (ADR 0100) : configuration et secrets d'une instance réseau active, pour une demande de lecture remise à
       l'exécutant par une file du module Vulnérabilités (contrôles Tenable qui citent une CVE). Même chemin de sortie que
-      `reclamer` (la CLI de l'exécutant, jamais une route) ; null si l'instance est inactive ou si un secret manque. */
+      `reclamer` (la CLI de l'exécutant, jamais une route) ; null si l'instance est inactive ou si un secret manque.
+      L'appelant journalise la remise (`vulnerabilites.cve_tenable.reclamee`), sans le secret. */
   async pourExecutant(id: string): Promise<AccesExecutant | null> {
     const i = await this.lire(id);
     if (!i.actif || !typeConnu(i.type)) return null;

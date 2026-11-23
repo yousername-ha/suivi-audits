@@ -11,6 +11,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import {
   deplacerOption,
+  focusQuitteRecherche,
   NOM_CHAMP_RECHERCHE,
   RechercheVulnerabilitesVue,
 } from '../src/vulnerabilites/RechercheVulnerabilites';
@@ -311,6 +312,22 @@ describe('rendu accessible', () => {
     expect(html).toMatch(
       /<button type="button" class="rv__ouvrir">Ouvrir sa fiche \(consultation de cve\.org et NVD sur votre clic\)<\/button>/,
     );
+  });
+  it('« Ouvrir sa fiche » est atteignable à la tabulation : la liste ne se ferme pas quand le focus passe du champ au bouton', () => {
+    // Faux nœuds : le conteneur de la recherche contient le champ et le bouton, pas le reste de la page.
+    const bouton = { nom: 'bouton' } as unknown as Node;
+    const champ = { nom: 'champ' } as unknown as Node;
+    const ailleurs = { nom: 'ailleurs' } as unknown as Node;
+    const conteneur = { contains: (n: Node | null) => n === bouton || n === champ };
+    expect(focusQuitteRecherche(conteneur, bouton)).toBe(false); // Tab : champ -> bouton, le panneau reste ouvert
+    expect(focusQuitteRecherche(conteneur, champ)).toBe(false); // Maj+Tab : bouton -> champ
+    expect(focusQuitteRecherche(conteneur, ailleurs)).toBe(true); // le focus quitte la recherche : fermeture
+    expect(focusQuitteRecherche(conteneur, null)).toBe(true); // clic hors de la page
+    expect(focusQuitteRecherche(null, bouton)).toBe(true);
+    // Le bouton n'est pas retiré de l'ordre de tabulation, et son départ du focus est suivi comme celui du champ.
+    const composant = readFileSync(path.join(SRC, 'vulnerabilites/RechercheVulnerabilites.tsx'), 'utf8');
+    expect(composant).not.toMatch(/tabIndex=\{-1\}/);
+    expect(composant.match(/if \(quitte\(e\)\) onBlur\(\);/g)).toHaveLength(2);
   });
   it('erreur et recherche en cours dites en texte', () => {
     expect(rendre({ reponse: undefined, erreur: 'Erreur 500' })).toContain('Recherche impossible : Erreur 500');

@@ -6,7 +6,8 @@ Lancé par l'exécutant d'exploitation du serveur (scripts/exploitation-worker.p
 `python -I`, avec un environnement minimal et un délai borné, jamais par l'API (qui reste sans accès réseau sortant).
 Bibliothèque standard seule.
 
-Entrée : un objet JSON sur l'entrée standard {source, parametres, mandataire?}. Sortie : un objet JSON {ok, elements, bilan, erreur} sur
+Entrée : un objet JSON sur l'entrée standard {source, parametres, mandataire?, delai?} (« delai » : source « cve-inconnue »
+seulement, temps après lequel l'exécutant interrompt le script). Sortie : un objet JSON {ok, elements, bilan, erreur} sur
 la sortie standard ; les éléments sont normalisés en champs structurés et bornés, l'erreur tient sur une ligne et ne
 reprend jamais un contenu de réponse.
 
@@ -97,7 +98,7 @@ BORNES_ANNONCES = {"identifiant": 300, "titre": 300, "resume": 1000, "lien": 500
 TOUTES_SOURCES = {**SOURCES, **SOURCES_REGLEMENTAIRES, **SOURCES_CPE, **SOURCES_CVE_INCONNUE, **SOURCES_ANNONCES}
 # Bornes, recopiées de VEILLE_BORNES (packages/shared) et comparées par le même test.
 BORNES = {"titre": 300, "resume": 1000, "description": 1000, "action": 1000, "nomFaille": 300, "editeur": 200, "produit": 200, "nomsCpe": 20, "produitsTouches": 20, "cvesParAvis": 200, "fichesCertSante": 30, "lot": 500, "lots": 40, "epss": 2000}
-CVE_ID = re.compile(r"^CVE-[12]\d{3}-\d{4,9}$")
+CVE_ID = re.compile(r"^CVE-[12][0-9]{3}-[0-9]{4,9}$")
 CERTFR_ID = re.compile(r"^CERTFR-20\d{2}-(?:ALE|AVI)-\d{2,4}$")
 CERTSANTE_ID = re.compile(r"^[1-9]\d{0,9}$")
 ADRESSE_CERTSANTE = re.compile(r"^https:\/\/cyberveille\.esante\.gouv\.fr\/alertes\/[a-z0-9-]{1,200}$")
@@ -106,7 +107,7 @@ CVSS31_VECTEUR = re.compile(r"^CVSS:3\.1(?:\/[A-Z]{1,3}:[A-Z]{1,2}){8,20}$")
 CVSS40_VECTEUR = re.compile(r"^CVSS:4\.0(?:\/[A-Za-z]{1,3}:[A-Za-z]{1,10}){11,40}$")
 NOM_CPE = re.compile(r"^[\x21-\x3b\x3d\x3f-\x7e]{1,100}$")
 VERSION_CPE = re.compile(r"^[\x21-\x3b\x3d\x3f-\x7e]{1,60}$")
-CVE_DANS_TEXTE = re.compile(r"\bCVE-[12]\d{3}-\d{4,9}\b")
+CVE_DANS_TEXTE = re.compile(r"\bCVE-[12][0-9]{3}-[0-9]{4,9}\b")
 REFERENCE_CERTFR = re.compile(r"/(?:alerte|avis)/(CERTFR-20\d{2}-(?:ALE|AVI)-\d{2,4})/")
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 HORODATAGE_NVD = re.compile(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,6}))?Z?$")
@@ -130,6 +131,15 @@ REPONSE_MAX.update({"cve-org": 1024 * 1024, "cloudflare-radar": 4 * 1024 * 1024,
 ERREUR_MAX = 300
 DELAI_REQUETE = 30
 DUREE_MAX = 240
+# CVE inconnue (lot CVE-INC, relecture de la PR #369) : l'exécutant donne dans la demande (« delai », secondes entières
+# bornées par CVE_DELAI_BORNES ; CVE_DELAI_DEFAUT s'il est absent) le temps après lequel il interrompt le script. Ce budget,
+# moins CVE_MARGE (démarrage, sortie), est partagé : cve.org dispose au plus de CVE_PART_CVE_ORG du budget, NVD du reste,
+# pour qu'une panne de cve.org (service muet) laisse lire NVD, au passage court (12 s) comme au passage complet (40 s). Chaque
+# lecture a son échéance : connexion, envoi et chaque réception sont bornés par le temps qui lui reste.
+CVE_DELAI_DEFAUT = 40
+CVE_DELAI_BORNES = (1, 120)
+CVE_MARGE = 1.5
+CVE_PART_CVE_ORG = 0.4
 # NVD : 2000 failles par page (maximum de l'API), cinq pages au plus, six secondes entre deux pages (débit public sans clé
 # d'API, d'après la documentation de NVD) ; fenêtre de 120 jours au plus (limite de l'API).
 NVD_PAR_PAGE = 2000
@@ -152,7 +162,7 @@ FICHE_FRAGMENTS_MAX = 20000
 FICHES_LUES_MAX = 2000
 EMPREINTE = re.compile(r"^[0-9a-f]{16}$")
 # Titre du flux : « Produit - CVE-… », suivi au besoin de « | modifié le JJ-MM-AAAA ».
-PRODUIT_TITRE = re.compile(r"^(.{1,200}?) - CVE-[12]\d{3}-\d{4,9}(?:\s|$)")
+PRODUIT_TITRE = re.compile(r"^(.{1,200}?) - CVE-[12][0-9]{3}-[0-9]{4,9}(?:\s|$)")
 # RSS : profondeur et nombre d'éléments XML bornés, éléments <item> gardés bornés.
 RSS_PROFONDEUR_MAX = 8
 RSS_ELEMENTS_MAX = 5000
@@ -167,20 +177,30 @@ INVISIBLES = ("Cc", "Cf", "Co", "Cs", "Zl", "Zp")
 # imbriqué est refusé par l'analyseur (RecursionError) ou accepté : la borne est donc posée ici, avant l'analyse, pour que
 # le refus ne dépende pas de l'environnement. Les sources lues n'approchent pas cette profondeur.
 PROFONDEUR_JSON_MAX = 64
-CHAINE_JSON = re.compile(rb'"(?:[^"\\]|\\.)*"')
+# Une chaîne JSON entière (échappements compris), ou un guillemet ouvrant sans fin. Contrôle linéaire et total (relecture de
+# la PR #369 : l'ancienne expression, appliquée par substitution, reprenait l'analyse à chaque guillemet d'une chaîne non
+# fermée et devenait quadratique, 5,9 s pour 40 Kio de « \" ») : la recherche avance toujours ; une chaîne non fermée
+# arrête le balayage (pour l'analyseur, tout ce qui suit est dans la chaîne, et il refusera la réponse).
+CHAINE_JSON = re.compile(rb'"[^"\\]*(?:\\.[^"\\]*)*"|"', re.S)
 HORS_CROCHETS = bytes(c for c in range(256) if c not in b"[]{}")
 
 
 def trop_imbrique(brut):
-    """Vrai si le JSON dépasse PROFONDEUR_JSON_MAX niveaux. Les crochets et accolades écrits dans une chaîne ne comptent pas."""
-    profondeur = 0
-    for c in CHAINE_JSON.sub(b"", brut).translate(None, HORS_CROCHETS):
-        if c in (91, 123):
-            profondeur += 1
-            if profondeur > PROFONDEUR_JSON_MAX:
-                return True
-        elif profondeur:
-            profondeur -= 1
+    """Vrai si le JSON dépasse PROFONDEUR_JSON_MAX niveaux. Les crochets et accolades écrits dans une chaîne ne comptent pas.
+    Un seul passage sur la réponse : entre deux chaînes, seuls les crochets et accolades sont comptés."""
+    profondeur, pos, n = 0, 0, len(brut)
+    while pos <= n:
+        m = CHAINE_JSON.search(brut, pos)
+        for c in brut[pos: m.start() if m else n].translate(None, HORS_CROCHETS):
+            if c in (91, 123):
+                profondeur += 1
+                if profondeur > PROFONDEUR_JSON_MAX:
+                    return True
+            elif profondeur:
+                profondeur -= 1
+        if m is None or m.end() - m.start() == 1:
+            return False
+        pos = m.end()
     return False
 
 
@@ -190,6 +210,14 @@ class Refus(Exception):
 
 class Introuvable(Refus):
     """cve.org ne connaît pas l'identifiant demandé (code 404) : ce n'est pas un échec de la lecture."""
+
+
+class ElementHostile(Refus):
+    """Nombre ou date hors des bornes de Python (OverflowError) dans un élément : l'élément est écarté et compté, la collecte
+    continue."""
+
+    def __init__(self):
+        super().__init__("Élément illisible : nombre ou date hors bornes.")
 
 
 # ------------------------------------------------------------------ Texte venu de l'extérieur
@@ -243,13 +271,17 @@ def horodatage_nvd(v):
 def horodatage_rss(v):
     try:
         d = parsedate_to_datetime(v) if isinstance(v, str) and len(v) <= 64 else None
-    except (TypeError, ValueError, IndexError):
+    except (TypeError, ValueError, IndexError, OverflowError):
         return None
     if d is None:
         return None
     if d.tzinfo is None:
         d = d.replace(tzinfo=dt.timezone.utc)
-    return d.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    try:
+        return d.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    except OverflowError:
+        # Date hors des dates de Python une fois ramenée en UTC (« 31 Dec 9999 23:59:59 -2359 ») : illisible.
+        return None
 
 
 # ------------------------------------------------------------------ Réseau
@@ -368,8 +400,8 @@ class ConnexionMandataire(http.client.HTTPSConnection):
     """Connexion HTTPS à la source à travers un tunnel ouvert sur le mandataire : TLS de bout en bout, certificat et nom de
     la source vérifiés par le même contexte qu'en accès direct."""
 
-    def __init__(self, hote, port, contexte_tls, mandataire):
-        super().__init__(hote, port, timeout=DELAI_REQUETE, context=contexte_tls)
+    def __init__(self, hote, port, contexte_tls, mandataire, timeout=DELAI_REQUETE):
+        super().__init__(hote, port, timeout=timeout, context=contexte_tls)
         self.contexte_tls = contexte_tls
         self.mandataire = mandataire
 
@@ -425,8 +457,10 @@ def explication(erreur):
 class Client:
     """Client HTTPS d'une source, limité à son hôte et à ses chemins. GET seulement ; aucune redirection suivie."""
 
-    def __init__(self, source, debut=None, mandataire=None):
+    def __init__(self, source, debut=None, mandataire=None, echeance=None):
         self.source = source
+        # Échéance de cette lecture (horloge monotone), ou None : délai DELAI_REQUETE par opération, comme toujours.
+        self.echeance = echeance
         self.hote, self.port = destination(source)
         self.contexte = contexte()
         self.mandataire = mandataire
@@ -438,6 +472,15 @@ class Client:
                 raise Refus("Autorité de certification de l'établissement illisible : rien n'a été lu.") from None
         self.debut = time.monotonic() if debut is None else debut
 
+    def delai(self):
+        """Délai de la prochaine opération réseau : DELAI_REQUETE, borné par l'échéance de la lecture s'il y en a une."""
+        if self.echeance is None:
+            return DELAI_REQUETE
+        reste = self.echeance - time.monotonic()
+        if reste <= 0:
+            raise TimeoutError()
+        return min(DELAI_REQUETE, reste)
+
     def lire(self, chemin, requete="", maximum=None):
         if not chemin_admis(self.source, chemin):
             raise Refus("Lecture refusée : %s hors de la liste fermée de la source." % chemin[:80])
@@ -448,15 +491,23 @@ class Client:
             raise Refus("Durée maximale de la collecte atteinte : collecte interrompue.")
         maximum = maximum or REPONSE_MAX[self.source]
         if self.mandataire:
-            connexion = ConnexionMandataire(self.hote, self.port, self.contexte, self.mandataire)
+            connexion = ConnexionMandataire(self.hote, self.port, self.contexte, self.mandataire, timeout=self.delai())
         else:
-            connexion = http.client.HTTPSConnection(self.hote, self.port, timeout=DELAI_REQUETE, context=self.contexte)
+            connexion = http.client.HTTPSConnection(self.hote, self.port, timeout=self.delai(), context=self.contexte)
+        sock = None
         try:
+            if self.echeance is not None:
+                # Socket gardée : http.client la retire de la connexion à la réponse d'un service qui ferme après.
+                connexion.connect()
+                sock = connexion.sock
+                sock.settimeout(self.delai())
             connexion.request("GET", chemin + ("?" + requete if requete else ""), headers={
                 "Accept": "application/json, application/rss+xml, application/xml;q=0.9",
                 "Accept-Encoding": "identity",
                 "User-Agent": "suivi-audits-veille",
             })
+            if sock is not None:
+                sock.settimeout(self.delai())
             reponse = connexion.getresponse()
             if 300 <= reponse.status < 400:
                 raise Refus("Redirection refusée (code %d) : la source n'est lue qu'à son adresse de la liste fermée." % reponse.status)
@@ -469,7 +520,20 @@ class Client:
             longueur = reponse.getheader("Content-Length")
             if longueur is not None and (not longueur.strip().isdigit() or int(longueur) > maximum):
                 raise Refus("Réponse trop volumineuse : refusée.")
-            brut = reponse.read(maximum + 1)
+            if sock is None:
+                brut = reponse.read(maximum + 1)
+            else:
+                # Une réception à la fois, chacune bornée par le temps qui reste : un service qui distille sa réponse ne
+                # dépasse pas l'échéance.
+                morceaux, taille = [], 0
+                while taille <= maximum and not reponse.isclosed():  # fermée d'elle-même une fois la réponse lue
+                    sock.settimeout(self.delai())
+                    morceau = reponse.read1(min(65536, maximum + 1 - taille))
+                    if not morceau:
+                        break
+                    morceaux.append(morceau)
+                    taille += len(morceau)
+                brut = b"".join(morceaux)
             if len(brut) > maximum:
                 raise Refus("Réponse trop volumineuse : refusée.")
         finally:
@@ -1244,7 +1308,11 @@ def instant_rfc3339(v):
     except ValueError:
         return None
     fraction = (m.group(3) or "0").ljust(3, "0")[:3]
-    return d.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.") + fraction + "Z"
+    try:
+        return d.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.") + fraction + "Z"
+    except OverflowError:
+        # « 9999-12-31T23:59:59-23:59 » : hors des dates de Python une fois ramenée en UTC.
+        raise ElementHostile() from None
 
 
 def objet(v):
@@ -1333,17 +1401,35 @@ def fiche_cve_org(d, cve):
             "references": references, "produits": produits, "ssvc": ssvc, "kevAjoutLe": kev}
 
 
-def cve_inconnue(parametres, mandataire):
+def delai_cve_inconnue(v):
+    """Délai reçu de l'exécutant (secondes entières, CVE_DELAI_BORNES), CVE_DELAI_DEFAUT s'il est absent ; autre forme : refus."""
+    if v is None:
+        return CVE_DELAI_DEFAUT
+    if not isinstance(v, int) or isinstance(v, bool) or not CVE_DELAI_BORNES[0] <= v <= CVE_DELAI_BORNES[1]:
+        raise Refus("Délai de la consultation illisible : rien n'a été lu.")
+    return v
+
+
+def budget_cve_inconnue(delai):
+    """(temps de cve.org, temps total) en secondes, pour un délai d'interruption donné par l'exécutant : cve.org dispose au
+    plus de CVE_PART_CVE_ORG du temps total ; NVD dispose du reste, au moins (1 - CVE_PART_CVE_ORG) du total."""
+    total = max(1.0, delai - CVE_MARGE)
+    return total * CVE_PART_CVE_ORG, total
+
+
+def cve_inconnue(parametres, mandataire, delai=CVE_DELAI_DEFAUT):
     """Une CVE inconnue de la veille : cve.org puis NVD, chacun avec son état (trouvee, absente, echec). Échec global si les
-    deux ont échoué. Rien d'autre que l'identifiant n'est envoyé."""
+    deux ont échoué. Rien d'autre que l'identifiant n'est envoyé. `delai` : temps après lequel l'exécutant interrompt le
+    script ; cve.org n'en prend qu'une part, pour que NVD soit lue même si cve.org ne répond pas."""
     cve = parametres.get("cve") if isinstance(parametres, dict) else None
     if not (isinstance(cve, str) and CVE_ID.fullmatch(cve)):
         raise Refus("Identifiant CVE illisible : rien n'a été lu.")
     debut = time.monotonic()
+    part_cveorg, total = budget_cve_inconnue(delai)
     erreurs = []
     fiche, etat_cveorg = None, "echec"
     try:
-        fiche = fiche_cve_org(Client("cve-org", debut, mandataire).json("/api/cve/" + cve), cve)
+        fiche = fiche_cve_org(Client("cve-org", debut, mandataire, echeance=debut + part_cveorg).json("/api/cve/" + cve), cve)
         etat_cveorg = "trouvee"
     except Introuvable:
         etat_cveorg = "absente"
@@ -1351,7 +1437,7 @@ def cve_inconnue(parametres, mandataire):
         erreurs.append("cve.org : " + explication(e))
     faille, etat_nvd = None, "echec"
     try:
-        d = Client("nvd", debut, mandataire).json(SOURCES["nvd"]["chemins"][0], "cveId=" + cve)
+        d = Client("nvd", debut, mandataire, echeance=debut + total).json(SOURCES["nvd"]["chemins"][0], "cveId=" + cve)
         if not isinstance(d, dict) or not isinstance(d.get("vulnerabilities"), list) or not isinstance(d.get("totalResults"), int):
             raise Refus("Réponse de NVD illisible.")
         if not d["vulnerabilities"]:
@@ -1390,6 +1476,9 @@ def score_annonce(v):
         x = float(v) if isinstance(v, (int, float, str)) and not isinstance(v, bool) else None
     except ValueError:
         return None
+    except OverflowError:
+        # Entier JSON trop grand pour un flottant : l'élément est écarté.
+        raise ElementHostile() from None
     return round(x, 1) if x is not None and 0 <= x <= 10 else None
 
 
@@ -1428,16 +1517,21 @@ def preavis_cloudflare(client, _parametres, bilan):
         version = c.get("cvss_version")
         version = str(version) if isinstance(version, (str, int, float)) and not isinstance(version, bool) else ""
         gravite = c.get("severity")
-        elements.append({
-            "identifiant": ident, "cve": cve, "titre": titre,
-            "resume": texte(it.get("summary"), BORNES_ANNONCES["resume"]),
-            "lien": lien_annonce("cloudflare-radar", it.get("url")),
-            "publieLe": instant_rfc3339(it.get("date_published")),
-            "gravite": GRAVITES_ANNONCE.get(gravite.strip().lower()) if isinstance(gravite, str) else None,
-            "score": score_annonce(c.get("score")),
-            "versionCvss": version if VERSION_CVSS.fullmatch(version) else None,
-            "kev": kev_annonce(c.get("kev_added"), it.get("kev_added")),
-        })
+        try:
+            element = {
+                "identifiant": ident, "cve": cve, "titre": titre,
+                "resume": texte(it.get("summary"), BORNES_ANNONCES["resume"]),
+                "lien": lien_annonce("cloudflare-radar", it.get("url")),
+                "publieLe": instant_rfc3339(it.get("date_published")),
+                "gravite": GRAVITES_ANNONCE.get(gravite.strip().lower()) if isinstance(gravite, str) else None,
+                "score": score_annonce(c.get("score")),
+                "versionCvss": version if VERSION_CVSS.fullmatch(version) else None,
+                "kev": kev_annonce(c.get("kev_added"), it.get("kev_added")),
+            }
+        except ElementHostile:
+            bilan.ecartes += 1
+            continue
+        elements.append(element)
     return elements
 
 
@@ -1493,7 +1587,7 @@ def executer(p):
             if not isinstance(parametres, dict):
                 raise Refus("Demande illisible.")
             try:
-                return cve_inconnue(parametres, lire_mandataire(p.get("mandataire")))
+                return cve_inconnue(parametres, lire_mandataire(p.get("mandataire")), delai_cve_inconnue(p.get("delai")))
             except Exception as erreur:  # noqa: BLE001
                 return {"ok": False, "erreur": une_ligne(explication(erreur)), "cveOrg": None, "cveOrgEtat": None,
                         "nvd": None, "nvdEtat": None}

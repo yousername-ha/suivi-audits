@@ -9,9 +9,11 @@ import http.server
 import importlib.util
 import json
 from pathlib import Path
+import re
 import ssl
 import tempfile
 import threading
+import time
 import unittest
 from unittest.mock import patch
 
@@ -23,6 +25,9 @@ h = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(h)
 
 CVE = "CVE-2026-90001"
+# Délai du passage court de l'exécutant, lu dans son script (une seule source).
+CVE_DELAI_COURT = int(re.search(r"^CVE_DELAI_COURT = (\d+)$", (ROOT / "scripts/exploitation-worker.py").read_text(), re.M).group(1))
+CVE_DELAI = int(re.search(r"^CVE_DELAI = (\d+)$", (ROOT / "scripts/exploitation-worker.py").read_text(), re.M).group(1))
 
 
 def enregistrement(cve=CVE, **extra):
@@ -181,6 +186,56 @@ class CveInconnue(unittest.TestCase):
             self.assertIn("rien n'a été lu", r["erreur"])
         self.assertEqual(Faux.recues, [])
 
+    def test_cve_org_muet_nvd_lue_reponse_partielle_dans_le_delai_du_passage_court(self):
+        # Relecture de la PR #369 : cve.org ne répond pas ; le script, qui connaît le délai après lequel l'exécutant
+        # l'interrompt, laisse à NVD le temps de répondre. Réponse partielle : un succès.
+        reveil = threading.Event()
+        self.addCleanup(reveil.set)
+        vrai = Faux.do_GET
+
+        def muet(handler):
+            if handler.path.startswith("/api/cve/"):
+                reveil.wait(30)
+                return None
+            return vrai(handler)
+        self.repondre("/rest/json/cves/2.0?cveId=" + CVE, nvd_une())
+        with patch.object(Faux, "do_GET", muet):
+            debut = time.monotonic()
+            r = v.executer({"source": "cve-inconnue", "parametres": {"cve": CVE}, "delai": CVE_DELAI_COURT})
+            duree = time.monotonic() - debut
+        self.assertEqual((r["ok"], r["erreur"], r["cveOrgEtat"], r["nvdEtat"]), (True, None, "echec", "trouvee"), r)
+        self.assertEqual(r["nvd"]["cve"], CVE)
+        self.assertLess(duree, CVE_DELAI_COURT - v.CVE_MARGE)
+        # Passage complet : même partage, NVD garde au moins 60 % du temps.
+        for delai in (CVE_DELAI_COURT, CVE_DELAI):
+            part, total = v.budget_cve_inconnue(delai)
+            self.assertLessEqual(total, delai - v.CVE_MARGE)
+            self.assertGreaterEqual(total - part, 0.6 * total)
+            self.assertGreaterEqual(total - part, 5)
+
+    def test_delai_recu_controle(self):
+        self.repondre("/rest/json/cves/2.0?cveId=" + CVE, nvd_vide())
+        for delai in ("12", 0, 121, True, 12.5, [12]):
+            with self.subTest(delai=delai):
+                Faux.recues = []
+                r = v.executer({"source": "cve-inconnue", "parametres": {"cve": CVE}, "delai": delai})
+                self.assertFalse(r["ok"])
+                self.assertIn("Délai de la consultation illisible", r["erreur"])
+                self.assertEqual(Faux.recues, [])
+        self.assertEqual(v.delai_cve_inconnue(None), v.CVE_DELAI_DEFAUT)
+        self.assertTrue(v.executer({"source": "cve-inconnue", "parametres": {"cve": CVE}, "delai": 30})["ok"])
+
+    def test_identifiant_en_chiffres_unicode_refuse(self):
+        for cve in ("CVE-２０２６-90001", "CVE-2026-٩٠٠٠١"):
+            with self.subTest(cve=cve):
+                self.assertIsNone(v.CVE_ID.fullmatch(cve))
+                self.assertIsNone(h.CVE_ID.fullmatch(cve))
+                self.assertFalse(v.chemin_admis("cve-org", "/api/cve/" + cve))
+                r = self.consulter(cve)
+                self.assertFalse(r["ok"])
+        self.assertEqual(v.CVE_DANS_TEXTE.findall("CVE-２０２６-90001 et " + CVE), [CVE])
+        self.assertEqual(Faux.recues, [])
+
     def test_redirection_refusee(self):
         Faux.reponses["/api/cve/" + CVE] = (302, b"", (("Location", "https://ailleurs.exemple.invalid/"),))
         self.repondre("/rest/json/cves/2.0?cveId=" + CVE, nvd_vide())
@@ -209,6 +264,26 @@ class CveInconnue(unittest.TestCase):
                              "lien": "https://radar.cloudflare.com/zero-wire/cves/CVE-2026-90010",
                              "publieLe": "2026-11-22T07:00:00.000Z", "gravite": "CRITICAL", "score": 9.8, "versionCvss": "3.1", "kev": True})
         self.assertEqual((b["lien"], b["score"], b["gravite"], b["kev"]), (None, None, "MEDIUM", None))
+
+    def test_preavis_nombre_ou_date_hostile_ecarte_compte_la_collecte_continue(self):
+        # Relecture de la PR #369 : un entier trop grand pour un flottant, une date hors des dates de Python une fois ramenée
+        # en UTC : l'élément est écarté et compté, jamais toute la collecte.
+        brut = ('{"items": ['
+                '{"id": "a", "title": "Score hostile", "_cve": {"id": "CVE-2026-90030", "score": 1' + "0" * 400 + '}},'
+                '{"id": "b", "title": "Date hostile", "date_published": "9999-12-31T23:59:59-23:59", "_cve": {"id": "CVE-2026-90031"}},'
+                '{"id": "c", "title": "Lisible", "date_published": "2026-11-22T08:00:00Z", "_cve": {"id": "CVE-2026-90032", "score": 7.5}}'
+                ']}')
+        self.repondre("/zero-wire/cves/feed?format=json", brut.encode())
+        r = v.executer({"source": "cloudflare-radar", "parametres": {}})
+        self.assertTrue(r["ok"], r)
+        self.assertEqual(r["bilan"]["ecartes"], 2)
+        self.assertEqual([e["cve"] for e in r["elements"]], ["CVE-2026-90032"])
+        self.assertEqual((r["elements"][0]["score"], r["elements"][0]["publieLe"]), (7.5, "2026-11-22T08:00:00.000Z"))
+        with self.assertRaises(v.ElementHostile):
+            v.score_annonce(10 ** 400)
+        with self.assertRaises(v.ElementHostile):
+            v.instant_rfc3339("9999-12-31T23:59:59-23:59")
+        self.assertIsNone(v.horodatage_rss("Fri, 31 Dec 9999 23:59:59 -2359"))
 
     def test_preavis_illisible(self):
         self.repondre("/zero-wire/cves/feed?format=json", json.dumps({"items": "x"}).encode())
@@ -304,6 +379,17 @@ class ControlesTenable(unittest.TestCase):
                 client.requete("GET", "/rest/plugin", fixe=fixe)
         with self.assertRaises(h.Refus):
             client.requete("GET", "/rest/system", fixe=h.REQUETE_CONTROLES_CVE % CVE)
+        # Relecture de la PR #369 : GET /rest/plugin n'est jamais admis nu (tout le catalogue de Security Center).
+        with patch.object(h.http.client, "HTTPSConnection", side_effect=AssertionError("appel réseau")):
+            for parametres in (None, {}):
+                with self.assertRaises(h.Refus):
+                    client.requete("GET", "/rest/plugin", parametres=parametres)
+        # La forme admise est construite à partir des champs admis : un autre jeu de champs ou des chiffres Unicode, refusés.
+        self.assertTrue(h.REQUETE_CONTROLES_CVE_FORME.fullmatch(h.REQUETE_CONTROLES_CVE % CVE))
+        for fixe in ("filterField=xrefs&op=like&value=%s&fields=id,name&startOffset=0&endOffset=50" % CVE,
+                     h.REQUETE_CONTROLES_CVE % "CVE-２０２６-90001",
+                     (h.REQUETE_CONTROLES_CVE % CVE).replace("pluginPubDate", "pluginText")):
+            self.assertIsNone(h.REQUETE_CONTROLES_CVE_FORME.fullmatch(fixe), fixe)
         # Un autre type n'admet jamais cette opération.
         r = h.executer({"type": "algolighthouse", "operation": "controles-cve", "configuration": {}, "secrets": {}})
         self.assertFalse(r["ok"])

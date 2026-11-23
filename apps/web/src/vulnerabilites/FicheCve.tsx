@@ -4,13 +4,14 @@
      elle a été consultée.
    - CVE inconnue de la veille : rien n'est appelé sans clic, sauf la recherche des contrôles Tenable (Security Center
      configuré et flux ouvert), inscrite à l'ouverture de la fiche, sans bouton. « Consulter cve.org et NVD » inscrit la
-     consultation (traitée par l'exécutant, en quelques secondes) ; l'interface interroge l'API pendant l'attente, deux minutes
-     au plus. « Voir chez Tenable » : lien seulement.
+     consultation (traitée par l'exécutant, en quelques secondes) ; l'interface interroge l'API pendant l'attente d'une
+     demande réellement inscrite, deux minutes au plus (une recherche non demandée, limite atteinte ou ouverture en échec,
+     ou indisponible, est dite et jamais attendue). « Voir chez Tenable » : lien seulement.
    Textes des sources en texte simple, rendus échappés par React ; références de cve.org en texte, jamais en lien (hôtes hors
    de la liste fermée) ; liens vers Tenable, cve.org, Cloudflare et tldrcve contrôlés (https sur l'hôte attendu), nouvel
    onglet sans référent. CSP stricte (ADR 0006) : classes de packages/ui/src/neon-veille.css, aucun style en ligne. */
 import { Alert, Button, Group, Loader, Stack, Table, Text } from '@mantine/core';
-import { type ComplementsCveDto, type FicheCveOrg, type FicheFailleDto } from '@suivi/shared';
+import { type ComplementsCveDto, type FicheCveOrg, type FicheFailleDto, type OuvertureCveDto } from '@suivi/shared';
 import { ErrorAlert, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
@@ -27,6 +28,7 @@ import {
   libelleRisque,
   lienSur,
   lignesSsvc,
+  type OuvertureTenableVue,
   phraseTenable,
   urlComplements,
   urlConsultation,
@@ -165,8 +167,8 @@ export function FicheCveOrgVue({ f }: { f: FicheCveOrg }) {
         <div>
           <p className="va-etiquette">Références (adresses en texte, à vérifier avant de les ouvrir)</p>
           <ul className="vn-lignes vn-references">
-            {f.references.map((r) => (
-              <li key={r.url}>
+            {f.references.map((r, i) => (
+              <li key={`${i}-${r.url}`}>
                 {r.nom ? `${r.nom} : ` : ''}
                 <span className="veille-code">{r.url}</span>
               </li>
@@ -178,14 +180,21 @@ export function FicheCveOrgVue({ f }: { f: FicheCveOrg }) {
   );
 }
 
-/** Contrôles Tenable qui citent la CVE : numéro, nom, famille, exploit disponible. Jamais de machine. */
-export function ControlesTenableVue({ c }: { c: ComplementsCveDto }) {
+/** Contrôles Tenable qui citent la CVE : numéro, nom, famille, exploit disponible. Jamais de machine. `ouverture` : ce que
+    l'ouverture de la fiche a fait de la recherche (limite atteinte, échec), dit quand rien n'est inscrit. */
+export function ControlesTenableVue({
+  c,
+  ouverture = null,
+}: {
+  c: ComplementsCveDto;
+  ouverture?: OuvertureTenableVue;
+}) {
   const t = c.tenable;
   return (
     <section className="va-section" aria-label="Tenable Security Center">
       <p className="va-etiquette">Tenable Security Center</p>
       <Text size="sm" role="status">
-        {phraseTenable(t)}
+        {phraseTenable(t, ouverture)}
       </Text>
       {t.etat === 'recu' && t.controles.length > 0 && (
         <Table striped withTableBorder>
@@ -220,11 +229,13 @@ export function FicheCveInconnueVue({
   c,
   envoi,
   erreur,
+  ouverture = null,
   onConsulter,
 }: {
   c: ComplementsCveDto;
   envoi: boolean;
   erreur: string | null;
+  ouverture?: OuvertureTenableVue;
   onConsulter: () => void;
 }) {
   const k = c.consultation;
@@ -264,7 +275,7 @@ export function FicheCveInconnueVue({
         </Group>
         {k.cveOrg && <FicheCveOrgVue f={k.cveOrg} />}
       </section>
-      <ControlesTenableVue c={c} />
+      <ControlesTenableVue c={c} ouverture={ouverture} />
       <div className="va-actions">
         <LienExterne href={lienSur(c.lienTenable, 'www.tenable.com')} nom={c.cve}>
           Voir chez Tenable
@@ -318,6 +329,7 @@ function FicheCveSansVeille({ cve }: { cve: string }) {
   const ouverte = useRef<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [ouverture, setOuverture] = useState<OuvertureTenableVue>(null);
   const cle = ['vulnerabilites', 'cve-complements', cve];
   const q = useQuery({
     queryKey: cle,
@@ -335,9 +347,14 @@ function FicheCveSansVeille({ cve }: { cve: string }) {
     if (!q.data || q.data.connue || ouverte.current === cve) return;
     ouverte.current = cve;
     debut.current = Date.now();
-    api('POST', urlOuverture(cve))
-      .then(() => qc.invalidateQueries({ queryKey: ['vulnerabilites', 'cve-complements', cve] }))
-      .catch(() => undefined);
+    // Ce que l'ouverture a fait de la recherche Security Center est gardé et dit (limite atteinte, échec) : l'écran n'attend
+    // que pour une recherche réellement inscrite (état `en_attente` des compléments).
+    api<OuvertureCveDto>('POST', urlOuverture(cve))
+      .then((r) => {
+        setOuverture(r.tenable);
+        return qc.invalidateQueries({ queryKey: ['vulnerabilites', 'cve-complements', cve] });
+      })
+      .catch(() => setOuverture('echec'));
   }, [q.data, cve, qc]);
   const consulter = async () => {
     setEnvoi(true);
@@ -362,5 +379,13 @@ function FicheCveSansVeille({ cve }: { cve: string }) {
         <Text size="sm">Chargement de la fiche…</Text>
       </Group>
     );
-  return <FicheCveInconnueVue c={q.data} envoi={envoi} erreur={erreur} onConsulter={() => void consulter()} />;
+  return (
+    <FicheCveInconnueVue
+      c={q.data}
+      envoi={envoi}
+      erreur={erreur}
+      ouverture={ouverture}
+      onConsulter={() => void consulter()}
+    />
+  );
 }
