@@ -78,6 +78,9 @@
   - un refus d'authentification (code 407) nomme le type demandé par le mandataire et rappelle que seule l'authentification
     simple est prise en charge.
   Non vérifié : le fonctionnement face au mandataire réel de l'établissement (tests sur un faux mandataire local).
+- **Erreur sans nom ni port du mandataire** (décision du RSSI du 23/11/2026) : l'erreur d'un flux qui passe par le mandataire,
+  lue par qui lit le module, ne nomme ni son hôte ni son port ; ils ne sont écrits qu'au journal d'audit. Veille (ADR 0100,
+  addendum « lot CVE-INC ») puis connecteur AlgoLightHouse (ADR 0100, addendum « lot ALH-MANDATAIRE »).
 - **Lots P2 et P3** (assistant, mises à jour, antivirus, ACME) : non réalisés ; l'écran du réglage les dit « pas encore pris
   en charge ».
 

@@ -600,6 +600,78 @@ describe('exécutant, mandataire, planification', () => {
     }
   });
 
+  it('mandataire injoignable (lot ALH-MANDATAIRE) : ni nom ni port dans l’exécution ni dans les routes ; le détail au seul journal d’audit', async () => {
+    const HOTE = 'mandataire-interne.exemple.invalid';
+    const ERREUR =
+      "Mandataire sortant injoignable : connexion refusée (le mandataire n'écoute pas, ou un pare-feu la refuse).";
+    const DETAIL = `Mandataire ${HOTE}:3129 : connexion refusée.`;
+    const sansMandataire = (texte: string) => {
+      expect(texte).not.toContain(HOTE);
+      expect(texte).not.toContain('3129');
+    };
+    const d = await rssi.post(`/api/integrations/instances/${instance}/synchroniser`);
+    expect(d.statusCode, d.body).toBe(201);
+    const claim = await cli(['integrations-claim']);
+    expect(claim.code, claim.err).toBe(0);
+    const job = JSON.parse(claim.out) as { id: string };
+    // Par la vraie CLI de l'exécutant : le détail est refusé avec un succès (rien n'est écrit), admis avec un échec.
+    const refus = await cli(
+      ['integrations-finish', job.id],
+      JSON.stringify({ ok: true, resultat: bilan([]), erreur: null, detail: DETAIL }),
+    );
+    expect(refus.code).toBe(2);
+    expect(
+      (await t.svc.db.one<{ etat: string }>('SELECT etat FROM integration_executions WHERE id = $1', [job.id]))!.etat,
+    ).toBe('en_cours');
+    const fin = await cli(
+      ['integrations-finish', job.id],
+      JSON.stringify({ ok: false, resultat: null, erreur: ERREUR, detail: DETAIL }),
+    );
+    expect(fin.code, fin.err).toBe(0);
+    // État de la surface externe (vulnerabilites:lire) : l'erreur, sans nom ni port.
+    for (const qui of [lecteurA, rssi]) {
+      const etat = await qui.get(`${S}/etat`);
+      expect(etat.statusCode).toBe(200);
+      expect(etat.json()[0]).toMatchObject({ derniere: { id: job.id, etat: 'echec', erreur: ERREUR } });
+      sansMandataire(etat.body);
+    }
+    // Instances et exécutions (integrations:lire) : idem.
+    for (const url of [
+      '/api/integrations/instances',
+      `/api/integrations/instances/${instance}`,
+      `/api/integrations/instances/${instance}/executions`,
+      `/api/integrations/executions/${job.id}`,
+    ]) {
+      const r = await admin.get(url);
+      expect(r.statusCode, url).toBe(200);
+      expect(r.body, url).toContain('Mandataire sortant injoignable');
+      sansMandataire(r.body);
+    }
+    // Rien n'est rangé avec l'exécution ; le détail est dans la seule entrée d'audit de fin d'exécution.
+    const ligne = await t.svc.db.one('SELECT * FROM integration_executions WHERE id = $1', [job.id]);
+    expect(ligne).toMatchObject({ etat: 'echec', erreur: ERREUR, resultat: null });
+    sansMandataire(JSON.stringify(ligne));
+    expect((await audits('integration.execution.terminee')).filter((a) => a.target === job.id)).toEqual([
+      {
+        username: 'exécutant serveur',
+        target: job.id,
+        details: {
+          integration: instance,
+          type: 'algolighthouse',
+          nom: 'AlgoLightHouse fictif',
+          operation: 'synchroniser',
+          etat: 'echec',
+          erreur: ERREUR,
+          detail: DETAIL,
+        },
+      },
+    ]);
+    const ailleurs = await t.svc.db.q<{ action: string }>(
+      `SELECT action FROM audit_log WHERE details::text LIKE '%${HOTE}%' ORDER BY id`,
+    );
+    expect(ailleurs.rows.map((r) => r.action)).toEqual(['integration.execution.terminee']);
+  }, 60_000);
+
   it('une synchronisation par jour ; flux fermé : rien ; module désactivé : routes refusées', async () => {
     const jour = new Date('2026-11-17T08:00:00Z');
     expect(await t.svc.vulnerabilites.surfaceExterne.planifier(jour)).toHaveLength(1);

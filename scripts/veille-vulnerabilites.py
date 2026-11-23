@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 """Veille du module Vulnérabilités sur cinq sources publiques (ADR 0100, points 3 à 5 ; lots V2 et V3), et veille
-réglementaire sur quatre flux officiels (ADR 0110, lot VR-1 : CNIL, CEPD, EUR-Lex, ANSSI), par le même mécanisme.
+réglementaire sur six sources officielles (ADR 0110, lot VR-1 : CNIL, CEPD, EUR-Lex, ANSSI ; lot VR-2 : actualités du CERT
+Santé, Journal officiel par les données ouvertes de la DILA), par le même mécanisme.
 
 Lancé par l'exécutant d'exploitation du serveur (scripts/exploitation-worker.py) sous un compte sans privilège, par
 `python -I`, avec un environnement minimal et un délai borné, jamais par l'API (qui reste sans accès réseau sortant).
 Bibliothèque standard seule.
 
-Entrée : un objet JSON sur l'entrée standard {source, parametres, mandataire?}. Sortie : un objet JSON {ok, elements, bilan, erreur} sur
+Entrée : un objet JSON sur l'entrée standard {source, parametres, mandataire?, delai?} (« delai » : source « cve-inconnue »
+seulement, temps après lequel l'exécutant interrompt le script). Sortie : un objet JSON {ok, elements, bilan, erreur} sur
 la sortie standard ; les éléments sont normalisés en champs structurés et bornés, l'erreur tient sur une ligne et ne
-reprend jamais un contenu de réponse.
+reprend jamais un contenu de réponse. Mandataire sortant injoignable (décision du RSSI du 23/11/2026) : l'erreur, lue par
+toute personne qui lit le module, ne nomme ni l'hôte ni le port du mandataire ; ils ne sont donnés qu'à part, dans
+« detail » (une ligne), que l'exécutant remet au seul journal d'audit, lu par l'administration.
 
 Règles :
 - liste fermée des hôtes et des chemins, écrite ici (SOURCES), recopiée de packages/shared/src/veille-vulnerabilites.ts et
@@ -36,59 +40,98 @@ Règles :
   le résumé n'est jamais lu. EUR-Lex : seuls les actes dont le titre contient un mot-clé de la liste reçue de l'application
   (parametres.motsCles, forme contrôlée et bornée) sont remontés ; les autres sont comptés comme écartés. Un titre ou un résumé trop long n'est pas tronqué (licence CC BY-ND de la CNIL : aucune
   modification du texte) : la publication est écartée (titre) ou gardée sans résumé ; lien gardé seulement en https sur
-  l'hôte de la source, sinon la publication est écartée ; date illisible : écartée ;
+  l'hôte de la source, sinon la publication est écartée ; date illisible : écartée. Actualités du CERT Santé : comme l'ANSSI,
+  le résumé n'est jamais lu ;
+- Journal officiel (source « legifrance », lot VR-2) : la page d'index du dossier des données ouvertes du JORF, puis les
+  archives quotidiennes « JORF_<date>-<heure>.tar.gz » publiées depuis la date reçue de l'application (parametres.depuis ;
+  sept jours sinon), JORF_ARCHIVES_MAX au plus. Chaque archive est bornée en taille (refusée au-delà, sans être lue),
+  décompressée en mémoire (jamais écrite sur disque) par tarfile et gzip, bornée une fois décompressée et en nombre de
+  fichiers ; seul l'en-tête (META) de chaque version de texte (fichier JORFTEXT….xml) est lu, borné, en UTF-8, sans
+  déclaration de type de document ni d'entité. Forme réelle non vérifiée : lecture tolérante (un fichier d'une autre forme
+  est ignoré ; si aucune version de texte n'est lisible, la collecte échoue avec une explication). Seuls les textes dont le
+  titre contient un mot-clé reçu (même filtre qu'EUR-Lex) sont remontés : identifiant JORFTEXT, titre (abrégé par « … »
+  au-delà de 300 caractères, données ouvertes sous Licence Ouverte), date de publication, lien vers la page du texte sur
+  Légifrance (hôte jamais joint ici) ; jamais le texte intégral ;
 - dictionnaire CPE de la NVD (ADR 0100, lot CPE-1 ; SOURCES_CPE, recopiée de packages/shared/src/dictionnaire-cpe.ts) :
   source « nvd-cpe », même hôte que la veille NVD, un seul chemin. Deux opérations : « dictionnaire » (une page à
   partir d'un indice reçu, sans aucune attente, ou les entrées modifiées pendant une fenêtre de dates ;
   produits distincts et, pour la copie complète, versions distinctes ; entrées obsolètes écartées) et « versions » (une
   page pour un éditeur et un produit reçus, versions distinctes non obsolètes, les plus récentes d'abord,
   BORNES_CPE["versions"] au plus). Rien d'autre n'est reçu de l'application que ces paramètres ; l'intitulé anglais est
-  nettoyé, borné et privé de la version.
+  nettoyé, borné et privé de la version ;
+- CVE inconnue de la veille (ADR 0100, lot CVE-INC ; SOURCES_CVE_INCONNUE, recopiée de packages/shared/src/cve-inconnue.ts) :
+  source « cve-inconnue », sur le clic d'une personne, pour une seule CVE reçue (forme contrôlée) : l'enregistrement CVE JSON 5
+  de cve.org (cveawg.mitre.org, chemin /api/cve/{cve}) réduit à une liste blanche (titre, description anglaise, dates, CNA,
+  références https, produits déclarés, évaluation SSVC et mention KEV du conteneur ADP de la CISA), puis la même CVE chez NVD
+  (paramètre cveId, même forme qu'une collecte NVD). Chaque partie a son état (trouvée, absente, échec) ;
+- sources facultatives (SOURCES_ANNONCES, recopiée de packages/shared/src/annonces-veille.ts) : le flux JSON Feed des CVE
+  annoncées de Cloudflare Radar (requête fixe format=json ; jamais les « briefings ») et le flux RSS 2.0 de tldrcve. Champs
+  en liste blanche, clés inconnues ignorées, textes simples bornés, liens gardés seulement en https sur l'hôte de la source.
+  Le filtre par produit surveillé du préavis est fait par l'API : le script ne reçoit aucun nom de produit.
 """
 import base64
+import codecs
 import datetime as dt
 import functools
+import gzip
 from email.utils import parsedate_to_datetime
 import hashlib
 import html
 from html.parser import HTMLParser
 import http.client
+import io
 import ipaddress
 import json
 import re
 import socket
 import ssl
 import sys
+import tarfile
 import time
 import unicodedata
 import xml.etree.ElementTree as ET
+import zlib
 
 # Liste fermée des sources : hôte et chemins exacts ({reference} : identifiant CERT-FR contrôlé). Une seule ligne JSON : le
 # test d'architecture la lit telle quelle.
 SOURCES = {"cisa-kev": {"hote": "www.cisa.gov", "chemins": ["/sites/default/files/feeds/known_exploited_vulnerabilities.json"]}, "nvd": {"hote": "services.nvd.nist.gov", "chemins": ["/rest/json/cves/2.0"]}, "epss": {"hote": "api.first.org", "chemins": ["/data/v1/epss"]}, "cert-fr": {"hote": "cert.cyber.gouv.fr", "chemins": ["/alerte/feed/", "/avis/feed/", "/alerte/{reference}/json/", "/avis/{reference}/json/"]}, "cert-sante": {"hote": "cyberveille.esante.gouv.fr", "chemins": ["/alertes-et-vulnerabilites/rss.xml", "/alertes/{slug}"]}}
 # Veille réglementaire (ADR 0110) : hôte et chemin exact du flux de chaque source, sources dont le résumé est gardé, bornes ;
 # recopiés de packages/shared/src/veille-reglementaire.ts et comparés par apps/api/test/veille-reglementaire-architecture.test.ts.
-SOURCES_REGLEMENTAIRES = {"cnil": {"hote": "www.cnil.fr", "chemins": ["/fr/rss.xml"]}, "cepd": {"hote": "www.edpb.europa.eu", "chemins": ["/feed/publications_en"]}, "eur-lex": {"hote": "eur-lex.europa.eu", "chemins": ["/EN/display-feed.rss?rssId=222"]}, "anssi": {"hote": "cyber.gouv.fr", "chemins": ["/actualites/rss/"]}}
+SOURCES_REGLEMENTAIRES = {"cnil": {"hote": "www.cnil.fr", "chemins": ["/fr/rss.xml"]}, "cepd": {"hote": "www.edpb.europa.eu", "chemins": ["/feed/publications_en"]}, "eur-lex": {"hote": "eur-lex.europa.eu", "chemins": ["/EN/display-feed.rss?rssId=222"]}, "anssi": {"hote": "cyber.gouv.fr", "chemins": ["/actualites/rss/"]}, "cert-sante-actualites": {"hote": "cyberveille.esante.gouv.fr", "chemins": ["/actualites/rss.xml"]}, "legifrance": {"hote": "echanges.dila.gouv.fr", "chemins": ["/OPENDATA/JORF/", "/OPENDATA/JORF/{archive}"]}}
 RESUME_REGLEMENTAIRE = ["cnil", "cepd", "eur-lex"]
+# Sources filtrées par les mots-clés reçus de l'application, et hôte des liens quand il diffère de l'hôte joint (jamais joint).
+FILTREES_REGLEMENTAIRES = ["eur-lex", "legifrance"]
+HOTES_LIENS_REGLEMENTAIRES = {"legifrance": "www.legifrance.gouv.fr"}
 BORNES_REGLEMENTAIRES = {"identifiant": 300, "titre": 300, "resume": 1000, "lien": 500, "items": 200, "motsCles": 60, "motCle": 60}
 DOMAINES_REGLEMENTAIRES = ("securite", "donnees-personnelles")
 # Dictionnaire CPE (ADR 0100, lot CPE-1) : hôte et chemin exacts, recopiés de SOURCE_DICTIONNAIRE_CPE
 # (packages/shared/src/dictionnaire-cpe.ts) et comparés par apps/api/test/veille-architecture.test.ts ; bornes de CPE_BORNES.
 SOURCES_CPE = {"nvd-cpe": {"hote": "services.nvd.nist.gov", "chemins": ["/rest/json/cpes/2.0"]}}
 BORNES_CPE = {"parPage": 10000, "pagesParPassage": 1, "versions": 2000, "intitule": 300}
-TOUTES_SOURCES = {**SOURCES, **SOURCES_REGLEMENTAIRES, **SOURCES_CPE}
+# CVE inconnue (ADR 0100, lot CVE-INC) : hôte nouveau de cve.org ({cve} : identifiant contrôlé par CVE_ID), recopié de
+# SOURCE_CVE_ORG (packages/shared/src/cve-inconnue.ts) ; NVD est lu par la source « nvd » ci-dessus. Bornes de CVE_INCONNUE_BORNES.
+SOURCES_CVE_INCONNUE = {"cve-org": {"hote": "cveawg.mitre.org", "chemins": ["/api/cve/{cve}"]}}
+BORNES_CVE_INCONNUE = {"titre": 300, "description": 1000, "cna": 60, "references": 20, "reference": 500, "nomReference": 200, "produits": 20, "editeur": 200, "produit": 200, "versionsParProduit": 10}
+# Sources facultatives (lot CVE-INC) : hôte, chemin et requête fixe, recopiés de SOURCES_ANNONCES_DEFINITIONS
+# (packages/shared/src/annonces-veille.ts) ; bornes d'ANNONCES_BORNES.
+SOURCES_ANNONCES = {"cloudflare-radar": {"hote": "radar.cloudflare.com", "chemins": ["/zero-wire/cves/feed"]}, "tldrcve": {"hote": "tldrcve.com", "chemins": ["/feed.xml"]}}
+REQUETES_ANNONCES = {"cloudflare-radar": "format=json", "tldrcve": ""}
+BORNES_ANNONCES = {"identifiant": 300, "titre": 300, "resume": 1000, "lien": 500, "verdict": 200, "cvesParAnnonce": 20, "items": 500}
+TOUTES_SOURCES = {**SOURCES, **SOURCES_REGLEMENTAIRES, **SOURCES_CPE, **SOURCES_CVE_INCONNUE, **SOURCES_ANNONCES}
 # Bornes, recopiées de VEILLE_BORNES (packages/shared) et comparées par le même test.
 BORNES = {"titre": 300, "resume": 1000, "description": 1000, "action": 1000, "nomFaille": 300, "editeur": 200, "produit": 200, "nomsCpe": 20, "produitsTouches": 20, "cvesParAvis": 200, "fichesCertSante": 30, "lot": 500, "lots": 40, "epss": 2000}
-CVE_ID = re.compile(r"^CVE-[12]\d{3}-\d{4,9}$")
+CVE_ID = re.compile(r"^CVE-[12][0-9]{3}-[0-9]{4,9}$")
 CERTFR_ID = re.compile(r"^CERTFR-20\d{2}-(?:ALE|AVI)-\d{2,4}$")
 CERTSANTE_ID = re.compile(r"^[1-9]\d{0,9}$")
 ADRESSE_CERTSANTE = re.compile(r"^https:\/\/cyberveille\.esante\.gouv\.fr\/alertes\/[a-z0-9-]{1,200}$")
 SLUG_CERTSANTE = re.compile(r"^[a-z0-9-]{1,200}$")
+# Archive quotidienne du Journal officiel (données ouvertes de la DILA) : nom contrôlé avant toute lecture.
+ARCHIVE_JORF = re.compile(r"^JORF_(\d{8})(?:-\d{6})?\.tar\.gz$")
 CVSS31_VECTEUR = re.compile(r"^CVSS:3\.1(?:\/[A-Z]{1,3}:[A-Z]{1,2}){8,20}$")
 CVSS40_VECTEUR = re.compile(r"^CVSS:4\.0(?:\/[A-Za-z]{1,3}:[A-Za-z]{1,10}){11,40}$")
 NOM_CPE = re.compile(r"^[\x21-\x3b\x3d\x3f-\x7e]{1,100}$")
 VERSION_CPE = re.compile(r"^[\x21-\x3b\x3d\x3f-\x7e]{1,60}$")
-CVE_DANS_TEXTE = re.compile(r"\bCVE-[12]\d{3}-\d{4,9}\b")
+CVE_DANS_TEXTE = re.compile(r"\bCVE-[12][0-9]{3}-[0-9]{4,9}\b")
 REFERENCE_CERTFR = re.compile(r"/(?:alerte|avis)/(CERTFR-20\d{2}-(?:ALE|AVI)-\d{2,4})/")
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 HORODATAGE_NVD = re.compile(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,6}))?Z?$")
@@ -106,11 +149,21 @@ ELEMENTS_MAX = BORNES["lot"] * BORNES["lots"]
 REPONSE_MAX = {"cisa-kev": 16 * 1024 * 1024, "nvd": 32 * 1024 * 1024, "epss": 1024 * 1024, "cert-fr": 2 * 1024 * 1024, "cert-sante": 2 * 1024 * 1024}
 REPONSE_MAX.update({s: 2 * 1024 * 1024 for s in SOURCES_REGLEMENTAIRES})
 REPONSE_MAX["nvd-cpe"] = 32 * 1024 * 1024
+REPONSE_MAX.update({"cve-org": 1024 * 1024, "cloudflare-radar": 4 * 1024 * 1024, "tldrcve": 2 * 1024 * 1024})
 # Dictionnaire CPE : une seule page par tranche, sans aucune attente dans le script ; le débit de la NVD (une demande toutes
 # les 6,5 secondes au plus pour les versions, cinq par trente secondes sans clé) est tenu par l'exécutant.
 ERREUR_MAX = 300
 DELAI_REQUETE = 30
 DUREE_MAX = 240
+# CVE inconnue (lot CVE-INC, relecture de la PR #369) : l'exécutant donne dans la demande (« delai », secondes entières
+# bornées par CVE_DELAI_BORNES ; CVE_DELAI_DEFAUT s'il est absent) le temps après lequel il interrompt le script. Ce budget,
+# moins CVE_MARGE (démarrage, sortie), est partagé : cve.org dispose au plus de CVE_PART_CVE_ORG du budget, NVD du reste,
+# pour qu'une panne de cve.org (service muet) laisse lire NVD, au passage court (12 s) comme au passage complet (40 s). Chaque
+# lecture a son échéance : connexion, envoi et chaque réception sont bornés par le temps qui lui reste.
+CVE_DELAI_DEFAUT = 40
+CVE_DELAI_BORNES = (1, 120)
+CVE_MARGE = 1.5
+CVE_PART_CVE_ORG = 0.4
 # NVD : 2000 failles par page (maximum de l'API), cinq pages au plus, six secondes entre deux pages (débit public sans clé
 # d'API, d'après la documentation de NVD) ; fenêtre de 120 jours au plus (limite de l'API).
 NVD_PAR_PAGE = 2000
@@ -133,7 +186,7 @@ FICHE_FRAGMENTS_MAX = 20000
 FICHES_LUES_MAX = 2000
 EMPREINTE = re.compile(r"^[0-9a-f]{16}$")
 # Titre du flux : « Produit - CVE-… », suivi au besoin de « | modifié le JJ-MM-AAAA ».
-PRODUIT_TITRE = re.compile(r"^(.{1,200}?) - CVE-[12]\d{3}-\d{4,9}(?:\s|$)")
+PRODUIT_TITRE = re.compile(r"^(.{1,200}?) - CVE-[12][0-9]{3}-[0-9]{4,9}(?:\s|$)")
 # RSS : profondeur et nombre d'éléments XML bornés, éléments <item> gardés bornés.
 RSS_PROFONDEUR_MAX = 8
 RSS_ELEMENTS_MAX = 5000
@@ -148,25 +201,61 @@ INVISIBLES = ("Cc", "Cf", "Co", "Cs", "Zl", "Zp")
 # imbriqué est refusé par l'analyseur (RecursionError) ou accepté : la borne est donc posée ici, avant l'analyse, pour que
 # le refus ne dépende pas de l'environnement. Les sources lues n'approchent pas cette profondeur.
 PROFONDEUR_JSON_MAX = 64
-CHAINE_JSON = re.compile(rb'"(?:[^"\\]|\\.)*"')
+# Une chaîne JSON entière (échappements compris), ou un guillemet ouvrant sans fin. Contrôle linéaire et total (relecture de
+# la PR #369 : l'ancienne expression, appliquée par substitution, reprenait l'analyse à chaque guillemet d'une chaîne non
+# fermée et devenait quadratique, 5,9 s pour 40 Kio de « \" ») : la recherche avance toujours ; une chaîne non fermée
+# arrête le balayage (pour l'analyseur, tout ce qui suit est dans la chaîne, et il refusera la réponse).
+CHAINE_JSON = re.compile(rb'"[^"\\]*(?:\\.[^"\\]*)*"|"', re.S)
 HORS_CROCHETS = bytes(c for c in range(256) if c not in b"[]{}")
 
 
 def trop_imbrique(brut):
-    """Vrai si le JSON dépasse PROFONDEUR_JSON_MAX niveaux. Les crochets et accolades écrits dans une chaîne ne comptent pas."""
-    profondeur = 0
-    for c in CHAINE_JSON.sub(b"", brut).translate(None, HORS_CROCHETS):
-        if c in (91, 123):
-            profondeur += 1
-            if profondeur > PROFONDEUR_JSON_MAX:
-                return True
-        elif profondeur:
-            profondeur -= 1
+    """Vrai si le JSON dépasse PROFONDEUR_JSON_MAX niveaux. Les crochets et accolades écrits dans une chaîne ne comptent pas.
+    Un seul passage sur la réponse : entre deux chaînes, seuls les crochets et accolades sont comptés."""
+    profondeur, pos, n = 0, 0, len(brut)
+    while pos <= n:
+        m = CHAINE_JSON.search(brut, pos)
+        for c in brut[pos: m.start() if m else n].translate(None, HORS_CROCHETS):
+            if c in (91, 123):
+                profondeur += 1
+                if profondeur > PROFONDEUR_JSON_MAX:
+                    return True
+            elif profondeur:
+                profondeur -= 1
+        if m is None or m.end() - m.start() == 1:
+            return False
+        pos = m.end()
     return False
 
 
 class Refus(Exception):
     """Erreur expliquée, sans contenu de réponse."""
+
+
+class Introuvable(Refus):
+    """cve.org ne connaît pas l'identifiant demandé (code 404) : ce n'est pas un échec de la lecture."""
+
+
+class MandataireInjoignable(Refus):
+    """Mandataire sortant injoignable (décision du RSSI du 23/11/2026) : le message, rendu à toute personne qui lit le module,
+    ne nomme ni l'hôte ni le port du mandataire ; `detail` (hôte, port et cause) ne sort que dans le champ « detail » de la
+    sortie, remis par l'exécutant au seul journal d'audit."""
+
+    def __init__(self, message, detail):
+        super().__init__(message)
+        self.detail = detail
+
+
+class ElementHostile(Refus):
+    """Nombre ou date hors des bornes de Python (OverflowError) dans un élément : l'élément est écarté et compté, la collecte
+    continue."""
+
+    def __init__(self):
+        super().__init__("Élément illisible : nombre ou date hors bornes.")
+
+
+class TropVolumineux(Refus):
+    """Réponse (ou archive décompressée) au-delà de sa borne : refusée sans être lue."""
 
 
 # ------------------------------------------------------------------ Texte venu de l'extérieur
@@ -220,13 +309,17 @@ def horodatage_nvd(v):
 def horodatage_rss(v):
     try:
         d = parsedate_to_datetime(v) if isinstance(v, str) and len(v) <= 64 else None
-    except (TypeError, ValueError, IndexError):
+    except (TypeError, ValueError, IndexError, OverflowError):
         return None
     if d is None:
         return None
     if d.tzinfo is None:
         d = d.replace(tzinfo=dt.timezone.utc)
-    return d.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    try:
+        return d.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    except OverflowError:
+        # Date hors des dates de Python une fois ramenée en UTC (« 31 Dec 9999 23:59:59 -2359 ») : illisible.
+        return None
 
 
 # ------------------------------------------------------------------ Réseau
@@ -302,16 +395,22 @@ def lire_reponse_tunnel(sock):
 def ouvrir_tunnel(m, hote, port, delai):
     """Tunnel CONNECT vers hote:port à travers le mandataire ; l'authentification simple n'est envoyée qu'au mandataire.
     Renvoie la connexion ouverte, prête pour TLS vers la source. Chaque échec est expliqué sur une ligne, sans secret."""
+    # Message sans nom ni port du mandataire (lu par toute personne qui lit le module) ; hôte et port dans le détail seulement.
     try:
         sock = socket.create_connection((m["hote"], m["port"]), timeout=delai)
     except socket.gaierror:
-        raise Refus("Mandataire injoignable : nom %s introuvable depuis le serveur (DNS)." % m["hote"]) from None
+        raise MandataireInjoignable("Mandataire sortant injoignable : nom introuvable depuis le serveur (DNS).",
+                                    "Mandataire %s : nom introuvable depuis le serveur (DNS)." % nom_mandataire(m)) from None
     except ConnectionRefusedError:
-        raise Refus("Mandataire injoignable : connexion refusée sur %s (le mandataire n'écoute pas, ou un pare-feu la refuse)." % nom_mandataire(m)) from None
+        raise MandataireInjoignable("Mandataire sortant injoignable : connexion refusée (le mandataire n'écoute pas, ou un pare-feu la refuse).",
+                                    "Mandataire %s : connexion refusée." % nom_mandataire(m)) from None
     except (TimeoutError, socket.timeout):
-        raise Refus("Mandataire injoignable : délai dépassé vers %s (pare-feu ou mandataire indisponible)." % nom_mandataire(m)) from None
+        raise MandataireInjoignable("Mandataire sortant injoignable : délai dépassé (pare-feu ou mandataire indisponible).",
+                                    "Mandataire %s : délai dépassé." % nom_mandataire(m)) from None
     except OSError as e:
-        raise Refus("Mandataire injoignable : %s (%s)." % (nom_mandataire(m), e.strerror or type(e).__name__)) from None
+        cause = e.strerror or type(e).__name__
+        raise MandataireInjoignable("Mandataire sortant injoignable (%s)." % cause,
+                                    "Mandataire %s : %s." % (nom_mandataire(m), cause)) from None
     try:
         cible = ("[%s]:%d" if ":" in hote else "%s:%d") % (hote, port)
         lignes = ["CONNECT %s HTTP/1.1" % cible, "Host: %s" % cible, "User-Agent: suivi-audits-veille"]
@@ -345,8 +444,8 @@ class ConnexionMandataire(http.client.HTTPSConnection):
     """Connexion HTTPS à la source à travers un tunnel ouvert sur le mandataire : TLS de bout en bout, certificat et nom de
     la source vérifiés par le même contexte qu'en accès direct."""
 
-    def __init__(self, hote, port, contexte_tls, mandataire):
-        super().__init__(hote, port, timeout=DELAI_REQUETE, context=contexte_tls)
+    def __init__(self, hote, port, contexte_tls, mandataire, timeout=DELAI_REQUETE):
+        super().__init__(hote, port, timeout=timeout, context=contexte_tls)
         self.contexte_tls = contexte_tls
         self.mandataire = mandataire
 
@@ -366,7 +465,7 @@ class ConnexionMandataire(http.client.HTTPSConnection):
 
 def chemin_admis(source, chemin):
     for motif in TOUTES_SOURCES.get(source, {}).get("chemins", ()):
-        for variable, forme in (("{reference}", CERTFR_ID), ("{slug}", SLUG_CERTSANTE)):
+        for variable, forme in (("{reference}", CERTFR_ID), ("{slug}", SLUG_CERTSANTE), ("{cve}", CVE_ID), ("{archive}", ARCHIVE_JORF)):
             if variable in motif:
                 debut, fin = motif.split(variable)
                 if (len(chemin) > len(debut) + len(fin) and chemin.startswith(debut) and chemin.endswith(fin)
@@ -402,8 +501,10 @@ def explication(erreur):
 class Client:
     """Client HTTPS d'une source, limité à son hôte et à ses chemins. GET seulement ; aucune redirection suivie."""
 
-    def __init__(self, source, debut=None, mandataire=None):
+    def __init__(self, source, debut=None, mandataire=None, echeance=None):
         self.source = source
+        # Échéance de cette lecture (horloge monotone), ou None : délai DELAI_REQUETE par opération, comme toujours.
+        self.echeance = echeance
         self.hote, self.port = destination(source)
         self.contexte = contexte()
         self.mandataire = mandataire
@@ -415,6 +516,15 @@ class Client:
                 raise Refus("Autorité de certification de l'établissement illisible : rien n'a été lu.") from None
         self.debut = time.monotonic() if debut is None else debut
 
+    def delai(self):
+        """Délai de la prochaine opération réseau : DELAI_REQUETE, borné par l'échéance de la lecture s'il y en a une."""
+        if self.echeance is None:
+            return DELAI_REQUETE
+        reste = self.echeance - time.monotonic()
+        if reste <= 0:
+            raise TimeoutError()
+        return min(DELAI_REQUETE, reste)
+
     def lire(self, chemin, requete="", maximum=None):
         if not chemin_admis(self.source, chemin):
             raise Refus("Lecture refusée : %s hors de la liste fermée de la source." % chemin[:80])
@@ -425,28 +535,51 @@ class Client:
             raise Refus("Durée maximale de la collecte atteinte : collecte interrompue.")
         maximum = maximum or REPONSE_MAX[self.source]
         if self.mandataire:
-            connexion = ConnexionMandataire(self.hote, self.port, self.contexte, self.mandataire)
+            connexion = ConnexionMandataire(self.hote, self.port, self.contexte, self.mandataire, timeout=self.delai())
         else:
-            connexion = http.client.HTTPSConnection(self.hote, self.port, timeout=DELAI_REQUETE, context=self.contexte)
+            connexion = http.client.HTTPSConnection(self.hote, self.port, timeout=self.delai(), context=self.contexte)
+        sock = None
         try:
+            if self.echeance is not None:
+                # Socket gardée : http.client la retire de la connexion à la réponse d'un service qui ferme après.
+                connexion.connect()
+                sock = connexion.sock
+                sock.settimeout(self.delai())
             connexion.request("GET", chemin + ("?" + requete if requete else ""), headers={
                 "Accept": "application/json, application/rss+xml, application/xml;q=0.9",
                 "Accept-Encoding": "identity",
                 "User-Agent": "suivi-audits-veille",
             })
+            if sock is not None:
+                sock.settimeout(self.delai())
             reponse = connexion.getresponse()
             if 300 <= reponse.status < 400:
                 raise Refus("Redirection refusée (code %d) : la source n'est lue qu'à son adresse de la liste fermée." % reponse.status)
+            if reponse.status == 404 and self.source == "cve-org":
+                raise Introuvable("Identifiant inconnu de cve.org (code 404).")
             if reponse.status == 429:
                 raise Refus("Limite de débit de la source atteinte (code 429) : nouvel essai à la prochaine collecte.")
             if reponse.status != 200:
                 raise Refus("Réponse inattendue de la source (code %d)." % reponse.status)
             longueur = reponse.getheader("Content-Length")
             if longueur is not None and (not longueur.strip().isdigit() or int(longueur) > maximum):
-                raise Refus("Réponse trop volumineuse : refusée.")
-            brut = reponse.read(maximum + 1)
+                raise TropVolumineux("Réponse trop volumineuse : refusée.")
+            if sock is None:
+                brut = reponse.read(maximum + 1)
+            else:
+                # Une réception à la fois, chacune bornée par le temps qui reste : un service qui distille sa réponse ne
+                # dépasse pas l'échéance.
+                morceaux, taille = [], 0
+                while taille <= maximum and not reponse.isclosed():  # fermée d'elle-même une fois la réponse lue
+                    sock.settimeout(self.delai())
+                    morceau = reponse.read1(min(65536, maximum + 1 - taille))
+                    if not morceau:
+                        break
+                    morceaux.append(morceau)
+                    taille += len(morceau)
+                brut = b"".join(morceaux)
             if len(brut) > maximum:
-                raise Refus("Réponse trop volumineuse : refusée.")
+                raise TropVolumineux("Réponse trop volumineuse : refusée.")
         finally:
             connexion.close()
         return brut
@@ -951,9 +1084,9 @@ def texte_entier(brut, maximum):
 
 
 def lien_reglementaire(source, brut):
-    """Lien gardé seulement en https sur l'hôte exact de la source, sans espace, guillemet ni chevron, borné."""
+    """Lien gardé seulement en https sur l'hôte exact des liens de la source, sans espace, guillemet ni chevron, borné."""
     lien = (brut or "").strip() if isinstance(brut, str) else ""
-    prefixe = "https://%s/" % SOURCES_REGLEMENTAIRES[source]["hote"]
+    prefixe = "https://%s/" % HOTES_LIENS_REGLEMENTAIRES.get(source, SOURCES_REGLEMENTAIRES[source]["hote"])
     if (len(lien) > BORNES_REGLEMENTAIRES["lien"] or not lien.startswith(prefixe) or not CARACTERES_LIEN.fullmatch(lien)
             or any(c in lien for c in "\"'<>\\`")):
         return None
@@ -968,7 +1101,7 @@ def normaliser(t):
 
 
 def mots_cles(parametres):
-    """Mots-clés d'EUR-Lex reçus de l'application : liste de 1 à 60 objets {mot, domaine}, mot de 2 à 60 caractères ;
+    """Mots-clés d'EUR-Lex ou du Journal officiel reçus de l'application : liste de 1 à 60 objets {mot, domaine}, mot de 2 à 60 caractères ;
     renvoie [(forme comparée, domaine)]. Forme inattendue : rien n'est lu."""
     l = parametres.get("motsCles") if isinstance(parametres, dict) else None
     illisible = Refus("Liste des mots-clés illisible : rien n'a été lu.")
@@ -996,7 +1129,7 @@ def reglementaire(source):
     """Collecteur d'une source réglementaire : le flux RSS à son chemin exact, une publication par élément <item>."""
     def collecter(client, parametres, bilan):
         elements, vus = [], set()
-        mots = mots_cles(parametres) if source == "eur-lex" else None
+        mots = mots_cles(parametres) if source in FILTREES_REGLEMENTAIRES else None
         items = lire_rss(client.lire(SOURCES_REGLEMENTAIRES[source]["chemins"][0]))
         if len(items) >= BORNES_REGLEMENTAIRES["items"]:
             bilan.tronque = True
@@ -1014,11 +1147,194 @@ def reglementaire(source):
                 bilan.ecartes += 1
                 continue
             vus.add(identifiant)
-            # ANSSI : la description du flux n'est jamais lue (décision du RSSI du 20/11/2026).
+            # ANSSI, CERT Santé : la description du flux n'est jamais lue (décisions du RSSI du 20 et du 22/11/2026).
             resume = texte_entier(item.get("description"), BORNES_REGLEMENTAIRES["resume"]) if source in RESUME_REGLEMENTAIRE else None
             elements.append({"identifiant": identifiant, "titre": titre, "resume": resume, "lien": lien, "publieLe": publie})
         return elements
     return collecter
+
+
+# ------------------------------------------------------------------ Journal officiel (ADR 0110, lot VR-2)
+# Données ouvertes de la DILA : page d'index du dossier, puis archives quotidiennes récentes. Forme réelle non vérifiée
+# (constat à faire sur le service) : lecture tolérante, bornée en taille, en nombre de fichiers et en profondeur.
+JORF_DOSSIER = "/OPENDATA/JORF/"
+ARCHIVE_DANS_LISTE = re.compile(r"(?<![A-Za-z0-9_])JORF_\d{8}(?:-\d{6})?\.tar\.gz")
+FICHIER_JORFTEXT = re.compile(r"(?:^|/)JORFTEXT\d{12}\.xml$")
+ID_JORFTEXT = re.compile(r"^JORFTEXT\d{12}$")
+JORF_LISTE_MAX = 4 * 1024 * 1024
+JORF_ARCHIVE_MAX = 32 * 1024 * 1024
+JORF_DECOMPRESSE_MAX = 512 * 1024 * 1024
+JORF_FICHIERS_MAX = 200000
+JORF_ARCHIVES_MAX = 10
+JORF_JOURS_DEFAUT = 7
+JORF_TETE_MAX = 64 * 1024
+JORF_TETE_ELEMENTS_MAX = 2000
+JORF_PROFONDEUR_MAX = 12
+JORF_TITRE_LU_MAX = 4000
+JORF_PAUSE = 0.5
+# Au-delà de cette durée de collecte (secondes, sur DUREE_MAX), aucune archive de plus n'est demandée.
+JORF_DUREE_MAX = 180
+JORF_CHAMPS = ("ID", "CID", "TITREFULL", "TITRE", "DATE_PUBLI")
+JORF_LIEN = "https://www.legifrance.gouv.fr/jorf/id/"
+ILLISIBLE = "illisible"
+
+
+class ArchiveIllisible(Refus):
+    """Archive du Journal officiel qui n'est pas un tar.gz lisible : elle seule est écartée."""
+
+
+class LectureBornee:
+    """Flux décompressé lu au plus `maximum` octets : au-delà, l'archive est refusée (bombe de décompression)."""
+
+    def __init__(self, flux, maximum):
+        self.flux, self.reste = flux, maximum
+
+    def read(self, n=-1):
+        n = self.reste + 1 if n is None or n < 0 else min(n, self.reste + 1)
+        donnees = self.flux.read(n)
+        self.reste -= len(donnees)
+        if self.reste < 0:
+            raise TropVolumineux("Archive du Journal officiel refusée : trop volumineuse une fois décompressée.")
+        return donnees
+
+
+def depuis_jorf(parametres):
+    """Date reçue de l'application (AAAA-MM-JJ) à partir de laquelle les archives sont lues ; sept jours sinon."""
+    brut = parametres.get("depuis")
+    if brut is None:
+        return dt.datetime.now(dt.timezone.utc).date() - dt.timedelta(days=JORF_JOURS_DEFAUT)
+    if not date_iso(brut):
+        raise Refus("Demande illisible : date de départ du Journal officiel attendue (AAAA-MM-JJ).")
+    return dt.date.fromisoformat(brut)
+
+
+def archives_jorf(brut, depuis):
+    """Archives quotidiennes citées par la page d'index, datées depuis `depuis`, des plus anciennes aux plus récentes. Les
+    noms sont relevés par leur forme exacte, sans analyser la page."""
+    s = brut.decode("utf-8", "replace")
+    datees = set()
+    for nom in ARCHIVE_DANS_LISTE.findall(s):
+        try:
+            jour = dt.datetime.strptime(ARCHIVE_JORF.fullmatch(nom).group(1), "%Y%m%d").date()
+        except ValueError:
+            continue
+        datees.add((jour, nom))
+    if not datees:
+        raise Refus("Liste des archives du Journal officiel illisible : aucune archive JORF_….tar.gz trouvée.")
+    return sorted(x for x in datees if x[0] >= depuis)
+
+
+def tete_texte_jorf(tete):
+    """Champs de l'en-tête (META) d'une version de texte du JORF : dict, None si le fichier n'est pas une version de texte
+    (élément racine autre que TEXTE_VERSION), ILLISIBLE s'il n'est pas en UTF-8, déclare un type de document ou une entité,
+    est mal formé ou trop profond avant la fin de l'en-tête."""
+    try:
+        s = codecs.getincrementaldecoder("utf-8")().decode(tete, final=False)
+    except UnicodeDecodeError:
+        return ILLISIBLE
+    minuscules = s.lower()
+    if "<!doctype" in minuscules or "<!entity" in minuscules:
+        return ILLISIBLE
+    analyseur = ET.XMLPullParser(events=("start", "end"))
+    pile, champs, nombre = [], {}, 0
+    try:
+        analyseur.feed(s)
+        for evenement, el in analyseur.read_events():
+            if evenement == "start":
+                if not pile and el.tag != "TEXTE_VERSION":
+                    return None
+                pile.append(el.tag)
+                nombre += 1
+                if len(pile) > JORF_PROFONDEUR_MAX or nombre > JORF_TETE_ELEMENTS_MAX:
+                    return ILLISIBLE
+                continue
+            pile.pop()
+            if el.tag in JORF_CHAMPS and el.tag not in champs and "META" in pile:
+                champs[el.tag] = "".join(el.itertext())
+            if el.tag == "META":
+                return champs
+    except ET.ParseError:
+        return ILLISIBLE
+    # En-tête plus long que la part lue : les champs déjà vus servent s'ils sont complets (contrôlés ensuite).
+    return champs if pile else ILLISIBLE
+
+
+def textes_archive_jorf(brut):
+    """Versions de texte d'une archive quotidienne, lues en mémoire : (textes, illisibles). Seul l'en-tête de chaque fichier
+    JORFTEXT….xml est lu ; tout autre fichier (articles, structures, listes) est ignoré."""
+    textes, illisibles, fichiers = [], 0, 0
+    try:
+        flux = LectureBornee(gzip.GzipFile(fileobj=io.BytesIO(brut), mode="rb"), JORF_DECOMPRESSE_MAX)
+        with tarfile.open(fileobj=flux, mode="r|") as archive:
+            for membre in archive:
+                fichiers += 1
+                if fichiers > JORF_FICHIERS_MAX:
+                    raise TropVolumineux("Archive du Journal officiel refusée : trop de fichiers.")
+                if not membre.isfile() or not FICHIER_JORFTEXT.search(membre.name):
+                    continue
+                f = archive.extractfile(membre)
+                champs = tete_texte_jorf(f.read(JORF_TETE_MAX) if f else b"")
+                if champs == ILLISIBLE:
+                    illisibles += 1
+                elif champs is not None:
+                    textes.append(champs)
+    except (tarfile.TarError, EOFError, zlib.error, OSError):
+        raise ArchiveIllisible("Archive du Journal officiel illisible (tar.gz attendu).") from None
+    return textes, illisibles
+
+
+def publication_jorf(champs, mots, bilan):
+    """Publication tirée d'une version de texte : identifiant JORFTEXT, titre (abrégé au-delà de la borne), date de
+    publication, lien Légifrance de forme exacte ; None (comptée écartée) sans mot-clé ou si un champ est illisible."""
+    identifiant = next((champs[k].strip() for k in ("ID", "CID") if ID_JORFTEXT.fullmatch(champs.get(k, "").strip())), None)
+    titre_brut = champs.get("TITREFULL") or champs.get("TITRE")
+    complet = texte(titre_brut, JORF_TITRE_LU_MAX)
+    jour = date_iso(champs.get("DATE_PUBLI", "").strip())
+    if not (identifiant and complet and jour) or domaine_titre(complet, mots) is None:
+        bilan.ecartes += 1
+        return None
+    return {"identifiant": identifiant, "titre": texte(titre_brut, BORNES_REGLEMENTAIRES["titre"]), "resume": None,
+            "lien": lien_reglementaire("legifrance", JORF_LIEN + identifiant), "publieLe": jour + "T00:00:00.000Z"}
+
+
+def journal_officiel(client, parametres, bilan):
+    """Collecteur du Journal officiel : archives quotidiennes récentes, textes filtrés par les mots-clés reçus. Une archive
+    trop volumineuse ou illisible n'est pas lue (collecte signalée incomplète) ; si aucune ne l'est, la collecte échoue."""
+    mots, depuis = mots_cles(parametres), depuis_jorf(parametres)
+    archives = archives_jorf(client.lire(JORF_DOSSIER, maximum=JORF_LISTE_MAX), depuis)
+    if len(archives) > JORF_ARCHIVES_MAX:
+        archives, bilan.tronque = archives[-JORF_ARCHIVES_MAX:], True
+    publications, refus, lues, versions, illisibles = {}, [], 0, 0, 0
+    for i, (_jour, nom) in enumerate(archives):
+        if i and time.monotonic() - client.debut > JORF_DUREE_MAX:
+            # Durée de la collecte presque épuisée : les archives suivantes attendront (collecte signalée incomplète).
+            bilan.tronque = True
+            break
+        if i:
+            time.sleep(JORF_PAUSE)
+        try:
+            textes, n = textes_archive_jorf(client.lire(JORF_DOSSIER + nom, maximum=JORF_ARCHIVE_MAX))
+        except (TropVolumineux, ArchiveIllisible) as erreur:
+            refus.append(str(erreur))
+            bilan.tronque = True
+            continue
+        lues += 1
+        versions += len(textes)
+        illisibles += n
+        bilan.ecartes += n
+        for champs in textes:
+            p = publication_jorf(champs, mots, bilan)
+            if p:
+                # Le même texte dans une archive plus récente remplace l'ancien (archives lues dans l'ordre des dates).
+                publications[p["identifiant"]] = p
+    if archives and not lues:
+        raise Refus(refus[0])
+    if illisibles and not versions:
+        raise Refus("Archives du Journal officiel dans une forme inattendue : aucune version de texte lisible.")
+    elements = sorted(publications.values(), key=lambda p: (p["publieLe"], p["identifiant"]))
+    if len(elements) > BORNES_REGLEMENTAIRES["items"]:
+        elements, bilan.tronque = elements[-BORNES_REGLEMENTAIRES["items"]:], True
+    return elements
 
 
 # ------------------------------------------------------------------ Dictionnaire CPE de la NVD (ADR 0100, lot CPE-1)
@@ -1197,9 +1513,296 @@ def cpe(client, parametres, bilan):
     raise Refus("Opération inconnue : rien n'a été lu.")
 
 
+# ------------------------------------------------------------------ CVE inconnue de la veille (ADR 0100, lot CVE-INC)
+INSTANT_RFC3339 = re.compile(r"^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))?(Z|[+-]\d{2}:?\d{2})?$")
+CNA_CVE = re.compile(r"^[A-Za-z0-9_.-]{1,60}$")
+REFERENCE_CVE = re.compile(r"^https:\/\/[A-Za-z0-9.-]{1,253}(?::\d{1,5})?(?:[/?#][\x21-\x7e]*)?$")
+INTERDITS_LIEN = re.compile(r"[\"'<>\\`]")
+SSVC_CHAMPS = {"exploitation": ("Exploitation", ("none", "poc", "active")), "automatisable": ("Automatable", ("yes", "no")),
+               "impact": ("Technical Impact", ("partial", "total"))}
+STATUTS_VERSION_CVE = ("affected", "unaffected", "unknown")
+
+
+def instant_rfc3339(v):
+    """Date et heure RFC 3339 (« 2026-11-20T10:00:00.123Z », décalage admis, sans zone : UTC) -> « …T10:00:00.123Z »."""
+    m = INSTANT_RFC3339.fullmatch(v.strip()) if isinstance(v, str) and len(v) <= 40 else None
+    if not m:
+        return None
+    zone = m.group(4) or "Z"
+    zone = "+00:00" if zone == "Z" else (zone if ":" in zone else zone[:3] + ":" + zone[3:])
+    try:
+        d = dt.datetime.fromisoformat("%sT%s%s" % (m.group(1), m.group(2), zone))
+    except ValueError:
+        return None
+    fraction = (m.group(3) or "0").ljust(3, "0")[:3]
+    try:
+        return d.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.") + fraction + "Z"
+    except OverflowError:
+        # « 9999-12-31T23:59:59-23:59 » : hors des dates de Python une fois ramenée en UTC.
+        raise ElementHostile() from None
+
+
+def objet(v):
+    return v if isinstance(v, dict) else {}
+
+
+def liste(v, maximum=1000):
+    return v[:maximum] if isinstance(v, list) else []
+
+
+def texte_ou_rien(v, maximum):
+    t = texte(v, maximum)
+    return t or None
+
+
+def version_cve(v):
+    return v if isinstance(v, str) and VERSION_CPE.fullmatch(v) and v not in ("*", "-") else None
+
+
+def reference_cve(v):
+    return v if (isinstance(v, str) and len(v) <= BORNES_CVE_INCONNUE["reference"] and REFERENCE_CVE.fullmatch(v)
+                 and not INTERDITS_LIEN.search(v)) else None
+
+
+def evaluation_ssvc(adp):
+    """Conteneur ADP de la CISA (« CISA-ADP ») : évaluation SSVC (options Exploitation, Automatable, Technical Impact) et
+    mention du catalogue KEV (date d'ajout). Toute autre valeur : null."""
+    ssvc, kev = None, None
+    for a in liste(adp, 50):
+        if objet(objet(a).get("providerMetadata")).get("shortName") != "CISA-ADP":
+            continue
+        for m in liste(objet(a).get("metrics"), 50):
+            autre = objet(objet(m).get("other"))
+            contenu = objet(autre.get("content"))
+            if autre.get("type") == "ssvc" and ssvc is None:
+                options = {}
+                for o in liste(contenu.get("options"), 20):
+                    for cle, valeur in objet(o).items():
+                        if isinstance(cle, str) and isinstance(valeur, str):
+                            options[cle] = valeur.strip().lower()
+                ssvc = {champ: (options.get(nom) if options.get(nom) in admis else None)
+                        for champ, (nom, admis) in SSVC_CHAMPS.items()}
+                ssvc["evalueLe"] = instant_rfc3339(contenu.get("timestamp"))
+            elif autre.get("type") == "kev" and kev is None:
+                ajout = contenu.get("dateAdded")
+                kev = date_iso(ajout[:10]) if isinstance(ajout, str) else None
+    return ssvc, kev
+
+
+def fiche_cve_org(d, cve):
+    """Liste blanche d'un enregistrement CVE JSON 5 ; l'identifiant doit être celui demandé."""
+    meta = objet(objet(d).get("cveMetadata"))
+    if meta.get("cveId") != cve:
+        raise Refus("Enregistrement de cve.org illisible : identifiant inattendu.")
+    conteneurs = objet(objet(d).get("containers"))
+    cna = objet(conteneurs.get("cna"))
+    descriptions = liste(cna.get("descriptions")) or liste(cna.get("rejectedReasons"))
+    anglais = next((x.get("value") for x in descriptions if isinstance(x, dict) and str(x.get("lang", "")).lower().startswith("en")), None)
+    references, vues = [], set()
+    for r in liste(cna.get("references")):
+        url = reference_cve(objet(r).get("url"))
+        if url and url not in vues and len(references) < BORNES_CVE_INCONNUE["references"]:
+            vues.add(url)
+            references.append({"url": url, "nom": texte_ou_rien(objet(r).get("name"), BORNES_CVE_INCONNUE["nomReference"])})
+    produits = []
+    for a in liste(cna.get("affected")):
+        a = objet(a)
+        editeur, produit = texte(a.get("vendor"), BORNES_CVE_INCONNUE["editeur"]), texte(a.get("product"), BORNES_CVE_INCONNUE["produit"])
+        if not (editeur or produit) or len(produits) >= BORNES_CVE_INCONNUE["produits"]:
+            continue
+        versions = []
+        for v in liste(a.get("versions"), BORNES_CVE_INCONNUE["versionsParProduit"]):
+            v = objet(v)
+            statut = v.get("status")
+            versions.append({"version": version_cve(v.get("version")),
+                             "statut": statut if statut in STATUTS_VERSION_CVE else None,
+                             "inferieurA": version_cve(v.get("lessThan")), "auPlus": version_cve(v.get("lessThanOrEqual"))})
+        produits.append({"editeur": editeur, "produit": produit, "versions": versions})
+    ssvc, kev = evaluation_ssvc(conteneurs.get("adp"))
+    cna_nom = meta.get("assignerShortName")
+    etat = {"PUBLISHED": "publiee", "REJECTED": "rejetee"}.get(meta.get("state"))
+    return {"cve": cve, "etat": etat, "titre": texte_ou_rien(cna.get("title"), BORNES_CVE_INCONNUE["titre"]),
+            "description": texte_ou_rien(anglais, BORNES_CVE_INCONNUE["description"]),
+            "publieLe": instant_rfc3339(meta.get("datePublished")), "majLe": instant_rfc3339(meta.get("dateUpdated")),
+            "cna": cna_nom if isinstance(cna_nom, str) and CNA_CVE.fullmatch(cna_nom) else None,
+            "references": references, "produits": produits, "ssvc": ssvc, "kevAjoutLe": kev}
+
+
+def delai_cve_inconnue(v):
+    """Délai reçu de l'exécutant (secondes entières, CVE_DELAI_BORNES), CVE_DELAI_DEFAUT s'il est absent ; autre forme : refus."""
+    if v is None:
+        return CVE_DELAI_DEFAUT
+    if not isinstance(v, int) or isinstance(v, bool) or not CVE_DELAI_BORNES[0] <= v <= CVE_DELAI_BORNES[1]:
+        raise Refus("Délai de la consultation illisible : rien n'a été lu.")
+    return v
+
+
+def budget_cve_inconnue(delai):
+    """(temps de cve.org, temps total) en secondes, pour un délai d'interruption donné par l'exécutant : cve.org dispose au
+    plus de CVE_PART_CVE_ORG du temps total ; NVD dispose du reste, au moins (1 - CVE_PART_CVE_ORG) du total."""
+    total = max(1.0, delai - CVE_MARGE)
+    return total * CVE_PART_CVE_ORG, total
+
+
+def cve_inconnue(parametres, mandataire, delai=CVE_DELAI_DEFAUT):
+    """Une CVE inconnue de la veille : cve.org puis NVD, chacun avec son état (trouvee, absente, echec). Échec global si les
+    deux ont échoué. Rien d'autre que l'identifiant n'est envoyé. `delai` : temps après lequel l'exécutant interrompt le
+    script ; cve.org n'en prend qu'une part, pour que NVD soit lue même si cve.org ne répond pas."""
+    cve = parametres.get("cve") if isinstance(parametres, dict) else None
+    if not (isinstance(cve, str) and CVE_ID.fullmatch(cve)):
+        raise Refus("Identifiant CVE illisible : rien n'a été lu.")
+    debut = time.monotonic()
+    part_cveorg, total = budget_cve_inconnue(delai)
+    erreurs = []
+    fiche, etat_cveorg = None, "echec"
+    try:
+        fiche = fiche_cve_org(Client("cve-org", debut, mandataire, echeance=debut + part_cveorg).json("/api/cve/" + cve), cve)
+        etat_cveorg = "trouvee"
+    except Introuvable:
+        etat_cveorg = "absente"
+    except Exception as e:  # noqa: BLE001 - échec expliqué, sans contenu de réponse
+        erreurs.append("cve.org : " + explication(e))
+    faille, etat_nvd = None, "echec"
+    try:
+        d = Client("nvd", debut, mandataire, echeance=debut + total).json(SOURCES["nvd"]["chemins"][0], "cveId=" + cve)
+        if not isinstance(d, dict) or not isinstance(d.get("vulnerabilities"), list) or not isinstance(d.get("totalResults"), int):
+            raise Refus("Réponse de NVD illisible.")
+        if not d["vulnerabilities"]:
+            etat_nvd = "absente"
+        else:
+            faille = faille_nvd(d["vulnerabilities"][0])
+            if faille is None or faille["cve"] != cve:
+                raise Refus("Réponse de NVD illisible.")
+            etat_nvd = "trouvee"
+    except Exception as e:  # noqa: BLE001
+        faille = None
+        erreurs.append("NVD : " + explication(e))
+    if etat_cveorg == "echec" and etat_nvd == "echec":
+        return {"ok": False, "erreur": une_ligne(" ; ".join(erreurs)), "cveOrg": None, "cveOrgEtat": None, "nvd": None, "nvdEtat": None}
+    return {"ok": True, "erreur": None, "cveOrg": fiche, "cveOrgEtat": etat_cveorg, "nvd": faille, "nvdEtat": etat_nvd}
+
+
+# ------------------------------------------------------------------ Sources facultatives (ADR 0100, lot CVE-INC)
+GRAVITES_ANNONCE = {g.lower(): g for g in GRAVITES}
+VERSION_CVSS = re.compile(r"^[234]\.[01]$")
+VERDICT_TLDRCVE = re.compile(r"\bVerdict\s*:\s*(Patch now if\b[^.\n]{0,180}|Patch now|Next cycle|Watching)", re.IGNORECASE)
+NATURE_TLDRCVE = re.compile(r"^(New|Update)\s*:\s*", re.IGNORECASE)
+
+
+def lien_annonce(source, v):
+    prefixe = "https://%s/" % SOURCES_ANNONCES[source]["hote"]
+    lien = v.strip() if isinstance(v, str) else ""
+    if (not lien.startswith(prefixe) or len(lien) > BORNES_ANNONCES["lien"] or not CARACTERES_LIEN.fullmatch(lien)
+            or INTERDITS_LIEN.search(lien)):
+        return None
+    return lien
+
+
+def score_annonce(v):
+    try:
+        x = float(v) if isinstance(v, (int, float, str)) and not isinstance(v, bool) else None
+    except ValueError:
+        return None
+    except OverflowError:
+        # Entier JSON trop grand pour un flottant : l'élément est écarté.
+        raise ElementHostile() from None
+    return round(x, 1) if x is not None and 0 <= x <= 10 else None
+
+
+def kev_annonce(*valeurs):
+    """`kev_added` : vrai pour true ou une date, faux pour false ; absent ou autre forme : null."""
+    for v in valeurs:
+        if v is True or (isinstance(v, str) and date_iso(v[:10])):
+            return True
+        if v is False:
+            return False
+    return None
+
+
+def preavis_cloudflare(client, _parametres, bilan):
+    """JSON Feed des CVE annoncées (`items[]`) : identifiant, adresse, titre, résumé, date, et `_cve` (identifiant, gravité,
+    score, version CVSS) ; `kev_added` s'il est présent ; toute autre clé est ignorée. Tous les éléments lisibles sont
+    remontés : l'API ne garde que les CVE critiques et celles qui citent un produit surveillé."""
+    d = client.json(SOURCES_ANNONCES["cloudflare-radar"]["chemins"][0], REQUETES_ANNONCES["cloudflare-radar"])
+    items = d.get("items") if isinstance(d, dict) else None
+    if not isinstance(items, list):
+        raise Refus("Flux de Cloudflare Radar illisible : liste « items » absente.")
+    if len(items) > BORNES_ANNONCES["items"]:
+        bilan.tronque = True
+    elements, vus = [], set()
+    for it in items[: BORNES_ANNONCES["items"]]:
+        it = objet(it)
+        c = objet(it.get("_cve"))
+        cve = c.get("id")
+        titre = texte(it.get("title"), BORNES_ANNONCES["titre"])
+        ident = texte(it.get("id"), BORNES_ANNONCES["identifiant"]) if isinstance(it.get("id"), str) else ""
+        ident = ident or (cve if isinstance(cve, str) else "")
+        if not (isinstance(cve, str) and CVE_ID.fullmatch(cve) and titre and ident) or ident in vus:
+            bilan.ecartes += 1
+            continue
+        vus.add(ident)
+        version = c.get("cvss_version")
+        version = str(version) if isinstance(version, (str, int, float)) and not isinstance(version, bool) else ""
+        gravite = c.get("severity")
+        try:
+            element = {
+                "identifiant": ident, "cve": cve, "titre": titre,
+                "resume": texte(it.get("summary"), BORNES_ANNONCES["resume"]),
+                "lien": lien_annonce("cloudflare-radar", it.get("url")),
+                "publieLe": instant_rfc3339(it.get("date_published")),
+                "gravite": GRAVITES_ANNONCE.get(gravite.strip().lower()) if isinstance(gravite, str) else None,
+                "score": score_annonce(c.get("score")),
+                "versionCvss": version if VERSION_CVSS.fullmatch(version) else None,
+                "kev": kev_annonce(c.get("kev_added"), it.get("kev_added")),
+            }
+        except ElementHostile:
+            bilan.ecartes += 1
+            continue
+        elements.append(element)
+    return elements
+
+
+def resumes_tldrcve(client, _parametres, bilan):
+    """Flux RSS 2.0 de tldrcve : titre (« New: … » ou « Update: … »), CVE citées par le titre et le résumé, résumé du flux,
+    verdict (phrase « Verdict: … » du résumé seulement), date et lien (https sur tldrcve.com, sinon l'élément est écarté)."""
+    elements, vus = [], set()
+    items = lire_rss(client.lire(SOURCES_ANNONCES["tldrcve"]["chemins"][0]))
+    if len(items) >= RSS_ITEMS_MAX:
+        bilan.tronque = True
+    for item in items:
+        titre = texte(item.get("title"), BORNES_ANNONCES["titre"])
+        resume = texte(item.get("description"), BORNES_ANNONCES["resume"])
+        lien = lien_annonce("tldrcve", item.get("link"))
+        guid = texte(item.get("guid"), BORNES_ANNONCES["identifiant"])
+        ident = guid or lien
+        cves = list(dict.fromkeys(c for c in CVE_DANS_TEXTE.findall(titre + " " + resume) if CVE_ID.fullmatch(c)))
+        if not (titre and lien and ident and cves) or ident in vus:
+            bilan.ecartes += 1
+            continue
+        vus.add(ident)
+        m = NATURE_TLDRCVE.match(titre)
+        nature = None if not m else ("nouvelle" if m.group(1).lower() == "new" else "mise_a_jour")
+        v = VERDICT_TLDRCVE.search(resume)
+        verdict = verdict_texte = None
+        if v:
+            phrase = v.group(1).strip().rstrip(".")
+            bas = phrase.lower()
+            verdict = ("patch-now-if" if bas.startswith("patch now if") else "patch-now" if bas == "patch now"
+                       else "next-cycle" if bas == "next cycle" else "watching")
+            verdict_texte = texte(phrase, BORNES_ANNONCES["verdict"]) or None
+            if verdict_texte is None:
+                verdict = None
+        elements.append({"identifiant": ident, "titre": titre, "nature": nature,
+                         "cves": cves[: BORNES_ANNONCES["cvesParAnnonce"]], "resume": resume, "verdict": verdict,
+                         "verdictTexte": verdict_texte, "lien": lien, "publieLe": horodatage_rss(item.get("pubDate"))})
+    return elements
+
+
 COLLECTES = {"cisa-kev": kev, "nvd": nvd, "epss": epss, "cert-fr": cert_fr, "cert-sante": cert_sante}
-COLLECTES.update({s: reglementaire(s) for s in SOURCES_REGLEMENTAIRES})
+COLLECTES.update({s: reglementaire(s) for s in SOURCES_REGLEMENTAIRES if s != "legifrance"})
+COLLECTES["legifrance"] = journal_officiel
 COLLECTES["nvd-cpe"] = cpe
+COLLECTES.update({"cloudflare-radar": preavis_cloudflare, "tldrcve": resumes_tldrcve})
 
 
 def executer(p):
@@ -1207,6 +1810,15 @@ def executer(p):
         if not isinstance(p, dict):
             raise Refus("Demande illisible.")
         source, parametres = p.get("source"), p.get("parametres")
+        if source == "cve-inconnue":
+            # CVE inconnue (lot CVE-INC) : deux lectures (cve.org, NVD), chacune avec son état ; forme de sortie propre.
+            if not isinstance(parametres, dict):
+                raise Refus("Demande illisible.")
+            try:
+                return cve_inconnue(parametres, lire_mandataire(p.get("mandataire")), delai_cve_inconnue(p.get("delai")))
+            except Exception as erreur:  # noqa: BLE001
+                return {"ok": False, "erreur": une_ligne(explication(erreur)), "cveOrg": None, "cveOrgEtat": None,
+                        "nvd": None, "nvdEtat": None}
         if source not in COLLECTES or source not in TOUTES_SOURCES:
             raise Refus("Source inconnue : rien n'a été lu.")
         if not isinstance(parametres, dict):
@@ -1226,7 +1838,11 @@ def executer(p):
         return {"ok": True, "elements": elements, "erreur": None,
                 "bilan": {"elements": len(elements), "ecartes": bilan.ecartes, "tronque": bilan.tronque, "detailsEchoues": bilan.details_echoues}}
     except Exception as erreur:  # noqa: BLE001 - tout échec est expliqué, jamais propagé avec ses détails
-        return {"ok": False, "elements": [], "bilan": None, "erreur": une_ligne(explication(erreur))}
+        sortie = {"ok": False, "elements": [], "bilan": None, "erreur": une_ligne(explication(erreur))}
+        if isinstance(erreur, MandataireInjoignable):
+            # Hôte et port du mandataire : à part, pour le seul journal d'audit (jamais dans l'erreur affichée).
+            sortie["detail"] = une_ligne(erreur.detail)
+        return sortie
 
 
 def main():

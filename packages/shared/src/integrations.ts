@@ -236,6 +236,10 @@ export const TYPES_INTEGRATION: readonly TypeIntegrationDefinition[] = [
       { methode: 'GET', chemin: '/rest/hosts', parametres: ['limit', 'offset'] },
       { methode: 'GET', chemin: '/rest/hosts/{uuid}' },
       { methode: 'GET', chemin: '/rest/system' },
+      // Lot CVE-INC (ADR 0100) : contrôles Tenable qui citent une CVE inconnue de la veille, lecture seule ; requête fixe
+      // écrite dans le script (filtre `xrefs`, liste blanche des champs), seul l'identifiant de la CVE y varie. Opération
+      // hors de la file des connecteurs (file dédiée du module Vulnérabilités).
+      { methode: 'GET', chemin: '/rest/plugin' },
     ],
     operations: ['tester', 'synchroniser'],
   },
@@ -491,15 +495,20 @@ export const RESULTATS_OPERATION: Record<IntegrationType, Partial<Record<Operati
   'silene-fichier': { importer: BilanImportSilene },
 };
 
-/** Entrée de `suivi integrations-finish <id>` : succès avec résultat, ou échec avec erreur courte. */
+/** Entrée de `suivi integrations-finish <id>` : succès avec résultat, ou échec avec erreur courte. `detail` (échec
+    seulement ; décision du RSSI du 23/11/2026, lot ALH-MANDATAIRE) : hôte et port du mandataire sortant de l'établissement
+    quand l'échec vient de lui, consignés au seul journal d'audit (lu par l'administration), jamais rangés avec l'exécution
+    ni rendus par une route. */
 export const RapportExecution = z
   .object({
     ok: z.boolean(),
     resultat: z.record(z.string(), z.unknown()).nullable(),
     erreur: ErreurExecution.nullable(),
+    detail: ErreurExecution.optional(),
   })
   .strict()
   .refine((r) => (r.ok ? r.resultat !== null && r.erreur === null : r.resultat === null && r.erreur !== null), {
     message: 'Un succès porte un résultat sans erreur ; un échec, une erreur sans résultat.',
-  });
+  })
+  .refine((r) => !r.ok || r.detail === undefined, { message: 'Le détail accompagne un échec seulement.' });
 export type RapportExecution = z.infer<typeof RapportExecution>;

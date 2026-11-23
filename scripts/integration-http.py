@@ -7,7 +7,10 @@ Bibliothèque standard seule.
 
 Entrée : un objet JSON sur l'entrée standard (type, opération, configuration, secrets, mandataire facultatif) ; ni argument ni variable
 d'environnement ne porte de secret. Sortie : un objet JSON {ok, resultat, erreur} sur la sortie standard, normalisé et
-borné ; il ne contient jamais de secret, et l'erreur tient sur une ligne. « synchroniser » ajoute `elements` : les machines,
+borné ; il ne contient jamais de secret, et l'erreur tient sur une ligne. Échec dû au mandataire de l'établissement
+(décision du RSSI du 23/11/2026, ADR 0100, addendum « lot ALH-MANDATAIRE ») : l'erreur, lue par toute personne qui lit le
+module, ne nomme ni l'hôte ni le port du mandataire ; ils ne sont donnés qu'à part, dans « detail » (une ligne), que
+l'exécutant remet au seul journal d'audit, lu par l'administration. « synchroniser » ajoute `elements` : les machines,
 constats, détections, machines d'inventaire et correctifs regroupés, réduits aux seuls champs listés (CHAMPS_ANALYSE,
 CHAMPS_DEPOT pour le dépôt d'une machine, CHAMPS_HOTE, CHAMPS_CORRECTIF), que l'exécutant rapporte par lots bornés.
 
@@ -53,9 +56,12 @@ import unicodedata
 
 # Liste fermée des points d'accès de lecture, par type (méthode, chemin exact ou motif dont {uuid} est la seule partie
 # variable). Une seule ligne JSON : le test d'architecture la lit telle quelle.
-POINTS_ACCES = {"tenable": [["POST", "/rest/analysis"], ["GET", "/rest/hosts"], ["GET", "/rest/hosts/{uuid}"], ["GET", "/rest/system"]], "algolighthouse": [["GET", "/api/v1/health"], ["GET", "/api/v1/version"], ["GET", "/api/v1/alerts"], ["GET", "/api/v1/alerts/{uuid}"], ["GET", "/api/v1/perimeters"], ["GET", "/api/v1/targets/hosts"], ["GET", "/api/v1/targets/domains"], ["GET", "/api/v1/technologies"]]}
+POINTS_ACCES = {"tenable": [["POST", "/rest/analysis"], ["GET", "/rest/hosts"], ["GET", "/rest/hosts/{uuid}"], ["GET", "/rest/system"], ["GET", "/rest/plugin"]], "algolighthouse": [["GET", "/api/v1/health"], ["GET", "/api/v1/version"], ["GET", "/api/v1/alerts"], ["GET", "/api/v1/alerts/{uuid}"], ["GET", "/api/v1/perimeters"], ["GET", "/api/v1/targets/hosts"], ["GET", "/api/v1/targets/domains"], ["GET", "/api/v1/technologies"]]}
 PARAMETRES_ACCES = {"tenable": {"GET /rest/hosts": ["limit", "offset"]}, "algolighthouse": {}}
 OPERATIONS = {"tenable": ["tester", "synchroniser"], "algolighthouse": ["tester", "synchroniser"]}
+# Lot CVE-INC (ADR 0100) : opérations hors de la file des connecteurs, demandées par la file dédiée du module Vulnérabilités
+# (contrôles Tenable qui citent une CVE inconnue de la veille). Lecture seule.
+OPERATIONS_CVE = {"tenable": ["controles-cve"]}
 # Types qui sortent vers Internet et peuvent passer par le mandataire de l'établissement (USAGE_MANDATAIRE « utilise » du
 # paquet partagé) ; tout autre type le refuse.
 TYPES_MANDATAIRE = ["algolighthouse"]
@@ -85,25 +91,45 @@ SEULE_BASIC = "Seule l'authentification simple (Basic) est prise en charge ; NTL
 # imbriqué est refusé par l'analyseur (RecursionError) ou accepté : la borne est donc posée ici, avant l'analyse, pour que
 # le refus ne dépende pas de l'environnement. Les sources lues n'approchent pas cette profondeur.
 PROFONDEUR_JSON_MAX = 64
-CHAINE_JSON = re.compile(rb'"(?:[^"\\]|\\.)*"')
+# Une chaîne JSON entière (échappements compris), ou un guillemet ouvrant sans fin. Contrôle linéaire et total (relecture de
+# la PR #369 : l'ancienne expression, appliquée par substitution, reprenait l'analyse à chaque guillemet d'une chaîne non
+# fermée et devenait quadratique, 5,9 s pour 40 Kio de « \" ») : la recherche avance toujours ; une chaîne non fermée
+# arrête le balayage (pour l'analyseur, tout ce qui suit est dans la chaîne, et il refusera la réponse).
+CHAINE_JSON = re.compile(rb'"[^"\\]*(?:\\.[^"\\]*)*"|"', re.S)
 HORS_CROCHETS = bytes(c for c in range(256) if c not in b"[]{}")
 
 
 def trop_imbrique(brut):
-    """Vrai si le JSON dépasse PROFONDEUR_JSON_MAX niveaux. Les crochets et accolades écrits dans une chaîne ne comptent pas."""
-    profondeur = 0
-    for c in CHAINE_JSON.sub(b"", brut).translate(None, HORS_CROCHETS):
-        if c in (91, 123):
-            profondeur += 1
-            if profondeur > PROFONDEUR_JSON_MAX:
-                return True
-        elif profondeur:
-            profondeur -= 1
+    """Vrai si le JSON dépasse PROFONDEUR_JSON_MAX niveaux. Les crochets et accolades écrits dans une chaîne ne comptent pas.
+    Un seul passage sur la réponse : entre deux chaînes, seuls les crochets et accolades sont comptés."""
+    profondeur, pos, n = 0, 0, len(brut)
+    while pos <= n:
+        m = CHAINE_JSON.search(brut, pos)
+        for c in brut[pos: m.start() if m else n].translate(None, HORS_CROCHETS):
+            if c in (91, 123):
+                profondeur += 1
+                if profondeur > PROFONDEUR_JSON_MAX:
+                    return True
+            elif profondeur:
+                profondeur -= 1
+        if m is None or m.end() - m.start() == 1:
+            return False
+        pos = m.end()
     return False
 
 
 class Refus(Exception):
     """Erreur expliquée, sans secret ni contenu de réponse."""
+
+
+class ErreurMandataire(Refus):
+    """Échec dû au mandataire de l'établissement (décision du RSSI du 23/11/2026, même règle que la veille) : le message,
+    rendu à toute personne qui lit le module, ne nomme ni l'hôte ni le port du mandataire ; `detail` (hôte, port et cause)
+    ne sort que dans le champ « detail » de la sortie, remis par l'exécutant au seul journal d'audit."""
+
+    def __init__(self, message, detail):
+        super().__init__(message)
+        self.detail = detail
 
 
 class ReponseInattendue(Refus):
@@ -232,17 +258,34 @@ def lire_reponse_tunnel(sock):
 
 def ouvrir_tunnel(m, hote, port, delai):
     """Tunnel CONNECT vers hote:port à travers le mandataire ; l'authentification simple n'est envoyée qu'au mandataire.
-    Renvoie la connexion ouverte, prête pour TLS vers le service. Chaque échec est expliqué sur une ligne, sans secret."""
+    Renvoie la connexion ouverte, prête pour TLS vers le service. Chaque échec est expliqué sur une ligne, sans secret, et
+    sans le nom ni le port du mandataire (ErreurMandataire : ils ne sont que dans le détail)."""
     try:
         sock = socket.create_connection((m["hote"], m["port"]), timeout=delai)
     except socket.gaierror:
-        raise Refus("Mandataire injoignable : nom %s introuvable depuis le serveur (DNS)." % m["hote"]) from None
+        raise ErreurMandataire("Mandataire sortant injoignable : nom introuvable depuis le serveur (DNS).",
+                               "Mandataire %s : nom introuvable depuis le serveur (DNS)." % nom_mandataire(m)) from None
     except ConnectionRefusedError:
-        raise Refus("Mandataire injoignable : connexion refusée sur %s (le mandataire n'écoute pas, ou un pare-feu la refuse)." % nom_mandataire(m)) from None
+        raise ErreurMandataire("Mandataire sortant injoignable : connexion refusée (le mandataire n'écoute pas, ou un pare-feu la refuse).",
+                               "Mandataire %s : connexion refusée." % nom_mandataire(m)) from None
     except (TimeoutError, socket.timeout):
-        raise Refus("Mandataire injoignable : délai dépassé vers %s (pare-feu ou mandataire indisponible)." % nom_mandataire(m)) from None
+        raise ErreurMandataire("Mandataire sortant injoignable : délai dépassé (pare-feu ou mandataire indisponible).",
+                               "Mandataire %s : délai dépassé." % nom_mandataire(m)) from None
     except OSError as e:
-        raise Refus("Mandataire injoignable : %s (%s)." % (nom_mandataire(m), e.strerror or type(e).__name__)) from None
+        cause = e.strerror or type(e).__name__
+        raise ErreurMandataire("Mandataire sortant injoignable (%s)." % cause,
+                               "Mandataire %s : %s." % (nom_mandataire(m), cause)) from None
+    try:
+        return demander_tunnel(sock, m, hote, port)
+    except Refus as e:
+        # Réponse du mandataire à la demande de tunnel (refus, authentification, fermeture, délai) : message inchangé, qui
+        # ne nomme pas le mandataire ; son hôte et son port dans le détail seulement.
+        raise ErreurMandataire(str(e), "Mandataire %s : %s" % (nom_mandataire(m), e)) from None
+
+
+def demander_tunnel(sock, m, hote, port):
+    """Demande CONNECT sur la connexion ouverte au mandataire ; tout échec ferme la connexion et lève Refus (message sans le
+    nom ni le port du mandataire)."""
     try:
         cible = ("[%s]:%d" if ":" in hote else "%s:%d") % (hote, port)
         lignes = ["CONNECT %s HTTP/1.1" % cible, "Host: %s" % cible, "User-Agent: suivi-audits-integrations"]
@@ -330,10 +373,19 @@ class Client:
         self.delai = delai
         self.en_tetes = en_tetes
 
-    def requete(self, methode, chemin, corps=None, parametres=None, maximum=REPONSE_MAX):
+    def requete(self, methode, chemin, corps=None, parametres=None, maximum=REPONSE_MAX, fixe=None):
         if not point_admis(self.type, methode, chemin):
             raise Refus("Appel refusé : %s %s hors de la liste fermée du connecteur." % (methode, chemin[:80]))
         cible = chemin
+        # GET /rest/plugin n'est admis qu'avec la requête fixe des contrôles d'une CVE (jamais nu, jamais avec d'autres
+        # paramètres) : sans filtre, Security Center rendrait tout son catalogue.
+        if (self.type, methode, chemin) == ("tenable", "GET", "/rest/plugin") and fixe is None:
+            raise Refus("Appel refusé : requête hors de la liste fermée du connecteur.")
+        if fixe is not None:
+            # Lot CVE-INC : requête écrite dans ce script (REQUETE_CONTROLES_CVE), seule l'identifiant de la CVE y varie.
+            if (self.type, methode, chemin) != ("tenable", "GET", "/rest/plugin") or parametres or not REQUETE_CONTROLES_CVE_FORME.fullmatch(fixe):
+                raise Refus("Appel refusé : requête hors de la liste fermée du connecteur.")
+            cible = chemin + "?" + fixe
         if parametres:
             admis = PARAMETRES_ACCES.get(self.type, {}).get("%s %s" % (methode, chemin), [])
             for nom, valeur in parametres.items():
@@ -405,6 +457,60 @@ def tenable_tester(client):
     return {"version": version}
 
 
+# ------------------------------------------------------------------ Tenable : contrôles qui citent une CVE (lot CVE-INC)
+# Requête fixe (forme relevée chez le RSSI le 20/11/2026) : filtre sur les références croisées (`xrefs`), liste blanche des
+# champs demandés, 50 contrôles au plus. Seuls le numéro, le nom, la famille (objet : son nom), l'exploit disponible et le
+# facteur de risque sortent du script ; `xrefs` ne sert qu'à vérifier que la CVE est bien citée (« like » trouve aussi
+# CVE-2026-12345 pour CVE-2026-1234). Aucune donnée de machine n'est demandée ni lue.
+CHAMPS_CONTROLES_CVE = ("id", "name", "family", "type", "xrefs", "exploitAvailable", "exploitEase", "exploitFrameworks",
+                        "riskFactor", "vulnPubDate", "patchPubDate", "pluginPubDate")
+CONTROLES_CVE_MAX = 50
+REQUETE_CONTROLES_CVE = "filterField=xrefs&op=like&value=%s&fields=" + ",".join(CHAMPS_CONTROLES_CVE) + "&startOffset=0&endOffset=50"
+# Forme admise, construite à partir des champs admis : seul l'identifiant de la CVE (chiffres ASCII) varie.
+REQUETE_CONTROLES_CVE_FORME = re.compile("^" + re.escape("filterField=xrefs&op=like&value=") + "CVE-[12][0-9]{3}-[0-9]{4,9}"
+                                         + re.escape("&fields=" + ",".join(CHAMPS_CONTROLES_CVE) + "&startOffset=0&endOffset=50") + "$")
+RISQUES_TENABLE = ("None", "Low", "Medium", "High", "Critical")
+NOM_CONTROLE_MAX = 300
+FAMILLE_MAX = 100
+
+
+def cite_cve(xrefs, cve):
+    """`xrefs` (chaîne, ou liste de chaînes) cite-t-il exactement cette CVE (pas une plus longue) ?"""
+    valeurs = [xrefs] if isinstance(xrefs, str) else [x for x in xrefs if isinstance(x, str)][:500] if isinstance(xrefs, list) else []
+    motif = re.compile(r"(?<![0-9A-Za-z-])" + re.escape(cve) + r"(?![0-9])")
+    return any(motif.search(v[:100000]) for v in valeurs)
+
+
+def tenable_controles_cve(client, parametres):
+    """GET /rest/plugin filtré sur la CVE reçue (forme contrôlée) : contrôles qui la citent, réduits à la liste blanche."""
+    cve = parametres.get("cve") if isinstance(parametres, dict) else None
+    if not (isinstance(cve, str) and CVE_ID.fullmatch(cve)):
+        raise Refus("Identifiant CVE illisible : rien n'a été appelé.")
+    liste = reponse_tenable(client.requete("GET", "/rest/plugin", fixe=REQUETE_CONTROLES_CVE % cve), list)
+    controles, vus = [], set()
+    for p in liste[:CONTROLES_CVE_MAX]:
+        if not isinstance(p, dict):
+            continue
+        ident = p.get("id")
+        ident = str(ident) if isinstance(ident, (str, int)) and not isinstance(ident, bool) else ""
+        nom = texte(p.get("name"), NOM_CONTROLE_MAX)
+        if not PLUGIN_ID.fullmatch(ident) or not nom or ident in vus or not cite_cve(p.get("xrefs"), cve):
+            continue
+        vus.add(ident)
+        famille = p.get("family")
+        famille = famille.get("name") if isinstance(famille, dict) else famille
+        risque = p.get("riskFactor")
+        exploit = p.get("exploitAvailable")
+        controles.append({
+            "id": ident,
+            "nom": nom,
+            "famille": texte(famille, FAMILLE_MAX) or None,
+            "exploitDisponible": True if exploit in (True, "true", "Yes", "yes") else False if exploit in (False, "false", "No", "no") else None,
+            "risque": risque if risque in RISQUES_TENABLE else None,
+        })
+    return {"controles": controles, "tronque": len(liste) >= CONTROLES_CVE_MAX}
+
+
 # ------------------------------------------------------------------ Tenable : synchronisation des failles et des machines
 # Champs lus dans un résultat de l'analyse `vulndetails` (cadrage, §5 bis) : tout autre champ, `pluginText` d'abord, est
 # écarté dès la lecture et ne sort jamais du script. Lot TEN-SCORES (décision du RSSI du 22/11/2026) : `assetExposureScore`
@@ -435,7 +541,7 @@ GRAVITE_DE_ID = {v: k for k, v in GRAVITES.items()}
 GRAVITES_DEFAUT = ["critique", "elevee"]
 PLUGIN_ID = re.compile(r"^[1-9]\d{0,8}$")
 DEPOT_TENABLE = re.compile(r"^[1-9]\d{0,8}$")
-CVE_ID = re.compile(r"^CVE-[12]\d{3}-\d{4,9}$")
+CVE_ID = re.compile(r"^CVE-[12][0-9]{3}-[0-9]{4,9}$")
 UUID_STRICT = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 ADRESSE_IP = re.compile(r"^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}|(?=[0-9a-f:.]*:)[0-9a-f:.]{2,45})$")
 NOM_MACHINE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,254}$")
@@ -1322,19 +1428,25 @@ def executer(p):
         if not isinstance(p, dict):
             raise Refus("Demande illisible.")
         type_, operation = p.get("type"), p.get("operation")
-        if type_ not in TYPES or operation not in OPERATIONS.get(type_, ()):
+        if type_ not in TYPES or (operation not in OPERATIONS.get(type_, ()) and operation not in OPERATIONS_CVE.get(type_, ())):
             raise Refus("Type ou opération inconnu : rien n'a été appelé.")
         configuration, secrets = p.get("configuration"), p.get("secrets")
         if not isinstance(configuration, dict) or not isinstance(secrets, dict):
             raise Refus("Demande illisible.")
         en_tetes, operations = TYPES[type_]
         client = Client(type_, configuration, en_tetes(secrets), lire_mandataire(p.get("mandataire")))
+        if operation == "controles-cve":
+            return {"ok": True, "resultat": tenable_controles_cve(client, p.get("parametres")), "erreur": None}
         if operation == "synchroniser":
             resultat, elements = operations[operation](client, configuration)
             return {"ok": True, "resultat": resultat, "elements": elements, "erreur": None}
         return {"ok": True, "resultat": operations[operation](client), "erreur": None}
     except Exception as erreur:  # noqa: BLE001 - tout échec est expliqué, jamais propagé avec ses détails
-        return {"ok": False, "resultat": None, "erreur": une_ligne(explication(erreur))}
+        sortie = {"ok": False, "resultat": None, "erreur": une_ligne(explication(erreur))}
+        if isinstance(erreur, ErreurMandataire):
+            # Hôte et port du mandataire : à part, pour le seul journal d'audit (jamais dans l'erreur affichée).
+            sortie["detail"] = une_ligne(erreur.detail)
+        return sortie
 
 
 def main():

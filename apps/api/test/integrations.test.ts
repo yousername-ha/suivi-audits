@@ -491,10 +491,13 @@ describe('« Tester la connexion » et exécutant', () => {
     expect((await lecture.get(`${base}/executions/${job.id}`)).json().etat).toBe('en_cours');
     expect((await cli(['integrations-claim'])).out.trim()).toBe('');
 
-    // Rapport mal formé (champ inattendu, erreur sur plusieurs lignes) : refusé par la CLI, rien n'est écrit.
+    // Rapport mal formé (champ inattendu, erreur sur plusieurs lignes, détail avec un succès ou sur plusieurs lignes) :
+    // refusé par la CLI, rien n'est écrit.
     for (const mauvais of [
       { ok: true, resultat: { version: '6.9.1' }, erreur: null, secrets: {} },
       { ok: false, resultat: null, erreur: 'ligne 1\nligne 2' },
+      { ok: true, resultat: { version: '6.9.1' }, erreur: null, detail: 'Mandataire fictif : détail.' },
+      { ok: false, resultat: null, erreur: 'Échec.', detail: 'ligne 1\nligne 2' },
     ]) {
       const r = await cli(['integrations-finish', job.id], JSON.stringify(mauvais));
       expect(r.code).toBe(2);

@@ -15,6 +15,10 @@
      vigueur (données personnelles l'emporte si les deux domaines sont trouvés) et ne range pas un acte qui n'en contient
      plus aucun. Réglage avec `administrer`, If-Match sur la version de la source, journal
      `veille_reglementaire.mots_cles.regles`.
+   - Lot VR-2 (décision du RSSI du 22/11/2026) : actualités du CERT Santé (titre, date et lien seulement) ; Journal officiel
+     (« legifrance ») lu par l'exécutant dans le fichier quotidien des données ouvertes de la DILA, filtré comme EUR-Lex par
+     sa propre liste de mots-clés (MOTS_CLES_JO_DEFAUT) ; la demande porte aussi la date de départ des archives (la veille
+     de la dernière collecte réussie, sept jours par défaut dans le script).
    - Qualification : « à qualifier » à l'arrivée, puis « sans objet », « à suivre » ou « impactant », par le rôle qui tient le
      domaine de la publication (rôle RSSI pour la sécurité ; droit réservé `veille_reglementaire:dpo` pour les données
      personnelles, donné à aucun rôle prédéfini), If-Match sur
@@ -37,9 +41,10 @@ import {
   FREQUENCE_VEILLE_REGLEMENTAIRE_DEFAUT,
   FREQUENCES_VEILLE_REGLEMENTAIRE,
   frequenceReglementaireAdmise,
+  estSourceFiltree,
   LotVeille,
   MotCleEurLex,
-  MOTS_CLES_EURLEX_DEFAUT,
+  motsClesParDefaut,
   type PagePublicationsDto,
   prochaineAffichee,
   type PublicationReglementaireDto,
@@ -51,6 +56,7 @@ import {
   QUALIFICATION_SECURITE_ROLE,
   sourceReglementaire,
   type SourceReglementaire,
+  type SourceFiltreeMotsCles,
   type SourceReglementaireCollectee,
   SOURCES_REGLEMENTAIRES_COLLECTEES,
   SOURCES_REGLEMENTAIRES_DEFINITIONS,
@@ -67,7 +73,7 @@ import type { VeilleReglementaireCollectes } from './db/types.generated.js';
 import type { FluxExternes } from './flux-externes.js';
 import { conflict } from './http/concurrency.js';
 import { HttpError } from './http/errors.js';
-import type { Mandataire } from './mandataire.js';
+import { detailMandataire, type Mandataire } from './mandataire.js';
 import { loadGrants } from './rights.js';
 
 type LigneCollecte = Selectable<VeilleReglementaireCollectes>;
@@ -85,13 +91,22 @@ const EXECUTANT = { username: 'exécutant serveur' };
 const PLANIFICATION = { username: 'planification' };
 const SUITES_VIDES = { exigences: 0, actions: 0, documents: 0 } as const;
 
-/** Liste des mots-clés d'EUR-Lex rangée en base (validée à l'écriture) ; illisible ou absente : liste par défaut. */
-function motsClesEnVigueur(brut: unknown): { liste: MotCleEurLex[]; parDefaut: boolean } {
+/** Liste des mots-clés d'une source filtrée (EUR-Lex, Journal officiel) rangée en base (validée à l'écriture) ; illisible
+    ou absente : liste par défaut de la source. */
+function motsClesEnVigueur(
+  source: SourceFiltreeMotsCles,
+  brut: unknown,
+): { liste: MotCleEurLex[]; parDefaut: boolean } {
   const l = z.array(MotCleEurLex).min(1).safeParse(brut);
   return l.success && brut !== null
     ? { liste: l.data, parDefaut: false }
-    : { liste: [...MOTS_CLES_EURLEX_DEFAUT], parDefaut: true };
+    : { liste: [...motsClesParDefaut(source)], parDefaut: true };
 }
+
+/** Journal officiel : date de départ des archives à lire (AAAA-MM-JJ, en UTC), la veille de la dernière collecte réussie
+    pour ne pas manquer une archive publiée le jour même ; aucune réussite : le script prend sept jours. */
+const depuisJournalOfficiel = (reussite: Date | null): string | undefined =>
+  reussite ? new Date(reussite.getTime() - 86_400_000).toISOString().slice(0, 10) : undefined;
 
 const versCollecte = (r: LigneCollecte): CollecteReglementaireDto => ({
   id: r.id,
@@ -289,7 +304,7 @@ export class VeilleReglementaire {
           erreur: l?.erreur ?? null,
           enErreur: activee && !!l?.erreur,
           enRetard: activee && flux.ouvert && (!reussite || reussite.getTime() < limite),
-          motsCles: d.id === 'eur-lex' ? motsClesEnVigueur(l?.mots_cles ?? null) : null,
+          motsCles: estSourceFiltree(d.id) ? motsClesEnVigueur(d.id, l?.mots_cles ?? null) : null,
           derniereCollecte: dernieres.get(d.id) ?? null,
           prochaineCollecte:
             activee && flux.ouvert ? prochaineAffichee(l?.planifiee_le ?? null, f, maintenant).toISOString() : null,
@@ -405,9 +420,10 @@ export class VeilleReglementaire {
     return (await this.etat()).sources.find((s) => s.source === source)!;
   }
 
-  /* ---------------------------------------------------------------- Mots-clés d'EUR-Lex (administrer) */
-  /** Règle la liste des mots-clés du filtre d'EUR-Lex (`null` : liste par défaut). If-Match sur la version de la source ;
-      journal avec la liste avant et après (mots publics, sans donnée de la plateforme). */
+  /* ---------------------------------------------------------------- Mots-clés d'EUR-Lex et du JO (administrer) */
+  /** Règle la liste des mots-clés du filtre d'EUR-Lex ou du Journal officiel (`null` : liste par défaut de la source).
+      If-Match sur la version de la source ; journal avec la liste avant et après (mots publics, sans donnée de la
+      plateforme). */
   async reglerMotsCles(
     source: SourceReglementaire,
     motsCles: MotCleEurLex[] | null,
@@ -415,7 +431,8 @@ export class VeilleReglementaire {
     user: SessionUser,
     ip: string,
   ): Promise<EtatSourceReglementaireDto> {
-    if (source !== 'eur-lex') throw new HttpError(422, 'Seul le flux d’EUR-Lex est filtré par mots-clés.');
+    if (!estSourceFiltree(source))
+      throw new HttpError(422, 'Seuls EUR-Lex et le Journal officiel sont filtrés par mots-clés.');
     await this.db.tx(async (c, k) => {
       await k
         .insertInto('veille_reglementaire_sources')
@@ -437,8 +454,8 @@ export class VeilleReglementaire {
         }))
         .where('source', '=', source)
         .execute();
-      const ancienne = motsClesEnVigueur(avant.mots_cles);
-      const nouvelle = motsClesEnVigueur(motsCles);
+      const ancienne = motsClesEnVigueur(source, avant.mots_cles);
+      const nouvelle = motsClesEnVigueur(source, motsCles);
       await this.db.audit(
         user,
         ip,
@@ -657,9 +674,20 @@ export class VeilleReglementaire {
         .onConflict((oc) => oc.column('source').doUpdateSet({ dernier_essai: sql<Date>`now()` }))
         .execute();
       await this.db.audit(EXECUTANT, null, 'veille_reglementaire.collecte.reclamee', r.id, { source: r.source }, c);
-      // EUR-Lex : la liste des mots-clés en vigueur part avec la demande ; le script ne remonte que les actes qui en portent un.
-      const parametres =
-        r.source === 'eur-lex' ? { motsCles: await this.motsCles(k) } : ({} as Record<string, unknown>);
+      // EUR-Lex et Journal officiel : la liste des mots-clés en vigueur part avec la demande ; le script ne remonte que les
+      // actes qui en portent un. Journal officiel : date de départ des archives quotidiennes à lire.
+      const parametres: Record<string, unknown> = estSourceFiltree(r.source)
+        ? { motsCles: await this.motsCles(k, r.source) }
+        : {};
+      if (r.source === 'legifrance') {
+        const s = await k
+          .selectFrom('veille_reglementaire_sources')
+          .select('derniere_reussite')
+          .where('source', '=', 'legifrance')
+          .executeTakeFirst();
+        const depuis = depuisJournalOfficiel(s?.derniere_reussite ?? null);
+        if (depuis) parametres.depuis = depuis;
+      }
       return { id: r.id, source: r.source, parametres, ...(mandataire ? { mandataire } : {}) };
     });
   }
@@ -690,7 +718,12 @@ export class VeilleReglementaire {
           );
         valides.push(v.data);
       });
-      await this.ranger(k, cur.source, valides, cur.source === 'eur-lex' ? await this.motsCles(k) : null);
+      await this.ranger(
+        k,
+        cur.source,
+        valides,
+        estSourceFiltree(cur.source) ? await this.motsCles(k, cur.source) : null,
+      );
       const r = await k
         .updateTable('veille_reglementaire_collectes')
         .set((eb) => ({ lots: eb('lots', '+', 1), elements: eb('elements', '+', valides.length) }))
@@ -753,7 +786,8 @@ export class VeilleReglementaire {
           etat: fin.etat,
           elements: fin.elements,
           lots: fin.lots,
-          ...(ok ? { ecartes: fin.ecartes, tronque: fin.tronque } : { erreur: fin.erreur }),
+          // Mandataire sortant injoignable (décision du RSSI du 23/11/2026) : hôte et port au seul journal d'audit.
+          ...(ok ? { ecartes: fin.ecartes, tronque: fin.tronque } : { erreur: fin.erreur, ...detailMandataire(p) }),
         },
         c,
       );
@@ -763,17 +797,18 @@ export class VeilleReglementaire {
     return versCollecte(r);
   }
 
-  private async motsCles(k: Kdb): Promise<MotCleEurLex[]> {
+  private async motsCles(k: Kdb, source: SourceFiltreeMotsCles): Promise<MotCleEurLex[]> {
     const l = await k
       .selectFrom('veille_reglementaire_sources')
       .select('mots_cles')
-      .where('source', '=', 'eur-lex')
+      .where('source', '=', source)
       .executeTakeFirst();
-    return motsClesEnVigueur(l?.mots_cles ?? null).liste;
+    return motsClesEnVigueur(source, l?.mots_cles ?? null).liste;
   }
 
   /** Publications sans doublon par (source, identifiant) : une collecte rejouée met à jour le texte, la date et le lien,
-      jamais la qualification. EUR-Lex (`motsCles`) : domaine déduit du titre ; un acte sans mot-clé n'est pas rangé. */
+      jamais la qualification. EUR-Lex et Journal officiel (`motsCles`) : domaine déduit du titre ; un acte sans mot-clé
+      n'est pas rangé. */
   private async ranger(
     k: Kdb,
     source: SourceReglementaireCollectee,

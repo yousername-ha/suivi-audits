@@ -25,6 +25,9 @@
   cpe-dictionnaire-claim | -lot <id> | -finish <id>  dictionnaire CPE : réclame une tranche du chargement par lots, rapporte un lot, la termine
      cpe-versions-claim | cpe-versions-finish <id>  dictionnaire CPE : réclame une demande de versions ({actif, demande}), la termine (JSON sur l'entrée standard)
      cpe-dictionnaire-claim | -lot <id> | -finish <id>  dictionnaire CPE : réclame une tranche du chargement par lots, rapporte un lot, la termine
+     cve-inconnue-claim | cve-inconnue-finish <id>  CVE inconnue de la veille : réclame une consultation de cve.org et NVD ({actif, demande}), la termine
+     cve-tenable-claim | cve-tenable-finish <id>  CVE inconnue : réclame une recherche des contrôles Tenable qui la citent, la termine
+     veille-annonces-claim | -lot <id> | -finish <id>  sources facultatives de la veille (Cloudflare Radar, tldrcve) : mêmes commandes que la veille
      flux-souhaites              flux vers l'extérieur voulus ouverts (JSON, ADR 0097)
      flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
      flux-reprise                reprise des modules en service jamais décidés (JSON sur l'entrée standard), puis flux voulus ouverts
@@ -47,6 +50,8 @@ import {
   LotVeille,
   RapportCollecte,
   RapportDictionnaireCpe,
+  RapportCveInconnue,
+  RapportCveTenable,
   RapportVersionsCpe,
   RapportExecution,
   type SettingsValues,
@@ -83,6 +88,9 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   integrations-claim | integrations-lot <id> | integrations-finish <id>  connecteurs : réclame une exécution, rapporte un lot (synchronisation), son résultat (JSON sur l'entrée standard)
   veille-claim | veille-lot <id> | veille-finish <id>  veille des vulnérabilités : réclame une collecte, rapporte un lot, la termine (JSON sur l'entrée standard)
   veille-reglementaire-claim | -lot <id> | -finish <id>  veille réglementaire : mêmes commandes, file propre au module
+  cve-inconnue-claim | cve-inconnue-finish <id>  CVE inconnue de la veille : consultation de cve.org et NVD ({actif, demande})
+  cve-tenable-claim | cve-tenable-finish <id>  CVE inconnue : contrôles Tenable qui la citent
+  veille-annonces-claim | -lot <id> | -finish <id>  sources facultatives de la veille (Cloudflare Radar, tldrcve)
   flux-souhaites              flux vers l'extérieur voulus ouverts (JSON)
   flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
   flux-reprise                modules en service jamais décidés enregistrés ouverts (JSON sur l'entrée standard), puis flux voulus ouverts
@@ -322,6 +330,63 @@ async function main() {
       const actif = !(await svc.modules.state(true)).disabled.includes('vulnerabilites');
       const job = await svc.vulnerabilites.dictionnaireCpe.reclamerTranche(actif);
       if (job) console.log(JSON.stringify(job));
+      break;
+    }
+    case 'cve-inconnue-claim': {
+      // CVE inconnue (ADR 0100, lot CVE-INC) : rend toujours { actif, demande } ; module désactivé ou flux fermé : actif faux.
+      const actif = !(await svc.modules.state(true)).disabled.includes('vulnerabilites');
+      console.log(JSON.stringify(await svc.vulnerabilites.cveInconnues.reclamer(actif)));
+      break;
+    }
+    case 'cve-tenable-claim': {
+      // Contrôles Tenable d'une CVE inconnue : modules Vulnérabilités et Intégrations actifs, flux « tenable » ouvert.
+      const { disabled } = await svc.modules.state(true);
+      const actifs = !disabled.includes('vulnerabilites') && !disabled.includes('integrations');
+      const job = await svc.vulnerabilites.cveInconnues.reclamerTenable(actifs);
+      if (job) console.log(JSON.stringify(job));
+      break;
+    }
+    case 'veille-annonces-claim': {
+      const actif = !(await svc.modules.state(true)).disabled.includes('vulnerabilites');
+      const job = await svc.vulnerabilites.annonces.reclamer(actif);
+      if (job) console.log(JSON.stringify(job));
+      break;
+    }
+    case 'cve-inconnue-finish':
+    case 'cve-tenable-finish':
+    case 'veille-annonces-lot':
+    case 'veille-annonces-finish': {
+      // Même contrôle que la veille : taille bornée, champ inattendu ou élément mal formé refusés (code 2).
+      const brut = await readStdin(cmd === 'veille-annonces-lot' ? VEILLE_REGLEMENTAIRE_ENTREE_MAX : CVE_ENTREE_MAX);
+      let valeur: unknown;
+      try {
+        valeur = brut === null ? null : JSON.parse(brut);
+      } catch {
+        valeur = null;
+      }
+      const schema =
+        cmd === 'cve-inconnue-finish'
+          ? RapportCveInconnue
+          : cmd === 'cve-tenable-finish'
+            ? RapportCveTenable
+            : cmd === 'veille-annonces-lot'
+              ? LotVeille
+              : RapportCollecte;
+      if (!z.uuid().safeParse(arg).success || valeur === null || !schema.safeParse(valeur).success) {
+        console.error('Envoi refusé : identifiant, taille ou contenu invalide.');
+        process.exit(2);
+      }
+      const c = svc.vulnerabilites.cveInconnues;
+      const a = svc.vulnerabilites.annonces;
+      try {
+        if (cmd === 'cve-inconnue-finish') await c.terminer(arg!, valeur);
+        else if (cmd === 'cve-tenable-finish') await c.terminerTenable(arg!, valeur);
+        else if (cmd === 'veille-annonces-lot') console.log(JSON.stringify(await a.lot(arg!, valeur)));
+        else await a.terminer(arg!, valeur);
+      } catch (e) {
+        console.error((e as Error).message);
+        process.exit((e as { status?: number }).status === 422 ? 2 : 1);
+      }
       break;
     }
     case 'cpe-versions-finish':
@@ -723,6 +788,8 @@ const VEILLE_ENTREE_MAX = 16 * 1024 * 1024;
 const VEILLE_REGLEMENTAIRE_ENTREE_MAX = 2 * 1024 * 1024;
 /** Dictionnaire CPE : un lot de 5 000 produits et 5 000 versions tient sous 4 Mio. */
 const CPE_ENTREE_MAX = 4 * 1024 * 1024;
+/** CVE inconnue : une fiche de cve.org et une réponse de NVD bornées, ou cinquante contrôles Tenable, tiennent sous 1 Mio. */
+const CVE_ENTREE_MAX = 1024 * 1024;
 /** Lot d'une synchronisation de Tenable : 500 éléments, dont des constats qui citent jusqu'à 500 CVE. */
 const INTEGRATIONS_LOT_MAX = 8 * 1024 * 1024;
 

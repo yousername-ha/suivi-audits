@@ -1,5 +1,7 @@
 /* Habillage de l'assistant global (ADR 0086) : importé une seule fois, ici. */
 @import './neon-assistant.css';
+/* Polices à l'essai (Plateforme > Apparence, 23/11/2026). */
+@import './polices-essai.css';
 /* Police Lexend variable, hébergée avec l'application (SIL OFL, licence dans fonts/ ; choix du RSSI du 19/11/2026). */
 @font-face {
   font-family: 'Lexend';

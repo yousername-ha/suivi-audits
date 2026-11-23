@@ -45,7 +45,7 @@ import {
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
-import type { Db } from '../db/db.js';
+import type { Db, Kdb } from '../db/db.js';
 import { HttpError } from '../http/errors.js';
 import type { FaillesDetectees } from './failles.js';
 import type { ReglagePrioriteVulnerabilites } from './priorite.js';
@@ -54,6 +54,24 @@ import { cveSurMachineFinSupport, lisible, present } from './sql.js';
 import type { SurfaceExterneAlh } from './surface-externe.js';
 
 const B = FICHE_FAILLE_BORNES;
+
+/** Une CVE a sa fiche (lot PC4) : connue de la veille, citée par un contrôle de Tenable, rapprochée d'un produit surveillé
+    (proposée, rattachée ou confirmée) ou exposée sur Internet (version encore détectée d'une technologie, alerte ouverte et
+    présente, quels que soient les droits : lot ALH5). Seule définition : la fiche d'une CVE (404 sinon) et la CVE inconnue
+    de la veille (lot CVE-INC : `connue` des compléments, ouverture, consultation) l'emploient. Une CVE citée seulement par
+    une alerte close ou par une technologie qui n'est plus détectée n'a pas de fiche. */
+export async function cveAUneFiche(
+  k: Kdb,
+  surface: Pick<SurfaceExterneAlh, 'cvesExposees'>,
+  cve: string,
+): Promise<boolean> {
+  const { rows } = await sql<{ a: boolean }>`
+    SELECT EXISTS (SELECT 1 FROM vulnerabilites_veille_cve WHERE cve = ${cve})
+      OR EXISTS (SELECT 1 FROM vulnerabilites_constat_cves WHERE cve = ${cve})
+      OR EXISTS (SELECT 1 FROM vulnerabilites_rapprochements WHERE cve = ${cve}
+                   AND statut IN ('proposee', 'rattachee', 'confirmee')) AS a`.execute(k);
+  return !!rows[0]?.a || (await surface.cvesExposees([cve])).has(cve);
+}
 const nombre = (v: string | number | null) => (v === null ? null : Number(v));
 const SANS_SOURCES: SourcesFailleDto = {
   exploitation: [],
@@ -206,6 +224,7 @@ export class FichesFailles {
 
   private async cve(user: SessionUser, cve: string): Promise<Entree> {
     const k = this.db.k;
+    if (!(await cveAUneFiche(k, this.surface, cve))) throw new HttpError(404, 'Faille introuvable.');
     const faits = (await lireFaitsCve(k, [cve])).get(cve) ?? null;
     const { rows: t } = await sql<{ origine: 'd' | 'p'; lu: boolean }>`
       SELECT 'd' AS origine, ${lisible(user)} AS lu FROM vulnerabilites_constat_cves cc
@@ -218,16 +237,15 @@ export class FichesFailles {
         JOIN vulnerabilites_produits_machines pm ON pm.produit_id = r.produit_id
         JOIN vulnerabilites_machines m ON m.id = pm.machine_id
         WHERE r.cve = ${cve} AND r.statut IN ('rattachee', 'confirmee')`.execute(k);
-    const { rows: rr } = await sql<{ rattachee: boolean; proposee: boolean; connue: boolean; fin_support: boolean }>`
+    const { rows: rr } = await sql<{ rattachee: boolean; proposee: boolean; fin_support: boolean }>`
       SELECT EXISTS (SELECT 1 FROM vulnerabilites_rapprochements WHERE cve = ${cve}
                        AND statut IN ('rattachee', 'confirmee')) AS rattachee,
              ${cveSurMachineFinSupport(cve)} AS fin_support,
-             EXISTS (SELECT 1 FROM vulnerabilites_rapprochements WHERE cve = ${cve} AND statut = 'proposee') AS proposee,
-             EXISTS (SELECT 1 FROM vulnerabilites_constat_cves WHERE cve = ${cve}) AS connue`.execute(k);
+             EXISTS (SELECT 1 FROM vulnerabilites_rapprochements WHERE cve = ${cve} AND statut = 'proposee') AS proposee`.execute(
+      k,
+    );
     const r = rr[0]!;
     const exposition = await this.surface.expositionFiche(user, [cve], 0);
-    if (!faits && !r.connue && !r.rattachee && !r.proposee && !exposition.exposee)
-      throw new HttpError(404, 'Faille introuvable.');
     const detectee = t.some((x) => x.origine === 'd');
     const presence: Presence = detectee
       ? 'detectee'

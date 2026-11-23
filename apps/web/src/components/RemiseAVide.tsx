@@ -1,11 +1,12 @@
 /* Remise à vide de la base, pour la recette (ADR 0065). Interrupteur désactivé par défaut ; le bouton rouge n'apparaît
-   qu'une fois la fonction autorisée. Deux portées au choix, phrase à recopier, code de double authentification. */
+   qu'une fois la fonction autorisée. Trois choix (données de travail, données de travail puis démonstration rechargée,
+   tout), phrase à recopier propre à chacun, code de double authentification. */
 import { Alert, Badge, Button, Card, Group, Modal, Radio, Stack, Switch, Text, TextInput, Title } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   REMISE_A_VIDE_PHRASES,
+  type RemiseAVideChoix,
   type RemiseAVideEtat,
-  type RemiseAVidePortee,
   type RemiseAVideResultat,
 } from '@suivi/shared';
 import { useRef, useState } from 'react';
@@ -18,7 +19,7 @@ const CLE = ['admin', 'remise-a-vide'] as const;
     exploitation libre. Le serveur refait tous ces contrôles. */
 export function peutRemettreAVide(
   etat: Pick<RemiseAVideEtat, 'autorisee' | 'occupee' | 'sauvegarde'> | undefined,
-  portee: RemiseAVidePortee,
+  choix: RemiseAVideChoix,
   confirm: string,
   code: string,
 ): boolean {
@@ -27,7 +28,7 @@ export function peutRemettreAVide(
     etat.autorisee &&
     !etat.occupee &&
     etat.sauvegarde.recente &&
-    confirm === REMISE_A_VIDE_PHRASES[portee] &&
+    confirm === REMISE_A_VIDE_PHRASES[choix] &&
     /^\d{6}$/.test(code)
   );
 }
@@ -42,7 +43,7 @@ export function RemiseAVidePanel() {
   const [activation, setActivation] = useState(false);
   const [codeActivation, setCodeActivation] = useState('');
   const [ouverte, setOuverte] = useState(false);
-  const [portee, setPortee] = useState<RemiseAVidePortee>('travail');
+  const [choix, setChoix] = useState<RemiseAVideChoix>('travail');
   const [confirm, setConfirm] = useState('');
   const [code, setCode] = useState('');
   const [pending, setPending] = useState(false);
@@ -72,7 +73,13 @@ export function RemiseAVidePanel() {
     try {
       setResultat(
         await api<RemiseAVideResultat>('POST', '/api/admin/remise-a-vide', {
-          body: { requestId: idRequete.current, portee, confirm, code },
+          body: {
+            requestId: idRequete.current,
+            portee: choix === 'tout' ? 'tout' : 'travail',
+            ...(choix === 'demonstration' ? { demonstration: true } : {}),
+            confirm,
+            code,
+          },
         }),
       );
       idRequete.current = null;
@@ -101,10 +108,10 @@ export function RemiseAVidePanel() {
           Remise à vide de la base
         </Title>
         <Text size="sm">
-          Pour la recette : efface les données saisies ou importées et revient à un état initial vide. Désactivée par
-          défaut ; une sauvegarde réussie de moins de {etat?.sauvegarde.delaiMinutes ?? 30} minutes est exigée, ainsi
-          que votre code de double authentification. L’opération est tracée dans le journal d’audit, qui n’est jamais
-          effacé.
+          Pour la recette : efface les données saisies ou importées et revient à un état initial vide, ou les remplace
+          par le jeu de démonstration fictif. Désactivée par défaut ; une sauvegarde réussie de moins de{' '}
+          {etat?.sauvegarde.delaiMinutes ?? 30} minutes est exigée, ainsi que votre code de double authentification.
+          L’opération est tracée dans le journal d’audit, qui n’est jamais effacé.
         </Text>
         <ErrorAlert error={error || q.error} />
         <Switch
@@ -175,7 +182,11 @@ export function RemiseAVidePanel() {
       <Modal opened={ouverte} onClose={fermer} title="Remettre la base à vide" size="lg" closeOnClickOutside={false}>
         {resultat ? (
           <Stack>
-            <Alert color={resultat.jeton ? 'orange' : 'green'} role="status" title="Terminé">
+            <Alert
+              color={resultat.jeton || resultat.demonstration === 'echec' ? 'orange' : 'green'}
+              role="status"
+              title="Terminé"
+            >
               {resultat.message}
             </Alert>
             <Group>
@@ -190,9 +201,9 @@ export function RemiseAVidePanel() {
             </Alert>
             <Radio.Group
               label="Que faut-il effacer ?"
-              value={portee}
+              value={choix}
               onChange={(v) => {
-                setPortee(v as RemiseAVidePortee);
+                setChoix(v as RemiseAVideChoix);
                 setConfirm('');
               }}
             >
@@ -203,6 +214,11 @@ export function RemiseAVidePanel() {
                   description="Pilotage, risques, actions, écarts, documents, référentiels importés. Comptes, rôles et réglages conservés : vous restez connecté."
                 />
                 <Radio
+                  value="demonstration"
+                  label="Les données de travail, puis recharger la démonstration"
+                  description="Efface les données de travail comme ci-dessus, puis recharge le jeu fictif de démonstration (établissement de santé imaginaire, machines et constats Tenable fictifs, aucun appel vers Tenable). Environ une minute."
+                />
+                <Radio
                   value="tout"
                   label="Tout, comptes compris"
                   description="Efface aussi les comptes, groupes, rôles personnalisés et réglages. Retour à l’écran d’installation avec un nouveau jeton."
@@ -210,7 +226,7 @@ export function RemiseAVidePanel() {
               </Stack>
             </Radio.Group>
             <TextInput
-              label={`Recopier exactement : ${REMISE_A_VIDE_PHRASES[portee]}`}
+              label={`Recopier exactement : ${REMISE_A_VIDE_PHRASES[choix]}`}
               value={confirm}
               disabled={pending}
               autoComplete="off"
@@ -233,10 +249,10 @@ export function RemiseAVidePanel() {
               <Button
                 color="red"
                 loading={pending}
-                disabled={pending || !peutRemettreAVide(etat, portee, confirm, code)}
+                disabled={pending || !peutRemettreAVide(etat, choix, confirm, code)}
                 onClick={() => void effacer()}
               >
-                Effacer définitivement
+                {choix === 'demonstration' ? 'Effacer et recharger la démonstration' : 'Effacer définitivement'}
               </Button>
             </Group>
           </Stack>

@@ -1617,7 +1617,7 @@ export interface VDocuments {
 
 export interface VeilleReglementaireCollectes {
   id: Generated<string>;
-  source: "cnil" | "cepd" | "eur-lex" | "anssi";
+  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "cert-sante-actualites" | "legifrance";
   origine: "manuel" | "planifie";
   etat: Generated<"en_file" | "en_cours" | "recu" | "echec" | "expire">;
   demande_par: string;
@@ -1633,7 +1633,7 @@ export interface VeilleReglementaireCollectes {
 
 export interface VeilleReglementairePublications {
   id: Generated<string>;
-  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "ans" | "legifrance";
+  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "cert-sante-actualites" | "ans" | "legifrance";
   domaine: "securite" | "donnees-personnelles";
   identifiant: string;
   titre: string;
@@ -1649,7 +1649,7 @@ export interface VeilleReglementairePublications {
 }
 
 export interface VeilleReglementaireSources {
-  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "ans" | "legifrance";
+  source: "cnil" | "cepd" | "eur-lex" | "anssi" | "cert-sante-actualites" | "ans" | "legifrance";
   activee: Generated<boolean>;
   frequence_heures: number | null;
   planifiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
@@ -2001,6 +2001,39 @@ export interface VulnerabilitesCpeVersions {
   obtenu_le: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface VulnerabilitesCveConsultations {
+  cve: string;
+  etat: "en_file" | "en_cours" | "recu" | "echec";
+  jeton: Generated<string>;
+  demande_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  debute_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  termine_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  erreur: string | null;
+  cveorg: ColumnType<JsonValue | null, string | null, string | null>;
+  cveorg_etat: string | null;
+  nvd_etat: string | null;
+  obtenu_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
+export interface VulnerabilitesCveOuverture {
+  id: Generated<number>;
+  vue_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
+export interface VulnerabilitesCveTenable {
+  integration_id: string;
+  cve: string;
+  etat: "en_file" | "en_cours" | "recu" | "echec";
+  jeton: Generated<string>;
+  demande_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  debute_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  termine_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  erreur: string | null;
+  controles: ColumnType<JsonValue, string | undefined, string>;
+  tronque: Generated<boolean>;
+  obtenu_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+}
+
 export interface VulnerabilitesDepassements {
   nature: "constat" | "declaree";
   objet_id: string;
@@ -2346,6 +2379,56 @@ export interface VulnerabilitesTenableEtat {
   correctifs_numero: number | null;
 }
 
+export interface VulnerabilitesVeilleAnnonces {
+  id: Generated<string>;
+  source: "cloudflare-radar" | "tldrcve";
+  identifiant: string;
+  cves: string[];
+  titre: string;
+  resume: Generated<string>;
+  lien: string | null;
+  publie_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  gravite: string | null;
+  score: ColumnType<string | null, number | string | null, number | string | null>;
+  version_cvss: string | null;
+  kev: boolean | null;
+  critique: Generated<boolean>;
+  produits_cites: Generated<string[]>;
+  nature: string | null;
+  verdict: string | null;
+  verdict_texte: string | null;
+  vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  maj_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesVeilleAnnoncesCollectes {
+  id: Generated<string>;
+  source: "cloudflare-radar" | "tldrcve";
+  origine: "manuel" | "planifie";
+  etat: Generated<"en_file" | "en_cours" | "recu" | "echec" | "expire">;
+  demande_par: string;
+  demande_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  debute_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  termine_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  lots: Generated<number>;
+  elements: Generated<number>;
+  gardes: Generated<number>;
+  ecartes: Generated<number>;
+  tronque: Generated<boolean>;
+  erreur: string | null;
+}
+
+export interface VulnerabilitesVeilleAnnoncesSources {
+  source: "cloudflare-radar" | "tldrcve";
+  activee: Generated<boolean>;
+  frequence_minutes: number | null;
+  planifiee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  derniere_reussite: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  dernier_essai: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  erreur: string | null;
+  version: Generated<number>;
+}
+
 export interface VulnerabilitesVeilleAvis {
   id: Generated<string>;
   source: "cert-fr" | "cert-sante";
@@ -2647,6 +2730,9 @@ export interface DB {
   vulnerabilites_cpe_dictionnaire: VulnerabilitesCpeDictionnaire;
   vulnerabilites_cpe_produits: VulnerabilitesCpeProduits;
   vulnerabilites_cpe_versions: VulnerabilitesCpeVersions;
+  vulnerabilites_cve_consultations: VulnerabilitesCveConsultations;
+  vulnerabilites_cve_ouverture: VulnerabilitesCveOuverture;
+  vulnerabilites_cve_tenable: VulnerabilitesCveTenable;
   vulnerabilites_depassements: VulnerabilitesDepassements;
   vulnerabilites_detections: VulnerabilitesDetections;
   vulnerabilites_imports: VulnerabilitesImports;
@@ -2674,6 +2760,9 @@ export interface DB {
   vulnerabilites_tenable_correctifs: VulnerabilitesTenableCorrectifs;
   vulnerabilites_tenable_depots: VulnerabilitesTenableDepots;
   vulnerabilites_tenable_etat: VulnerabilitesTenableEtat;
+  vulnerabilites_veille_annonces: VulnerabilitesVeilleAnnonces;
+  vulnerabilites_veille_annonces_collectes: VulnerabilitesVeilleAnnoncesCollectes;
+  vulnerabilites_veille_annonces_sources: VulnerabilitesVeilleAnnoncesSources;
   vulnerabilites_veille_avis: VulnerabilitesVeilleAvis;
   vulnerabilites_veille_collectes: VulnerabilitesVeilleCollectes;
   vulnerabilites_veille_cve: VulnerabilitesVeilleCve;

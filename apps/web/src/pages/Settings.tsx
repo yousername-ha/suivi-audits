@@ -43,6 +43,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import { CopyCommand, ErrorAlert } from '../components/common';
 import { appliquerStyleFenetres, styleFenetres } from '../fenetres';
+import { appliquerPolice, policeEssai } from '../police';
 import { CLE_FLUX_EXTERNES, FluxFermeAlerte } from '../components/FluxExternes';
 import { useValidationFlux } from '../components/ValidationFlux';
 import { CLE_LOGO_ORGANISATION } from '../components/MarqueOrganisation';
@@ -655,6 +656,47 @@ function FenetresEssai({ p }: { p: P }) {
   );
 }
 
+/** Police à l'essai (demande du RSSI du 23/11/2026), pour toute l'instance : aperçu immédiat sur toute la page tant que la
+    section n'est pas enregistrée ; abandonné en quittant le panneau. */
+function PoliceEssaiChoix({ p }: { p: P }) {
+  const enregistree = useMe().appearance.police;
+  const choisie = policeEssai(p.values.police);
+  useEffect(() => {
+    appliquerPolice(document.documentElement, choisie);
+    return () => appliquerPolice(document.documentElement, enregistree);
+  }, [choisie, enregistree]);
+  return (
+    <Radio.Group
+      label="Police (essai)"
+      description="Pour tous les comptes de l’instance. Essai : une seule police sera gardée."
+      value={choisie}
+      onChange={(v) => p.set('police', v)}
+    >
+      <Stack gap="xs" mt="xs">
+        <Radio value="lexend" label="Lexend" description="Large et arrondie (par défaut)." disabled={p.ro} />
+        <Radio
+          value="plex"
+          label="Plex Sans"
+          description="Sobre, chiffres nets dans les tableaux, plus étroite."
+          disabled={p.ro}
+        />
+        <Radio
+          value="figtree"
+          label="Figtree"
+          description="Ronde et moderne, plus compacte que Lexend."
+          disabled={p.ro}
+        />
+        <Radio
+          value="public-sans"
+          label="Public Sans"
+          description="Ton institutionnel, chiffres affirmés."
+          disabled={p.ro}
+        />
+      </Stack>
+    </Radio.Group>
+  );
+}
+
 /* ---------------------------------------------------------------- Sections */
 const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
   general: (p) => <General p={p} />,
@@ -697,6 +739,7 @@ const SECTIONS: Record<SettingsSection, (p: P) => ReactNode> = {
       </Stack>
       <StyleGlobal p={p} />
       <FenetresEssai p={p} />
+      <PoliceEssaiChoix p={p} />
       <Text size="sm" c="dimmed">
         Thème et densité s’appliquent à toute personne qui n’a pas choisi ses propres préférences d’affichage. Le style
         et les fenêtres sont les mêmes pour tous les comptes.

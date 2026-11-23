@@ -18,7 +18,7 @@
    par adresse IP, filtre par nom, présentation empilée) est dans la spec de l'import Silène, qui a des données. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
+import { attendreFenetresStables, ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de l’écran, flux refermé', async ({
   browser,
@@ -42,6 +42,8 @@ test('Surface externe : connecteur AlgoLightHouse créé et activé, onglets de 
   const accessible = async () => {
     // L'animation d'arrivée de l'en-tête fausse le contraste mesuré : même attente que zzzzz-accessibilite.
     await page.waitForTimeout(400);
+    // Fenêtre encore en fondu : contraste mêlé au fond (lot ROBUSTESSE-TESTS).
+    await attendreFenetresStables(page);
     expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()).violations).toEqual([]);
   };
   try {

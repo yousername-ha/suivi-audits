@@ -89,8 +89,9 @@ export const sourceVeille = (id: SourceVeille): SourceVeilleDefinition =>
   SOURCES_VEILLE_DEFINITIONS.find((s) => s.id === id)!;
 
 /* ------------------------------------------------------------------ Formes contrôlées */
-/** Identifiant CVE (« CVE-AAAA-NNNN », quatre chiffres ou plus). */
-export const CVE_ID = /^CVE-[12]\d{3}-\d{4,9}$/;
+/** Identifiant CVE (« CVE-AAAA-NNNN », quatre chiffres ou plus). Chiffres écrits `[0-9]` : recopié tel quel dans les scripts
+    Python (comparé par les tests d'architecture), où `\d` admettrait aussi les chiffres Unicode (relecture de la PR #369). */
+export const CVE_ID = /^CVE-[12][0-9]{3}-[0-9]{4,9}$/;
 /** Identifiant d'une alerte ou d'un avis du CERT-FR (forme publiée par son API, depuis 2010). */
 export const CERTFR_ID = /^CERTFR-20\d{2}-(?:ALE|AVI)-\d{2,4}$/;
 /** Identifiant d'une alerte du CERT Santé : numéro de l'élément du flux (guid). */
@@ -322,13 +323,22 @@ export const BilanCollecte = z
   .strict();
 export type BilanCollecte = z.infer<typeof BilanCollecte>;
 
-/** Entrée de `suivi veille-finish <id>` : succès avec son bilan, ou échec avec une erreur sur une ligne. */
+/** Entrée de `suivi veille-finish <id>` (et des fins de la veille réglementaire et des sources facultatives) : succès avec
+    son bilan, ou échec avec une erreur sur une ligne. `detail` (échec seulement ; décision du RSSI du 23/11/2026) : hôte et
+    port du mandataire sortant injoignable, consignés au seul journal d'audit (lu par l'administration), jamais rangés avec la
+    collecte ni rendus à qui lit le module. */
 export const RapportCollecte = z
-  .object({ ok: z.boolean(), bilan: BilanCollecte.nullable(), erreur: ErreurCourte.nullable() })
+  .object({
+    ok: z.boolean(),
+    bilan: BilanCollecte.nullable(),
+    erreur: ErreurCourte.nullable(),
+    detail: ErreurCourte.optional(),
+  })
   .strict()
   .refine((r) => (r.ok ? r.bilan !== null && r.erreur === null : r.bilan === null && r.erreur !== null), {
     message: 'Un succès porte un bilan sans erreur ; un échec, une erreur sans bilan.',
-  });
+  })
+  .refine((r) => !r.ok || r.detail === undefined, { message: 'Le détail accompagne un échec seulement.' });
 export type RapportCollecte = z.infer<typeof RapportCollecte>;
 
 /* ------------------------------------------------------------------ API */
