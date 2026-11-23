@@ -27,4 +27,17 @@ describe('remise à vide : conditions du bouton rouge', () => {
     expect(peutRemettreAVide({ ...pret, occupee: true }, 'travail', phrase, '123456')).toBe(false);
     expect(peutRemettreAVide(undefined, 'travail', phrase, '123456')).toBe(false);
   });
+  it('régénérer la démonstration : phrase propre, distincte de celle des données de travail', () => {
+    expect(peutRemettreAVide(pret, 'demonstration', REMISE_A_VIDE_PHRASES.demonstration, '123456')).toBe(true);
+    expect(peutRemettreAVide(pret, 'demonstration', REMISE_A_VIDE_PHRASES.travail, '123456')).toBe(false);
+    expect(peutRemettreAVide(pret, 'travail', REMISE_A_VIDE_PHRASES.demonstration, '123456')).toBe(false);
+    expect(
+      peutRemettreAVide(
+        { ...pret, sauvegarde: { ...pret.sauvegarde, recente: false } },
+        'demonstration',
+        REMISE_A_VIDE_PHRASES.demonstration,
+        '123456',
+      ),
+    ).toBe(false);
+  });
 });
