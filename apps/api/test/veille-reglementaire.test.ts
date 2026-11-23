@@ -4,10 +4,13 @@
    des sources et « Collecter maintenant » avec administrer), If-Match, journal, filtres et recherche, synthèse, cycle
    réclamation -> lot -> fin par le service et par la vraie CLI de l'exécutant, éléments refusés (ANSSI avec résumé, lien hors
    hôte), flux fermé ou module désactivé, planification par source activée, file indépendante de la veille des
-   vulnérabilités ; ANS et Légifrance sans collecteur ; filtre d'EUR-Lex par mots-clés (liste par défaut remise avec la
+   vulnérabilités ; ANS sans collecteur ; filtre d'EUR-Lex par mots-clés (liste par défaut remise avec la
    collecte, domaine déduit du mot trouvé, données personnelles l'emporte, réglage administrer, If-Match, journal).
+   Lot VR-2 (migration 104) : actualités du CERT Santé (jamais de résumé, code et base) ; Journal officiel (sa propre
+   liste de mots-clés et la date de départ des archives remises avec la collecte, domaine déduit, lien Légifrance de
+   forme exacte, réglage de sa liste sans toucher à celle d'EUR-Lex).
    Données fictives ; aucune source n'est jointe. */
-import { MOTS_CLES_EURLEX_DEFAUT } from '@suivi/shared';
+import { MOTS_CLES_EURLEX_DEFAUT, MOTS_CLES_JO_DEFAUT } from '@suivi/shared';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -32,12 +35,18 @@ const pub = (n: number, source = 'cnil', extra: Record<string, unknown> = {}) =>
     cepd: 'www.edpb.europa.eu',
     'eur-lex': 'eur-lex.europa.eu',
     anssi: 'cyber.gouv.fr',
+    'cert-sante-actualites': 'cyberveille.esante.gouv.fr',
   };
+  const sansResume = ['anssi', 'cert-sante-actualites', 'legifrance'].includes(source);
   return {
     identifiant: `fictif-${source}-${n}`,
     titre: `Publication fictive ${n} (${source})`,
-    resume: source === 'anssi' ? null : `Résumé fictif ${n}.`,
-    lien: `https://${hotes[source]}/fictif/${n}`,
+    resume: sansResume ? null : `Résumé fictif ${n}.`,
+    // Journal officiel : page du texte sur Légifrance, par son identifiant (fictif).
+    lien:
+      source === 'legifrance'
+        ? `https://www.legifrance.gouv.fr/jorf/id/JORFTEXT${String(n).padStart(12, '0')}`
+        : `https://${hotes[source]}/fictif/${n}`,
     publieLe: `2026-11-${String(10 + n).padStart(2, '0')}T08:00:00.000Z`,
     ...extra,
   };
@@ -155,7 +164,8 @@ describe('veille réglementaire : schéma et rôle', () => {
     ).toEqual(['administrateur', 'auditeur_externe', 'contributeur', 'lecteur', 'rssi']);
     // La migration ne donne le droit « DPO » à aucun rôle stocké.
     expect(await n('roles', "'veille_reglementaire:dpo' = ANY(permissions) AND id <> 'r_vr_dpo'")).toBe(0);
-    // La base refuse ce que le code refuse : résumé de l'ANSSI, lien hors hôte, Légifrance activée.
+    // La base refuse ce que le code refuse : résumé de l'ANSSI, lien hors hôte, ANS activée (migration 104 : Légifrance
+    // s'active désormais).
     await expect(
       t.svc.db.q(
         "INSERT INTO veille_reglementaire_publications (source, domaine, identifiant, titre, resume, lien, publie_le) VALUES ('anssi', 'securite', 'x', 'T', 'R', 'https://cyber.gouv.fr/x', now())",
@@ -167,8 +177,47 @@ describe('veille réglementaire : schéma et rôle', () => {
       ),
     ).rejects.toThrow();
     await expect(
-      t.svc.db.q("INSERT INTO veille_reglementaire_sources (source, activee) VALUES ('legifrance', true)"),
+      t.svc.db.q("INSERT INTO veille_reglementaire_sources (source, activee) VALUES ('ans', true)"),
     ).rejects.toThrow();
+  });
+
+  it('migration 104 : CERT Santé sans résumé, lien du Journal officiel de forme exacte, mots-clés d’EUR-Lex et du JO seuls', async () => {
+    const inserer = (source: string, resume: string | null, lien: string) =>
+      t.svc.db.q(
+        "INSERT INTO veille_reglementaire_publications (source, domaine, identifiant, titre, resume, lien, publie_le) VALUES ($1, 'securite', $2, 'T', $3, $4, now())",
+        [source, `x-${source}-${lien}`, resume, lien],
+      );
+    await expect(
+      inserer('cert-sante-actualites', 'R', 'https://cyberveille.esante.gouv.fr/actualites/x'),
+    ).rejects.toThrow();
+    await expect(inserer('cert-sante-actualites', null, 'https://esante.gouv.fr/actualites/x')).rejects.toThrow();
+    await inserer('cert-sante-actualites', null, 'https://cyberveille.esante.gouv.fr/actualites/fictif');
+    for (const lien of [
+      'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT12',
+      'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000000001/x',
+      'https://echanges.dila.gouv.fr/OPENDATA/JORF/',
+      'https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000000001',
+    ])
+      await expect(inserer('legifrance', null, lien), lien).rejects.toThrow();
+    await expect(
+      inserer('legifrance', 'R', 'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000000001'),
+    ).rejects.toThrow();
+    await inserer('legifrance', null, 'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000000001');
+    expect(await n('veille_reglementaire_publications')).toBe(2);
+    await t.svc.db.q(
+      'INSERT INTO veille_reglementaire_sources (source, activee, mots_cles) VALUES (\'legifrance\', true, \'[{"mot": "fictif", "domaine": "securite"}]\'), (\'cert-sante-actualites\', true, NULL)',
+    );
+    await expect(
+      t.svc.db.q(
+        'INSERT INTO veille_reglementaire_sources (source, mots_cles) VALUES (\'anssi\', \'[{"mot": "fictif", "domaine": "securite"}]\')',
+      ),
+    ).rejects.toThrow();
+    for (const source of ['cert-sante-actualites', 'legifrance'])
+      await t.svc.db.q(
+        "INSERT INTO veille_reglementaire_collectes (source, origine, demande_par) VALUES ($1, 'manuel', 'test')",
+        [source],
+      );
+    expect(await n('veille_reglementaire_collectes')).toBe(2);
   });
 });
 
@@ -272,7 +321,9 @@ describe('veille réglementaire : collecte', () => {
     const cnil = etat.sources.find((s: { source: string }) => s.source === 'cnil');
     expect(cnil.derniereReussite).not.toBeNull();
     expect(cnil.derniereCollecte.etat).toBe('recu');
-    expect(etat.sources.find((s: { source: string }) => s.source === 'legifrance').collecteur).toBe(false);
+    // Lot VR-2 : le Journal officiel a son collecteur ; l'ANS reste sans collecteur.
+    expect(etat.sources.find((s: { source: string }) => s.source === 'legifrance').collecteur).toBe(true);
+    expect(etat.sources.find((s: { source: string }) => s.source === 'ans').collecteur).toBe(false);
   });
 
   it('élément refusé : résumé pour l’ANSSI, lien hors hôte ou hors https, texte non nettoyé ; tout le lot', async () => {
@@ -319,7 +370,7 @@ describe('veille réglementaire : collecte', () => {
     expect(await n('vulnerabilites_veille_collectes')).toBe(0);
   }, 60_000);
 
-  it('réglage d’une source : administrer, If-Match, liste fermée, Légifrance sans collecteur, journal', async () => {
+  it('réglage d’une source : administrer, If-Match, liste fermée, ANS sans collecteur, journal', async () => {
     const lire = async () =>
       (await admin.get(base + '/sources')).json().sources.find((s: { source: string }) => s.source === 'cepd') as {
         version: number;
@@ -331,9 +382,14 @@ describe('veille réglementaire : collecte', () => {
     expect(
       (await admin.patch(base + '/sources/cepd', { frequenceHeures: 2 }, { 'if-match': `"${v}"` })).statusCode,
     ).toBe(422);
-    expect((await admin.patch(base + '/sources/legifrance', { activee: true }, { 'if-match': '"1"' })).statusCode).toBe(
-      422,
-    );
+    // Lot VR-2 : le Journal officiel et les actualités du CERT Santé s'activent (désactivés au départ).
+    const depart = (await admin.get(base + '/sources')).json().sources as { source: string; activee: boolean }[];
+    for (const s of ['legifrance', 'cert-sante-actualites']) {
+      expect(depart.find((x) => x.source === s)!.activee, s).toBe(false);
+      const r = await admin.patch(base + `/sources/${s}`, { activee: true }, { 'if-match': '"1"' });
+      expect(r.statusCode, s).toBe(200);
+      expect(r.json()).toMatchObject({ source: s, activee: true, collecteur: true, version: 2 });
+    }
     // ANS : aucun flux public connu, ni activation ni collecte (code et base).
     expect((await admin.patch(base + '/sources/ans', { activee: true }, { 'if-match': '"1"' })).statusCode).toBe(422);
     await expect(
@@ -471,6 +527,132 @@ describe('veille réglementaire : filtre d’EUR-Lex par mots-clés', () => {
     expect((await veille().reclamer(true))!.parametres).toEqual({ motsCles: liste });
     const remise = await rssi.put(url, { motsCles: null }, { 'if-match': `"${avant.version + 1}"` });
     expect(remise.json().motsCles.parDefaut).toBe(true);
+  });
+});
+
+describe('veille réglementaire : actualités du CERT Santé et Journal officiel (lot VR-2)', () => {
+  it('CERT Santé : titre, date et lien seulement ; domaine sécurité ; résumé ou lien hors hôte refusés', async () => {
+    await ouvrir();
+    await collecte('cert-sante-actualites', [pub(1, 'cert-sante-actualites')]);
+    const l = await t.svc.db.one<{ domaine: string; resume: string | null; lien: string }>(
+      "SELECT domaine, resume, lien FROM veille_reglementaire_publications WHERE source = 'cert-sante-actualites'",
+    );
+    expect(l).toEqual({ domaine: 'securite', resume: null, lien: 'https://cyberveille.esante.gouv.fr/fictif/1' });
+    for (const mauvais of [
+      pub(2, 'cert-sante-actualites', { resume: 'Interdit.' }),
+      pub(2, 'cert-sante-actualites', { lien: 'https://esante.gouv.fr/actualites/x' }),
+      pub(2, 'cert-sante-actualites', { lien: 'https://cert.cyber.gouv.fr/x' }),
+    ]) {
+      await t.svc.db.q(
+        "INSERT INTO veille_reglementaire_collectes (source, origine, demande_par) VALUES ('cert-sante-actualites', 'manuel', 'test')",
+      );
+      const job = (await veille().reclamer(true))!;
+      expect(job.parametres).toEqual({});
+      await expect(veille().lot(job.id as string, { elements: [mauvais] })).rejects.toMatchObject({ status: 422 });
+      await veille().terminer(job.id as string, { ok: false, bilan: null, erreur: 'Lot refusé.' });
+    }
+    expect(await n('veille_reglementaire_publications')).toBe(1);
+  });
+
+  it('Journal officiel : sa liste de mots-clés et la date de départ partent avec la collecte ; domaine déduit, lien de forme exacte', async () => {
+    await ouvrir();
+    await t.svc.db.q(
+      "INSERT INTO veille_reglementaire_collectes (source, origine, demande_par) VALUES ('legifrance', 'manuel', 'test')",
+    );
+    // Jamais collecté : aucune date de départ (le script lit sept jours).
+    const job = (await veille().reclamer(true))!;
+    expect(job.parametres).toEqual({ motsCles: [...MOTS_CLES_JO_DEFAUT] });
+    const elements = [
+      pub(1, 'legifrance', { titre: 'Décret relatif à la cybersécurité (fictif)' }),
+      pub(2, 'legifrance', { titre: 'Décret portant traitement de données à caractère personnel (fictif)' }),
+      pub(3, 'legifrance', { titre: 'Arrêté portant nomination (fictif)' }),
+      // Mot de la liste d'EUR-Lex absent de celle du JO : non rangé.
+      pub(4, 'legifrance', { titre: 'Regulation on personal data (fictif)' }),
+    ];
+    expect(await veille().lot(job.id as string, { elements })).toEqual({ elements: 4, lots: 1 });
+    await veille().terminer(job.id as string, bilan(4));
+    const rangees = (
+      await t.svc.db.q<{ identifiant: string; domaine: string; lien: string }>(
+        "SELECT identifiant, domaine, lien FROM veille_reglementaire_publications WHERE source = 'legifrance' ORDER BY identifiant",
+      )
+    ).rows;
+    expect(rangees).toEqual([
+      {
+        identifiant: 'fictif-legifrance-1',
+        domaine: 'securite',
+        lien: 'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000000001',
+      },
+      {
+        identifiant: 'fictif-legifrance-2',
+        domaine: 'donnees-personnelles',
+        lien: 'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000000000002',
+      },
+    ]);
+    // Après une réussite : la veille de la dernière collecte réussie.
+    await t.svc.db.q(
+      "UPDATE veille_reglementaire_sources SET derniere_reussite = '2026-11-20T08:00:00Z' WHERE source = 'legifrance'",
+    );
+    await t.svc.db.q(
+      "INSERT INTO veille_reglementaire_collectes (source, origine, demande_par) VALUES ('legifrance', 'manuel', 'test')",
+    );
+    const suivante = (await veille().reclamer(true))!;
+    expect(suivante.parametres).toEqual({ motsCles: [...MOTS_CLES_JO_DEFAUT], depuis: '2026-11-19' });
+    // Lien d'une autre forme, résumé : tout le lot est refusé.
+    for (const mauvais of [
+      pub(5, 'legifrance', { titre: 'Cybersécurité', lien: 'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT5' }),
+      pub(5, 'legifrance', { titre: 'Cybersécurité', lien: 'https://echanges.dila.gouv.fr/OPENDATA/JORF/' }),
+      pub(5, 'legifrance', { titre: 'Cybersécurité', resume: 'Texte intégral : interdit.' }),
+    ])
+      await expect(veille().lot(suivante.id as string, { elements: [mauvais] })).rejects.toMatchObject({
+        status: 422,
+      });
+    expect(await n('veille_reglementaire_publications', "source = 'legifrance'")).toBe(2);
+  });
+
+  it('mots-clés du Journal officiel : réglés à part de ceux d’EUR-Lex, administrer, If-Match, journal', async () => {
+    const etat = async (source: string) =>
+      (await admin.get(base + '/sources')).json().sources.find((x: { source: string }) => x.source === source) as {
+        version: number;
+        motsCles: { liste: unknown[]; parDefaut: boolean } | null;
+      };
+    expect((await etat('legifrance')).motsCles).toEqual({ liste: [...MOTS_CLES_JO_DEFAUT], parDefaut: true });
+    expect((await etat('cert-sante-actualites')).motsCles).toBeNull();
+    const liste = [{ mot: 'hébergement de données de santé', domaine: 'donnees-personnelles' }];
+    const url = base + '/sources/legifrance/mots-cles';
+    expect((await dpo.put(url, { motsCles: liste }, { 'if-match': '"1"' })).statusCode).toBe(403);
+    expect((await rssi.put(url, { motsCles: liste })).statusCode).toBe(428);
+    expect(
+      (await rssi.put(base + '/sources/cert-sante-actualites/mots-cles', { motsCles: liste }, { 'if-match': '"1"' }))
+        .statusCode,
+    ).toBe(422);
+    const ok = await rssi.put(url, { motsCles: liste }, { 'if-match': '"1"' });
+    expect(ok.statusCode, ok.body).toBe(200);
+    expect(ok.json().motsCles).toEqual({ liste, parDefaut: false });
+    // La liste d'EUR-Lex n'a pas bougé.
+    expect((await etat('eur-lex')).motsCles).toEqual({ liste: [...MOTS_CLES_EURLEX_DEFAUT], parDefaut: true });
+    expect((await audits('veille_reglementaire.mots_cles.regles')).at(-1)!.details).toMatchObject({
+      source: 'legifrance',
+      avant: { parDefaut: true },
+      apres: { parDefaut: false, motsCles: liste },
+    });
+    await ouvrir();
+    await t.svc.db.q(
+      "INSERT INTO veille_reglementaire_collectes (source, origine, demande_par) VALUES ('legifrance', 'manuel', 'test')",
+    );
+    expect((await veille().reclamer(true))!.parametres).toEqual({ motsCles: liste });
+  });
+
+  it('planification et « Collecter maintenant » : les deux sources activées sont inscrites comme les autres', async () => {
+    await ouvrir();
+    await t.svc.db.q(
+      "INSERT INTO veille_reglementaire_sources (source, activee) VALUES ('cert-sante-actualites', true), ('legifrance', true)",
+    );
+    expect((await veille().planifier(new Date())).length).toBe(2);
+    expect(
+      (
+        await t.svc.db.q<{ source: string }>('SELECT source FROM veille_reglementaire_collectes ORDER BY source')
+      ).rows.map((r) => r.source),
+    ).toEqual(['cert-sante-actualites', 'legifrance']);
   });
 });
 

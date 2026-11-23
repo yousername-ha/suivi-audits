@@ -295,12 +295,17 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
       'Aucune requête ne part vers AlgoLightHouse : une demande en file est close sans appel ; la configuration, la clé et les données déjà lues sont conservées.',
   },
   {
-    // Veille réglementaire (ADR 0110, lot VR-1) : flux publics de la CNIL, du CEPD, d'EUR-Lex et de l'ANSSI, lus
-    // par le même script isolé que la veille des vulnérabilités. Les hôtes viennent de la liste fermée du module
-    // (veille-reglementaire.ts), recopiée dans le script de l'exécutant.
+    // Veille réglementaire (ADR 0110, lots VR-1 et VR-2) : flux publics de la CNIL, du CEPD, d'EUR-Lex, de l'ANSSI et du
+    // CERT Santé, fichier quotidien du Journal officiel (données ouvertes de la DILA), lus par le même script isolé que la
+    // veille des vulnérabilités. Les hôtes viennent de la liste fermée du module (veille-reglementaire.ts), recopiée dans
+    // le script de l'exécutant ; l'hôte des liens vers Légifrance n'est jamais joint par la plateforme.
+    // Hôtes nouveaux du lot VR-2, autorisés par la décision du RSSI du 22/11/2026 (« CERT Santé – actualités, Journal
+    // officiel, données ouvertes » ; ADR 0110, addendum « lot VR-2 », tableau « Hôtes nouveaux autorisés par le RSSI ») :
+    // cyberveille.esante.gouv.fr (déjà sous « veille-vulnerabilites », inscrit aussi ici) et echanges.dila.gouv.fr. API
+    // Légifrance (PISTE) : lot à part, plus tard (décision du RSSI du 23/11/2026), aucun de ses hôtes n'est inscrit.
     id: 'veille-reglementaire',
     libelle: 'Veille réglementaire',
-    role: 'Lire les flux publics de publications réglementaires (CNIL, CEPD, EUR-Lex, ANSSI) pour le module Veille réglementaire.',
+    role: 'Lire les flux publics de publications réglementaires (CNIL, CEPD, EUR-Lex, ANSSI, CERT Santé) et le fichier quotidien du Journal officiel (données ouvertes de la DILA) pour le module Veille réglementaire.',
     destinations: SOURCES_REGLEMENTAIRES_JOINTES.map((s) => ({
       sens: 'sortant' as const,
       hote: `${s.hote} (${s.organisme})`,
@@ -312,7 +317,7 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
       libelle: 'Exécutant d’exploitation du serveur (service « updater »), par un script isolé sans privilège',
     },
     donnees:
-      'L’adresse IP du serveur, ou celle du mandataire de l’établissement s’il est actif, et la demande de lecture du flux RSS de chaque source activée. Aucune donnée métier : ni qualification, ni contenu de la plateforme.',
+      'L’adresse IP du serveur, ou celle du mandataire de l’établissement s’il est actif, et la demande de lecture du flux RSS de chaque source activée (pour le Journal officiel : la liste des archives quotidiennes, puis les archives récentes). Aucune donnée métier : ni qualification, ni contenu de la plateforme.',
     reglage: { libelle: 'Conformité et audits > Veille réglementaire', lien: '/veille-reglementaire' },
     activation: { par: 'flux', geste: 'Bouton « Activer la veille réglementaire »' },
     moduleActivation: 'veille_reglementaire',

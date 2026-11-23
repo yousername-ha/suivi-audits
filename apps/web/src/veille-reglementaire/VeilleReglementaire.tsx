@@ -1,9 +1,11 @@
 import { BarreFiltres } from '../components/BarreFiltres';
-/* Veille réglementaire (ADR 0110, lot VR-1) : publications de la CNIL, du CEPD, d'EUR-Lex et de l'ANSSI, filtrées
+/* Veille réglementaire (ADR 0110, lots VR-1 et VR-2) : publications de la CNIL, du CEPD, d'EUR-Lex, de l'ANSSI, du CERT
+   Santé et du Journal officiel, filtrées
    par statut, domaine et source, avec recherche ; qualification en un clic (« Sans objet », « À suivre », « Impactant ») pour
    qui tient le rôle du domaine (RSSI pour la sécurité, DPO pour les données personnelles) ; état des sources (activation,
    fréquence, dernière collecte réussie, erreur) et activation du flux, sur le modèle de l'écran Veille des vulnérabilités ;
-   mots-clés du filtre d'EUR-Lex (lecture pour tous, saisie pour qui administre).
+   mots-clés des filtres d'EUR-Lex et du Journal officiel, une carte par source (lecture pour tous, saisie pour qui
+   administre).
    Charte de packages/ui, CSP stricte (ADR 0006) : aucun style en ligne, `lockScroll={false}`, aucune prop Mantine de style
    responsive. Les textes des sources s'affichent tels quels, comme texte simple (rendu échappé par React) ; un lien s'ouvre
    dans un nouvel onglet sans transmettre de référent. Les boutons suivent les droits pour l'affichage seulement : le serveur
@@ -28,6 +30,7 @@ import { notifications } from '@mantine/notifications';
 import {
   DOMAINES_REGLEMENTAIRES,
   type DroitsVeilleReglementaireDto,
+  estSourceFiltree,
   type EtatSourceReglementaireDto,
   type EtatVeilleReglementaireDto,
   type MotCleEurLex,
@@ -59,6 +62,7 @@ import { deuxChiffres } from '../vulnerabilites/vue-ensemble';
 import {
   AUTORITES_REGLEMENTAIRES,
   etatSourceReglementaire,
+  FILTRES_MOTS_CLES,
   FILTRES_VIDES,
   type FiltresPublications,
   libelleSource,
@@ -359,7 +363,8 @@ export function SourcesReglementaires({
   );
 }
 
-/** Mots-clés du filtre d'EUR-Lex : liste par domaine ; saisie (un mot par ligne) pour qui administre. */
+/** Mots-clés du filtre d'une source (EUR-Lex, Journal officiel) : liste par domaine ; saisie (un mot par ligne) pour qui
+    administre. Une région nommée par carte : les champs de saisie de deux cartes se distinguent par elle. */
 export function MotsClesEurLex({
   source,
   peutRegler = false,
@@ -377,16 +382,15 @@ export function MotsClesEurLex({
     'donnees-personnelles': lignesMotsCles(liste, 'donnees-personnelles'),
   }));
   const reglable = peutRegler && !!onEnregistrer;
+  const filtre = FILTRES_MOTS_CLES[estSourceFiltree(source.source) ? source.source : 'eur-lex'];
   return (
-    <Stack gap="xs">
+    <Stack gap="xs" component="section" aria-label={filtre.titre}>
       <Title order={2} size="h4">
-        Filtre d’EUR-Lex
+        {filtre.titre}
       </Title>
       <Text size="sm" className="lecture">
-        Le flux d’EUR-Lex publie tous les actes du Journal officiel : seuls ceux dont le titre contient l’un de ces mots
-        sont gardés (sans tenir compte des majuscules ni des accents, mot entier). Le domaine de l’acte est celui du mot
-        trouvé ; si des mots des deux domaines sont trouvés, l’acte va aux données personnelles.{' '}
-        {source.motsCles?.parDefaut ? 'Liste par défaut.' : 'Liste réglée.'}
+        {filtre.texte} Le domaine de l’acte est celui du mot trouvé ; si des mots des deux domaines sont trouvés, l’acte
+        va aux données personnelles. {source.motsCles?.parDefaut ? 'Liste par défaut.' : 'Liste réglée.'}
       </Text>
       {reglable ? (
         <>
@@ -643,7 +647,9 @@ export function VeilleReglementairePage() {
       });
       notifications.show({
         color: 'teal',
-        message: motsCles ? 'Mots-clés d’EUR-Lex enregistrés.' : 'Liste de mots-clés par défaut rétablie.',
+        message: motsCles
+          ? `Mots-clés ${estSourceFiltree(s.source) ? FILTRES_MOTS_CLES[s.source].nom : ''} enregistrés.`
+          : 'Liste de mots-clés par défaut rétablie.',
       });
     } catch (e) {
       notifications.show({ color: 'red', message: errorMessage(e) });
@@ -667,7 +673,7 @@ export function VeilleReglementairePage() {
       </p>
       <PageHeader
         title="Veille réglementaire"
-        description="Publications de la CNIL, du CEPD, d’EUR-Lex (actes filtrés par mots-clés) et de l’ANSSI, lues par l’exécutant d’exploitation du serveur à la fréquence choisie pour chaque source. Chaque publication arrive « à qualifier » : le rôle RSSI qualifie la sécurité, le droit DPO les données personnelles. Les textes des sources sont repris tels quels ; pour l’ANSSI, seuls le titre, la date et le lien sont gardés."
+        description="Publications de la CNIL, du CEPD, d’EUR-Lex et du Journal officiel (actes filtrés par mots-clés), de l’ANSSI et du CERT Santé, lues par l’exécutant d’exploitation du serveur à la fréquence choisie pour chaque source. Chaque publication arrive « à qualifier » : le rôle RSSI qualifie la sécurité, le droit DPO les données personnelles. Les textes des sources sont repris tels quels ; pour l’ANSSI, le CERT Santé et le Journal officiel, seuls le titre, la date et le lien sont gardés."
         actions={
           administrer &&
           etat.data?.flux.ouvert && (
@@ -765,19 +771,18 @@ export function VeilleReglementairePage() {
               enCours={reglage}
               onRegler={(s, r) => void regler(s, r)}
             />
-            {(() => {
-              const eurlex = etat.data.sources.find((x) => x.source === 'eur-lex');
-              return eurlex?.motsCles ? (
+            {etat.data.sources
+              .filter((x) => x.motsCles)
+              .map((filtree) => (
                 <MotsClesEurLex
                   // Clé : la saisie repart de la liste enregistrée après chaque réglage.
-                  key={`${eurlex.version}`}
-                  source={eurlex}
+                  key={`${filtree.source}-${filtree.version}`}
+                  source={filtree}
                   peutRegler={administrer}
                   enCours={motsClesEnCours}
-                  onEnregistrer={(m) => void reglerMotsCles(eurlex, m)}
+                  onEnregistrer={(m) => void reglerMotsCles(filtree, m)}
                 />
-              ) : null;
-            })()}
+              ))}
           </>
         )}
       </Stack>

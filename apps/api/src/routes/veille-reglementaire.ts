@@ -3,7 +3,7 @@
    publications, état des sources, droits de la personne) avec `lire` OU le droit réservé `veille_reglementaire:dpo`, qui
    ouvre le module à lui seul (liste de permissions de route(), l'une suffit) ; qualification avec l'un des deux et, selon le
    domaine de la publication, le rôle RSSI (sécurité) ou le droit « DPO » (données personnelles) ; 403 sinon,
-   administrateur compris ; If-Match sur la version ; réglage d'une source (activation, fréquence ; If-Match), mots-clés du filtre d'EUR-Lex (If-Match) et
+   administrateur compris ; If-Match sur la version ; réglage d'une source (activation, fréquence ; If-Match), mots-clés des filtres d'EUR-Lex et du Journal officiel (If-Match) et
    « Collecter maintenant » avec `administrer`.
    Le flux s'ouvre par la route commune des flux (« Activer la veille réglementaire », administrateur, validation
    explicite). */
@@ -122,7 +122,7 @@ export const veilleReglementaireRoutes = [
     method: 'PUT',
     url: `${base}/sources/:source/mots-cles`,
     summary:
-      'Veille réglementaire : régler les mots-clés du filtre d’EUR-Lex (1 à 60 mots de 2 à 60 caractères, chacun avec son domaine ; null : liste par défaut) ; If-Match : version de la source ; 422 pour une autre source',
+      'Veille réglementaire : régler les mots-clés du filtre d’EUR-Lex ou du Journal officiel (legifrance), chacun sa liste (1 à 60 mots de 2 à 60 caractères, chacun avec son domaine ; null : liste par défaut de la source) ; If-Match : version de la source ; 422 pour une autre source',
     tags,
     access: 'veille_reglementaire:administrer',
     params: z.object({ source: SourceReglementaire }),
