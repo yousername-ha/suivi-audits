@@ -4,6 +4,7 @@
    (perimetres-vulnerabilites.ts). */
 import {
   type CartePerimetreDto,
+  FILTRE_SANS_GROUPE,
   type ExpositionTuileDto,
   type FaillesParGravite,
   type IdPerimetreVue,
@@ -55,16 +56,21 @@ export function adresseListeMachines(id: string | null, zone?: ZoneParc): string
   return `/vulnerabilites/machines?${p.toString()}`;
 }
 
-/** Filtres initiaux de l'écran « Machines » lus dans son adresse (lien depuis l'onglet « Périmètres ») ; valeurs
-    inconnues ignorées. */
+const UUID_GROUPE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Filtres initiaux de l'écran « Machines » lus dans son adresse (lien depuis l'onglet « Périmètres » ; lot GRP-MACHINES :
+    `?groupe=<uuid>` ou `?groupe=aucun`, lien « Voir le parc » de la fiche d'un fournisseur) ; valeurs inconnues ignorées. */
 export function filtresDepuisAdresse(p: URLSearchParams): {
   role: (typeof ROLES_MACHINE)[number] | 'aucun' | '';
   perimetre: string;
+  groupe: string;
 } {
   const role = p.get('role') ?? '';
+  const groupe = p.get('groupe')?.trim() ?? '';
   return {
     role: role === 'aucun' || (ROLES_MACHINE as readonly string[]).includes(role) ? (role as 'aucun') : '',
     perimetre: p.get('perimetre')?.trim() ?? '',
+    groupe: groupe === FILTRE_SANS_GROUPE || UUID_GROUPE.test(groupe) ? groupe.toLowerCase() : '',
   };
 }
 
