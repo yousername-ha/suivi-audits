@@ -395,6 +395,8 @@ export const RechercheMachines = z
         ne répond à aucun filtre actif. */
     acr: FiltreAcr.optional(),
     aes: FiltreAes.optional(),
+    /** Lot GRP-MACHINES : machines d'un groupe, ou `aucun` (machines lues qui ne sont dans aucun groupe). */
+    groupe: z.union([z.uuid(), z.literal('aucun')]).optional(),
     page,
   })
   .strict();

@@ -24,6 +24,8 @@ import { FiltreAcr, FiltreAes } from './scores-tenable.js';
 /** Présentation de l'écran « Machines » : la liste existante ou le parc en tuiles. */
 export const VUES_MACHINES = ['liste', 'parc'] as const;
 export type VueMachines = (typeof VUES_MACHINES)[number];
+/** Présentation sans préférence mémorisée (lot GRP-MACHINES, décision du RSSI du 23/11/2026) : le parc. */
+export const VUE_MACHINES_DEFAUT: VueMachines = 'parc';
 /** Échelle du parc : réduit (les plus prioritaires de chaque zone) ou grand écran (tout le parc reçu, tuiles denses). */
 export const ECHELLES_PARC = ['reduit', 'grand'] as const;
 export type EchelleParc = (typeof ECHELLES_PARC)[number];
@@ -104,6 +106,8 @@ export const RechercheParc = z
     /** Lot TEN-SCORES : catégorie minimale de criticité (ACR) et d'exposition (AES) selon Tenable, comme la liste. */
     acr: FiltreAcr.optional(),
     aes: FiltreAes.optional(),
+    /** Lot GRP-MACHINES : machines d'un groupe, ou `aucun` (sans groupe), comme la liste. */
+    groupe: z.union([z.uuid(), z.literal('aucun')]).optional(),
   })
   .strict();
 export type RechercheParc = z.infer<typeof RechercheParc>;

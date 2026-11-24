@@ -161,5 +161,11 @@ export async function controleRelations(svc: Services): Promise<ControleRelation
     if (!fournisseurs.has(e.supplier_id))
       risques.anomalie(`évaluation ${e.id} : fournisseur ${e.supplier_id} absent du registre (évaluation conservée)`);
   }
+  // Matrice RACI (ADR 0113) : ignorée tant que son fournisseur manque au registre, effacée si l'identifiant est réattribué.
+  for (const m of await k.selectFrom('fournisseurs_raci').select('fournisseur_id').execute()) {
+    risques.verifie();
+    if (!fournisseurs.has(m.fournisseur_id))
+      risques.anomalie(`matrice RACI : fournisseur absent du registre ${m.fournisseur_id}`);
+  }
   return { ok: controles.every((c) => c.anomalies.length === 0), controles };
 }

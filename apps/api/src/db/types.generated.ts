@@ -434,6 +434,16 @@ export interface Fonctions {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface FournisseursRaci {
+  fournisseur_id: string;
+  activites: ColumnType<JsonValue, string, string>;
+  acteurs: ColumnType<JsonValue, string, string>;
+  cases: ColumnType<JsonValue, string, string>;
+  version: Generated<number>;
+  mise_a_jour_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  mise_a_jour_par: string;
+}
+
 export interface GrcFrameworkCopyVersions {
   smsi_id: string;
   framework_id: string;
@@ -2057,6 +2067,25 @@ export interface VulnerabilitesDetections {
   vu_le: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface VulnerabilitesGroupeMachines {
+  groupe_id: string;
+  machine_id: string;
+  ajoute_par: string;
+  ajoute_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface VulnerabilitesGroupes {
+  id: Generated<string>;
+  nom: string;
+  description: Generated<string>;
+  fournisseur_ref: string | null;
+  version: Generated<number>;
+  created_by: string;
+  created_at: ColumnType<Date, Date | string | undefined, Date | string>;
+  updated_by: string;
+  updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
 export interface VulnerabilitesImports {
   execution_id: string;
   integration_id: string;
@@ -2614,6 +2643,7 @@ export interface DB {
   flux_externes: FluxExternes;
   fonction_membres: FonctionMembres;
   fonctions: Fonctions;
+  fournisseurs_raci: FournisseursRaci;
   grc_framework_copy_versions: GrcFrameworkCopyVersions;
   grc_framework_versions: GrcFrameworkVersions;
   grc_links: GrcLinks;
@@ -2735,6 +2765,8 @@ export interface DB {
   vulnerabilites_cve_tenable: VulnerabilitesCveTenable;
   vulnerabilites_depassements: VulnerabilitesDepassements;
   vulnerabilites_detections: VulnerabilitesDetections;
+  vulnerabilites_groupe_machines: VulnerabilitesGroupeMachines;
+  vulnerabilites_groupes: VulnerabilitesGroupes;
   vulnerabilites_imports: VulnerabilitesImports;
   vulnerabilites_instantanes: VulnerabilitesInstantanes;
   vulnerabilites_instantanes_mesures: VulnerabilitesInstantanesMesures;
