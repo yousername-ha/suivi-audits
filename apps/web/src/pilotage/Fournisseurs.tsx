@@ -27,6 +27,7 @@ import { api, get, post } from '../api';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { FournisseursStudio, PuceFournisseur } from './FournisseursStudio';
+import { GroupesDuFournisseurSection } from './GroupesDuFournisseur';
 import { MatriceRaciFournisseur } from './MatriceRaci';
 import {
   filtrerFournisseurs,
@@ -524,12 +525,11 @@ function FicheFournisseur({
           </Group>
         </Stack>
       </Tabs.Panel>
-      {/* Onglet de la maquette validée par le RSSI (23/11/2026) : les groupes de machines maintenus par le fournisseur
-          viendront au-dessus de la matrice RACI (section réservée, remplie par la session Vulnérabilités avec sa
-          migration 105 ; aucune route appelée ici). */}
+      {/* Onglet de la maquette validée par le RSSI (23/11/2026) : groupes de machines maintenus par le fournisseur (lot
+          GRP-MACHINES, migration 105), puis matrice RACI (ADR 0113). */}
       <Tabs.Panel value="responsabilites" pt="md">
         <Stack>
-          {/* Section « Groupes de machines maintenus » : emplacement réservé, non rempli. */}
+          <GroupesDuFournisseurSection fournisseurId={fournisseur.id} />
           <MatriceRaciFournisseur fournisseurId={fournisseur.id} nomFournisseur={fournisseur.name} />
         </Stack>
       </Tabs.Panel>

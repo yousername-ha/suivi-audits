@@ -2,7 +2,7 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
-## [Non publié]
+## [7.7.0] — 2026-11-24
 
 ### Notes de mise à jour
 
@@ -40,6 +40,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 - Fournisseurs, **adresse directe de la fiche** : `/pilotage/fournisseurs?fiche=<identifiant>` ouvre la fiche du fournisseur,
   `&onglet=machines` l'onglet « Machines et responsabilités » (lien « maintenu par » des groupes de machines) (session
   « Projet audit_suivi Coeur »).
+- Fournisseurs, fiche, onglet « Machines et responsabilités » : section **« Groupes de machines maintenus »** au-dessus de
+  la matrice RACI (maquette validée par le RSSI le 23/11/2026) : groupes rattachés au fournisseur, machines lues, mention des
+  machines hors de la lecture, failles critiques ouvertes de ces seules machines, lien « Voir le parc » filtré sur le groupe ;
+  affichée avec les droits de lire le module Vulnérabilités et les fournisseurs (session « Projet audit_suivi Coeur »).
 
 ### Modifié
 
