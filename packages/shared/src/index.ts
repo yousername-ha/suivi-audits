@@ -88,6 +88,7 @@ export * from './masque-vulnerabilites.js';
 export * from './alertes-vulnerabilites.js';
 export * from './vue-ensemble-vulnerabilites.js';
 export * from './parc-machines.js';
+export * from './groupes-machines.js';
 export * from './perimetres-vulnerabilites.js';
 export * from './fiche-faille-vulnerabilites.js';
 export * from './tendances-vulnerabilites.js';

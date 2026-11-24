@@ -13,11 +13,12 @@
    nettoie derrière elle. Elle garde son préfixe (passe en DERNIER) : la suppression clôt l'alerte critique ouverte par
    l'import, mais l'alerte close et les notifications envoyées aux comptes restent (historique), et les parcours
    précédents vérifient des listes d'alertes vides sur une pile vierge. Ses assertions ne visent que l'instance qu'il crée
-   (nom unique), ce qui le rend rejouable. */
+   (nom unique), ce qui le rend rejouable. Lot GRP-MACHINES : l'écran « Machines » s'ouvre désormais sur le « Parc » ; ce
+   parcours, qui lit les lignes de la liste, mémorise « Liste » pour le compte au départ et rend ses préférences à la fin. */
 import path from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { attendreFenetresStables, ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
+import { attendreFenetresStables, csrfOf, ouvrirFiltres, sessionAdmin, watchPage } from '../helpers';
 
 const FIXTURES = path.resolve(import.meta.dirname, '../../fixtures/nessus');
 const SCAN1 = path.join(FIXTURES, 'scan-fictif-1.nessus');
@@ -111,7 +112,20 @@ for (const [mode, scheme, largeur] of [
     const nom = `Nessus fictif ${mode} ${Date.now().toString(36)}`;
     const source = `Source : ${nom} (Nessus, import de fichier)`;
     let supprimee = false;
+    // Lot GRP-MACHINES : présentation « Liste » mémorisée le temps du parcours (préférences d'origine rendues à la fin).
+    const preferences = await (await page.request.get('/api/account/preferences')).json();
     try {
+      expect(
+        (
+          await page.request.put('/api/account/preferences', {
+            data: {
+              ...preferences,
+              vulnerabilitesMachines: { ...(preferences.vulnerabilitesMachines ?? {}), vue: 'liste' },
+            },
+            headers: { 'x-csrf-token': await csrfOf(page.request) },
+          })
+        ).status(),
+      ).toBe(200);
       await page.goto('/plateforme/integrations');
       const carte = page.getByRole('dialog', { name: 'Intégrations', exact: true });
       await expect(carte).toBeVisible();
@@ -277,6 +291,10 @@ for (const [mode, scheme, largeur] of [
         } catch {
           // Le ménage ne masque pas l'échec d'origine.
         }
+      await page.request.put('/api/account/preferences', {
+        data: preferences,
+        headers: { 'x-csrf-token': await csrfOf(page.request) },
+      });
       await ctx.close();
     }
   });

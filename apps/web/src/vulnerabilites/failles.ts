@@ -160,6 +160,8 @@ export interface FiltresMachines {
   /** Lot TEN-SCORES : catégorie minimale de criticité (ACR) et d'exposition (AES) selon Tenable (facultatif ; vide : tous). */
   acr?: FiltreAcr | '';
   aes?: FiltreAes | '';
+  /** Lot GRP-MACHINES : un groupe, ou `aucun` (sans groupe) ; vide : tous les groupes. */
+  groupe?: string;
 }
 export const FILTRES_MACHINES_VIDES: FiltresMachines = { q: '', role: '', perimetre: '' };
 
@@ -172,10 +174,11 @@ export function parametresMachines(f: FiltresMachines): URLSearchParams {
   if (f.finSupport) p.set('finSupport', 'oui');
   if (f.acr) p.set('acr', f.acr);
   if (f.aes) p.set('aes', f.aes);
+  if (f.groupe) p.set('groupe', f.groupe);
   return p;
 }
 
-/** Adresse de la liste des machines (recherche par nom, rôle, périmètre, fin de support, ACR, AES, page). */
+/** Adresse de la liste des machines (recherche par nom, rôle, périmètre, fin de support, ACR, AES, groupe, page). */
 export function urlMachines(f: FiltresMachines, page = 1): string {
   const p = parametresMachines(f);
   if (page > 1) p.set('page', String(page));

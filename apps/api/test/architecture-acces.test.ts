@@ -1,7 +1,7 @@
 /* Garde-fou d'architecture (ADR 0083, chantier 4) : une donnée d'un module ne sort vers un autre qu'à travers la porte de
    lecture. Le test analyse le source de l'API et échoue si un fichier interroge directement les tables GRC partagées
-   (objets, liens, registres, périmètres de registre) ou relit l'état historique brut (`recompose()`) sans figurer dans la
-   liste blanche ci-dessous. Chaque entrée porte sa justification ; ajouter une entrée se discute en revue. Une entrée qui ne
+   (objets, liens, registres, périmètres de registre), relit l'état historique brut (`recompose()`) ou lit une clé de cet
+   état par son mappeur (`.mapper(`) sans figurer dans la liste blanche ci-dessous. Chaque entrée porte sa justification ; ajouter une entrée se discute en revue. Une entrée qui ne
    correspond plus à aucun accès est refusée (la liste ne peut que se réduire). */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -44,6 +44,11 @@ const LISTE_BLANCHE: Record<string, Entree> = {
     raison: 'Garde de purge d’un document : doit voir toutes les citations, quel que soit le lecteur.',
   },
   'jeu-de-test.ts': { categorie: 'systeme', raison: 'Jeu de données de démonstration chargé par un administrateur.' },
+  'vulnerabilites/groupes.ts': {
+    categorie: 'agregat',
+    raison:
+      'Groupes de machines (lot GRP-MACHINES, ADR 0100) : lit le seul registre des fournisseurs par son mappeur, une fois par requête, pour l’identifiant et le nom du fournisseur rattaché. Les fournisseurs appartiennent à l’organisation, pas à un périmètre (ADR 0032) : même raisonnement que GET /api/suppliers, qui ne cloisonne pas ; servi à qui n’a pas `fournisseurs:lire`, rien d’autre que ce nom ne sort (décision de la session Coeur du 23/11/2026).',
+  },
   'jeu-externe.ts': {
     categorie: 'systeme',
     raison:
@@ -164,6 +169,7 @@ const KYSELY = new RegExp(
 );
 const SQL_TEXTE = new RegExp(`\\b(?:FROM|JOIN|INTO|UPDATE)\\s+(?:public\\.)?(${TABLES})\\b`, 'gi');
 const RECOMPOSE = /\brecompose\(/;
+const MAPPEUR = /\.mapper\(/;
 
 /** Retire les commentaires pour ne pas compter les mentions dans la documentation. */
 const sansCommentaires = (t: string) => t.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`])\/\/[^\n]*/g, '$1');
@@ -182,6 +188,7 @@ function accesDirects() {
     for (const m of t.matchAll(KYSELY)) tables.add(m[1]!);
     for (const m of t.matchAll(SQL_TEXTE)) tables.add(m[1]!.toLowerCase());
     const recompose = RECOMPOSE.test(t);
+    if (MAPPEUR.test(t)) tables.add('mapper()');
     if (tables.size || recompose)
       out.set(path.relative(SRC, f).split(path.sep).join('/'), { tables: [...tables].sort(), recompose });
   }

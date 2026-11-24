@@ -151,8 +151,17 @@ describe('lot PC3 : adresses et libellés', () => {
     expect(filtresDepuisAdresse(new URLSearchParams(`perimetre=${PERIM}&role=front`))).toEqual({
       role: 'front',
       perimetre: PERIM,
+      groupe: '',
     });
-    expect(filtresDepuisAdresse(new URLSearchParams('role=routeur'))).toEqual({ role: '', perimetre: '' });
+    expect(filtresDepuisAdresse(new URLSearchParams('role=routeur'))).toEqual({ role: '', perimetre: '', groupe: '' });
+    // Lot GRP-MACHINES : « Voir le parc » depuis la fiche d'un fournisseur (`?groupe=<uuid>`), « Sans groupe » (`aucun`) ;
+    // toute autre valeur est ignorée.
+    const GROUPE = '0b1c2d3e-4f50-4617-8899-aabbccddeeff';
+    expect(filtresDepuisAdresse(new URLSearchParams(`groupe=${GROUPE}`)).groupe).toBe(GROUPE);
+    expect(filtresDepuisAdresse(new URLSearchParams(`groupe=${GROUPE.toUpperCase()}`)).groupe).toBe(GROUPE);
+    expect(filtresDepuisAdresse(new URLSearchParams('groupe=aucun')).groupe).toBe('aucun');
+    for (const x of ['tous', '1', 'aucun2', `${GROUPE}x`, '../machines'])
+      expect(filtresDepuisAdresse(new URLSearchParams(`groupe=${encodeURIComponent(x)}`)).groupe).toBe('');
   });
   it('nom accessible d’une carte, exposition d’une tuile, bandeau de première ligne', () => {
     expect(nomAccessibleCarte(carte())).toBe(

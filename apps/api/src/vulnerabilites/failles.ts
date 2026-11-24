@@ -39,6 +39,8 @@
    CVE ; etatCorrectif du paquet partagé) et fin de support (date `seolDate` de Tenable passée) ; filtre « fin de support »
    des constats et des machines ; une machine est en fin de support dès qu'un constat présent sur elle l'est, quel que soit
    son état de suivi (c'est un fait, pas une décision). Colonnes ajoutées aux requêtes existantes : aucune requête de plus.
+   Lot GRP-MACHINES : filtre de la liste et du parc par groupe de machines (groupes.ts), ou « sans groupe », dans la requête
+   des filtres d'ACR et d'AES (une de plus au plus).
    Journal `vulnerabilites.machine*` : identifiants internes seulement, jamais un nom ni une adresse de machine. */
 import {
   etatCorrectif,
@@ -841,10 +843,10 @@ export class FaillesDetectees {
   /** Machines lisibles, de la plus critique à la moins critique ; recherche par nom ou système (partiels, casse ignorée) ou
       par adresse IP (préfixe), règle commune avec la barre de recherche (lot R1) ; filtres par rôle et périmètre. Le rang
       est calculé sur toutes les machines lisibles, avant les filtres. Lot TEN-SCORES : filtres par catégorie minimale d'ACR
-      et d'AES, en SQL (selonScores), avant la pagination. */
+      et d'AES, en SQL (selonFiltresSql), avant la pagination ; lot GRP-MACHINES : filtre par groupe, dans la même requête. */
   async machines(user: SessionUser, q: RechercheMachines): Promise<PageMachines> {
     const toutes = await this.machinesRangees(user);
-    const scores = await this.selonScores(user, q);
+    const scores = await this.selonFiltresSql(user, q);
     const texte = q.q?.trim();
     const filtrees = toutes.filter(
       (m) =>
@@ -866,13 +868,24 @@ export class FaillesDetectees {
 
   /** Lot TEN-SCORES : identifiants des machines lisibles (même règle `lisible` que la liste) dont la criticité (ACR) et
       l'exposition (AES) selon Tenable atteignent la catégorie minimale demandée ; une machine sans valeur ne répond à aucun
-      filtre actif. `null` : aucun filtre demandé (aucune requête). Une requête de plus, seulement avec un filtre. Le rang
-      reste calculé sur toutes les machines lisibles ; ni priorité ni rang ne dépendent de ces valeurs. */
-  private async selonScores(user: SessionUser, q: { acr?: FiltreAcr; aes?: FiltreAes }): Promise<Set<string> | null> {
-    if (!q.acr && !q.aes) return null;
+      filtre actif. Lot GRP-MACHINES : dans la même requête, machines d'un groupe, ou sans aucun groupe (`aucun`). `null` :
+      aucun filtre demandé (aucune requête). Une requête de plus, seulement avec un filtre, quel que soit leur nombre. Le
+      rang reste calculé sur toutes les machines lisibles ; ni priorité ni rang ne dépendent de ces filtres. */
+  private async selonFiltresSql(
+    user: SessionUser,
+    q: { acr?: FiltreAcr; aes?: FiltreAes; groupe?: string },
+  ): Promise<Set<string> | null> {
+    if (!q.acr && !q.aes && !q.groupe) return null;
     const conditions: RawBuilder<boolean>[] = [lisible(user)];
     if (q.acr) conditions.push(sql<boolean>`m.acr >= ${SEUILS_ACR[q.acr]}`);
     if (q.aes) conditions.push(sql<boolean>`m.aes >= ${SEUILS_AES[q.aes]}`);
+    if (q.groupe === 'aucun')
+      conditions.push(
+        sql<boolean>`NOT EXISTS (SELECT 1 FROM vulnerabilites_groupe_machines gm WHERE gm.machine_id = m.id)`,
+      );
+    else if (q.groupe)
+      conditions.push(sql<boolean>`EXISTS (SELECT 1 FROM vulnerabilites_groupe_machines gm
+        WHERE gm.machine_id = m.id AND gm.groupe_id = ${q.groupe}::uuid)`);
     const { rows } = await sql<{ id: string }>`
       SELECT m.id FROM vulnerabilites_machines m WHERE ${sql.join(conditions, sql` AND `)}`.execute(this.db.k);
     return new Set(rows.map((r) => r.id));
@@ -891,11 +904,11 @@ export class FaillesDetectees {
   /** Parc des machines lisibles (lot PC2), par zone de rôle, dans l'ordre du rang : mêmes filtres que la liste, au plus
       PARC_PAR_ZONE machines par zone (les plus prioritaires), totaux de chaque zone toujours rendus. Seules les machines que
       la personne lit sont listées ou comptées. Lecture seule. Nombre de requêtes fixe, aucune par machine : machines et
-      leurs compteurs 2, réglage 1, marques 9 (faillesDesMachines) ; 12 au plus, 13 avec un filtre d'ACR ou d'AES (lot
-      TEN-SCORES). */
+      leurs compteurs 2, réglage 1, marques 9 (faillesDesMachines) ; 12 au plus, 13 avec un filtre d'ACR, d'AES (lot
+      TEN-SCORES) ou de groupe (lot GRP-MACHINES), une seule de plus quel que soit le nombre de ces filtres. */
   async parc(user: SessionUser, q: RechercheParc): Promise<ParcMachinesDto> {
     const toutes = await this.machinesRangees(user);
-    const scores = await this.selonScores(user, q);
+    const scores = await this.selonFiltresSql(user, q);
     const texte = q.q?.trim();
     const filtrees = toutes.filter(
       (m) =>

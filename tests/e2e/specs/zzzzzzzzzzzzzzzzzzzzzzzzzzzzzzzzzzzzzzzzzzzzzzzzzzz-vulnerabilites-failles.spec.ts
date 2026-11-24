@@ -7,7 +7,8 @@
    (administration du module ; aucun dépôt sur une pile vierge), choix « Hérité du dépôt » de l'affectation. Lot PC2 :
    présentation « Parc » de l'écran « Machines » (quatre zones vides sur une pile vierge, murs, légende des marques, échelle
    réduite et grand écran), colonne « Priorité et marques » de la liste ; la présentation est une préférence de la personne,
-   remise à sa valeur d'origine en fin de parcours, même en cas d'échec. */
+   remise à sa valeur d'origine en fin de parcours, même en cas d'échec. Lot GRP-MACHINES : sans préférence mémorisée (effacée
+   au départ du parcours), l'écran s'ouvre sur le « Parc » ; le parcours passe ensuite à la « Liste » pour ses contrôles. */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { ouvrirFiltres, csrfOf, sessionAdmin, watchPage } from '../helpers';
@@ -25,6 +26,16 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
   // Préférences d'origine, remises en fin de parcours (lot PC2 : la présentation de « Machines » y est mémorisée).
   const preferences = await (await page.request.get('/api/account/preferences')).json();
   try {
+    // Lot GRP-MACHINES : aucune présentation mémorisée au départ, pour lire celle par défaut.
+    const { vulnerabilitesMachines: _memorisee, ...sansPresentation } = preferences;
+    expect(
+      (
+        await page.request.put('/api/account/preferences', {
+          data: sansPresentation,
+          headers: { 'x-csrf-token': await csrfOf(page.request) },
+        })
+      ).status(),
+    ).toBe(200);
     await page.goto('/vulnerabilites/failles');
     await expect(page.getByRole('heading', { name: 'Failles détectées', level: 1 })).toBeVisible();
     await expect(page.getByText('Aucune faille détectée ne correspond')).toBeVisible();
@@ -45,6 +56,14 @@ test('Vulnérabilités : failles détectées par faille et par machine, écran d
 
     await page.getByRole('link', { name: 'Machines', exact: true }).first().click();
     await expect(page.getByRole('heading', { name: 'Machines', level: 1 })).toBeVisible();
+    // Lot GRP-MACHINES (décision du RSSI du 23/11/2026) : sans préférence mémorisée, la présentation « Parc » s'ouvre.
+    for (const zone of ['Front', 'Back applicatif', 'Base de données', 'Rôle non indiqué'])
+      await expect(page.getByRole('heading', { name: zone, level: 3, exact: true })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Affectation des machines choisies' })).toHaveCount(0);
+    await page
+      .getByRole('group', { name: 'Présentation des machines' })
+      .getByRole('button', { name: 'Liste', exact: true })
+      .click();
     await expect(page.getByRole('group', { name: 'Affectation des machines choisies' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Appliquer à 0 machine/ })).toBeDisabled();
     await expect(page.locator('th', { hasText: /^Périmètre$/ })).toBeVisible();
