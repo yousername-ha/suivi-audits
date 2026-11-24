@@ -53,6 +53,7 @@ import { GrcPlanEcarts } from './plan-ecarts.js';
 import { GrcCouverture } from './couverture.js';
 import type { NotificationsMetier } from '../notifications-metier.js';
 import { GrcSuppliers } from './suppliers.js';
+import { GrcRaciFournisseurs } from './raci-fournisseurs.js';
 import { GrcRisks } from './risks.js';
 import { GrcStudyConfig } from './study-config.js';
 import { LegacyTasks } from './legacy-tasks.js';
@@ -235,6 +236,8 @@ export class Grc {
   readonly planEcarts: GrcPlanEcarts;
   readonly evaluations: GrcEvaluationsExigences;
   readonly suppliers: GrcSuppliers;
+  /** Matrice RACI des fournisseurs (ADR 0113). */
+  readonly raciFournisseurs: GrcRaciFournisseurs;
   readonly risks: GrcRisks;
   readonly studyConfig: GrcStudyConfig;
   readonly tasks: GrcTasks;
@@ -258,6 +261,7 @@ export class Grc {
     this.planEcarts = new GrcPlanEcarts(this);
     this.evaluations = new GrcEvaluationsExigences(this);
     this.suppliers = new GrcSuppliers(this);
+    this.raciFournisseurs = new GrcRaciFournisseurs(this);
     this.risks = new GrcRisks(this);
     this.studyConfig = new GrcStudyConfig(this);
     this.tasks = new GrcTasks(this);

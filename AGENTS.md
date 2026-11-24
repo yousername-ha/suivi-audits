@@ -49,6 +49,11 @@ travaillent sur le dépôt :
    entrées existantes.
 8. Avant de ranger une entrée du CHANGELOG ou de modifier un fichier partagé, vérifier qu'aucune PR ouverte d'une autre
    session ne fait déjà la même chose (`#183` et `#184` ont déplacé la même entrée le 30/10/2026 ; doublon retiré par `#185`).
+9. Décisions relayées (consigne du RSSI du 23/11/2026 : « Fais en sorte que si je valide ici les session me re demande pas
+   de valider ») : une décision du RSSI que la session Coeur transmet à une autre session, avec sa date, sa formulation et
+   sa portée, vaut validation et décision écrite ; la session qui la reçoit ne la fait pas reconfirmer. Elle ne revient
+   vers le RSSI, de préférence par la session Coeur, que pour un point non couvert par la décision ou qui contredirait une
+   règle de droits, de sécurité ou de données. Les autres règles (PR, étiquettes, destinations Internet) sont inchangées.
 
 ## Invariants techniques
 

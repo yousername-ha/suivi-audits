@@ -2,12 +2,14 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
-## [Non publié]
+## [7.7.0] — 2026-11-24
 
 ### Notes de mise à jour
 
 - Migration automatique additive `105` (deux tables du module Vulnérabilités pour les groupes de machines, vides au
   départ), sans reprise de données ni commande sur le serveur. Aucune action.
+- Migration automatique additive `106` (table `fournisseurs_raci`, vide au départ), sans reprise de données ni commande sur le
+  serveur. Aucun flux nouveau vers l'extérieur.
 
 ### Ajouté
 
@@ -26,6 +28,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   rattachés, machines lues, failles critiques ouvertes des seules machines lues, aucun détail de machine ;
   `vulnerabilites:lire` et `fournisseurs:lire`). Rien des groupes ne part chez l'assistant. (session « Module surveillance
   vulnérabilités SMSI »)
+- Fournisseurs, **matrice RACI** (décision du RSSI du 23/11/2026, [ADR 0113](docs/adr/0113-matrice-raci-des-fournisseurs.md)) :
+  dans la fiche d'un fournisseur, onglet « Machines et responsabilités », une matrice activités × acteurs créée à partir d'un
+  modèle (sept activités ; le fournisseur, RSSI, DSI et Référent métier), puis modifiable (activités et acteurs ajoutés,
+  renommés, retirés, activités réordonnées ; la colonne du fournisseur reste). Une lettre par case (R, A, C, I ou « — »),
+  colonne « Contrôle » et résumé des activités à revoir selon la règle « exactement un A et au moins un R », sans bloquer
+  l'enregistrement. API `GET`, `PUT` et `DELETE /api/suppliers/{id}/raci` (`If-Match` ; suppression au droit « supprimer »),
+  journal sans autre donnée que le fournisseur et les nombres de lignes et de colonnes ; matrice d'un fournisseur retiré
+  signalée par le contrôle des relations ; deux matrices fictives dans le jeu de démonstration (session « Projet audit_suivi
+  Coeur »).
+- Fournisseurs, **adresse directe de la fiche** : `/pilotage/fournisseurs?fiche=<identifiant>` ouvre la fiche du fournisseur,
+  `&onglet=machines` l'onglet « Machines et responsabilités » (lien « maintenu par » des groupes de machines) (session
+  « Projet audit_suivi Coeur »).
+- Fournisseurs, fiche, onglet « Machines et responsabilités » : section **« Groupes de machines maintenus »** au-dessus de
+  la matrice RACI (maquette validée par le RSSI le 23/11/2026) : groupes rattachés au fournisseur, machines lues, mention des
+  machines hors de la lecture, failles critiques ouvertes de ces seules machines, lien « Voir le parc » filtré sur le groupe ;
+  affichée avec les droits de lire le module Vulnérabilités et les fournisseurs (session « Projet audit_suivi Coeur »).
 
 ### Modifié
 

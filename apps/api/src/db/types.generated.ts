@@ -434,6 +434,16 @@ export interface Fonctions {
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
+export interface FournisseursRaci {
+  fournisseur_id: string;
+  activites: ColumnType<JsonValue, string, string>;
+  acteurs: ColumnType<JsonValue, string, string>;
+  cases: ColumnType<JsonValue, string, string>;
+  version: Generated<number>;
+  mise_a_jour_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  mise_a_jour_par: string;
+}
+
 export interface GrcFrameworkCopyVersions {
   smsi_id: string;
   framework_id: string;
@@ -2633,6 +2643,7 @@ export interface DB {
   flux_externes: FluxExternes;
   fonction_membres: FonctionMembres;
   fonctions: Fonctions;
+  fournisseurs_raci: FournisseursRaci;
   grc_framework_copy_versions: GrcFrameworkCopyVersions;
   grc_framework_versions: GrcFrameworkVersions;
   grc_links: GrcLinks;

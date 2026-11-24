@@ -260,7 +260,7 @@ export class GrcSuppliers {
   async create(input: unknown, user: SessionUser, ip: string) {
     await this.g.permission(user, 'fournisseurs', 'modifier');
     const body = SupplierBody.parse(input);
-    return this.g.db.tx(async (c) => {
+    return this.g.db.tx(async (c, k) => {
       await surConnexion(c).selectFrom('app_state').select('id').where('id', '=', 1).forUpdate().execute();
       const { state, suppliers } = await this.registry(c);
       if (!state) throw new HttpError(409, 'Registre historique indisponible.');
@@ -277,6 +277,8 @@ export class GrcSuppliers {
         state.version,
       );
       if (r.conflict) throw new HttpError(412, 'Le registre a changé. Rechargez avant de créer.');
+      // Identifiant d'un ancien fournisseur retiré du registre : sa matrice RACI ne passe pas au nouveau (ADR 0113).
+      await this.g.raciFournisseurs.effacerOrpheline(c, k, id, user, ip);
       await this.g.db.audit(user, ip, 'supplier.created', `legacy:suppliers:${id}`, { version: r.version }, c);
       await this.g.notify(c, `legacy:suppliers:${id}`, r.version, DEFAULT_SMSI, 'fournisseurs', user.username);
       return this.row(created as JsonObject & { id: string }, null, [], today('UTC'));

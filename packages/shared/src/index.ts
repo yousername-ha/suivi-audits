@@ -43,6 +43,7 @@ export * from './liens.js';
 export * from './risques.js';
 export * from './config-grc.js';
 export * from './fournisseurs.js';
+export * from './raci-fournisseurs.js';
 export * from './suivi-incidents.js';
 export * from './declarations-incidents.js';
 export * from './retex-incidents.js';

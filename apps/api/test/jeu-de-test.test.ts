@@ -186,6 +186,24 @@ describe('jeu de données de test', () => {
     expect(liensR03).toMatch(/treats/);
     expect(liensR03).toMatch(/Sauvegarder les dossiers hors site/);
   });
+  it('contient deux matrices RACI fictives, créées par la route publique (ADR 0113)', async () => {
+    const lue = async (id: string) => (await a.get(`/api/suppliers/${id}/raci`)).json();
+    const hebergeur = await lue('SUP-001');
+    expect(hebergeur.matrice).toMatchObject({ version: 2, misAJourPar: 'jdt_admin' });
+    expect(hebergeur.matrice.activites).toHaveLength(7);
+    expect(hebergeur.controle.every((c: { ecarts: string[] }) => c.ecarts.length === 0)).toBe(true);
+    // Le logiciel de dossiers garde deux activités à revoir : la règle avertit sans bloquer.
+    const dossiers = await lue('SUP-003');
+    expect(
+      dossiers.controle
+        .filter((c: { ecarts: string[] }) => c.ecarts.length)
+        .map((c: { activite: string; ecarts: string[] }) => [c.activite, c.ecarts]),
+    ).toEqual([
+      ['acces', ['plusieurs_a']],
+      ['supervision', ['aucun_a']],
+    ]);
+    expect((await lue('SUP-002')).matrice).toBeNull();
+  });
   it('refuse de se charger deux fois : les données de départ restent vides sauf demande explicite', async () => {
     await expect(chargerJeuDeTest(t.svc, t.app, 'jdt_admin', { publicUrl: 'https://suivi.test' })).rejects.toThrow(
       /contient déjà des données/,
