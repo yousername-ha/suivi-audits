@@ -2,6 +2,20 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+- Aucune migration, aucune commande sur le serveur, aucun flux nouveau vers l'extérieur.
+
+### Corrigé
+
+- Système > **Mises à jour et versions** (retour du RSSI du 24/11/2026) : sur un écran peu haut, la fenêtre était découpée
+  en parties et ne défilait plus ; l'encadré de l'installation était coupé et le bouton « Installer la version » n'était
+  atteignable qu'au clavier, après le code de double authentification. La fenêtre garde désormais son défilement vertical
+  habituel. Au téléphone, la flèche entre les deux cartes de versions est verticale et ne les traverse plus (session
+  « Projet audit_suivi Coeur »).
+
 ## [7.7.0] — 2026-11-24
 
 ### Notes de mise à jour
