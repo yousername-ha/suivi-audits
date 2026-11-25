@@ -2,6 +2,24 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+- Aucune migration, aucune commande, aucun flux nouveau vers l'extérieur. Aucune action.
+
+### Modifié
+
+- Charte, **feuilles de style modernisées** (décision du RSSI du 24/11/2026, lot « charte CSS », en CSS statique et dans le
+  thème, sans script ni style en ligne) : la page ne défile plus sous une fenêtre ou un panneau ouvert (voile et conteneur
+  qui retiennent le geste, `overscroll-behavior` ; le verrou de Mantine reste coupé par la CSP, la fenêtre défile toujours ;
+  Chrome et Edge 144, Firefox 150) ; barres de défilement aux couleurs du thème clair ou sombre, contraste d'au moins 3:1
+  vérifié sur chaque fond, teintes propres au menu bleu nuit et couleurs nettement contrastées sous « contraste renforcé »
+  (`prefers-contrast: more`) ; titres équilibrés sur leurs lignes (`text-wrap: balance`) et textes d'aide sans mot isolé
+  en dernière ligne (`pretty`) ; police de repli locale aux dimensions de Lexend et de chaque police à l'essai
+  (`size-adjust`, `ascent-override`, `descent-override`), affichée pendant leur chargement, pour que les lignes et les
+  fiches ne changent plus de taille à l'arrivée de la police (session « Projet audit_suivi Coeur »).
+
 ## [7.7.0] — 2026-11-24
 
 ### Notes de mise à jour

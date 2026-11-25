@@ -421,8 +421,10 @@ export const POINTS_DE_RUPTURE = {
   xxl: '160em',
 } as const;
 
+/** « Lexend repli » (styles.css) : police locale aux dimensions de Lexend, affichée tant que Lexend se charge (lot « charte
+    CSS » du 24/11/2026) ; limitée aux caractères de Lexend, elle ne remplace aucune autre police une fois Lexend chargée. */
 export const POLICE =
-  '"Lexend", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif';
+  '"Lexend", "Lexend repli", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif';
 export const POLICE_MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace';
 
 /* ---------------------------------------------------------------- Contraste (WCAG 2.1) */
@@ -516,6 +518,21 @@ export const MENU = {
     mur: '#7FC5EF',
   } satisfies Record<IdentiteMenu, string>,
 } as const;
+/** Barres de défilement (`scrollbar-color`, lot « charte CSS » du 24/11/2026) : pouce et piste par thème, menu bleu nuit
+    (commun aux deux thèmes) et teintes nettement contrastées sous « contraste renforcé » (`prefers-contrast: more`).
+    La piste est transparente : le pouce garde au moins 3:1 avec chaque fond qu'il survole (WCAG 1.4.11, couples
+    vérifiés par le test de contraste). */
+export const BARRES_DEFILEMENT = {
+  clair: { pouce: GRIS[5], piste: 'transparent' },
+  sombre: { pouce: SOMBRE[3], piste: 'transparent' },
+  menu: { pouce: MENU.secondaire, piste: 'transparent' },
+  contraste: {
+    clair: { pouce: FONDS.clair.texte, piste: FONDS.clair.surface },
+    sombre: { pouce: FONDS.sombre.texte, piste: FONDS.sombre.page },
+    menu: { pouce: MENU.selection, piste: MENU.fond.haut },
+  },
+} as const;
+
 /** Variables CSS du menu (--menu-*), communes aux deux thèmes. */
 export function variablesMenu(): Record<string, string> {
   const v: Record<string, string> = {
@@ -704,4 +721,36 @@ export const COUPLES_CONTRASTE: { nom: string; texte: string; fond: string; seui
       ]),
     ];
   }),
+  // Barres de défilement (WCAG 1.4.11, 3:1) : piste transparente, le pouce est vérifié sur chaque fond qu'il survole.
+  ...(
+    [
+      ['clair', 'surface', FONDS.clair.surface],
+      ['clair', 'surface douce', GRIS[0]],
+      ['clair', 'page du style Clair', STYLE_CLAIR.page],
+      ['clair', 'surface douce du style Clair', STYLE_CLAIR.surfaceDouce],
+      ['clair', 'fiche, fond doux', FICHES.clair.doux],
+      ['sombre', 'surface', FONDS.sombre.surface],
+      ['sombre', 'page', FONDS.sombre.page],
+      ['sombre', 'surface douce', SOMBRE[6]],
+      ['sombre', 'fiche', FICHES.sombre.fond],
+    ] as const
+  ).map(([m, nom, fond]) => ({
+    nom: `barre de défilement : pouce sur ${nom} (${m})`,
+    texte: BARRES_DEFILEMENT[m].pouce,
+    fond,
+    seuil: 3,
+  })),
+  ...(['haut', 'milieu', 'bas', 'halo'] as const).map((lieu) => ({
+    nom: `barre de défilement : pouce sur le menu (${lieu})`,
+    texte: BARRES_DEFILEMENT.menu.pouce,
+    fond: MENU.fond[lieu],
+    seuil: 3,
+  })),
+  // Contraste renforcé (prefers-contrast: more) : pouce et piste nettement séparés, au niveau du texte (7:1).
+  ...(['clair', 'sombre', 'menu'] as const).map((m) => ({
+    nom: `barre de défilement, contraste renforcé : pouce sur piste (${m})`,
+    texte: BARRES_DEFILEMENT.contraste[m].pouce,
+    fond: BARRES_DEFILEMENT.contraste[m].piste,
+    seuil: 7,
+  })),
 ];

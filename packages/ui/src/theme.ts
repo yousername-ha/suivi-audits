@@ -22,6 +22,7 @@ import { DescriptionChamp } from './DescriptionChamp.ts';
 import { rendreFocusFiche } from './focus-fiche.ts';
 import { proportionChamp } from './proportions-champs.ts';
 import {
+  BARRES_DEFILEMENT,
   BRAND,
   ENCRE,
   ESPACEMENTS,
@@ -53,7 +54,9 @@ export const theme = createTheme({
   fontFamily: POLICE,
   fontFamilyMonospace: POLICE_MONO,
   // Lexend (choix du RSSI du 19/11/2026) : titres en 600 et graisse « medium » à 500, moins lourds que 650 et 600.
-  headings: { fontFamily: POLICE, fontWeight: '600' },
+  /* Titres équilibrés sur leurs lignes (text-wrap: balance, lot « charte CSS » du 24/11/2026) : la valeur part dans la
+     variable statique --mantine-heading-text-wrap, sans style en ligne ; le nombre de lignes ne change pas. */
+  headings: { fontFamily: POLICE, fontWeight: '600', textWrap: 'balance' },
   fontWeights: { medium: '500' },
   radius: RAYONS,
   defaultRadius: 'md',
@@ -151,6 +154,21 @@ const variablesNeon = (mode: 'clair' | 'sombre'): Record<string, string> => ({
 const variablesFiches = (mode: 'clair' | 'sombre'): Record<string, string> =>
   Object.fromEntries(Object.entries(FICHES[mode]).map(([nom, valeur]) => [`--fiche-${nom}`, valeur]));
 
+/** Barres de défilement (styles.css) : teintes du thème et de « contraste renforcé ». */
+const variablesBarres = (mode: 'clair' | 'sombre'): Record<string, string> => ({
+  '--suivi-barre-pouce': BARRES_DEFILEMENT[mode].pouce,
+  '--suivi-barre-piste': BARRES_DEFILEMENT[mode].piste,
+  '--suivi-barre-pouce-contraste': BARRES_DEFILEMENT.contraste[mode].pouce,
+  '--suivi-barre-piste-contraste': BARRES_DEFILEMENT.contraste[mode].piste,
+});
+/** Barres du menu bleu nuit, communes aux deux thèmes. */
+const variablesBarresMenu = (): Record<string, string> => ({
+  '--menu-barre-pouce': BARRES_DEFILEMENT.menu.pouce,
+  '--menu-barre-piste': BARRES_DEFILEMENT.menu.piste,
+  '--menu-barre-pouce-contraste': BARRES_DEFILEMENT.contraste.menu.pouce,
+  '--menu-barre-piste-contraste': BARRES_DEFILEMENT.contraste.menu.piste,
+});
+
 /** Variables CSS : celles de Mantine, ajustées (fonds, bordures, texte secondaire) et complétées par la charte. */
 export const cssVariablesResolver: CSSVariablesResolver = (t) => {
   const base = defaultCssVariablesResolver(t);
@@ -164,6 +182,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       '--suivi-sceau-blanc': SCEAU.blanc,
       '--suivi-sceau-rouge': SCEAU.rouge,
       ...variablesMenu(),
+      ...variablesBarresMenu(),
     },
     light: {
       ...base.light,
@@ -181,6 +200,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       ...variablesCarte(CARTE.clair),
       ...variablesNeon('clair'),
       ...variablesFiches('clair'),
+      ...variablesBarres('clair'),
     },
     dark: {
       ...base.dark,
@@ -198,6 +218,7 @@ export const cssVariablesResolver: CSSVariablesResolver = (t) => {
       ...variablesCarte(CARTE.sombre),
       ...variablesNeon('sombre'),
       ...variablesFiches('sombre'),
+      ...variablesBarres('sombre'),
     },
   };
 };
