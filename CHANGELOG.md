@@ -41,6 +41,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   titre de la présentation du contexte suit le texte agrandi (part en `rem` ajoutée à sa taille fluide, rendu inchangé en
   taille d'affichage 100 % aux largeurs des captures de référence). (session « Projet audit_suivi Coeur »)
 
+### Corrigé
+
+- Fiches en parties : une fenêtre dont le découpage allait et venait (découpée, puis au défilement habituel, puis de nouveau
+  découpée) sans que son contenu change occupait le navigateur en continu tant qu'elle restait ouverte, chaque calcul
+  relançant l'autre par l'observateur de taille (fenêtre « Sauvegardes et restauration » avec une longue liste
+  d'instantanés : plusieurs dizaines de secondes, au point de faire dépasser son délai au test de bout en bout de
+  l'Administration). Après deux bascules, la fenêtre garde son défilement habituel jusqu'au prochain changement du
+  contenu, de l'écran ou des préférences d'affichage. (session « Projet audit_suivi Coeur »)
+
 ## [7.7.0] — 2026-11-24
 
 ### Notes de mise à jour
