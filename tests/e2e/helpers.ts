@@ -107,11 +107,18 @@ export async function freshTotp(secret: string): Promise<string> {
 export const markTotpUsed = (secret: string, offset = 0) =>
   lastStep.set(secret, Math.max(lastStep.get(secret) ?? 0, Math.floor(Date.now() / 30000) + offset));
 
-/** Enregistre toute violation de CSP et toute erreur JavaScript de la page. */
+/** Violation de la CSP appliquée, ou de Trusted Types relevée en observation (en-tête Report-Only, ADR 0006, addendum du
+    24/11/2026). Chromium écrit, au niveau « info » : « This document requires 'TrustedHTML' assignment. The policy is
+    report-only… » pour un point d'injection (TrustedScript, TrustedScriptURL de même), et « Creating a TrustedTypePolicy
+    named '…' violates the following Content Security policy directive… » pour une politique non déclarée. */
+const VIOLATION_CSP =
+  /Content Security Policy|Refused to (apply|execute|load)|requires 'Trusted(HTML|Script|ScriptURL)' assignment|TrustedTypePolicy/i;
+
+/** Enregistre toute violation de CSP (Trusted Types compris) et toute erreur JavaScript de la page. */
 export function watchPage(page: Page) {
   const problems: string[] = [];
   page.on('console', (m) => {
-    if (/Content Security Policy|Refused to (apply|execute|load)/i.test(m.text())) problems.push(`CSP : ${m.text()}`);
+    if (VIOLATION_CSP.test(m.text())) problems.push(`CSP : ${m.text()}`);
   });
   page.on('pageerror', (e) => problems.push(`JS : ${e.message}`));
   return problems;

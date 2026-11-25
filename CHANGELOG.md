@@ -2,6 +2,45 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+- Aucune migration, aucune commande sur le serveur. Nouvel en-tête `Content-Security-Policy-Report-Only` (Trusted Types en
+  observation) servi par Caddy pour l'interface et la page de mise à jour ; la CSP appliquée est inchangée. La configuration
+  et la page du frontal changent : à la fin de la mise à jour depuis l'interface, le frontal du site est redémarré une fois
+  ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)), coupure de quelques secondes annoncée par la page de
+  suivi, qui reprend seule. Aucun flux nouveau vers l'extérieur : les violations se lisent dans la console du navigateur,
+  sans point de collecte des rapports. (session « Projet audit_suivi Coeur »)
+
+### Sécurité
+
+- **Trusted Types en observation** (décision du RSSI du 24/11/2026, [ADR 0006](docs/adr/0006-front-react-mantine-csp-stricte.md),
+  addendum du 24/11/2026) : les frontaux (`docker/Caddyfile`, `Caddyfile.internal`, `Caddyfile.gateway`) servent
+  `Content-Security-Policy-Report-Only: require-trusted-types-for 'script'; trusted-types suivi-xml` pour l'interface et
+  `… trusted-types 'none'` pour la page de mise à jour, sans `report-uri` ni `report-to`. Les deux analyses XML du
+  navigateur (rapport Nessus, classeur `.xlsx`) passent par la politique nommée `suivi-xml`
+  (`apps/web/src/trusted-types.ts`, détection de l'API et repli sans elle, refus des déclarations DOCTYPE et ENTITY).
+  Zod n'essaie plus de compiler à la volée dans le navigateur (`packages/shared/src/zod-navigateur.ts`, réglage `jitless`
+  quand un document existe ; l'API n'est pas concernée) : sa sonde `new Function`, refusée par la CSP, produisait à chaque
+  page une violation de la CSP appliquée, invisible dans la console, et une violation Trusted Types. Contrôles HTTP de la CI et test `trusted-types.test.ts` (en-têtes, liste des politiques, aucun point d'injection écrit
+  dans les sources) ; les tests de bout en bout relèvent aussi les violations Trusted Types de la console. Passage en
+  application stricte après une campagne de bout en bout propre, sur décision ultérieure du RSSI. (session « Projet
+  audit_suivi Coeur »)
+
+### Modifié
+
+- Accessibilité, **focus après une action refusée** (guide « accessible-error-announcement », décision du RSSI du
+  24/11/2026) : dans une fenêtre, un panneau ou un formulaire, quand une action lancée par un bouton fait apparaître une
+  erreur alors que le focus est resté sur ce bouton, le focus rejoint le premier champ invalide (`aria-invalid`), sinon le
+  message d'erreur (`ErrorAlert`, devenu focalisable) ; une saisie en cours n'est jamais interrompue. Dans une fiche
+  découpée en parties, la partie de l'élément focalisé s'affiche. Mécanisme commun `packages/ui/src/focus-erreur.ts`,
+  installé une fois au démarrage, sans modifier les formulaires. (session « Projet audit_suivi Coeur »)
+- Accessibilité, **texte agrandi par le système** (guide « respect-os-text-scale ») : `<meta name="text-scale"
+  content="scale">` dans l'interface et la page de mise à jour (navigateurs qui le reconnaissent, Chrome et Edge 146) ; le
+  titre de la présentation du contexte suit le texte agrandi (part en `rem` ajoutée à sa taille fluide, rendu inchangé en
+  taille d'affichage 100 % aux largeurs des captures de référence). (session « Projet audit_suivi Coeur »)
+
 ## [7.7.0] — 2026-11-24
 
 ### Notes de mise à jour

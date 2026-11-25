@@ -129,7 +129,11 @@ async function connecter() {
   const erreurs = [];
   page.on('pageerror', (e) => erreurs.push(`JS : ${e.message}`));
   page.on('console', (m) => {
-    if (m.type() === 'error' || /Content Security Policy|Refused to/i.test(m.text()))
+    // Trusted Types en observation (ADR 0006, addendum du 24/11/2026) : « This document requires 'TrustedHTML' assignment… ».
+    if (
+      m.type() === 'error' ||
+      /Content Security Policy|Refused to|requires 'Trusted(HTML|Script|ScriptURL)'/i.test(m.text())
+    )
       erreurs.push(`console : ${m.text()}`);
   });
   page.on('response', (r) => {

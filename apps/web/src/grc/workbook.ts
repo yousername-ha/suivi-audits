@@ -1,5 +1,6 @@
 import { Unzip, UnzipInflate, strFromU8, strToU8, zipSync } from 'fflate';
 import type { FrameworkDefinition } from '@suivi/shared';
+import { analyserXml } from '../trusted-types';
 const xml = (s: unknown) =>
   String(s ?? '').replace(
     /[<>&"']/g,
@@ -106,7 +107,8 @@ function readZip(bytes: Uint8Array) {
 }
 function parseXml(text: string | undefined) {
   if (!text || /<!DOCTYPE|<!ENTITY/i.test(text)) throw new Error('XML manquant ou entités externes interdites.');
-  const document = new DOMParser().parseFromString(text, 'application/xml');
+  // Analyse à travers la politique Trusted Types « suivi-xml » (trusted-types.ts).
+  const document = analyserXml(text);
   if (document.getElementsByTagName('parsererror').length) throw new Error('Feuille XML invalide.');
   return document;
 }

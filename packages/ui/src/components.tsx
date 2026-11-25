@@ -223,11 +223,11 @@ export function ConfirmButton({
   );
 }
 
-/** Message d'erreur (null : rien). */
+/** Message d'erreur (null : rien). data-alerte-erreur : cible du focus après une action refusée (focus-erreur.ts). */
 export function ErrorAlert({ error, title = 'Erreur' }: { error: unknown; title?: string }) {
   if (!error) return null;
   return (
-    <Alert color="red" title={title} role="alert">
+    <Alert color="red" title={title} role="alert" data-alerte-erreur="">
       {error instanceof Error ? error.message : String(error)}
     </Alert>
   );

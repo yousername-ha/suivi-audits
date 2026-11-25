@@ -290,7 +290,7 @@ export function SetupPage() {
                     onChange={(e) => setDemo(e.currentTarget.checked)}
                   />
                   {error && (
-                    <Alert color="red" role="alert">
+                    <Alert color="red" role="alert" data-alerte-erreur="">
                       {error}
                     </Alert>
                   )}

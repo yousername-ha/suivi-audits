@@ -369,7 +369,9 @@ html[data-fenetres='lisere']
   max-width: 32ch;
   margin: 0.75rem 0 0;
   color: var(--neon-titre);
-  font-size: clamp(1.5rem, 2.6vw, 2.15rem);
+  /* Part liée au texte (rem) et part liée à la largeur (vw) : le titre suit le texte agrandi par le système (meta
+     text-scale) ; mêmes bornes, rendu inchangé à 390, 768, 1366, 1440 et 1920 px en taille d'affichage 100 %. */
+  font-size: clamp(1.5rem, 0.4rem + 2.05vw, 2.15rem);
   font-weight: 600;
   line-height: 1.18;
   letter-spacing: -0.045em;

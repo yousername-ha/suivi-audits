@@ -10,6 +10,7 @@
      garde son défilement vertical habituel. Il en va de même d'une fenêtre faite surtout d'un long tableau. */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { CIBLES_ERREUR } from '@suivi/ui';
 import { nommerParties, titreCourt, trouverPied, type RepereDePartie } from './fiches-parties';
 
 interface Pagination {
@@ -341,7 +342,11 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
         (e) => visible(e) && !e.closest('[data-fiche-actions-fixes]'),
       );
       const erreur = alerte?.textContent?.trim() ?? '';
-      if (alerte && erreur && erreur !== derniereErreur) courant = pageDe(alerte);
+      // Le focus déjà posé sur une erreur (premier champ invalide après un refus, voir focus-erreur.ts dans packages/ui)
+      // garde sa partie : elle peut suivre celle du message d'erreur.
+      const surErreur =
+        focus instanceof HTMLElement && corps.contains(focus) && focus.matches(CIBLES_ERREUR) && visible(focus);
+      if (alerte && erreur && erreur !== derniereErreur && !surErreur) courant = pageDe(alerte);
       derniereErreur = erreur;
       afficher(courant);
     };
