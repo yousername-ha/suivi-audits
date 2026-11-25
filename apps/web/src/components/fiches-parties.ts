@@ -78,3 +78,29 @@ export function trouverPied(corps: HTMLElement, visible: (e: Element) => boolean
   }
   return null;
 }
+
+/** Issue d'un calcul de la fiche : découpée en parties, ou défilement habituel. */
+export type IssueFiche = 'decoupee' | 'defilement';
+/** Suivi des issues successives obtenues sans changement du contenu, de l'écran ni des préférences d'affichage. */
+export interface SuiviIssues {
+  derniere: IssueFiche | null;
+  bascules: number;
+}
+export const SUIVI_INITIAL: SuiviIssues = { derniere: null, bascules: 0 };
+/** Bascules (découpée puis défilement, ou l'inverse) au-delà desquelles le découpage est jugé instable. */
+export const BASCULES_MAX = 2;
+
+/** Note l'issue d'un calcul. Une fiche peut changer de taille selon sa mise en page (largeur du contenu, retours à la
+    ligne) : découpée, elle repasse au défilement habituel ; au défilement, elle redevient découpable, et chaque issue
+    relance l'autre par l'observateur de taille. Ce va-et-vient occupait le navigateur tant que la fenêtre restait
+    ouverte (fenêtre « Sauvegardes et restauration », 24/11/2026). */
+export function noterIssue(suivi: SuiviIssues, issue: IssueFiche): SuiviIssues {
+  return {
+    derniere: issue,
+    bascules: suivi.derniere !== null && suivi.derniere !== issue ? suivi.bascules + 1 : suivi.bascules,
+  };
+}
+
+/** Découpage instable : la fiche garde son défilement habituel jusqu'au prochain changement du contenu, de l'écran ou
+    des préférences d'affichage. */
+export const decoupageInstable = (suivi: SuiviIssues) => suivi.bascules >= BASCULES_MAX;

@@ -81,6 +81,7 @@ import { QuestionsFluxPage } from './pages/QuestionsFlux';
 import { RealtimeProvider } from './realtime';
 import { canAdminArea, SessionProvider, useCan, useMe } from './session';
 import { theme } from '@suivi/ui/theme';
+import { surveillerRefus } from '@suivi/ui';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -189,6 +190,9 @@ const loading = (
     <Loader aria-label="Chargement" />
   </Center>
 );
+
+// Après un enregistrement refusé, le focus rejoint le premier champ invalide ou le message d'erreur (focus-erreur.ts).
+surveillerRefus();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

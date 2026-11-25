@@ -94,6 +94,13 @@ describe('instantanés de l’état de suivi', () => {
     expect(titres).toContain('Sauvegardes et restauration');
     expect(titres).toContain('Mises à jour et versions');
   });
+  it('les deux fenêtres qui portent ces listes défilent au lieu d’être découpées en parties', () => {
+    // La liste des instantanés s'allonge à chaque enregistrement : découpée, la fenêtre coûtait plusieurs secondes de
+    // mise en page par calcul (test de bout en bout de l'Administration hors délai, 25/11/2026).
+    const consultation = (id: string) => cartesDuCote(tout, 'systeme').find((c) => c.id === id)?.consultation;
+    expect(consultation('sauvegardes')).toBe(true);
+    expect(consultation('mises-a-jour')).toBe(true);
+  });
   it('le cadre porte son titre, son aide, sa région nommée ; Télécharger et Restaurer inchangés', () => {
     const html = rendu(createElement(InstantanesEtat), (qc) =>
       qc.setQueryData(

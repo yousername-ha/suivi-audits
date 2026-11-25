@@ -4,7 +4,17 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { nommerParties, PREMIERE_PARTIE, titreCourt, type RepereDePartie } from '../src/components/fiches-parties';
+import {
+  BASCULES_MAX,
+  decoupageInstable,
+  nommerParties,
+  noterIssue,
+  PREMIERE_PARTIE,
+  SUIVI_INITIAL,
+  titreCourt,
+  type IssueFiche,
+  type RepereDePartie,
+} from '../src/components/fiches-parties';
 
 const repere = (page: number, titre: string, options: Partial<RepereDePartie> = {}): RepereDePartie => ({
   page,
@@ -127,5 +137,29 @@ describe('feuille de style des fiches en parties', () => {
     expect(css).toMatch(/\[data-fiche-section\] \{\s*break-before: column;/);
     for (const groupeIndivisible of ['[data-fiche-entier]', '.mantine-InputWrapper-root', 'summary', 'tr,'])
       expect(css).toContain(groupeIndivisible);
+  });
+});
+
+describe('va-et-vient entre découpage et défilement', () => {
+  const suivre = (issues: IssueFiche[]) => issues.reduce(noterIssue, SUIVI_INITIAL);
+
+  it('une issue stable, ou un seul changement (contenu chargé, police appliquée), garde le découpage possible', () => {
+    expect(decoupageInstable(suivre(['decoupee', 'decoupee', 'decoupee']))).toBe(false);
+    expect(decoupageInstable(suivre(['defilement', 'defilement', 'decoupee', 'decoupee']))).toBe(false);
+  });
+
+  it('découpée, puis au défilement, puis de nouveau découpée : instable, la fiche garde son défilement', () => {
+    // Suite relevée sur la fenêtre « Sauvegardes et restauration » (trace CI du 25/11/2026), où chaque issue relançait
+    // l'autre par l'observateur de taille tant que la fenêtre restait ouverte.
+    const suivi = suivre(['defilement', 'defilement', 'decoupee', 'defilement']);
+    expect(suivi.bascules).toBe(BASCULES_MAX);
+    expect(decoupageInstable(suivi)).toBe(true);
+    // Le repli « instable » est lui-même un défilement : l'état ne bouge plus.
+    expect(decoupageInstable(noterIssue(suivi, 'defilement'))).toBe(true);
+  });
+
+  it('un changement du contenu, de l’écran ou des préférences repart du suivi initial', () => {
+    expect(decoupageInstable(noterIssue(SUIVI_INITIAL, 'decoupee'))).toBe(false);
+    expect(SUIVI_INITIAL).toEqual({ derniere: null, bascules: 0 });
   });
 });

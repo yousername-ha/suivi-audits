@@ -6,11 +6,27 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
+- Aucune migration, aucune commande sur le serveur. Nouvel en-tête `Content-Security-Policy-Report-Only` (Trusted Types en
+  observation) servi par Caddy pour l'interface et la page de mise à jour ; la CSP appliquée est inchangée. La configuration
+  et la page du frontal changent : à la fin de la mise à jour depuis l'interface, le frontal du site est redémarré une fois
+  ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)), coupure de quelques secondes annoncée par la page de
+  suivi, qui reprend seule. Aucun flux nouveau vers l'extérieur : les violations se lisent dans la console du navigateur,
+  sans point de collecte des rapports. (session « Projet audit_suivi Coeur »)
 - Aucune migration, aucune commande sur le serveur, aucun flux nouveau vers l'extérieur. Aucune action. Les incidents déjà
   enregistrés ne sont pas repris (décision du RSSI du 24/11/2026).
 
 ### Modifié
 
+- Accessibilité, **focus après une action refusée** (guide « accessible-error-announcement », décision du RSSI du
+  24/11/2026) : dans une fenêtre, un panneau ou un formulaire, quand une action lancée par un bouton fait apparaître une
+  erreur alors que le focus est resté sur ce bouton, le focus rejoint le premier champ invalide (`aria-invalid`), sinon le
+  message d'erreur (`ErrorAlert`, devenu focalisable) ; une saisie en cours n'est jamais interrompue. Dans une fiche
+  découpée en parties, la partie de l'élément focalisé s'affiche. Mécanisme commun `packages/ui/src/focus-erreur.ts`,
+  installé une fois au démarrage, sans modifier les formulaires. (session « Projet audit_suivi Coeur »)
+- Accessibilité, **texte agrandi par le système** (guide « respect-os-text-scale ») : `<meta name="text-scale"
+  content="scale">` dans l'interface et la page de mise à jour (navigateurs qui le reconnaissent, Chrome et Edge 146) ; le
+  titre de la présentation du contexte suit le texte agrandi (part en `rem` ajoutée à sa taille fluide, rendu inchangé en
+  taille d'affichage 100 % aux largeurs des captures de référence). (session « Projet audit_suivi Coeur »)
 - Charte, **feuilles de style modernisées** (décision du RSSI du 24/11/2026, lot « charte CSS », en CSS statique et dans le
   thème, sans script ni style en ligne) : la page ne défile plus sous une fenêtre ou un panneau ouvert (voile et conteneur
   qui retiennent le geste, `overscroll-behavior` ; le verrou de Mantine reste coupé par la CSP, la fenêtre défile toujours ;
@@ -23,6 +39,16 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Corrigé
 
+- Fiches en parties : une fenêtre dont le découpage allait et venait (découpée, puis au défilement habituel, puis de nouveau
+  découpée) sans que son contenu change occupait le navigateur en continu tant qu'elle restait ouverte, chaque calcul
+  relançant l'autre par l'observateur de taille (fenêtre « Sauvegardes et restauration » avec une longue liste
+  d'instantanés : plusieurs dizaines de secondes, au point de faire dépasser son délai au test de bout en bout de
+  l'Administration). Après deux bascules, la fenêtre garde son défilement habituel jusqu'au prochain changement du
+  contenu, de l'écran ou des préférences d'affichage. (session « Projet audit_suivi Coeur »)
+- Administration, **« Sauvegardes et restauration » en fenêtre de consultation** : elle garde son défilement vertical,
+  comme « Mises à jour et versions », au lieu d'être découpée en parties. La liste des instantanés de l'état de suivi
+  qu'elle porte depuis le 19/11/2026 s'allonge à chaque enregistrement ; découpée, la fenêtre coûtait plusieurs secondes
+  de mise en page par calcul. (session « Projet audit_suivi Coeur »)
 - **Jour et heure civils de Paris** au lieu de l'UTC (décision du RSSI du 24/11/2026) : nouveau module partagé
   `heure-paris` (`jourParis`, `maintenantLocalParis`, fondés sur `Intl.DateTimeFormat` et le fuseau `Europe/Paris`, sans
   dépendance). Incidents : l'heure de détection et l'heure de résolution posées par défaut sont l'heure de Paris au format
@@ -39,6 +65,21 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   atteignable qu'au clavier, après le code de double authentification. La fenêtre garde désormais son défilement vertical
   habituel. Au téléphone, la flèche entre les deux cartes de versions est verticale et ne les traverse plus (session
   « Projet audit_suivi Coeur »).
+
+### Sécurité
+
+- **Trusted Types en observation** (décision du RSSI du 24/11/2026, [ADR 0006](docs/adr/0006-front-react-mantine-csp-stricte.md),
+  addendum du 24/11/2026) : les frontaux (`docker/Caddyfile`, `Caddyfile.internal`, `Caddyfile.gateway`) servent
+  `Content-Security-Policy-Report-Only: require-trusted-types-for 'script'; trusted-types suivi-xml` pour l'interface et
+  `… trusted-types 'none'` pour la page de mise à jour, sans `report-uri` ni `report-to`. Les deux analyses XML du
+  navigateur (rapport Nessus, classeur `.xlsx`) passent par la politique nommée `suivi-xml`
+  (`apps/web/src/trusted-types.ts`, détection de l'API et repli sans elle, refus des déclarations DOCTYPE et ENTITY).
+  Zod n'essaie plus de compiler à la volée dans le navigateur (`packages/shared/src/zod-navigateur.ts`, réglage `jitless`
+  quand un document existe ; l'API n'est pas concernée) : sa sonde `new Function`, refusée par la CSP, produisait à chaque
+  page une violation de la CSP appliquée, invisible dans la console, et une violation Trusted Types. Contrôles HTTP de la CI et test `trusted-types.test.ts` (en-têtes, liste des politiques, aucun point d'injection écrit
+  dans les sources) ; les tests de bout en bout relèvent aussi les violations Trusted Types de la console. Passage en
+  application stricte après une campagne de bout en bout propre, sur décision ultérieure du RSSI. (session « Projet
+  audit_suivi Coeur »)
 
 ## [7.7.0] — 2026-11-24
 

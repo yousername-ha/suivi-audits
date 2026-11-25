@@ -6,8 +6,8 @@
    la migration 075 : noms en minuscules, adresse IP, textes nettoyés et bornés, lien https seul, CVE de forme contrôlée.
    Tout élément hors norme est écarté et compté (jamais tronqué en silence ; un texte raccourci à sa borne porte « … » et
    est compté). Fonctions pures, testées hors navigateur sur une représentation minimale d'un nœud XML (NoeudXml) ; seule
-   `lireDocument` touche au DOMParser. Format écrit d'après la connaissance de « NessusClientData_v2 », non vérifié sur un
-   export réel.
+   `lireDocument` touche au DOMParser, à travers la politique Trusted Types « suivi-xml » (trusted-types.ts). Format écrit
+   d'après la connaissance de « NessusClientData_v2 », non vérifié sur un export réel.
    Lot N2 : `exploited_by_malware` est lu en plus (exploitation avérée selon Tenable, décision du RSSI du 19/11/2026). */
 import {
   ADRESSE_IP,
@@ -33,6 +33,7 @@ import {
   TENABLE_BORNES,
   VOIR_AUSSI,
 } from '@suivi/shared';
+import { analyserXml } from '../trusted-types';
 
 /* ------------------------------------------------------------------ Nœud XML minimal */
 /** Ce que l'extraction lit d'un élément XML : nom local, attribut, éléments enfants, texte. Fourni par le DOMParser dans le
@@ -80,7 +81,7 @@ export function noeudDom(e: Element): NoeudXml {
 export function lireDocument(texte: string, analyseur: Pick<DOMParser, 'parseFromString'> = new DOMParser()): NoeudXml {
   const e = erreurTexte(texte);
   if (e) throw new ErreurImport(e);
-  const doc = analyseur.parseFromString(texte, 'application/xml');
+  const doc = analyserXml(texte, analyseur);
   if (doc.getElementsByTagName('parsererror').length > 0 || !doc.documentElement)
     throw new ErreurImport('Fichier illisible : ce n’est pas un document XML bien formé.');
   return noeudDom(doc.documentElement);

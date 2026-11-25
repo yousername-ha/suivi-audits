@@ -265,6 +265,13 @@ jobs:
           test "$(curl -sk https://localhost/healthz)" = ok
           test "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' http://localhost/setup)" = "308 https://localhost/setup"
           curl -skI https://localhost/ | grep -i "^content-security-policy: default-src 'self'; script-src 'self'; style-src 'self'"
+          # Trusted Types en observation (ADR 0006, addendum du 24/11/2026) : interface (politique suivi-xml) et page de mise
+          # à jour (aucune politique), sans point de collecte des rapports.
+          curl -skI https://localhost/ | grep -i "^content-security-policy-report-only: require-trusted-types-for 'script'; trusted-types suivi-xml"
+          curl -skI https://localhost/update/ | grep -i "^content-security-policy-report-only: require-trusted-types-for 'script'; trusted-types 'none'"
+          if curl -skI https://localhost/ https://localhost/update/ | grep -qiE "^content-security-policy.*(report-uri|report-to)"; then
+            echo "::error::Point de collecte des rapports CSP non autorisé"; exit 1
+          fi
           test "$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/api/events)" = 401
           test "$(docker compose exec -T app id -u)" = 1000
           test "$(docker compose exec -T web id -u)" = 1001
