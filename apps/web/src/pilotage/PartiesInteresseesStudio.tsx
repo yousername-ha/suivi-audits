@@ -7,7 +7,7 @@
    de la ligne. Les en-têtes de la liste compacte restent décoratifs (aria-hidden), sans filtre de colonne. */
 import { ActionIcon, Button, Select } from '@mantine/core';
 import { useReducedMotion } from '@mantine/hooks';
-import type { GrcObject } from '@suivi/shared';
+import { type GrcObject, jourParis } from '@suivi/shared';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { BoiteOutils, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
 import { ficheCliquable } from '../fiche-cliquable';
@@ -28,7 +28,7 @@ export const etatPartie = (o: GrcObject) =>
 export const naturePartie = (o: GrcObject) =>
   ['Interne', 'Externe'].includes(textePartie(o.data.nature)) ? textePartie(o.data.nature) : 'À préciser';
 /** Repère de revue : seuil existant de 365 jours, sans obligation de revue annuelle inventée. */
-export function revuePartie(o: GrcObject, today = new Date().toISOString().slice(0, 10)) {
+export function revuePartie(o: GrcObject, today = jourParis()) {
   const cutoff = new Date(new Date(today + 'T00:00:00Z').getTime() - 365 * 864e5).toISOString().slice(0, 10);
   return !textePartie(o.data.reviewedAt) || textePartie(o.data.reviewedAt).slice(0, 10) < cutoff;
 }

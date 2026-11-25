@@ -1,5 +1,6 @@
 /* Exports Excel de l'outil de suivi, par rubrique (reprise des exports de l'outil historique). */
 import { z } from 'zod';
+import { jourParis } from '@suivi/shared';
 import { PorteeLecture } from '../acces/portee.js';
 import type { Session } from '../auth.js';
 import { classeur } from '../export/classeur.js';
@@ -38,7 +39,7 @@ export const exportSuiviRoutes = [
       // État historique rédigé par la porte de lecture (ADR 0083) : les rubriques illisibles sont exportées vides.
       const r = await PorteeLecture.pour(svc.grc, u).etatHistoriqueSiPresent();
       if (!r) throw new HttpError(404, 'Aucune donnée.');
-      const aujourdhui = new Date().toISOString().slice(0, 10);
+      const aujourdhui = jourParis();
       // Les fiches du Pilotage (contexte, risques, continuité, revues…) sont lues pour le périmètre demandé (BUG-038, BUG-058).
       const perimetre = query.perimetre ?? DEFAULT_SMSI;
       const etat = await etatAvecObjetsPilotage(svc.grc, u, perimetre, r.data);

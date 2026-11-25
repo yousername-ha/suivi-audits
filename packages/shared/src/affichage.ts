@@ -1,6 +1,7 @@
 /* Affichage : préférences par personne (taille, densité, thème, colonnes), écrans muraux, synthèse du tableau de bord
    (calculée à partir de l'état de l'outil historique, déjà filtré selon les droits). */
 import { z } from 'zod';
+import { jourParis } from './heure-paris.js';
 import { conformiteParReferentiel, indicateursSynthese, plansAnnee } from './tableau-de-bord.js';
 import { ECHELLES_PARC, VUES_MACHINES } from './parc-machines.js';
 import { BUSINESS_MODULES } from './permissions.js';
@@ -223,7 +224,7 @@ export function computeSynthese(
   state: Obj,
   opts: { organisation: string; aujourdHui: Date; lisible: (cle: string) => boolean },
 ): Synthese {
-  const today = opts.aujourdHui.toISOString().slice(0, 10);
+  const today = jourParis(opts.aujourdHui);
   const labels = (state.yearLabels && typeof state.yearLabels === 'object' ? state.yearLabels : {}) as Obj;
   const nextYear = typeof state.nextYear === 'number' ? state.nextYear : null;
 

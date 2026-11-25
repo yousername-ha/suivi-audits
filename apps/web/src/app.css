@@ -662,9 +662,13 @@
     grid-template-columns: minmax(0, 1fr);
     justify-items: stretch;
   }
+  /* Flèche verticale entre les cartes empilées (24/11/2026) : tournée de 90°, la flèche horizontale gardait sa largeur
+     dans la mise en page et traversait les cartes. */
   .maj-fleche {
     justify-self: center;
-    transform: rotate(90deg);
+    inline-size: var(--suivi-trait-focus);
+    block-size: var(--mantine-spacing-xl);
+    background: linear-gradient(180deg, var(--menu-fond-haut), var(--neon-cyan));
   }
 }
 [data-mantine-color-scheme='dark'] .maj-fleche {
@@ -680,6 +684,15 @@
   border-block-start: var(--suivi-trait-focus) solid var(--neon-cyan);
   border-inline-end: var(--suivi-trait-focus) solid var(--neon-cyan);
   transform: translateY(-50%) rotate(45deg);
+}
+@media (max-width: 36em) {
+  .maj-fleche::after {
+    inset-inline-end: auto;
+    inset-inline-start: 50%;
+    inset-block-start: auto;
+    inset-block-end: 0;
+    transform: translateX(-50%) rotate(135deg);
+  }
 }
 .maj-meta {
   row-gap: var(--mantine-spacing-2xs);

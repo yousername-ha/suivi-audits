@@ -6,7 +6,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-- Aucune migration, aucune commande, aucun flux nouveau vers l'extérieur. Aucune action.
+- Aucune migration, aucune commande sur le serveur, aucun flux nouveau vers l'extérieur. Aucune action. Les incidents déjà
+  enregistrés ne sont pas repris (décision du RSSI du 24/11/2026).
 
 ### Modifié
 
@@ -19,6 +20,25 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   en dernière ligne (`pretty`) ; police de repli locale aux dimensions de Lexend et de chaque police à l'essai
   (`size-adjust`, `ascent-override`, `descent-override`), affichée pendant leur chargement, pour que les lignes et les
   fiches ne changent plus de taille à l'arrivée de la police (session « Projet audit_suivi Coeur »).
+
+### Corrigé
+
+- **Jour et heure civils de Paris** au lieu de l'UTC (décision du RSSI du 24/11/2026) : nouveau module partagé
+  `heure-paris` (`jourParis`, `maintenantLocalParis`, fondés sur `Intl.DateTimeFormat` et le fuseau `Europe/Paris`, sans
+  dépendance). Incidents : l'heure de détection et l'heure de résolution posées par défaut sont l'heure de Paris au format
+  du champ (`AAAA-MM-JJThh:mm`, sans fuseau, comme la saisie), et non plus l'heure UTC, en retard d'une heure en hiver et de
+  deux en été ; l'année du numéro `INC-AAAA-nnn` suit aussi Paris ; les heures par défaut du RETEX suivent Paris quel que
+  soit le fuseau du navigateur. Veille des vulnérabilités : une échéance KEV n'est plus jugée dépassée ou à venir selon le
+  jour UTC (faux entre minuit et 1 h ou 2 h). Même correction pour « aujourd'hui » dans les comparaisons d'échéances et de
+  revues (tableau de bord, risques, cartes de synthèse, boîtes du Pilotage, revue de direction, plans, évaluations de
+  fournisseurs, import Tenacy, assistant), pour les dates proposées par défaut dans les formulaires (récurrences, mesures
+  d'indicateur, évaluation de fournisseur, mois des tâches) et pour la date des noms de fichiers d'export. Un test de
+  l'interface refuse le retour de `new Date().toISOString().slice(…)` (session « Projet audit_suivi Coeur »).
+- Système > **Mises à jour et versions** (retour du RSSI du 24/11/2026) : sur un écran peu haut, la fenêtre était découpée
+  en parties et ne défilait plus ; l'encadré de l'installation était coupé et le bouton « Installer la version » n'était
+  atteignable qu'au clavier, après le code de double authentification. La fenêtre garde désormais son défilement vertical
+  habituel. Au téléphone, la flèche entre les deux cartes de versions est verticale et ne les traverse plus (session
+  « Projet audit_suivi Coeur »).
 
 ## [7.7.0] — 2026-11-24
 

@@ -2,7 +2,7 @@
    Tenacy. La simulation calcule tout sans rien écrire et renvoie une empreinte des lignes ; l'application recalcule dans une
    transaction et refuse si les lignes ont changé depuis la simulation. Un écart se retrouve par son identifiant Tenacy
    (`data.tenacy.id`) dans le périmètre choisi : un second import du même fichier ne change rien. */
-import { cleTexte, lireGaps, TENACY_LIMITES, type LigneTenacy, type TenacyBody } from '@suivi/shared';
+import { jourParis, cleTexte, lireGaps, TENACY_LIMITES, type LigneTenacy, type TenacyBody } from '@suivi/shared';
 import { deepEqual, type Json } from '@suivi/shared/legacy';
 import type { SessionUser } from './auth.js';
 import { sql } from 'kysely';
@@ -64,7 +64,7 @@ const PRIORITE = (criticite: string) =>
       : /bas|low|faible/i.test(criticite)
         ? 'low'
         : 'normal';
-const aujourdhui = () => new Date().toISOString().slice(0, 10);
+const aujourdhui = () => jourParis();
 export const empreinteTenacy = (b: Pick<TenacyBody, 'perimetre' | 'lignes'>) =>
   sha256hex(JSON.stringify({ perimetre: b.perimetre, lignes: b.lignes }));
 

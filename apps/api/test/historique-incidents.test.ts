@@ -1,7 +1,9 @@
 /* Reprise du registre des incidents et de la cellule de crise de l'outil de suivi : écritures
    natives sous verrou, droits croisés (écarts, pilotage, incidents), champs inconnus conservés. Données fictives. */
+import { maintenantLocalParis } from '@suivi/shared';
 import { schema15Problems } from '@suivi/shared/legacy';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { incidentBrut } from '../src/historique/incidents.js';
 import { createTestApp, login, makeUser, seedState, type Agent, type TestApp } from './helpers.js';
 
 let t: TestApp, admin: Agent, reader: Agent, writer: Agent, sansEcarts: Agent;
@@ -75,6 +77,23 @@ describe('registre des incidents', () => {
     expect(brut).toMatchObject({ title: 'Existant fictif', inconnu: { x: 1 }, impact: 'Moyen' });
     expect((await writer.patch('/api/incidents/INC-2026-001', { status: 'Autre' })).statusCode).toBe(422);
     expect((await writer.patch('/api/incidents/INC-9', { title: 'x' })).statusCode).toBe(404);
+  });
+  it('date et heure de détection et de résolution par défaut : heure civile de Paris, jamais l’heure UTC', async () => {
+    const avant = maintenantLocalParis();
+    const cree = await writer.post('/api/incidents', { title: 'Heure par défaut fictive' });
+    const pendant = maintenantLocalParis();
+    expect(cree.statusCode, cree.body).toBe(201);
+    expect([avant, pendant]).toContain(cree.json().detectedAt);
+    const id = cree.json().id as string;
+    const debut = maintenantLocalParis();
+    const resolu = await writer.patch(`/api/incidents/${id}`, { status: 'Résolu' });
+    const fin = maintenantLocalParis();
+    expect(resolu.statusCode, resolu.body).toBe(200);
+    expect([debut, fin]).toContain(resolu.json().resolvedAt);
+    // Une heure saisie reste telle quelle (chaîne sans fuseau, lue comme heure de Paris).
+    const saisie = await writer.patch(`/api/incidents/${id}`, { detectedAt: '2026-11-24T23:30' });
+    expect(saisie.json().detectedAt).toBe('2026-11-24T23:30');
+    expect((await admin.del(`/api/incidents/${id}`)).statusCode).toBe(200);
   });
   it('enregistre les réponses de la qualification guidée par PATCH, sans changer la qualification', async () => {
     const r = await writer.patch(`/api/incidents/${incident}`, { answers: { cia: 'non', dcp: 'oui', nsp: 'oui' } });
@@ -318,5 +337,26 @@ describe('cellule de crise', () => {
       'crisis.contacts-imported',
     ])
       expect(a.has(n), n).toBe(true);
+  });
+});
+
+describe('nouvel incident brut : valeurs par défaut à l’heure de Paris', () => {
+  afterEach(() => vi.useRealTimers());
+  it('après minuit à Paris (encore la veille en UTC) : date, heure et année de Paris', () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-12-31T23:30:00Z') });
+    const i = incidentBrut({ incidents: [] });
+    expect(i.detectedAt).toBe('2027-01-01T00:30');
+    expect(i.id).toBe('INC-2027-001');
+    expect(i.createdAt).toBe('2026-12-31T23:30:00.000Z');
+  });
+  it('en été, l’heure de détection a deux heures d’avance sur l’UTC', () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-07-01T10:05:00Z') });
+    expect(incidentBrut({ incidents: [] }).detectedAt).toBe('2026-07-01T12:05');
+  });
+  it('autour du passage à l’heure d’hiver (25/10/2026)', () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-25T00:30:00Z') });
+    expect(incidentBrut({ incidents: [] }).detectedAt).toBe('2026-10-25T02:30');
+    vi.setSystemTime(new Date('2026-10-25T01:30:00Z'));
+    expect(incidentBrut({ incidents: [] }).detectedAt).toBe('2026-10-25T02:30');
   });
 });
