@@ -319,6 +319,9 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     icone: 'maj',
     teinte: 'bleu',
     detail: () => <UpdatesPanel />,
+    /* Retour du RSSI du 24/11/2026 : découpée en parties, la fenêtre coupait l'encadré de l'installation et le bouton
+       « Installer » n'était plus atteignable qu'au clavier. Fenêtre d'opération : défilement vertical habituel. */
+    consultation: true,
   },
   {
     id: 'flux-externes',

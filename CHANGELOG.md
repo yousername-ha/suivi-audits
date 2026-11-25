@@ -22,6 +22,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   fournisseurs, import Tenacy, assistant), pour les dates proposées par défaut dans les formulaires (récurrences, mesures
   d'indicateur, évaluation de fournisseur, mois des tâches) et pour la date des noms de fichiers d'export. Un test de
   l'interface refuse le retour de `new Date().toISOString().slice(…)` (session « Projet audit_suivi Coeur »).
+- Système > **Mises à jour et versions** (retour du RSSI du 24/11/2026) : sur un écran peu haut, la fenêtre était découpée
+  en parties et ne défilait plus ; l'encadré de l'installation était coupé et le bouton « Installer la version » n'était
+  atteignable qu'au clavier, après le code de double authentification. La fenêtre garde désormais son défilement vertical
+  habituel. Au téléphone, la flèche entre les deux cartes de versions est verticale et ne les traverse plus (session
+  « Projet audit_suivi Coeur »).
 
 ## [7.7.0] — 2026-11-24
 
