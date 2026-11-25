@@ -62,27 +62,65 @@
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC,
     U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
+/* Polices de repli stables, comme « Lexend repli » (styles.css, lot « charte CSS » du 24/11/2026) : police locale mise
+   aux dimensions de chaque police à l'essai, mesurées de la même façon. */
+@font-face {
+  font-family: 'Plex Sans repli';
+  font-style: normal;
+  src: local('Arial'), local('ArialMT'), local('Helvetica'), local('Liberation Sans'), local('Arimo');
+  size-adjust: 101%;
+  ascent-override: 101.48%;
+  descent-override: 27.23%;
+  line-gap-override: 0%;
+  unicode-range:
+    U+0000-02CC, U+02CE-02D7, U+02DA, U+02DC-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF,
+    U+2000-206F, U+20A0-20C0, U+2113, U+2122, U+2191, U+2193, U+2212, U+2215, U+2C60-2C7F, U+A720-A7FF, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Figtree repli';
+  font-style: normal;
+  src: local('Arial'), local('ArialMT'), local('Helvetica'), local('Liberation Sans'), local('Arimo');
+  size-adjust: 100.34%;
+  ascent-override: 94.68%;
+  descent-override: 24.91%;
+  line-gap-override: 0%;
+  unicode-range:
+    U+0000-02CC, U+02CE-02D7, U+02DA, U+02DC-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF,
+    U+2000-206F, U+20A0-20C0, U+2113, U+2122, U+2191, U+2193, U+2212, U+2215, U+2C60-2C7F, U+A720-A7FF, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Public Sans repli';
+  font-style: normal;
+  src: local('Arial'), local('ArialMT'), local('Helvetica'), local('Liberation Sans'), local('Arimo');
+  size-adjust: 103.17%;
+  ascent-override: 92.08%;
+  descent-override: 21.81%;
+  line-gap-override: 0%;
+  unicode-range:
+    U+0000-02CC, U+02CE-02D7, U+02DA, U+02DC-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF,
+    U+2000-206F, U+20A0-20C0, U+2113, U+2122, U+2191, U+2193, U+2212, U+2215, U+2C60-2C7F, U+A720-A7FF, U+FEFF, U+FFFD;
+}
 :root[data-police='plex'] {
   --mantine-font-family:
-    'Plex Sans', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans',
-    'Liberation Sans', Arial, sans-serif;
+    'Plex Sans', 'Plex Sans repli', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue',
+    'Noto Sans', 'Liberation Sans', Arial, sans-serif;
   --mantine-font-family-headings:
-    'Plex Sans', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans',
-    'Liberation Sans', Arial, sans-serif;
+    'Plex Sans', 'Plex Sans repli', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue',
+    'Noto Sans', 'Liberation Sans', Arial, sans-serif;
 }
 :root[data-police='figtree'] {
   --mantine-font-family:
-    'Figtree', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans',
-    'Liberation Sans', Arial, sans-serif;
+    'Figtree', 'Figtree repli', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue',
+    'Noto Sans', 'Liberation Sans', Arial, sans-serif;
   --mantine-font-family-headings:
-    'Figtree', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans',
-    'Liberation Sans', Arial, sans-serif;
+    'Figtree', 'Figtree repli', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue',
+    'Noto Sans', 'Liberation Sans', Arial, sans-serif;
 }
 :root[data-police='public-sans'] {
   --mantine-font-family:
-    'Public Sans', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans',
-    'Liberation Sans', Arial, sans-serif;
+    'Public Sans', 'Public Sans repli', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto,
+    'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif;
   --mantine-font-family-headings:
-    'Public Sans', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans',
-    'Liberation Sans', Arial, sans-serif;
+    'Public Sans', 'Public Sans repli', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto,
+    'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif;
 }
