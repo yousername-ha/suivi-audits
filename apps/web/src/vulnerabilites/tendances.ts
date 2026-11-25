@@ -6,6 +6,7 @@ import {
   fmtJour,
   type Granularite,
   type IdPerimetreVue,
+  jourParis,
   MESURE_LIBELLES,
   NIVEAU_ALERTE_GLOBAL_LIBELLES,
   type NiveauAlerteGlobal,
@@ -143,7 +144,7 @@ export const libelleNiveau = (n: NiveauAlerteGlobal | null) =>
 /* ------------------------------------------------------------------ Rapport */
 export type ModePeriode = 'mois' | 'libre';
 /** Jour civil du fuseau de l'organisation (AAAA-MM-JJ), comme le serveur. */
-export const aujourdhui = (d = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(d);
+export const aujourdhui = (d = new Date()) => jourParis(d);
 /** Les vingt-quatre derniers mois, du plus récent au plus ancien (AAAA-MM et libellé « novembre 2026 »). */
 export function moisProposes(aujourdhui: string, nombre = 24): { value: string; label: string }[] {
   const [a, m] = aujourdhui.split('-').map(Number) as [number, number];

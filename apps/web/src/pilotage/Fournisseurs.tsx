@@ -21,7 +21,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { FREQUENCES_CONTROLE, TYPES_CERTIFICAT, partSaas } from '@suivi/shared';
+import { FREQUENCES_CONTROLE, TYPES_CERTIFICAT, jourParis, partSaas } from '@suivi/shared';
 import { DataTable, StatusChip } from '@suivi/ui';
 import { api, get, post } from '../api';
 import { ErrorAlert } from '../components/common';
@@ -74,7 +74,6 @@ interface Historique {
 const REPONSE: Record<string, string> = { oui: 'Répond', non: 'Ne répond pas', nonevalue: 'Non évalué' };
 const versOption = (m: boolean | null) => (m === true ? 'oui' : m === false ? 'non' : 'nonevalue');
 const depuisOption = (v: string | null) => (v === 'oui' ? true : v === 'non' ? false : null);
-const jour = (d: Date) => d.toISOString().slice(0, 10);
 const FILTRES = [
   { value: 'all', label: 'Tous' },
   { value: 'nomfa', label: 'Sans MFA' },
@@ -637,7 +636,7 @@ function CriteresDuFournisseur({ fournisseur }: { fournisseur: Fournisseur }) {
 function EvaluationForm({ fournisseur, onDone }: { fournisseur: Fournisseur; onDone: () => void }) {
   const can = useCan(),
     qc = useQueryClient(),
-    [date, setDate] = useState(jour(new Date())),
+    [date, setDate] = useState(jourParis()),
     [prochaine, setProchaine] = useState(''),
     [conclusion, setConclusion] = useState(''),
     // Les critères rattachés au fournisseur (ADR 0098) sont proposés d'office ; un critère retiré ne l'est plus.

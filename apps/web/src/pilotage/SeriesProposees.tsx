@@ -1,7 +1,7 @@
 /* Séries récurrentes proposées (ISO 9001:2015) : modèles tirés du texte de la norme, sans fréquence. Rien n'est planifié
    d'office : la série est préparée inactive, l'organisme choisit la fréquence, puis l'active. */
 import { Button, Card, Group, Stack, Text } from '@mantine/core';
-import { SERIES_PROPOSEES, type SerieProposee } from '@suivi/shared';
+import { jourParis, SERIES_PROPOSEES, type SerieProposee } from '@suivi/shared';
 import { useCan } from '../session';
 
 export function SeriesProposees({ onPreparer }: { onPreparer: (name: string, data: Record<string, unknown>) => void }) {
@@ -10,7 +10,7 @@ export function SeriesProposees({ onPreparer }: { onPreparer: (name: string, dat
     onPreparer(s.titre, {
       description: `${s.description} (ISO 9001:2015, article ${s.article})`,
       recurrence: {
-        start: new Date().toISOString().slice(0, 10),
+        start: jourParis(),
         time: '09:00',
         timezone: 'Europe/Paris',
         unit: 'month',

@@ -3,6 +3,7 @@
    distante. Seules les dates comptent ; l'heure et le fuseau d'un événement sont ignorés (jour calendaire tel qu'écrit).
    Un fichier qui contient une erreur n'est jamais appliqué, même en partie. */
 import { z } from 'zod';
+import { jourParis } from './heure-paris.js';
 import { validDate } from './grc.js';
 import { developper, lireRegle } from './ical-repetition.js';
 
@@ -76,7 +77,7 @@ function dateIcs(valeur: string): { jour: string; avecHeure: boolean; minuit: bo
 
 /** Les règles de répétition sont développées de un an avant `aujourdhui` jusqu'à cinq ans après. */
 export const ICAL_HORIZON_ANS = 5;
-export function lireIcs(texte: string, aujourdhui: string = new Date().toISOString().slice(0, 10)): IcalLecture {
+export function lireIcs(texte: string, aujourdhui: string = jourParis()): IcalLecture {
   const jours = new Set<string>();
   const ignores: IcalLigne[] = [];
   const erreurs: IcalLigne[] = [];

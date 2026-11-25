@@ -8,6 +8,7 @@ import {
   type GrcKind,
   type GrcObject,
   type PilotageRecord,
+  jourParis,
 } from '@suivi/shared';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
@@ -164,7 +165,7 @@ export function BusinessRegistry({
       : stateLabel(o.data.status ?? o.data.result);
   const echeanceDe = (o: GrcObject) =>
     String(o.data.dueAt ?? o.data.reviewAt ?? o.data.validUntil ?? o.data.plannedAt ?? '').slice(0, 10);
-  const aujourdhui = new Date().toISOString().slice(0, 10);
+  const aujourdhui = jourParis();
   const etats = [...new Set(toutes.map(state))].sort();
   const responsables = [...new Set(toutes.map(owner))].sort();
   const rows = toutes.filter(

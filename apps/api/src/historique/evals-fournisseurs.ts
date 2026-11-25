@@ -16,6 +16,7 @@ import {
   type EvaluationClausier,
   type PointClausier,
   type ScoreEvaluation,
+  jourParis,
 } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
@@ -27,7 +28,7 @@ import { entrees, remplacerEntree, type RegistreHistorique } from './registre.js
 const str = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String(v));
 /** Échéance par défaut des actions créées depuis une évaluation du clausier. */
 const ECHEANCE_ACTIONS_JOURS = 30;
-const aujourdhui = () => new Date().toISOString().slice(0, 10);
+const aujourdhui = () => jourParis();
 
 export interface ResumeEvaluation extends EvaluationClausier {
   score: ScoreEvaluation;
@@ -197,7 +198,7 @@ export class EvaluationsClausier {
         );
         const connus = new Set(entrees(data, 'items').map((x) => str(x.id)));
         // Responsable : la personne qui crée les actions ; échéance : 30 jours (10.2, une action sans échéance ne se suit pas).
-        const echeance = new Date(Date.now() + ECHEANCE_ACTIONS_JOURS * 86_400_000).toISOString().slice(0, 10);
+        const echeance = jourParis(new Date(Date.now() + ECHEANCE_ACTIONS_JOURS * 86_400_000));
         await this.r.creerEcart(c, user, ip, {
           id: fid,
           dueAt: echeance,

@@ -22,6 +22,7 @@ import {
   UserPatchBody,
   Uuid,
   type RoleAssignment,
+  jourParis,
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import crypto from 'node:crypto';
@@ -504,7 +505,7 @@ export const accessRoutes = [
     query: z.object({ format: z.enum(['csv', 'xlsx']).default('csv') }),
     handler: async ({ svc, s, ip, query, reply }) => {
       const rows = await accessReview(svc);
-      const day = new Date().toISOString().slice(0, 10);
+      const day = jourParis();
       await svc.db.audit((s as Session).user, ip, 'admin.access_review_export', query.format, { rows: rows.length });
       reply.header('Cache-Control', 'no-store');
       if (query.format === 'xlsx') {

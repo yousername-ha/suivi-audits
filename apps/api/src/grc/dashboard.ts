@@ -1,3 +1,4 @@
+import { jourParis } from '@suivi/shared';
 import type { SessionUser } from '../auth.js';
 import type { Grc } from './core.js';
 export async function dashboard(g: Grc, smsi: string, user: SessionUser) {
@@ -10,7 +11,7 @@ export async function dashboard(g: Grc, smsi: string, user: SessionUser) {
   if (policy.dashboard.cards.includes('risks') && user.rights.can('pilotage', 'lire'))
     sections.risks = await g.db.one(
       `SELECT count(*)::int total,count(*) FILTER(WHERE NOT EXISTS(SELECT 1 FROM grc_risk_evaluations e WHERE e.risk_id=o.id AND e.decision='approved'))::int AS "awaitingReview",count(*) FILTER(WHERE data->>'reviewAt'<$2)::int overdue FROM grc_objects o WHERE smsi_id=$1 AND kind='risk' AND NOT archived`,
-      [smsi, new Date().toISOString().slice(0, 10)],
+      [smsi, jourParis()],
     );
   for (const [card, kind, module] of [
     ['controls', 'control', 'pilotage'],
@@ -19,7 +20,7 @@ export async function dashboard(g: Grc, smsi: string, user: SessionUser) {
     if (policy.dashboard.cards.includes(card) && user.rights.can(module, 'lire')) {
       const summary = await g.db.one<{ total: number; awaitingReview: number; pending: number; overdue: number }>(
         `SELECT count(*)::int total,count(*) FILTER(WHERE kind='evidence' AND COALESCE(data->>'status','draft')<>'validated')::int AS "awaitingReview",count(*) FILTER(WHERE kind='control' AND COALESCE(data->>'status','draft')<>'paused' AND COALESCE(data->>'performedAt','')='')::int pending,count(*) FILTER(WHERE COALESCE(data->>'status','draft')<>'paused' AND NULLIF(COALESCE(data->>'dueAt',data->>'validUntil'),'')<$3 AND (kind='evidence' OR COALESCE(data->>'performedAt','')<COALESCE(data->>'dueAt','')))::int overdue FROM grc_objects WHERE smsi_id=$1 AND kind=$2 AND NOT archived`,
-        [smsi, kind, new Date().toISOString().slice(0, 10)],
+        [smsi, kind, jourParis()],
       );
       sections[card] = summary && {
         total: summary.total,
