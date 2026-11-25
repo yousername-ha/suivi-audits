@@ -24,6 +24,7 @@ import { CleSecoursPanel } from '../components/CleSecours';
 import { FluxExternesPanel } from '../components/FluxExternes';
 import { MandatairePanel } from '../components/Mandataire';
 import { AntivirusPanel } from '../components/Antivirus';
+import { ConnexionUniquePanel } from '../components/ConnexionUnique';
 import { AdresseSitePanel } from '../components/AdresseSite';
 import { CalendriersPanel } from './AdminCalendriers';
 import { FonctionsPanel } from './AdminFonctions';
@@ -374,6 +375,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
         <SectionLoader section="securite" onDirty={m} titreVisible={false} />
         {can('administration', 'administrer') && <PoivrePanel />}
         {can('administration', 'lire') && <PolitiqueClesPanel ecriture={can('administration', 'administrer')} />}
+        {can('administration', 'lire') && <ConnexionUniquePanel ecriture={can('administration', 'administrer')} />}
         {can('administration', 'lire') && <AntivirusPanel />}
       </Stack>
     ),

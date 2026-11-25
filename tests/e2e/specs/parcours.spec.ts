@@ -135,6 +135,7 @@ test('installation : jeton, création de l’administrateur, activation de la do
     'Veille sur les vulnérabilités',
     'AlgoLightHouse',
     'Veille réglementaire',
+    'Connexion unique (SAML), métadonnées des fournisseurs',
   ])
     await expect(page.getByRole('region', { name: nom }).getByRole('button', { name: 'Plus tard' })).toBeVisible();
   await antivirus.getByRole('button', { name: 'Activer' }).click();

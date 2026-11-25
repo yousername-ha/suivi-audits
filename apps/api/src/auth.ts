@@ -46,6 +46,9 @@ export interface SessionUser {
   /** Une clé est exigée (politique des administrateurs échue, ou ré-enrôlement imposé). */
   cleRequise: boolean;
   mustChangePassword: boolean;
+  /** Compte « connexion unique » (ADR 0114) : ni mot de passe ni second facteur locaux ; seules ses sessions ouvertes par la
+      connexion unique sont admises. */
+  sso: boolean;
 }
 export interface Session {
   sid: Buffer;
@@ -80,17 +83,21 @@ export function parseCookies(header: string | undefined): Map<string, string> {
 }
 
 /** Étape d'accès : 'ok' | 'mfa' (second facteur à présenter : TOTP, clé ou code de récupération) | 'enroll' (TOTP à configurer,
-    toujours obligatoire) | 'enroll_key' (clé de sécurité exigée, ADR 0079) | 'password' (changement imposé). */
+    toujours obligatoire) | 'enroll_key' (clé de sécurité exigée, ADR 0079) | 'password' (changement imposé).
+    Compte « connexion unique » (ADR 0114) : la double authentification est prouvée par le fournisseur d'identité dans
+    l'assertion ; sa session, ouverte par la connexion unique à l'état « mfaOk », est complète (ni enroll, ni mfa, ni
+    enroll_key, ni password). Les règles des comptes locaux ne changent pas. */
 export function accessStage(
   s:
     | (Pick<Session, 'mfaOk'> & {
         user: Pick<SessionUser, 'totpEnabled' | 'mustChangePassword'> &
-          Partial<Pick<SessionUser, 'cles' | 'clesEnregistrees' | 'cleRequise'>>;
+          Partial<Pick<SessionUser, 'cles' | 'clesEnregistrees' | 'cleRequise' | 'sso'>>;
       })
     | null,
   mfaRequired: boolean,
 ): AccessStage {
   if (!s) return 'anon';
+  if (s.user.sso) return s.mfaOk ? 'ok' : 'mfa';
   const cles = s.user.cles ?? 0;
   // Une clé suspendue est « enregistrée mais inutilisable » : elle n'abaisse jamais l'assurance exigée.
   const enregistrees = Math.max(cles, s.user.clesEnregistrees ?? 0);
@@ -99,6 +106,16 @@ export function accessStage(
   if (s.user.cleRequise && cles === 0) return 'enroll_key';
   if (s.user.mustChangePassword) return 'password';
   return 'ok';
+}
+
+/** Compte « connexion unique » (ADR 0114) : ni mot de passe, ni TOTP, ni clé de sécurité, ni codes de récupération locaux. */
+export function refuserFacteurLocalSso(u: Pick<SessionUser, 'sso'>): void {
+  if (u.sso)
+    throw new HttpError(
+      403,
+      'Compte en connexion unique : le mot de passe et la double authentification se gèrent chez votre fournisseur d’identité.',
+      { reason: 'sso' },
+    );
 }
 
 export type MotifVerrou = 'mot_de_passe' | 'second_facteur';
@@ -172,7 +189,14 @@ export class Auth {
     this.setCookie(req, reply, '', 0);
   }
 
-  async create(req: FastifyRequest, reply: FastifyReply, userId: string, mfaOk: boolean, c?: Client): Promise<string> {
+  async create(
+    req: FastifyRequest,
+    reply: FastifyReply,
+    userId: string,
+    mfaOk: boolean,
+    c?: Client,
+    o: { sso?: boolean } = {},
+  ): Promise<string> {
     const tok = token(32);
     const csrf = token(24);
     const exp = new Date(Date.now() + this.policy().sessionMaxHours * 3600e3);
@@ -185,6 +209,8 @@ export class Auth {
         mfa_ok: mfaOk,
         // Une session complète vient de présenter le mot de passe et le second facteur : ré-authentification récente.
         reauth_at: mfaOk ? sql<Date>`now()` : null,
+        // Session ouverte par la connexion unique (ADR 0114) : la seule admise pour un compte « sso ».
+        par_sso: o.sso === true,
         ip: req.ip || null,
         user_agent: String(req.headers['user-agent'] || '').slice(0, 300),
         expires_at: exp,
@@ -235,6 +261,7 @@ export class Auth {
         's.mfa_ok',
         's.last_seen_at',
         's.reauth_at',
+        's.par_sso',
         'u.id',
         'u.username',
         'u.display_name',
@@ -245,6 +272,7 @@ export class Auth {
         'u.must_change_password',
         'u.created_at',
         'u.webauthn_reenrolement',
+        'u.mode_connexion',
         (eb) =>
           eb
             .selectFrom('webauthn_credentials as w')
@@ -266,6 +294,8 @@ export class Auth {
       .where('s.last_seen_at', '>', sql<Date>`now() - make_interval(mins => ${this.policy().sessionIdleMinutes})`)
       .executeTakeFirst();
     if (!r || !compteActif(r)) return null;
+    // Compte « connexion unique » : une session qui n'a pas été ouverte par la connexion unique n'est jamais admise.
+    if (r.mode_connexion === 'sso' && !r.par_sso) return null;
     const { grants, rights } = await droitsDe(this.db.pool, r.id);
     if (touch && Date.now() - new Date(r.last_seen_at).getTime() > 60e3) {
       this.db.k
@@ -297,6 +327,7 @@ export class Auth {
           reenrolement: r.webauthn_reenrolement,
         }).requise,
         mustChangePassword: r.must_change_password,
+        sso: r.mode_connexion === 'sso',
       },
     };
   }
@@ -310,6 +341,7 @@ export class Auth {
         'u.must_change_password',
         'u.created_at',
         'u.webauthn_reenrolement',
+        'u.mode_connexion',
         (eb) =>
           eb
             .selectFrom('webauthn_credentials as w')
@@ -335,6 +367,7 @@ export class Auth {
         user: {
           totpEnabled: u.totp_enabled,
           mustChangePassword: u.must_change_password,
+          sso: u.mode_connexion === 'sso',
           cles: Number(u.cles ?? 0),
           clesEnregistrees: Number(u.cles_enregistrees ?? 0),
           cleRequise: this.exigenceCle({
@@ -381,6 +414,11 @@ export class Auth {
     if (!u) {
       await dummyVerify(password);
       return { ok: false as const, reason: 'unknown' as const };
+    }
+    // Compte « connexion unique » (ADR 0114) : aucun mot de passe n'est accepté ; même coût et même réponse qu'un échec.
+    if (u.mode_connexion === 'sso') {
+      await dummyVerify(password);
+      return { ok: false as const, reason: 'sso' as const, user: u };
     }
     if (u.locked_until && new Date(u.locked_until) > new Date()) {
       await dummyVerify(password);

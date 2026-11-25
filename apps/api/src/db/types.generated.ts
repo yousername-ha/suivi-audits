@@ -982,12 +982,62 @@ export interface Sessions {
   last_seen_at: ColumnType<Date, Date | string | undefined, Date | string>;
   expires_at: ColumnType<Date, Date | string, Date | string>;
   reauth_at: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  par_sso: Generated<boolean>;
 }
 
 export interface Settings {
   key: string;
   value: ColumnType<JsonValue, string, string>;
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface SsoAssertionsVues {
+  cle: string;
+  fournisseur_id: string;
+  expire_le: ColumnType<Date, Date | string, Date | string>;
+}
+
+export interface SsoFournisseurs {
+  id: Generated<string>;
+  type: "entra" | "keycloak" | "saml";
+  libelle: string;
+  actif: Generated<boolean>;
+  entity_id: string;
+  url_metadonnees: string | null;
+  autorite_tls: string | null;
+  mfa_source: "attribut" | "authn_context";
+  mfa_attribut: Generated<string>;
+  mfa_valeurs: string[];
+  rapprochement: Generated<"nameid" | "attribut">;
+  rapprochement_attribut: Generated<string>;
+  sso_url: string | null;
+  certificats: ColumnType<JsonValue, string | undefined, string>;
+  certificat_expire_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  metadonnees_source: "url" | "import" | null;
+  metadonnees_lues_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  metadonnees_signees: Generated<boolean>;
+  metadonnees_empreinte: string | null;
+  metadonnees_erreur: string | null;
+  metadonnees_erreur_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  lecture_id: string | null;
+  lecture_reclamee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
+  relecture_demandee: Generated<boolean>;
+  alerte_expiration: string | null;
+  version: Generated<number>;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  modifie_le: ColumnType<Date, Date | string | undefined, Date | string>;
+}
+
+export interface SsoRequetes {
+  id: string;
+  fournisseur_id: string;
+  but: "connexion" | "reauth";
+  retour: string;
+  user_id: string | null;
+  session_hash: Buffer | null;
+  cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  expire_le: ColumnType<Date, Date | string, Date | string>;
+  consommee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;
 }
 
 export interface StateHistory {
@@ -1607,6 +1657,9 @@ export interface Users {
   preferences: ColumnType<JsonValue, string | undefined, string>;
   webauthn_user_handle: Buffer | null;
   webauthn_reenrolement: Generated<boolean>;
+  mode_connexion: Generated<"local" | "sso">;
+  sso_fournisseur_id: string | null;
+  sso_identifiant: string | null;
 }
 
 export interface VDocuments {
@@ -2687,6 +2740,9 @@ export interface DB {
   schema_migrations: SchemaMigrations;
   sessions: Sessions;
   settings: Settings;
+  sso_assertions_vues: SsoAssertionsVues;
+  sso_fournisseurs: SsoFournisseurs;
+  sso_requetes: SsoRequetes;
   state_history: StateHistory;
   suivi_clausier_evals: SuiviClausierEvals;
   suivi_crise_cellules: SuiviCriseCellules;

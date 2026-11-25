@@ -6,7 +6,7 @@ Référence applicative analysée : `c704fa6e6d6d516db75f963db8dd5d2049ab42c8`. 
 
 Application auto-hébergée, pilotage multi-référentiels, audits, risques, actions,
 preuves et continuité. État **effectivement implémenté au commit analysé** ;
-OIDC, D/J/I/F et fin du legacy sont des cibles, pas des composants déployés.
+D/J/I/F et fin du legacy sont des cibles, pas des composants déployés ; la connexion unique est SAML 2.0 (ADR 0114), pas OIDC.
 Environnements connus : Compose production/recette, Compose dev et runners CI.
 Serveur utilisateur, OS exact, dimensionnement, volumétrie et SLO : INCONNUS.
 
@@ -71,6 +71,24 @@ compte créé (demande mémorisée dans `settings`, `flux_questions_en_attente`,
 « Plus tard » pour chaque module et ouvre par les mêmes gestes (route commune, réglages de l'assistant) ; courriel et ACME
 renvoient à leur page. Il n’existe pas de bus distribué ou Redis ajouté.
 
+Connexion unique SAML 2.0 ([ADR 0114](../adr/0114-connexion-unique-saml.md), décisions du RSSI du 25/11/2026) : Microsoft Entra
+ID, Keycloak ou fournisseur SAML générique, à l'initiative du service seulement. La page de connexion propose un lien par
+fournisseur actif ; `GET /api/auth/sso/:id/connexion` enregistre la demande (`sso_requetes`, usage unique, cinq minutes,
+chemin de retour interne) et redirige vers le fournisseur (HTTP-Redirect, demande signée RSA SHA-256 par la clé du service
+`saml_sp_key` générée par `init`). Le navigateur revient sur `POST /api/auth/sso/:id/acs` (HTTP-POST), seule route exemptée du
+contrôle d'origine, avec son propre analyseur de formulaire (256 Kio). L'API (`apps/api/src/connexion-unique/`) contrôle le XML
+(taille, UTF-8, ni DTD ni entité), les algorithmes (SHA-256 ou plus), `Destination` et `Recipient`, puis
+`@node-saml/node-saml` 5.2.0 vérifie la signature (réponse ou assertion), l'audience, les échéances, `InResponseTo` et
+l'anti-rejeu (`sso_assertions_vues`) ; l'assertion doit prouver une double authentification faite chez le fournisseur, et
+désigner un compte créé d'avance en mode `sso` (`users.mode_connexion`, `sso_fournisseur_id`, `sso_identifiant`). Session
+ouverte à l'état complet (`sessions.par_sso`), redirection 303 ; le cookie `SameSite=Strict` accompagne ensuite les appels de
+l'interface. Droits locaux seulement ; au moins un administrateur local actif ; déconnexion locale (pas de SLO). Les
+métadonnées sont relues toutes les six heures par l'exécutant d'exploitation (flux `sso-saml`, fermé par défaut, ouvert quand
+l'administrateur enregistre une adresse de métadonnées et valide la destination ; `suivi sso-metadonnees-claim | -finish`,
+script isolé `scripts/sso-metadonnees.py`, HTTPS seulement, sans analyse XML), ou importées à la main ; l'API contrôle le
+document (entityID, signature, certificats) et alerte avant l'expiration du certificat de signature, sur un échec de
+relecture ou un certificat changé. « Aucun XML hors SAML » : l'API n'analyse aucun autre XML.
+
 Connecteurs du module Intégrations ([ADR 0076](../adr/0076-module-integrations.md), socle partiel) : catalogue des types en
 code (`packages/shared/src/integrations.ts` : portée, schéma de configuration, champs secrets, flux, liste fermée des points
 d'accès de lecture), instances et file des exécutions en base (`integrations`, `integration_executions`, migration `073`),
@@ -98,7 +116,7 @@ SQL (`perimetreMachine`) porte cette règle pour toutes les lectures. Ces donné
 Type sans réseau : « Nessus, import de fichier » (`nessus-fichier`, [ADR 0100](../adr/0100-module-vulnerabilites.md), lot N1 ;
 migration `093`). Ni adresse, ni clé, ni flux, ni exécutant (`flux: null`, absent du script et de l'exécutant). Le fichier
 `.nessus` est lu dans le navigateur (`DOMParser`, DOCTYPE et entités refusés avant l'analyse,
-`apps/web/src/integrations/nessus.ts`) ; l'API ne lit aucun XML : elle reçoit un extrait JSON en liste blanche, par lots de
+`apps/web/src/integrations/nessus.ts`) ; l'API ne lit aucun XML hors SAML (ADR 0114) : elle reçoit un extrait JSON en liste blanche, par lots de
 machines entières (`POST /api/integrations/instances/:id/imports`, `…/lots`, `…/fin`, `integrations:administrer`, corps de
 8 Mio au plus, limites de débit), revalidé par `LotImportNessus` (`packages/shared/src/import-nessus.ts`), et le range par le
 chemin d'écriture de Tenable (`SynchronisationTenable.rangerPassage`, mêmes tables, même numéro de passage). Chaque lot est

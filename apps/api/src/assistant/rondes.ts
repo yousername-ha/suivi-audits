@@ -167,6 +167,7 @@ export class RondesAssistant {
       clesEnregistrees: 0,
       cleRequise: false,
       mustChangePassword: false,
+      sso: false,
     };
   }
 

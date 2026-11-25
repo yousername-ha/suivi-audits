@@ -65,6 +65,7 @@ export * from './notifications.js';
 export * from './texte.js';
 export * from './assistant.js';
 export * from './flux-externes.js';
+export * from './connexion-unique.js';
 export * from './vulnerabilites.js';
 export * from './integrations.js';
 export * from './veille-vulnerabilites.js';

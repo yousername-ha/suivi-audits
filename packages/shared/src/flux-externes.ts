@@ -9,6 +9,7 @@ import { SOURCES_REGLEMENTAIRES_JOINTES } from './veille-reglementaire.js';
 import { SOURCES_ANNONCES_DEFINITIONS } from './annonces-veille.js';
 import { SOURCE_CVE_ORG } from './cve-inconnue.js';
 import { SOURCES_VEILLE_DEFINITIONS } from './veille-vulnerabilites.js';
+import { HOTE_METADONNEES_ENTRA } from './connexion-unique.js';
 
 /** Lot CVE-INC (ADR 0100, addendum « lot CVE-INC », tableau « Hôtes nouveaux autorisés par le RSSI ») : hôtes nouveaux du
     flux « veille-vulnerabilites », joints seulement sur le clic d'une personne (cve.org, décision du RSSI du 19/11/2026) ou si
@@ -31,6 +32,7 @@ export const FLUX_MODULES = [
   'veille-vulnerabilites',
   'algolighthouse',
   'veille-reglementaire',
+  'sso-saml',
 ] as const;
 export const FluxModule = z.enum(FLUX_MODULES);
 export type FluxModule = z.infer<typeof FluxModule>;
@@ -325,6 +327,47 @@ export const FLUX_EXTERNES: readonly FluxExterneDefinition[] = [
     siFerme:
       'Aucune source n’est jointe : aucune collecte n’est inscrite ni réclamée, une demande en file est close sans appel ; les publications déjà collectées et leur qualification restent consultables.',
   },
+  {
+    // Connexion unique SAML 2.0 (ADR 0114 ; décision du RSSI du 25/11/2026, « Le plus secure et moderne et automatique. Si
+    // flux doit être ouvert alors comme le reste au moment de la configuration ça ouvrira les flux. ») : relecture
+    // périodique des métadonnées des fournisseurs d'identité. La connexion des personnes passe par leur navigateur, jamais
+    // par le serveur. Hôte nouveau autorisé par cette décision : login.microsoftonline.com (Microsoft Entra ID) ; pour
+    // Keycloak ou un fournisseur SAML générique, l'hôte de l'adresse saisie, montré à la validation.
+    id: 'sso-saml',
+    libelle: 'Connexion unique (SAML), métadonnées des fournisseurs',
+    role: 'Relire périodiquement, en HTTPS, les métadonnées des fournisseurs d’identité de la connexion unique (adresse de connexion, certificats de signature) ; la connexion des personnes passe par leur navigateur, pas par le serveur.',
+    destinations: [
+      {
+        sens: 'sortant',
+        hote: `${HOTE_METADONNEES_ENTRA} (Microsoft Entra ID)`,
+        ports: 'TCP 443 (HTTPS)',
+      },
+      {
+        sens: 'sortant',
+        hote: 'Hôte de l’adresse des métadonnées réglée pour Keycloak ou un fournisseur SAML (réseau interne en général)',
+        ports: 'TCP du port de l’adresse réglée (443 par défaut, HTTPS)',
+      },
+    ],
+    porteur: {
+      type: 'executant',
+      services: ['updater'],
+      libelle: 'Exécutant d’exploitation du serveur (service « updater »), par un script isolé sans privilège',
+    },
+    donnees:
+      'L’adresse IP du serveur et la demande de lecture de l’adresse des métadonnées réglée (pour Microsoft Entra ID, elle porte l’identifiant du locataire et celui de l’application). Aucune donnée de la plateforme : ni compte, ni identité, ni assertion.',
+    reglage: { libelle: 'Configuration système > Sécurité', lien: '/systeme/securite' },
+    activation: {
+      par: 'module',
+      geste:
+        'Carte « Connexion unique (SAML) » : enregistrer un fournisseur avec une adresse de métadonnées, puis valider le flux',
+    },
+    pareFeu: [
+      `Sortie TCP 443 du serveur vers ${HOTE_METADONNEES_ENTRA} (Microsoft Entra ID).`,
+      'Sortie TCP du serveur vers l’hôte des métadonnées de Keycloak ou du fournisseur SAML, sur le port de l’adresse réglée (443 par défaut).',
+    ],
+    siFerme:
+      'Les métadonnées ne sont pas relues : la configuration déjà lue ou importée reste en service, et l’import manuel du fichier XML reste possible ; une demande de relecture est refusée.',
+  },
 ];
 
 export const fluxExterne = (id: FluxModule): FluxExterneDefinition => FLUX_EXTERNES.find((f) => f.id === id)!;
@@ -415,6 +458,7 @@ export const FLUX_SANS_REPRISE = [
   'veille-vulnerabilites',
   'algolighthouse',
   'veille-reglementaire',
+  'sso-saml',
 ] as const satisfies readonly FluxModule[];
 /** Modules que la reprise de l'existant peut concerner : ceux qui existaient avant le registre des flux. */
 export type FluxModuleRepris = Exclude<FluxModule, (typeof FLUX_SANS_REPRISE)[number]>;

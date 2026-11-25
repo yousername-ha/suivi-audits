@@ -69,6 +69,7 @@ describe('installation, flux vers l’extérieur : modes', () => {
       ['veille-vulnerabilites', 'direct'],
       ['algolighthouse', 'page'],
       ['veille-reglementaire', 'direct'],
+      ['sso-saml', 'page'],
     ]);
   });
   it('sans le droit de régler l’assistant (ou module désactivé), l’assistant s’active depuis sa page', () => {

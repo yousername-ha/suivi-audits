@@ -77,6 +77,7 @@ import { RechercheVulnerabilites } from './vulnerabilites/recherche.js';
 import { RapportVulnerabilites } from './vulnerabilites/rapport.js';
 import { Integrations } from './integrations/index.js';
 import { Mandataire } from './mandataire.js';
+import { ConnexionUnique } from './connexion-unique/index.js';
 
 export function createServices(cfg: Config, log: Logger, options: { modele?: TransportModele } = {}) {
   const db = new Db(cfg.db, log);
@@ -110,6 +111,9 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
   const webauthn = new Webauthn(cfg, db, vault);
   auth.exigenceCle = (u) => webauthn.exigence(u);
   webauthn.surAlerte = (e) => alertesSecurite.cleSecurite(e);
+  /** Connexion unique SAML (ADR 0114) : fournisseurs, demandes, validation des réponses, métadonnées (flux « sso-saml »). */
+  const connexionUnique = new ConnexionUnique(cfg, db, flux);
+  connexionUnique.surAlerte = (e) => alertesSecurite.sso(e);
   const modele = options.modele ?? new RelaisModele(cfg.assistantRelais);
   const assistant = new Assistant(db, vault, grc, modele, log, flux);
   const assistantRondes = new RondesAssistant(db, grc, assistant, modele, log);
@@ -315,6 +319,7 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
     auth,
     motsDePasse,
     webauthn,
+    connexionUnique,
     cleSecours: new CleSecours(db, cfg),
     adresseSite: new AdresseSiteService(db, cfg),
     alertesSecurite,
@@ -348,6 +353,9 @@ export function createServices(cfg: Config, log: Logger, options: { modele?: Tra
       cveConsultation: limiter(CVE_INCONNUE_BORNES.demandesParHeure, 60 * 60e3),
       cveTenable: limiter(CVE_INCONNUE_BORNES.tenableParHeure, 60 * 60e3),
       loginByIp: limiter(20, 15 * 60e3),
+      /** Connexion unique (ADR 0114) : départs vers le fournisseur et réponses reçues, par adresse IP (un établissement
+          derrière une seule adresse se connecte surtout par là). */
+      ssoByIp: limiter(120, 15 * 60e3),
       loginByUser: limiter(10, 15 * 60e3),
       mfaBySession: limiter(8, 10 * 60e3),
       mfaByUser: limiter(10, 15 * 60e3),

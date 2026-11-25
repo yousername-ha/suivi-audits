@@ -468,6 +468,7 @@ describe('migration 005 : reprise des cartes de la bêta déjà dessinées (CART
         '104_veille_reglementaire_cert_sante_jo.sql',
         '105_vulnerabilites_groupes_machines.sql',
         '106_fournisseurs_raci.sql',
+        '107_connexion_unique_saml.sql',
       ]);
       const st = await t2.svc.legacy.recompose();
       expect(deepEqual(st!.data.maps as Json, fixture.maps as Json)).toBe(true);
