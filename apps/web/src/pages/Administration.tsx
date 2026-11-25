@@ -301,6 +301,11 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
         {can('administration', 'administrer') && <RemiseAVidePanel />}
       </Stack>
     ),
+    /* Fenêtre de consultation : la liste des instantanés s'allonge à chaque enregistrement de l'état de suivi. Découpée en
+       parties, elle coûtait plusieurs secondes de mise en page par calcul et pouvait basculer sans fin entre découpage et
+       défilement (test de bout en bout de l'Administration hors délai, 25/11/2026). Défilement vertical habituel, comme
+       « Mises à jour et versions ». */
+    consultation: true,
   },
   {
     id: 'courriel',

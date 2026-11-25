@@ -45,6 +45,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   d'instantanés : plusieurs dizaines de secondes, au point de faire dépasser son délai au test de bout en bout de
   l'Administration). Après deux bascules, la fenêtre garde son défilement habituel jusqu'au prochain changement du
   contenu, de l'écran ou des préférences d'affichage. (session « Projet audit_suivi Coeur »)
+- Administration, **« Sauvegardes et restauration » en fenêtre de consultation** : elle garde son défilement vertical,
+  comme « Mises à jour et versions », au lieu d'être découpée en parties. La liste des instantanés de l'état de suivi
+  qu'elle porte depuis le 19/11/2026 s'allonge à chaque enregistrement ; découpée, la fenêtre coûtait plusieurs secondes
+  de mise en page par calcul. (session « Projet audit_suivi Coeur »)
 - **Jour et heure civils de Paris** au lieu de l'UTC (décision du RSSI du 24/11/2026) : nouveau module partagé
   `heure-paris` (`jourParis`, `maintenantLocalParis`, fondés sur `Intl.DateTimeFormat` et le fuseau `Europe/Paris`, sans
   dépendance). Incidents : l'heure de détection et l'heure de résolution posées par défaut sont l'heure de Paris au format
