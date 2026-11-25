@@ -22,6 +22,7 @@ import {
   type EtatDictionnaireCpeDto,
   type EtatVeilleDto,
   type FailleVeilleDto,
+  jourParis,
   type PageVeille,
 } from '@suivi/shared';
 import { DataTable, ErrorAlert, Page, StatusChip } from '@suivi/ui';
@@ -403,7 +404,8 @@ export function VeillePage() {
     queryFn: () => get<PageVeille<FailleVeilleDto>>(urlFailles(recherche, false, pageFailles)),
     enabled: lire && !!recherche,
   });
-  const aujourdhui = new Date().toISOString().slice(0, 10);
+  // Jour civil de Paris : une échéance KEV n'est dépassée qu'au lendemain à Paris (jamais selon le jour UTC).
+  const aujourdhui = jourParis();
 
   const chercher = (e: FormEvent) => {
     e.preventDefault();

@@ -9,6 +9,7 @@ import {
   objectifsPilotage,
   plansAnnee,
   type EntreeRevue,
+  jourParis,
 } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import { sql } from 'kysely';
@@ -45,7 +46,7 @@ export class PilotageRevue {
     await this.g.permission(user, GRC_MODULES.management_review, 'lire');
     const portee = PorteeLecture.pour(this.g, user);
     const etat = (await portee.etatHistorique()).data;
-    const aujourdhui = new Date().toISOString().slice(0, 10);
+    const aujourdhui = jourParis();
     const racine = smsi === DEFAULT_SMSI;
     const enfants = await this.heritiers(smsi, portee);
     const ids = [smsi, ...enfants.map((e) => e.id)];
@@ -140,7 +141,7 @@ export class PilotageRevue {
     // c) parties intéressées (historiques au commun, fiches saisies à l'écran partout).
     const historiqueParties = racine ? lignes(etat.interested) : [];
     const nonRevues = historiqueParties.filter(
-      (p) => !p.reviewed || String(p.reviewed) < new Date(Date.now() - 365 * 864e5).toISOString().slice(0, 10),
+      (p) => !p.reviewed || String(p.reviewed) < jourParis(new Date(Date.now() - 365 * 864e5)),
     ).length;
     faits.c.push(
       `${pluriel(historiqueParties.length + (await natifs('stakeholder')), 'partie intéressée', 'parties intéressées')} enregistrée(s)${racine ? `, dont ${nonRevues} non revue(s) depuis un an parmi les parties historiques` : ''}${suffixe}.`,

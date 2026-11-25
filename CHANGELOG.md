@@ -12,6 +12,55 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)), coupure de quelques secondes annoncée par la page de
   suivi, qui reprend seule. Aucun flux nouveau vers l'extérieur : les violations se lisent dans la console du navigateur,
   sans point de collecte des rapports. (session « Projet audit_suivi Coeur »)
+- Aucune migration, aucune commande sur le serveur, aucun flux nouveau vers l'extérieur. Aucune action. Les incidents déjà
+  enregistrés ne sont pas repris (décision du RSSI du 24/11/2026).
+
+### Modifié
+
+- Accessibilité, **focus après une action refusée** (guide « accessible-error-announcement », décision du RSSI du
+  24/11/2026) : dans une fenêtre, un panneau ou un formulaire, quand une action lancée par un bouton fait apparaître une
+  erreur alors que le focus est resté sur ce bouton, le focus rejoint le premier champ invalide (`aria-invalid`), sinon le
+  message d'erreur (`ErrorAlert`, devenu focalisable) ; une saisie en cours n'est jamais interrompue. Dans une fiche
+  découpée en parties, la partie de l'élément focalisé s'affiche. Mécanisme commun `packages/ui/src/focus-erreur.ts`,
+  installé une fois au démarrage, sans modifier les formulaires. (session « Projet audit_suivi Coeur »)
+- Accessibilité, **texte agrandi par le système** (guide « respect-os-text-scale ») : `<meta name="text-scale"
+  content="scale">` dans l'interface et la page de mise à jour (navigateurs qui le reconnaissent, Chrome et Edge 146) ; le
+  titre de la présentation du contexte suit le texte agrandi (part en `rem` ajoutée à sa taille fluide, rendu inchangé en
+  taille d'affichage 100 % aux largeurs des captures de référence). (session « Projet audit_suivi Coeur »)
+- Charte, **feuilles de style modernisées** (décision du RSSI du 24/11/2026, lot « charte CSS », en CSS statique et dans le
+  thème, sans script ni style en ligne) : la page ne défile plus sous une fenêtre ou un panneau ouvert (voile et conteneur
+  qui retiennent le geste, `overscroll-behavior` ; le verrou de Mantine reste coupé par la CSP, la fenêtre défile toujours ;
+  Chrome et Edge 144, Firefox 150) ; barres de défilement aux couleurs du thème clair ou sombre, contraste d'au moins 3:1
+  vérifié sur chaque fond, teintes propres au menu bleu nuit et couleurs nettement contrastées sous « contraste renforcé »
+  (`prefers-contrast: more`) ; titres équilibrés sur leurs lignes (`text-wrap: balance`) et textes d'aide sans mot isolé
+  en dernière ligne (`pretty`) ; police de repli locale aux dimensions de Lexend et de chaque police à l'essai
+  (`size-adjust`, `ascent-override`, `descent-override`), affichée pendant leur chargement, pour que les lignes et les
+  fiches ne changent plus de taille à l'arrivée de la police (session « Projet audit_suivi Coeur »).
+
+### Corrigé
+
+- Fiches en parties : une fenêtre dont le découpage allait et venait (découpée, puis au défilement habituel, puis de nouveau
+  découpée) sans que son contenu change occupait le navigateur en continu tant qu'elle restait ouverte, chaque calcul
+  relançant l'autre par l'observateur de taille (fenêtre « Sauvegardes et restauration » avec une longue liste
+  d'instantanés : plusieurs dizaines de secondes, au point de faire dépasser son délai au test de bout en bout de
+  l'Administration). Après deux bascules, la fenêtre garde son défilement habituel jusqu'au prochain changement du
+  contenu, de l'écran ou des préférences d'affichage. (session « Projet audit_suivi Coeur »)
+- **Jour et heure civils de Paris** au lieu de l'UTC (décision du RSSI du 24/11/2026) : nouveau module partagé
+  `heure-paris` (`jourParis`, `maintenantLocalParis`, fondés sur `Intl.DateTimeFormat` et le fuseau `Europe/Paris`, sans
+  dépendance). Incidents : l'heure de détection et l'heure de résolution posées par défaut sont l'heure de Paris au format
+  du champ (`AAAA-MM-JJThh:mm`, sans fuseau, comme la saisie), et non plus l'heure UTC, en retard d'une heure en hiver et de
+  deux en été ; l'année du numéro `INC-AAAA-nnn` suit aussi Paris ; les heures par défaut du RETEX suivent Paris quel que
+  soit le fuseau du navigateur. Veille des vulnérabilités : une échéance KEV n'est plus jugée dépassée ou à venir selon le
+  jour UTC (faux entre minuit et 1 h ou 2 h). Même correction pour « aujourd'hui » dans les comparaisons d'échéances et de
+  revues (tableau de bord, risques, cartes de synthèse, boîtes du Pilotage, revue de direction, plans, évaluations de
+  fournisseurs, import Tenacy, assistant), pour les dates proposées par défaut dans les formulaires (récurrences, mesures
+  d'indicateur, évaluation de fournisseur, mois des tâches) et pour la date des noms de fichiers d'export. Un test de
+  l'interface refuse le retour de `new Date().toISOString().slice(…)` (session « Projet audit_suivi Coeur »).
+- Système > **Mises à jour et versions** (retour du RSSI du 24/11/2026) : sur un écran peu haut, la fenêtre était découpée
+  en parties et ne défilait plus ; l'encadré de l'installation était coupé et le bouton « Installer la version » n'était
+  atteignable qu'au clavier, après le code de double authentification. La fenêtre garde désormais son défilement vertical
+  habituel. Au téléphone, la flèche entre les deux cartes de versions est verticale et ne les traverse plus (session
+  « Projet audit_suivi Coeur »).
 
 ### Sécurité
 
@@ -27,28 +76,6 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   dans les sources) ; les tests de bout en bout relèvent aussi les violations Trusted Types de la console. Passage en
   application stricte après une campagne de bout en bout propre, sur décision ultérieure du RSSI. (session « Projet
   audit_suivi Coeur »)
-
-### Modifié
-
-- Accessibilité, **focus après une action refusée** (guide « accessible-error-announcement », décision du RSSI du
-  24/11/2026) : dans une fenêtre, un panneau ou un formulaire, quand une action lancée par un bouton fait apparaître une
-  erreur alors que le focus est resté sur ce bouton, le focus rejoint le premier champ invalide (`aria-invalid`), sinon le
-  message d'erreur (`ErrorAlert`, devenu focalisable) ; une saisie en cours n'est jamais interrompue. Dans une fiche
-  découpée en parties, la partie de l'élément focalisé s'affiche. Mécanisme commun `packages/ui/src/focus-erreur.ts`,
-  installé une fois au démarrage, sans modifier les formulaires. (session « Projet audit_suivi Coeur »)
-- Accessibilité, **texte agrandi par le système** (guide « respect-os-text-scale ») : `<meta name="text-scale"
-  content="scale">` dans l'interface et la page de mise à jour (navigateurs qui le reconnaissent, Chrome et Edge 146) ; le
-  titre de la présentation du contexte suit le texte agrandi (part en `rem` ajoutée à sa taille fluide, rendu inchangé en
-  taille d'affichage 100 % aux largeurs des captures de référence). (session « Projet audit_suivi Coeur »)
-
-### Corrigé
-
-- Fiches en parties : une fenêtre dont le découpage allait et venait (découpée, puis au défilement habituel, puis de nouveau
-  découpée) sans que son contenu change occupait le navigateur en continu tant qu'elle restait ouverte, chaque calcul
-  relançant l'autre par l'observateur de taille (fenêtre « Sauvegardes et restauration » avec une longue liste
-  d'instantanés : plusieurs dizaines de secondes, au point de faire dépasser son délai au test de bout en bout de
-  l'Administration). Après deux bascules, la fenêtre garde son défilement habituel jusqu'au prochain changement du
-  contenu, de l'écran ou des préférences d'affichage. (session « Projet audit_suivi Coeur »)
 
 ## [7.7.0] — 2026-11-24
 

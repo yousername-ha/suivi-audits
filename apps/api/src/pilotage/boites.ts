@@ -1,7 +1,7 @@
 /* Boîtes de pilotage par processus (ISO 9001:2015, 4.4.1 c et 9.1.1) : ce qui est rattaché à chaque processus dans le
    registre commun (actions ouvertes, risques, séries récurrentes) et la prochaine échéance récurrente. Les indicateurs eux-
    mêmes sont lus et calculés avec l'état de l'outil de suivi. Aucun taux de conformité n'est calculé ici. */
-import { GRC_MODULES, Recurrence, prochaineOccurrence } from '@suivi/shared';
+import { jourParis, GRC_MODULES, Recurrence, prochaineOccurrence } from '@suivi/shared';
 import { isObject } from '@suivi/shared/legacy';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
@@ -70,7 +70,7 @@ export class PilotageBoites {
       }
       return objets.filter((o) => ids.has(o.id));
     };
-    const aujourdhui = new Date().toISOString().slice(0, 10);
+    const aujourdhui = jourParis();
     return refs.map((ref) => {
       const liees = rattaches(ref);
       const actions = liees.filter((o) => o.kind === 'action' && !clos.has(String(o.status)));

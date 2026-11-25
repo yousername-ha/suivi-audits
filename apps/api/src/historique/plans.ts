@@ -14,6 +14,7 @@ import {
   lireTacheRecurrente,
   type ActionPlan,
   type TacheRecurrente,
+  jourParis,
 } from '@suivi/shared';
 import { isObject, type JsonObject } from '@suivi/shared/legacy';
 import type { SessionUser } from '../auth.js';
@@ -22,8 +23,8 @@ import { DEFAULT_SMSI } from '../grc/core.js';
 import { entrees, perimetreDe, remplacerEntree, type RegistreHistorique } from './registre.js';
 
 const str = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String(v));
-/** Date du jour (AAAA-MM-JJ) en UTC, comme `suppliers.ts`. */
-const aujourdhui = () => new Date().toISOString().slice(0, 10);
+/** Date du jour (AAAA-MM-JJ), jour civil de Paris. */
+const aujourdhui = () => jourParis();
 
 interface MesurePlan {
   id: string;

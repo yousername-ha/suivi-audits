@@ -17,7 +17,7 @@ import {
 } from '@mantine/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
-import { formatValeurIndicateur } from '@suivi/shared';
+import { jourParis, formatValeurIndicateur } from '@suivi/shared';
 import { optionsTypesProcessus, useTypesProcessus } from '../processus/types';
 import { ConfirmButton, DataTable } from '@suivi/ui';
 import { api } from '../api';
@@ -443,7 +443,7 @@ export function FicheIndicateur({
       source: texte(indicateur.source),
       processes: liste(indicateur.processes),
     }),
-    [date, setDate] = useState(new Date().toISOString().slice(0, 10)),
+    [date, setDate] = useState(jourParis()),
     [valeur, setValeur] = useState(''),
     [note, setNote] = useState(''),
     [hist, setHist] = useState('');

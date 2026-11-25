@@ -3,7 +3,7 @@
    restreints qu'elle ne peut pas lire (un écran mural n'a aucun droit par registre : seuls le périmètre commun et les
    registres non restreints sont comptés). Chaque élément n'est compté qu'une fois, même s'il apparaît dans plusieurs
    périmètres par un registre partagé. Chaque bloc exige la lecture de son module et vaut `null` sans ce droit. */
-import type { Rights, Synthese } from '@suivi/shared';
+import { jourParis, type Rights, type Synthese } from '@suivi/shared';
 import { FINDING_TYPE_LABELS } from '@suivi/shared/audit';
 import type { SessionUser } from './auth.js';
 import { DEFAULT_SMSI, type Grc } from './grc/core.js';
@@ -125,8 +125,9 @@ async function tableauDeBordNatifBase(
   const { ids, masques } = await portee(g, user);
   if (!ids.length) return vide;
   const maintenant = opts.aujourdHui.toISOString();
-  const jour = maintenant.slice(0, 10);
-  const horizon = new Date(opts.aujourdHui.getTime() + opts.joursEcheance * 86400e3).toISOString().slice(0, 10);
+  // Jours civils de Paris (échéances AAAA-MM-JJ) ; `maintenant` reste un instant ISO.
+  const jour = jourParis(opts.aujourdHui);
+  const horizon = jourParis(new Date(opts.aujourdHui.getTime() + opts.joursEcheance * 86400e3));
   const sortie: Natif = { ...vide };
 
   const l = await compter(g, ids, masques, maintenant);

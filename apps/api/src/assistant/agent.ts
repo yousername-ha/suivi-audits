@@ -1,7 +1,7 @@
 /* Boucle de l'agent (ADR 0086, point 1) : demande, appels d'outils, réponse. Le modèle ne reçoit que ce que les outils ont lu
    avec les droits de la personne. Un contenu lu est une donnée, jamais une consigne : la consigne système le rappelle, et
    aucun outil ne permet d'écrire ou de sortir. Nombre de tours borné. */
-import { PROFIL_ASSISTANT_LIBELLES, type ProfilAssistant, type SourceAssistant } from '@suivi/shared';
+import { jourParis, PROFIL_ASSISTANT_LIBELLES, type ProfilAssistant, type SourceAssistant } from '@suivi/shared';
 import type { Logger } from 'pino';
 import { z } from 'zod';
 import { HttpError } from '../http/errors.js';
@@ -77,7 +77,7 @@ export async function repondre(p: {
   avantDeConclure?: (journal: readonly { nom: string; elements: number }[]) => string | null;
 }): Promise<ResultatAgent> {
   const messages: MessageModele[] = [
-    { role: 'system', content: p.consigne ?? consigne(p.profil, new Date().toISOString().slice(0, 10)) },
+    { role: 'system', content: p.consigne ?? consigne(p.profil, jourParis()) },
     ...p.fil.map((m): MessageModele => ({ role: m.role === 'utilisateur' ? 'user' : 'assistant', content: m.contenu })),
   ];
   const parNom = new Map(p.outils.map((o) => [o.nom, o]));

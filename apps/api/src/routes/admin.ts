@@ -8,6 +8,7 @@ import {
   SystemeOut,
   TypeProcessusBody,
   TypeProcessusPatch,
+  jourParis,
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import { z } from 'zod';
@@ -168,10 +169,7 @@ export const adminRoutes = [
       if (exportJson) {
         reply
           .header('Content-Type', 'application/json; charset=utf-8')
-          .header(
-            'Content-Disposition',
-            `attachment; filename="journal-audit-${new Date().toISOString().slice(0, 10)}.json"`,
-          )
+          .header('Content-Disposition', `attachment; filename="journal-audit-${jourParis()}.json"`)
           .header('Cache-Control', 'no-store');
         return reply.send(JSON.stringify(r.rows));
       }
@@ -184,10 +182,7 @@ export const adminRoutes = [
         ].join('\r\n');
       reply
         .header('Content-Type', 'text/csv; charset=utf-8')
-        .header(
-          'Content-Disposition',
-          `attachment; filename="journal-audit-${new Date().toISOString().slice(0, 10)}.csv"`,
-        )
+        .header('Content-Disposition', `attachment; filename="journal-audit-${jourParis()}.csv"`)
         .header('Cache-Control', 'no-store');
       return reply.send(body);
     },
@@ -277,10 +272,7 @@ export const adminRoutes = [
       });
       reply
         .header('Content-Type', 'application/x-ndjson; charset=utf-8')
-        .header(
-          'Content-Disposition',
-          `attachment; filename="journaux-techniques-${new Date().toISOString().slice(0, 10)}.ndjson"`,
-        )
+        .header('Content-Disposition', `attachment; filename="journaux-techniques-${jourParis()}.ndjson"`)
         .header('Cache-Control', 'no-store');
       if (reste) reply.header('X-Journal-Tronque', '1');
       // Ordre chronologique dans le fichier : les plus anciennes entrées d'abord.
