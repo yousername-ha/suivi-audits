@@ -4,7 +4,7 @@
 import { Alert, Badge, Button, Card, Checkbox, Group, Select, Stack, Table, Text, TextInput } from '@mantine/core';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
-import type { BusinessPolicy, GrcObject, RegistreDto, TaskData } from '@suivi/shared';
+import { type BusinessPolicy, type GrcObject, jourParis, type RegistreDto, type TaskData } from '@suivi/shared';
 import { DataTable, retenirFocusFiche } from '@suivi/ui';
 import { useFiltreUrl } from '../components/filtre-url';
 import { get } from '../api';
@@ -75,7 +75,7 @@ export function Tasks({
 }) {
   // Filtres conservés dans l'adresse (retour depuis une fiche, lien partagé) : vue, mois, recherche, responsable, état, registre.
   const [vue, setVue] = useFiltreUrl('tvue', policy.display.defaultTaskView),
-    [month, setMonth] = useFiltreUrl('tmois', new Date().toISOString().slice(0, 7)),
+    [month, setMonth] = useFiltreUrl('tmois', jourParis().slice(0, 7)),
     [search, setSearch] = useFiltreUrl('tq', ''),
     [responsable, setResponsable] = useFiltreUrl('tresp', ''),
     [etat, setEtat] = useFiltreUrl('tetat', ''),

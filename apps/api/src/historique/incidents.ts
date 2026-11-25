@@ -12,7 +12,9 @@ import {
   ObligationTraitee,
   identifiantActionIncident,
   identifiantIncident,
+  jourParis,
   lireIncident,
+  maintenantLocalParis,
   qualifierIncident,
   type Incident,
   type Reponses,
@@ -25,7 +27,9 @@ import type { DeclarationsIncidents } from './declarations.js';
 import { entrees, perimetreDe, remplacerEntree, type RegistreHistorique } from './registre.js';
 
 const str = (v: unknown) => (typeof v === 'string' ? v : v == null ? '' : String(v));
-const maintenant16 = () => new Date().toISOString().slice(0, 16);
+/* Heure de détection ou de résolution par défaut : heure civile de Paris au format du champ « datetime-local »
+   (AAAA-MM-JJThh:mm, sans fuseau), comme la saisie à l'écran ; jamais l'heure UTC. */
+const maintenant16 = () => maintenantLocalParis();
 
 export interface VueIncidents {
   version: number;
@@ -38,7 +42,7 @@ export interface VueIncidents {
 
 /** Nouvel incident brut : valeurs par défaut de l'outil historique, complétées par `o`. */
 export function incidentBrut(data: JsonObject, o: JsonObject = {}): JsonObject {
-  const annee = new Date().getFullYear();
+  const annee = Number(jourParis().slice(0, 4));
   return {
     id: identifiantIncident(
       entrees(data, 'incidents').map((x) => str(x.id)),

@@ -22,6 +22,7 @@ import {
   type ReglagesAssistantDto,
   type SourceAssistant,
   type TestModeleDto,
+  jourParis,
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import type { Kdb } from '../db/db.js';
@@ -584,7 +585,7 @@ export class Assistant {
         profil: t.profil,
         // Contexte de l'organisation et fiches de méthode validées : relus aussi en conversation.
         consigne: [
-          consigne(t.profil, new Date().toISOString().slice(0, 10)),
+          consigne(t.profil, jourParis()),
           vuln ? CONSIGNE_VULNERABILITES : '',
           (await this.rondes?.annexes(t.profil)) ?? '',
         ]

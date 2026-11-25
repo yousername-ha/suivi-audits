@@ -2,7 +2,7 @@
    PERSONNE qui interroge l'assistant, après avoir vérifié que le périmètre appartient au profil : l'assistant ne lit jamais
    plus que l'intersection des deux. Aucun outil n'écrit. Les chiffres viennent des services (jamais du modèle) et chaque
    résultat porte ses sources. Les résultats sont bornés avant d'être remis au modèle. */
-import { GRC_KINDS, GRC_LABELS, type GrcKind, type SourceAssistant } from '@suivi/shared';
+import { jourParis, GRC_KINDS, GRC_LABELS, type GrcKind, type SourceAssistant } from '@suivi/shared';
 import { z, type ZodType } from 'zod';
 import type { SessionUser } from '../auth.js';
 import { HttpError } from '../http/errors.js';
@@ -361,7 +361,7 @@ export const OUTILS: readonly Outil[] = [
     async executer(ctx) {
       const tous = (await ctx.g.listSmsis(ctx.user)).filter((s) => ctx.perimetres.has(s.id));
       const liste = tous.slice(0, PERIMETRES_VUE_MAX);
-      const aujourdHui = new Date().toISOString().slice(0, 10);
+      const aujourdHui = jourParis();
       const perimetres = [];
       for (const s of liste) {
         const compteurs = await sansRefus(async () => (await dashboard(ctx.g, s.id, ctx.user)).sections);
@@ -567,7 +567,7 @@ export const OUTILS: readonly Outil[] = [
       const s = await ctx.g.access(a.perimetre, ctx.user);
       const actions = await parcourirActions(ctx, a.perimetre);
       actions.retard.sort((x, y) => String(x.echeance).localeCompare(String(y.echeance)));
-      const aujourdHui = new Date().toISOString().slice(0, 10);
+      const aujourdHui = jourParis();
       const risques: (ReturnType<typeof resume> & { revue: string })[] = [];
       let offset: number | null = 0;
       let risquesExamines = 0;

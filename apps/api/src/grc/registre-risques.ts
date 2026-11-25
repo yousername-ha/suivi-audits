@@ -13,6 +13,7 @@ import {
   type EtatAcceptation,
   type GrcKind,
   type RiskMethod,
+  jourParis,
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import type { SessionUser } from '../auth.js';
@@ -46,7 +47,7 @@ interface Ligne {
   acceptance: { result: string; until: string | null; date: string; by: string } | null;
 }
 
-const jour = () => new Date().toISOString().slice(0, 10);
+const jour = () => jourParis();
 /** Définition d'une version de configuration (échelle, correspondance). */
 const definitionCfg = async (k: Kdb, ref: { item: string; version: number }) =>
   (

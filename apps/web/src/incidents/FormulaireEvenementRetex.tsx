@@ -1,22 +1,18 @@
 /* Formulaire d'un événement de chronologie RETEX (date et heure, type, gravité, acteur, intitulé, description), partagé par
    la saisie du pilote, la correction d'une proposition et la page de contribution. */
 import { Button, Group, Select, Stack, Textarea, TextInput } from '@mantine/core';
-import { GRAVITES_RETEX, TYPES_EVENEMENT_RETEX, type EvenementRetex } from '@suivi/shared';
+import { GRAVITES_RETEX, maintenantLocalParis, TYPES_EVENEMENT_RETEX, type EvenementRetex } from '@suivi/shared';
 import { useState } from 'react';
 
 export type SaisieRetex = Omit<EvenementRetex, 'id' | 'source' | 'apport'>;
 
-/** Date et heure locales courantes au format du champ « datetime-local ». */
-export const maintenantLocal = () => {
-  const d = new Date();
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-};
-/** Horodatage ISO (UTC) converti en heure locale « AAAA-MM-JJThh:mm » (vide s'il est invalide). */
+/** Date et heure courantes de Paris au format du champ « datetime-local », comme l'heure de détection par défaut posée par
+    le serveur (quel que soit le fuseau du navigateur). */
+export const maintenantLocal = () => maintenantLocalParis();
+/** Horodatage ISO (UTC) converti en heure de Paris « AAAA-MM-JJThh:mm » (vide s'il est invalide). */
 export const isoVersLocal = (iso: string) => {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? ''
-    : new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  return Number.isNaN(d.getTime()) ? '' : maintenantLocalParis(d);
 };
 export const saisieVide = (ts: string, type = 'Détection'): SaisieRetex => ({
   ts,
