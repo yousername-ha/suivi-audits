@@ -19,6 +19,8 @@ ADR 0082), puis celle du [30/10/2026](docs/01_REPRISE_IA/REPRISE-2026-10-30.md) 
 - Trois branches (décision du RSSI, 11/10/2026) : `main` (version Docker unique, publiée par étiquette
   `vX.Y.Z`), `claude-suivi-smsi` (branche de travail, [plan d'unification](docs/unification/PLAN-EVOLUTION.md)),
   `legacy` (outil historique autonome). Les autres branches sont conservées sous les étiquettes `archive/*`.
+- `refonte-verre` (décision du RSSI, 26/11/2026) : copie de `main` fusionnée automatiquement à chaque publication, plus la
+  refonte « Verre » et sa pile d'évaluation sans connexion (`docker-compose.verre.yml`, à ne jamais reporter ailleurs).
 - `main` n'évolue que par PR depuis `claude-suivi-smsi`, après CI verte. Dépôt public : aucune donnée réelle
   ni aucun secret, y compris dans les messages de commit.
 - Architecture actuelle : [DAT](docs/03_ARCHITECTURE/DAT.md).

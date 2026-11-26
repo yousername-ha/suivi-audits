@@ -1,0 +1,47 @@
+# Branche d'évaluation de la refonte « Verre » (décision du RSSI du 26/11/2026) : refonte-verre reste une copie de main,
+# plus la refonte graphique et sa pile d'évaluation sans page de connexion (docker-compose.verre.yml, sur cette branche
+# seulement). À chaque publication dans main, main est fusionnée dans refonte-verre par un commit de fusion : jamais de
+# réécriture ni de poussée forcée. En cas de conflit, rien n'est poussé et l'exécution échoue : Coeur résout à la main.
+# Ne touche à aucune autre branche. Le déclencheur ne vaut que depuis main : actif avec la publication qui porte ce fichier.
+name: Synchroniser refonte-verre
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: synchroniser-refonte-verre
+  cancel-in-progress: false
+
+jobs:
+  synchroniser:
+    name: Fusion de main dans refonte-verre
+    if: github.repository == 'yousername-ha/suivi-audits'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refonte-verre
+          fetch-depth: 0
+      - name: Fusionner main
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch --no-tags origin main
+          if git merge-base --is-ancestor origin/main HEAD; then
+            echo 'refonte-verre contient déjà main : rien à faire.'
+            exit 0
+          fi
+          if ! git merge --no-ff --no-edit -m 'Synchronisation : fusion de main dans refonte-verre' origin/main; then
+            git merge --abort || true
+            echo '::error::Conflit entre main et refonte-verre : fusion à résoudre à la main (commit de fusion, sans réécriture).'
+            exit 1
+          fi
+          git push origin HEAD:refonte-verre
