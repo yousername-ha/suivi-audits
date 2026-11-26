@@ -261,6 +261,27 @@ function genererSecrets(dir: string): number {
   return created + genererCleSaml(dir);
 }
 
+/** Crée `f` en exclusivité (mode 0400) puis y écrit `contenu()` ; rend false si le fichier existe déjà. Un échec de la
+    génération retire le fichier vide, pour qu'un prochain démarrage le recrée. */
+function creerExclusif(f: string, contenu: () => string): boolean {
+  let fd: number;
+  try {
+    fd = fs.openSync(f, 'wx', 0o400);
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'EEXIST') return false;
+    throw e;
+  }
+  try {
+    fs.writeFileSync(fd, contenu());
+  } catch (e) {
+    fs.closeSync(fd);
+    fs.rmSync(f, { force: true });
+    throw e;
+  }
+  fs.closeSync(fd);
+  return true;
+}
+
 /** Clé et certificat du service de la connexion unique SAML (ADR 0114) : la clé signe les demandes de connexion, le
     certificat (public) se recopie chez le fournisseur d'identité. Création exclusive, jamais de remplacement : un
     certificat manquant est refait à partir de la clé existante. */
@@ -268,32 +289,30 @@ export function genererCleSaml(dir: string): number {
   let created = 0;
   const cleF = path.join(dir, 'saml_sp_key');
   const certF = path.join(dir, 'saml_sp_cert');
-  // Génération seulement si la clé manque (quelques centaines de millisecondes) ; « wx » ne remplace jamais un fichier.
-  if (!fs.existsSync(cleF))
-    try {
-      const { privateKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 3072 });
-      fs.writeFileSync(cleF, privateKey.export({ type: 'pkcs8', format: 'pem' }), { mode: 0o400, flag: 'wx' });
-      created++;
-      console.log('secret créé : saml_sp_key');
-    } catch (e) {
-      if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
-    }
-  if (!fs.existsSync(certF))
-    try {
-      const cle = fs.readFileSync(cleF, 'utf8');
-      fs.writeFileSync(
-        certF,
-        certificatAutoSigne(cle, { nomCommun: 'Suivi des audits SMSI - connexion unique', jours: 3650 }),
-        {
-          mode: 0o400,
-          flag: 'wx',
-        },
-      );
-      created++;
-      console.log('secret créé : saml_sp_cert');
-    } catch (e) {
-      if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
-    }
+  // Création exclusive (« wx ») avant toute génération : aucun contrôle d'existence préalable (pas de fenêtre entre le
+  // contrôle et l'écriture), un fichier existant n'est jamais remplacé.
+  if (
+    creerExclusif(cleF, () =>
+      crypto
+        .generateKeyPairSync('rsa', { modulusLength: 3072 })
+        .privateKey.export({ type: 'pkcs8', format: 'pem' })
+        .toString(),
+    )
+  ) {
+    created++;
+    console.log('secret créé : saml_sp_key');
+  }
+  if (
+    creerExclusif(certF, () =>
+      certificatAutoSigne(fs.readFileSync(cleF, 'utf8'), {
+        nomCommun: 'Suivi des audits SMSI - connexion unique',
+        jours: 3650,
+      }),
+    )
+  ) {
+    created++;
+    console.log('secret créé : saml_sp_cert');
+  }
   for (const f of [cleF, certF]) {
     fs.chownSync(f, APP_UID, APP_GID);
     fs.chmodSync(f, 0o400);

@@ -65,6 +65,7 @@ class Script(unittest.TestCase):
         cls.autorite = (p / "cert").read_text()
         cls.serveur = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Gestionnaire)
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
         ctx.load_cert_chain(str(p / "cert"), str(p / "key"))
         cls.serveur.socket = ctx.wrap_socket(cls.serveur.socket, server_side=True)
         cls.port = cls.serveur.server_address[1]
