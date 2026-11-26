@@ -1266,7 +1266,7 @@ html[data-style='verre'] {
     radial-gradient(80% 60% at 50% 34%, rgba(255, 255, 255, 0.1), transparent 62%),
     radial-gradient(130% 110% at 50% 50%, #9fbd62 0%, #82a346 48%, #5f7e2c 100%);
   /* Halo vert adouci (demandes du RSSI du 26/11/2026 : vert plus doux, plus foncé, moins de blanc). */
-  --acr-halo: 130, 170, 60;
+  --acr-halo: 150, 196, 70;
   --acr-prisme-fort: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 220'%3E%3Cdefs%3E%3ClinearGradient id='f' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.6'/%3E%3Cstop offset='.45' stop-color='%23fff' stop-opacity='.12'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='.35'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M18 62 L96 8 L228 30 L232 150 L150 212 L10 170 Z' fill='url(%23f)' stroke='%233c5a0a' stroke-opacity='.35' stroke-width='5' stroke-linejoin='round'/%3E%3Cpath d='M18 62 L96 8 L228 30 L232 150 L150 212 L10 170 Z' fill='none' stroke='%23fff' stroke-opacity='.95' stroke-width='2.5' stroke-linejoin='round'/%3E%3Cpath d='M34 70 L100 26 L212 44 L216 144 L146 194 L28 160 Z' fill='none' stroke='%23fff' stroke-opacity='.6' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M46 76 l8 -5 M200 52 l6 6 M204 140 l-6 6 M40 152 l7 4' stroke='%23fff' stroke-opacity='.9' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
   --acr-pastille-fond: rgba(20, 32, 10, 0.88);
   --acr-pastille-bord: rgba(220, 255, 120, 0.7);
@@ -1330,7 +1330,8 @@ html[data-style='verre'] .auth-connexion .auth-verre-pastille {
   color: var(--acr-encre);
   box-shadow:
     inset 0 0 14px rgba(255, 255, 255, 0.16),
-    0 0 26px rgba(var(--acr-halo), 0.45);
+    0 0 34px rgba(var(--acr-halo), 0.7),
+    0 0 80px rgba(var(--acr-halo), 0.3);
 }
 html[data-style='verre'] .auth-connexion .auth-verre-bouclier {
   width: 1.6rem;
@@ -1400,7 +1401,8 @@ html[data-style='verre'] .auth-connexion .auth-carte--valider {
   font-weight: 700;
   box-shadow:
     inset 0 0 18px rgba(255, 255, 255, 0.14),
-    0 0 26px rgba(var(--acr-halo), 0.4);
+    0 0 34px rgba(var(--acr-halo), 0.65),
+    0 0 90px rgba(var(--acr-halo), 0.28);
 }
 html[data-style='verre'] .auth-connexion .auth-carte--valider::before,
 html[data-style='verre'] .auth-connexion .auth-carte--valider::after {
