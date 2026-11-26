@@ -415,7 +415,13 @@ export function Layout({ children }: { children: ReactNode }) {
         <aside className="shell-nav">{navigation}</aside>
         {/* Vulnérabilités et veille réglementaire : style de la page de maintenance, limité à ces deux modules
             (neon-vulnerabilites.css). */}
-        <main className="shell-main app-main" data-module={moduleMaintenance}>
+        {/* Famille du menu de la page (refonte « Verre », lot 2) : surtitre de l'en-tête et habillage par famille. */}
+        <main
+          className="shell-main app-main"
+          data-module={moduleMaintenance}
+          data-famille={familleDeLaPage}
+          data-famille-libelle={localiser(loc.pathname)?.famille.label}
+        >
           <ErrorAlert error={logoutError} />
           <BandeauCrise />
           {/* Lot R1 : barre de recherche globale du module, en tête de toutes ses pages (droit de lire le module).

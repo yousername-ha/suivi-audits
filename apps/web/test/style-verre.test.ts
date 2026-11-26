@@ -53,4 +53,16 @@ describe('style « Verre »', () => {
     expect(verre).toMatch(/html\[data-style='verre'\] \.auth-connexion \.auth-verre-tete \{\s*display: flex;/);
     expect(verre).toContain("html[data-style='verre'] .auth-connexion .auth-carte--valider {");
   });
+
+  it('lot 2, Organisation : famille de la page posée par la coquille, en-tête et compteurs habillés en style « Verre »', () => {
+    const layout = lire('../src/components/Layout.tsx');
+    expect(layout).toContain('data-famille={familleDeLaPage}');
+    expect(layout).toContain('data-famille-libelle={localiser(loc.pathname)?.famille.label}');
+    const verre = lire('../../../packages/ui/src/verre.css');
+    expect(verre).toContain(
+      "html[data-style='verre'] .app-main[data-famille='organisation'] > .page:has(> .page-header) {",
+    );
+    expect(verre).toContain('content: attr(data-famille-libelle);');
+    expect(verre).toContain("html[data-style='verre'] .app-main[data-famille='organisation'] .pr-lane {");
+  });
 });

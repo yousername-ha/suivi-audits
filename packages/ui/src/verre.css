@@ -1490,6 +1490,124 @@ html[data-style='verre'] .tdb .tdb-dalle.tdb-bandeau .neon-motif {
 }
 
 /* ========================================================================
+   LOT 2 : ONGLET ORGANISATION (maquettes 28 à 34 du canevas retenu)
+   En-tête comme les maquettes : surtitre de la famille, grand titre, description, puis les onglets ; compteurs en
+   tuiles à grand chiffre ; colonnes de Processus en panneaux de verre. La cartographie garde sa disposition (choix du
+   RSSI). Limité aux pages de la famille Organisation (attribut data-famille posé par la coquille).
+   ======================================================================== */
+html[data-style='verre'] .app-main[data-famille='organisation']:has(> .page > .page-header) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-lg);
+}
+html[data-style='verre'] .app-main[data-famille='organisation'] > .page:has(> .page-header) {
+  display: contents;
+}
+html[data-style='verre'] .app-main[data-famille='organisation']:has(> .page > .page-header)::before {
+  order: -30;
+  margin-bottom: calc(var(--mantine-spacing-lg) * -1 + 0.2rem);
+  content: attr(data-famille-libelle);
+  color: var(--verre-vert);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+html[data-style='verre'] .app-main[data-famille='organisation'] > .page > .page-header {
+  order: -20;
+}
+html[data-style='verre'] .app-main[data-famille='organisation']:has(> .page > .page-header) > .entete-module {
+  order: -10;
+}
+html[data-style='verre']
+  .app-main[data-famille='organisation']:has(> .page > .page-header)
+  > :not(.entete-module, .page) {
+  order: -40;
+}
+html[data-style='verre'] .app-main[data-famille='organisation'] .page-header h1 {
+  color: var(--verre-texte-fort);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Compteurs (Plans annuels) : tuiles de même largeur, grand chiffre fin suivi de son libellé. */
+html[data-style='verre']
+  .app-main[data-famille='organisation']
+  .mantine-Group-root:has(> .mantine-Card-root > p.mantine-Text-root:first-child + p.mantine-Text-root:last-child) {
+  flex-wrap: nowrap;
+}
+html[data-style='verre']
+  .app-main[data-famille='organisation']
+  .mantine-Group-root
+  > .mantine-Card-root:has(> p.mantine-Text-root:first-child + p.mantine-Text-root:last-child) {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.9rem 1.2rem;
+}
+html[data-style='verre']
+  .app-main[data-famille='organisation']
+  .mantine-Card-root
+  > p.mantine-Text-root:first-child:has(+ p.mantine-Text-root:last-child) {
+  color: var(--verre-texte-fort);
+  font-size: 2rem;
+  font-weight: 300;
+  line-height: 1;
+}
+html[data-style='verre']
+  .app-main[data-famille='organisation']
+  .mantine-Card-root
+  > p.mantine-Text-root:first-child
+  + p.mantine-Text-root:last-child {
+  color: var(--verre-secondaire);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+
+/* Processus : résumé en tuiles, colonnes en panneaux de verre avec pastille de couleur dans l'en-tête. */
+html[data-style='verre'] .app-main[data-famille='organisation'] .pr-resume {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--mantine-spacing-sm);
+}
+html[data-style='verre'] .app-main[data-famille='organisation'] .pr-resume > span {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.9rem 1.2rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: 1.25rem;
+  background: var(--verre-surface);
+  color: var(--verre-secondaire);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+  box-shadow: var(--verre-reflet);
+}
+html[data-style='verre'] .app-main[data-famille='organisation'] .pr-resume > span > b {
+  color: var(--verre-texte-fort);
+  font-size: 2rem;
+  font-weight: 300;
+  line-height: 1;
+}
+html[data-style='verre'] .app-main[data-famille='organisation'] .pr-lane {
+  padding: 1rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: var(--verre-rayon);
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre-douce);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] .app-main[data-famille='organisation'] .pr-lane-header h2 {
+  color: var(--verre-texte-fort);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* ========================================================================
    REPLIS : transparence réduite, contraste renforcé, navigateur sans backdrop-filter, couleurs forcées
    ======================================================================== */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
