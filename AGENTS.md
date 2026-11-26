@@ -7,7 +7,9 @@ Suivre également [CONTRIBUTING.md](CONTRIBUTING.md).
 ## Périmètre actuel
 
 - Branches : `main` (version Docker unique), `claude-suivi-smsi` (branche de travail),
-  `legacy` (outil historique autonome) ; anciennes branches sous `archive/*`.
+  `legacy` (outil historique autonome) ; anciennes branches sous `archive/*`. `refonte-verre` (décision du RSSI du
+  26/11/2026) : copie de `main` tenue à jour automatiquement (workflow `synchroniser-refonte-verre.yml`), plus la refonte
+  graphique « Verre » et sa pile d'évaluation sans page de connexion (`docker-compose.verre.yml`, jamais reportée ailleurs).
   Vérifier l’état Git avant toute édition. Aucun commit direct, reset ou réécriture sur `main` :
   `main` n'évolue que par PR depuis `claude-suivi-smsi`, après CI verte et accord du RSSI.
 - Dépôt public depuis le 11/10/2026 : aucune donnée réelle ni aucun secret. Aucune suppression
