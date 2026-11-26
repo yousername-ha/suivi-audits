@@ -71,6 +71,7 @@ export function Dalle({
   lueur = false,
   className = '',
   action,
+  dalle,
   children,
 }: {
   titre: string;
@@ -82,12 +83,16 @@ export function Dalle({
   className?: string;
   /** Commande placée à droite du titre (détail de la dalle). */
   action?: ReactNode;
+  /** Identifiant de la dalle (attribut data-dalle) : sert seulement au style « Verre » (verre.css), qui colore ses grands
+      chiffres selon leur sens ; sans effet sur les autres styles. */
+  dalle?: string;
   children: ReactNode;
 }) {
   return (
     <section
       className={`tdb-dalle tdb-l${largeur}${hauteur ? ` tdb-h${hauteur}` : ''}${lueur ? ' tdb-dalle--lueur' : ''}${className ? ` ${className}` : ''}`}
       aria-label={titre}
+      data-dalle={dalle}
     >
       <div className="tdb-dalle-tete">
         <div className="tdb-dalle-titres">

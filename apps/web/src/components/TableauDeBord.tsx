@@ -346,6 +346,7 @@ function cadre(p: RenduDalle, titre: string, sousTitre: string | undefined, cont
       largeur={p.largeur}
       hauteur={p.hauteur}
       action={p.action}
+      dalle={p.id}
       className={className}
     >
       {contenu}
@@ -1085,6 +1086,7 @@ export function TableauDeBordConformite({
         {visibles.map((x) => (
           <Fragment key={x.cle}>
             {x.dalle.rendu({
+              id: x.dalle.id,
               largeur: x.largeur,
               hauteur: x.hauteur,
               reglages: x.reglages,

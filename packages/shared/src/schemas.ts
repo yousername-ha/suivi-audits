@@ -6,7 +6,7 @@ import { Preferences as PreferencesSchema } from './affichage.js';
 import { PoivreAEnregistrer } from './poivre.js';
 import { CleSecoursAEnregistrer } from './cle-secours.js';
 import { AdresseSite } from './adresse-site.js';
-import { FENETRES, POLICES } from './settings.js';
+import { FENETRES, POLICES, STYLES } from './settings.js';
 import { ModeConnexion, SSO_BORNES } from './connexion-unique.js';
 
 export const USERNAME_RE = /^[a-zA-Z0-9._@-]{2,64}$/;
@@ -114,7 +114,7 @@ export const MeOut = z.object({
   appearance: z.object({
     theme: z.enum(['auto', 'clair', 'sombre']),
     densite: z.enum(['compacte', 'normale', 'confortable']),
-    style: z.enum(['sage', 'clair']),
+    style: z.enum(STYLES),
     /** Style des fenêtres à l'essai (addendum du 19/11/2026 à l'ADR 0093). */
     fenetres: z.enum(FENETRES),
     /** Police à l'essai (demande du RSSI du 23/11/2026) ; absente : Lexend. */

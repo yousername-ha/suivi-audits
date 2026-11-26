@@ -122,6 +122,7 @@ export function dallesNeon(
       largeur={p.largeur}
       hauteur={p.hauteur}
       action={p.action}
+      dalle={p.id}
       className={`tdb-neon${className ? ` ${className}` : ''}`}
     >
       {contenu}

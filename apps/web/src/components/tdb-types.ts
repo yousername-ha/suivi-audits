@@ -10,6 +10,8 @@ export type GroupeDalle = (typeof GROUPES_DALLES)[number];
 
 /** Rendu d'une dalle : largeur et hauteur dans la grille, réglages de la dalle, commande de détail. */
 export interface RenduDalle {
+  /** Identifiant de la dalle rendue (attribut data-dalle, style « Verre » seulement) ; absent : aucun attribut. */
+  id?: IdDalle;
   largeur: LargeurDalle;
   /** Lignes de la grille ; absente : hauteur naturelle (détail, petits écrans). */
   hauteur?: number;

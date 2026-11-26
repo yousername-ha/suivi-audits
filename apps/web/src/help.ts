@@ -542,7 +542,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     permission: 'parametres:lire',
     link: '/plateforme',
     steps: [
-      'Style global : dans Paramètres > Apparence, choisissez « Référence 08 — Sauge » (défaut) ou « Clair bleuté » pour tous les comptes ; l’aperçu s’affiche avant l’enregistrement. Le thème clair, sombre ou automatique reste un choix personnel.',
+      'Style global : dans Paramètres > Apparence, choisissez « Référence 08 — Sauge » (défaut), « Clair bleuté » ou « Verre » (surfaces translucides, menu en gélules, variante claire en mode clair) pour tous les comptes ; l’aperçu s’affiche avant l’enregistrement et le choix se défait d’un clic. Le thème clair, sombre ou automatique reste un choix personnel.',
       'Fenêtres (essai) : dans la même carte Apparence, choisissez « Barre d’accent » (défaut : trait gris et fine barre dégradée en haut) ou « Liseré dégradé » (liseré sur tout le contour) pour toutes les fenêtres et tous les panneaux, pour tous les comptes ; l’aperçu s’affiche avant l’enregistrement. Un seul style sera gardé à la fin de l’essai.',
       'Thème et densité par défaut s’appliquent à toute personne qui n’a pas choisi ses propres préférences (Mon compte). Seule la permission d’écriture sur les paramètres permet de les modifier.',
     ],

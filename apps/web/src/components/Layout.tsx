@@ -133,6 +133,10 @@ export function Layout({ children }: { children: ReactNode }) {
   const theme = useAffichage();
   const schema = useComputedColorScheme('light');
   const tablette = useMediaQuery('(min-width: 36em) and (max-width: 63.99em)');
+  // Style « Verre » sur ordinateur : « Compte et administration » devient une rangée de boutons ronds à icône seule
+  // (verre.css) ; le libellé reste lu par les lecteurs d'écran et s'affiche en info-bulle au survol ou au focus.
+  const ordinateur = useMediaQuery('(min-width: 64em)');
+  const rangeeVerre = me.appearance.style === 'verre' && !!ordinateur;
   // Pictogrammes animés en continu, sans bouton de pause (ADR 0099) : arrêtés quand l'onglet est masqué ; le mouvement
   // réduit du système et l'impression les arrêtent par neon-menu.css.
   const ongletVisible = useOngletVisible();
@@ -191,13 +195,19 @@ export function Layout({ children }: { children: ReactNode }) {
       setLoggingOut(false);
     }
   };
-  const withTip = (label: string, node: ReactNode) => (
-    <Tooltip key={label} label={label} position="right" disabled={!tablette}>
+  const withTip = (label: string, node: ReactNode, rangee = false) => (
+    <Tooltip
+      key={label}
+      label={label}
+      position={rangee ? 'top' : 'right'}
+      disabled={!tablette && !rangee}
+      events={rangee ? { hover: true, focus: true, touch: false } : undefined}
+    >
       <div>{node}</div>
     </Tooltip>
   );
 
-  const navigationItems = (entries: Item[]) =>
+  const navigationItems = (entries: Item[], rangee = false) =>
     entries.map(([to, label, identite]) =>
       withTip(
         label,
@@ -210,6 +220,7 @@ export function Layout({ children }: { children: ReactNode }) {
           onClick={close}
           data-identite={identite}
         />,
+        rangee,
       ),
     );
   const navigation = (
@@ -293,8 +304,8 @@ export function Layout({ children }: { children: ReactNode }) {
       <VisuallyHidden aria-live="polite">{tri.annonce}</VisuallyHidden>
       <Stack gap="2xs" className="nav-administration">
         <Text className="nav-caption nav-annexe">Compte et administration</Text>
-        {navigationItems(administration)}
-        {navigationItems(outils)}
+        {navigationItems(administration, rangeeVerre)}
+        {navigationItems(outils, rangeeVerre)}
       </Stack>
       <Stack mt="xl" gap="2xs" className="nav-footer">
         <div className="nav-signature nav-annexe">

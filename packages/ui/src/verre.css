@@ -1,0 +1,1315 @@
+/* ========================================================================
+   STYLE D'INSTANCE « VERRE » (refonte verre, lot 1, décision du RSSI du 26/11/2026)
+   Troisième style global, à côté de « sage » (défaut) et « clair » : Paramètres > Apparence, attribut data-style de
+   <html>. Chaque règle de cette feuille commence par html[data-style='verre'] (test packages/ui/test/verre-css.test.ts) :
+   sans ce style, l'interface et ses captures de référence restent identiques au pixel.
+   Valeurs reprises des maquettes validées (Main.dc.html, menu officiel) : fond #121316 à halos violet, sarcelle et ambre,
+   surfaces « liquides » (bord blanc translucide, dégradé, reflet interne, flou de 30 px), gélules, rails segmentés, champs
+   creux. Lisibilité (règle du RSSI) : aucun petit texte fin, 13 px au moins en graisse 500 à 700 ; grands chiffres colorés
+   selon leur sens. Mode clair : verre blanc, texte foncé. Repli opaque pour prefers-reduced-transparency, prefers-contrast
+   et les navigateurs sans backdrop-filter. Chargée en dernier (apps/web/src/main.tsx).
+   ======================================================================== */
+
+/* ---------------------------------------------------------------- Jetons : mode sombre (valeurs des maquettes) */
+html[data-style='verre'] {
+  --verre-texte-min: max(13px, 0.8125rem);
+  --verre-rayon: 1.75rem;
+  --verre-rayon-menu: 2.125rem;
+  --verre-rayon-ligne: 1.125rem;
+  --verre-flou: blur(30px) saturate(160%);
+  --verre-flou-leger: blur(18px) saturate(140%);
+  --verre-fond-page: #121316;
+  --verre-halos:
+    radial-gradient(30% 40% at 10% 10%, rgba(124, 58, 237, 0.26), transparent 70%),
+    radial-gradient(30% 40% at 88% 18%, rgba(26, 120, 120, 0.24), transparent 70%),
+    radial-gradient(34% 44% at 55% 105%, rgba(217, 145, 60, 0.14), transparent 70%);
+  --verre-bord: rgba(255, 255, 255, 0.13);
+  --verre-bord-fort: rgba(255, 255, 255, 0.2);
+  --verre-surface: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.025) 45%,
+    rgba(255, 255, 255, 0.045)
+  );
+  /* Surface des fenêtres et listes flottantes : même dégradé posé sur un fond presque opaque (lisible sur le voile). */
+  --verre-surface-flottante:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.025) 45%, rgba(255, 255, 255, 0.045)),
+    rgba(26, 27, 33, 0.9);
+  --verre-surface-opaque: #1d1f25;
+  --verre-reflet: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  --verre-ombre: 0 24px 56px rgba(0, 0, 0, 0.42);
+  --verre-ombre-douce: 0 6px 18px rgba(0, 0, 0, 0.4);
+  --verre-relief-fond: rgba(255, 255, 255, 0.11);
+  --verre-relief-bord: rgba(255, 255, 255, 0.24);
+  --verre-relief-ombre: inset 0 1px 0 rgba(255, 255, 255, 0.38), 0 6px 18px rgba(0, 0, 0, 0.4);
+  --verre-survol: rgba(255, 255, 255, 0.05);
+  --verre-creux-fond: rgba(0, 0, 0, 0.26);
+  --verre-creux-bord: rgba(255, 255, 255, 0.14);
+  --verre-creux-ombre: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+  --verre-rail-fond: rgba(0, 0, 0, 0.3);
+  --verre-rail-ombre: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+  --verre-gelule-fond: rgba(255, 255, 255, 0.08);
+  --verre-gelule-bord: rgba(255, 255, 255, 0.2);
+  --verre-gelule-reflet: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  --verre-primaire: linear-gradient(135deg, rgba(124, 58, 237, 0.75), rgba(79, 70, 229, 0.7));
+  --verre-primaire-bord: rgba(196, 181, 253, 0.55);
+  --verre-primaire-ombre: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 8px 22px rgba(76, 29, 149, 0.45);
+  --verre-bulle-active: linear-gradient(140deg, rgba(124, 58, 237, 0.9), rgba(79, 70, 229, 0.85));
+  --verre-bulle-active-bord: rgba(221, 214, 254, 0.6);
+  --verre-ligne-fond: rgba(255, 255, 255, 0.045);
+  --verre-ligne-survol: rgba(255, 255, 255, 0.08);
+  --verre-ligne-trait: rgba(255, 255, 255, 0.08);
+  --verre-entete: rgba(18, 19, 22, 0.55);
+  --verre-texte: #f4f5fa;
+  --verre-texte-fort: #ffffff;
+  --verre-texte-menu: #e6e8f2;
+  --verre-secondaire: #d2d5e2;
+  --verre-secondaire-2: #cdd0de;
+  --verre-discret: #aeb2c6;
+  --verre-focus: #c4b5fd;
+  /* Couleurs de sens : grands chiffres et teintes des rubriques du menu (menu officiel). */
+  --verre-violet: #c4b5fd;
+  --verre-vert: #86efac;
+  --verre-bleu: #93c5fd;
+  --verre-ambre: #fcd34d;
+  --verre-sarcelle: #5eead4;
+  --verre-orange: #fdba74;
+  --verre-rose: #f9a8d4;
+  --verre-jaune: #fde68a;
+  --verre-rouge: #fda4af;
+
+  /* Charte et Mantine : mêmes variables, valeurs du verre. */
+  --mantine-font-family:
+    'Plex Sans', 'Plex Sans repli', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue',
+    'Noto Sans', 'Liberation Sans', Arial, sans-serif;
+  --mantine-font-family-headings:
+    'Plex Sans', 'Plex Sans repli', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue',
+    'Noto Sans', 'Liberation Sans', Arial, sans-serif;
+  --mantine-font-size-xs: var(--verre-texte-min);
+  --menu-teinte-dashboard: var(--verre-violet);
+  --menu-teinte-organisation: var(--verre-vert);
+  --menu-teinte-pilotage: var(--verre-bleu);
+  --menu-teinte-risques: var(--verre-ambre);
+  --menu-teinte-conformite: var(--verre-sarcelle);
+  --menu-teinte-actions: var(--verre-orange);
+  --menu-teinte-resilience: var(--verre-rose);
+  --menu-teinte-documents: var(--verre-jaune);
+  --menu-teinte-plateforme: var(--verre-texte);
+  --menu-teinte-parametres: var(--verre-texte);
+  --menu-teinte-compte: var(--verre-texte);
+  --menu-teinte-aide: var(--verre-texte);
+  --menu-teinte-mur: var(--verre-texte);
+  --menu-texte: var(--verre-texte-menu);
+  --menu-secondaire: var(--verre-discret);
+  --menu-destination: var(--verre-secondaire);
+  --menu-selection: var(--verre-texte-fort);
+  --menu-trait: rgba(255, 255, 255, 0.12);
+  --menu-survol: var(--verre-survol);
+  --menu-survol-trait: rgba(255, 255, 255, 0.12);
+  --menu-focus: var(--verre-focus);
+}
+html[data-style='verre'][data-mantine-color-scheme='dark'] {
+  --mantine-color-body: var(--verre-fond-page);
+  --mantine-color-text: var(--verre-texte);
+  --mantine-color-dimmed: var(--verre-secondaire-2);
+  --mantine-color-default: var(--verre-gelule-fond);
+  --mantine-color-default-hover: rgba(255, 255, 255, 0.13);
+  --mantine-color-default-border: var(--verre-gelule-bord);
+  --mantine-color-default-color: var(--verre-texte-fort);
+  --mantine-color-placeholder: var(--verre-discret);
+  --suivi-fond-page: var(--verre-fond-page);
+  --suivi-surface: var(--verre-surface-opaque);
+  --suivi-surface-douce: rgba(255, 255, 255, 0.05);
+  --suivi-trait: var(--verre-bord);
+  --suivi-ombre: var(--verre-ombre-douce);
+  --neon-titre: var(--verre-texte);
+  --neon-secondaire: var(--verre-secondaire-2);
+  --neon-doux: rgba(255, 255, 255, 0.07);
+  --neon-accent: var(--verre-violet);
+  /* Fiches et fenêtres (neon-fiche.css, neon-fiches-sobres.css) : palette du verre. */
+  --fiche-fond: var(--verre-surface-opaque);
+  --fiche-encre: var(--verre-texte);
+  --fiche-secondaire: var(--verre-secondaire-2);
+  --fiche-trait: rgba(255, 255, 255, 0.2);
+  --fiche-separateur: rgba(255, 255, 255, 0.1);
+  --fiche-accent: var(--verre-violet);
+  --fiche-focus: var(--verre-focus);
+  --fiche-doux: rgba(255, 255, 255, 0.06);
+  --fiche-bord: var(--verre-bord);
+}
+
+/* ---------------------------------------------------------------- Jetons : mode clair (verre blanc, texte foncé) */
+html[data-style='verre'][data-mantine-color-scheme='light'] {
+  --verre-fond-page: #eef0f6;
+  --verre-halos:
+    radial-gradient(30% 40% at 10% 10%, rgba(124, 58, 237, 0.16), transparent 70%),
+    radial-gradient(30% 40% at 88% 18%, rgba(26, 120, 120, 0.14), transparent 70%),
+    radial-gradient(34% 44% at 55% 105%, rgba(217, 145, 60, 0.14), transparent 70%);
+  --verre-bord: rgba(255, 255, 255, 0.85);
+  --verre-bord-fort: rgba(30, 34, 70, 0.16);
+  --verre-surface: linear-gradient(150deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.55));
+  --verre-surface-flottante:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.78)), rgba(246, 247, 251, 0.92);
+  --verre-surface-opaque: #f8f9fc;
+  --verre-reflet: inset 0 1px 0 #ffffff;
+  --verre-ombre: 0 18px 40px rgba(30, 34, 70, 0.14);
+  --verre-ombre-douce: 0 6px 18px rgba(30, 34, 70, 0.12);
+  --verre-relief-fond: #ffffff;
+  --verre-relief-bord: rgba(124, 58, 237, 0.3);
+  --verre-relief-ombre: 0 6px 18px rgba(30, 34, 70, 0.12);
+  --verre-survol: rgba(30, 34, 70, 0.05);
+  --verre-creux-fond: rgba(255, 255, 255, 0.7);
+  --verre-creux-bord: rgba(30, 34, 70, 0.16);
+  --verre-creux-ombre: inset 0 1px 3px rgba(30, 34, 70, 0.1);
+  --verre-rail-fond: rgba(30, 34, 70, 0.07);
+  --verre-rail-ombre: inset 0 1px 3px rgba(30, 34, 70, 0.12);
+  --verre-gelule-fond: rgba(255, 255, 255, 0.85);
+  --verre-gelule-bord: rgba(30, 34, 70, 0.16);
+  --verre-gelule-reflet: 0 4px 12px rgba(30, 34, 70, 0.08);
+  /* Texte blanc sur le dégradé : opaque en clair pour garder 4,5:1 au moins. */
+  --verre-primaire: linear-gradient(135deg, #7c3aed, #4f46e5);
+  --verre-primaire-bord: rgba(79, 70, 229, 0.6);
+  --verre-primaire-ombre: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 20px rgba(79, 70, 229, 0.25);
+  --verre-bulle-active: linear-gradient(140deg, #7c3aed, #4f46e5);
+  --verre-bulle-active-bord: rgba(124, 58, 237, 0.5);
+  --verre-ligne-fond: rgba(255, 255, 255, 0.7);
+  --verre-ligne-survol: #ffffff;
+  --verre-ligne-trait: rgba(30, 34, 70, 0.08);
+  --verre-entete: rgba(238, 240, 246, 0.6);
+  --verre-texte: #1c2033;
+  --verre-texte-fort: #1c2033;
+  --verre-texte-menu: #262b45;
+  --verre-secondaire: #3c4260;
+  --verre-secondaire-2: #4a5070;
+  --verre-discret: #5d6380;
+  --verre-focus: #6d28d9;
+  /* Teintes 800 : 6:1 au moins sur le verre blanc, y compris au-dessus des halos. */
+  --verre-violet: #5b21b6;
+  --verre-vert: #166534;
+  --verre-bleu: #1e40af;
+  --verre-ambre: #92400e;
+  --verre-sarcelle: #115e59;
+  --verre-orange: #9a3412;
+  --verre-rose: #9d174d;
+  --verre-jaune: #854d0e;
+  --verre-rouge: #9f1239;
+
+  --mantine-color-body: var(--verre-fond-page);
+  --mantine-color-text: var(--verre-texte);
+  --mantine-color-dimmed: var(--verre-secondaire-2);
+  --mantine-color-default: var(--verre-gelule-fond);
+  --mantine-color-default-hover: #ffffff;
+  --mantine-color-default-border: var(--verre-gelule-bord);
+  --mantine-color-default-color: var(--verre-texte);
+  --suivi-fond-page: var(--verre-fond-page);
+  --suivi-surface: var(--verre-surface-opaque);
+  --suivi-surface-douce: rgba(30, 34, 70, 0.04);
+  --suivi-trait: rgba(30, 34, 70, 0.12);
+  --suivi-ombre: var(--verre-ombre-douce);
+  --neon-titre: var(--verre-texte);
+  --neon-secondaire: var(--verre-secondaire-2);
+  --neon-doux: rgba(124, 58, 237, 0.08);
+  --neon-accent: var(--verre-violet);
+  --menu-trait: rgba(30, 34, 70, 0.14);
+  --menu-survol-trait: rgba(30, 34, 70, 0.12);
+  --fiche-fond: #ffffff;
+  --fiche-encre: var(--verre-texte);
+  --fiche-secondaire: var(--verre-secondaire-2);
+  --fiche-trait: rgba(30, 34, 70, 0.2);
+  --fiche-separateur: rgba(30, 34, 70, 0.1);
+  --fiche-accent: var(--verre-violet);
+  --fiche-focus: var(--verre-focus);
+  --fiche-doux: rgba(30, 34, 70, 0.04);
+  --fiche-bord: rgba(30, 34, 70, 0.14);
+}
+
+/* ---------------------------------------------------------------- Fond : #121316 à halos, conteneurs transparents */
+html[data-style='verre'] body {
+  background-color: var(--verre-fond-page);
+  background-image: var(--verre-halos);
+  background-attachment: fixed;
+  color: var(--mantine-color-text);
+}
+html[data-style='verre'][data-mantine-color-scheme] :is(.shell, .shell-body, .shell-main.app-main, .shell-top) {
+  background-color: transparent;
+  background-image: none;
+}
+html[data-style='verre'] :is(h1, h2, h3, h4, .mantine-Title-root) {
+  color: var(--neon-titre);
+}
+
+/* ---------------------------------------------------------------- Surfaces « liquides » */
+html[data-style='verre'] :is(.mantine-Card-root, .mantine-Paper-root:not(.mantine-Popover-dropdown)) {
+  border: 1px solid var(--verre-bord);
+  border-radius: var(--verre-rayon);
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre);
+  -webkit-backdrop-filter: var(--verre-flou);
+  backdrop-filter: var(--verre-flou);
+}
+/* Surface dans une surface : pas de second flou ni de grande ombre portée. */
+html[data-style='verre'] :is(.mantine-Card-root, .mantine-Paper-root) :is(.mantine-Card-root, .mantine-Paper-root) {
+  border-radius: calc(var(--verre-rayon) - 0.5rem);
+  box-shadow: var(--verre-reflet);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* ---------------------------------------------------------------- Fenêtres, tiroirs, listes flottantes */
+html[data-style='verre']
+  :is(
+    .mantine-Modal-content,
+    .mantine-Drawer-content,
+    .mantine-Popover-dropdown,
+    .mantine-Menu-dropdown,
+    .mantine-Combobox-dropdown,
+    .mantine-Notification-root
+  ) {
+  border: 1px solid var(--verre-bord);
+  background: var(--verre-surface-flottante);
+  color: var(--mantine-color-text);
+  box-shadow: var(--verre-reflet), var(--verre-ombre);
+  -webkit-backdrop-filter: var(--verre-flou);
+  backdrop-filter: var(--verre-flou);
+}
+html[data-style='verre'] .mantine-Modal-content {
+  border-radius: var(--verre-rayon);
+}
+html[data-style='verre'] .mantine-Drawer-content {
+  border-radius: 0;
+}
+html[data-style='verre'] :is(.mantine-Popover-dropdown, .mantine-Menu-dropdown, .mantine-Combobox-dropdown) {
+  border-radius: 1.25rem;
+}
+html[data-style='verre'] :is(.mantine-Modal-header, .mantine-Drawer-header),
+html[data-style='verre']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  > :is(.mantine-Modal-header, .mantine-Drawer-header) {
+  border-block-end: 1px solid var(--verre-ligne-trait);
+  background: transparent;
+  color: var(--mantine-color-text);
+}
+html[data-style='verre']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-close, .mantine-Drawer-close) {
+  border: 1px solid var(--verre-creux-bord);
+  border-radius: 50%;
+  background: var(--verre-survol);
+  color: var(--verre-texte);
+}
+/* Champs creux et boutons en gélule aussi dans les fenêtres (qui ont leur propre habillage, plus spécifique). */
+html[data-style='verre']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input:not([data-tone]):not(:where([data-tone]) .mantine-Input-input) {
+  border: 1px solid var(--verre-creux-bord);
+  background: var(--verre-creux-fond);
+  box-shadow: var(--verre-creux-ombre);
+  color: var(--mantine-color-text);
+}
+html[data-style='verre']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  :is(input.mantine-Input-input, button.mantine-Input-input) {
+  border-radius: 999px;
+}
+html[data-style='verre']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  textarea.mantine-Input-input {
+  border-radius: 1rem;
+}
+html[data-style='verre']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input:focus-within {
+  border-color: var(--verre-focus);
+}
+html[data-style='verre']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Input-input[data-error] {
+  border-color: var(--mantine-color-error);
+}
+html[data-style='verre']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-Button-root {
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+html[data-style='verre']
+  :is(.mantine-Modal-content, .mantine-Drawer-content:not(.nav-tiroir))
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  .mantine-InputWrapper-label {
+  color: var(--verre-texte);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] :is(.mantine-Modal-body, .mantine-Drawer-body) .fenetre-actions {
+  background: transparent;
+}
+html[data-style='verre'] :is(.mantine-Modal-title, .mantine-Drawer-title) {
+  font-weight: 700;
+}
+html[data-style='verre'] :is(.mantine-Menu-item, .mantine-Combobox-option) {
+  border-radius: 999px;
+  font-weight: 500;
+}
+html[data-style='verre']
+  :is(.mantine-Menu-item:hover, .mantine-Combobox-option:hover, .mantine-Combobox-option[data-combobox-selected]) {
+  background: var(--verre-relief-fond);
+}
+html[data-style='verre'] .mantine-Tooltip-tooltip {
+  border: 1px solid var(--verre-bord-fort);
+  border-radius: 999px;
+  background: var(--verre-surface-opaque);
+  color: var(--verre-texte);
+  box-shadow: var(--verre-ombre-douce);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- Boutons et commandes en gélule */
+html[data-style='verre'] .mantine-Button-root {
+  border-radius: 999px;
+  font-weight: 600;
+}
+html[data-style='verre']
+  :is(.mantine-Button-root, .mantine-ActionIcon-root):is([data-variant='default'], .commande-neon) {
+  border: 1px solid var(--verre-gelule-bord);
+  background: var(--verre-gelule-fond);
+  color: var(--verre-texte-fort);
+  box-shadow: var(--verre-gelule-reflet);
+}
+html[data-style='verre']
+  :is(.mantine-Button-root, .mantine-ActionIcon-root):is([data-variant='default'], .commande-neon):hover:not(
+    :disabled,
+    [data-disabled]
+  ) {
+  background: var(--mantine-color-default-hover);
+}
+/* Bouton plein : dégradé de sa couleur ; couleur principale de la charte : dégradé violet de la maquette. */
+html[data-style='verre']
+  :is(.mantine-Button-root, .mantine-ActionIcon-root)[data-variant='filled']:not(:disabled, [data-disabled]) {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 55%, rgba(0, 0, 0, 0.12));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+html[data-style='verre']
+  :is(.mantine-Button-root, .mantine-ActionIcon-root)[data-variant='filled'][style*='--mantine-color-suivi-filled']:not(
+    :disabled,
+    [data-disabled]
+  ) {
+  border-color: var(--verre-primaire-bord);
+  background: var(--verre-primaire);
+  color: #ffffff;
+  box-shadow: var(--verre-primaire-ombre);
+}
+html[data-style='verre'] :is(.mantine-Button-root, .mantine-ActionIcon-root)[data-variant='light'] {
+  border: 1px solid color-mix(in srgb, var(--button-color, var(--ai-color, currentColor)) 35%, transparent);
+  box-shadow: var(--verre-gelule-reflet);
+}
+html[data-style='verre'] :is(.mantine-Button-root, .mantine-ActionIcon-root)[data-variant='outline'] {
+  border-color: var(--verre-gelule-bord);
+  background: transparent;
+}
+html[data-style='verre'] .mantine-ActionIcon-root {
+  border-radius: 50%;
+}
+html[data-style='verre']
+  :is(.mantine-Button-root, .mantine-ActionIcon-root, .mantine-UnstyledButton-root):focus-visible {
+  outline: 2px solid var(--verre-focus);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- Sélecteurs segmentés en rail */
+html[data-style='verre'] .mantine-SegmentedControl-root {
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: var(--verre-rail-fond);
+  box-shadow: var(--verre-rail-ombre);
+}
+html[data-style='verre'] .mantine-SegmentedControl-indicator {
+  border: 1px solid var(--verre-relief-bord);
+  border-radius: 999px;
+  background: var(--verre-relief-fond);
+  box-shadow: var(--verre-relief-ombre);
+}
+html[data-style='verre'] .mantine-SegmentedControl-control {
+  border: 0;
+}
+html[data-style='verre'] .mantine-SegmentedControl-control::before {
+  display: none;
+}
+html[data-style='verre'] .mantine-SegmentedControl-label {
+  border-radius: 999px;
+  color: var(--verre-secondaire-2);
+  font-weight: 600;
+}
+html[data-style='verre'] .mantine-SegmentedControl-label[data-active],
+html[data-style='verre'] .mantine-SegmentedControl-input:checked + .mantine-SegmentedControl-label {
+  color: var(--verre-texte-fort);
+}
+
+/* ---------------------------------------------------------------- Champs creux */
+html[data-style='verre'] .mantine-Input-input {
+  border: 1px solid var(--verre-creux-bord);
+  background: var(--verre-creux-fond);
+  color: var(--mantine-color-text);
+  box-shadow: var(--verre-creux-ombre);
+  font-weight: 500;
+}
+html[data-style='verre'] :is(input.mantine-Input-input, button.mantine-Input-input, .mantine-PillsInput-input) {
+  border-radius: 999px;
+}
+html[data-style='verre'] textarea.mantine-Input-input {
+  border-radius: 1rem;
+}
+html[data-style='verre'] .mantine-Input-input:focus,
+html[data-style='verre'] .mantine-Input-input:focus-within {
+  border-color: var(--verre-focus);
+}
+html[data-style='verre'] .mantine-InputWrapper-label {
+  font-weight: 600;
+}
+html[data-style='verre']
+  :is(.mantine-InputWrapper-description, .mantine-Radio-description, .mantine-Checkbox-description) {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+
+/* ---------------------------------------------------------------- Tableaux : lignes en verre */
+html[data-style='verre'] .data-table .mantine-Table-table {
+  border-collapse: separate;
+  border-spacing: 0 0.375rem;
+  padding-inline: 0.5rem;
+}
+html[data-style='verre'] .data-table :is(thead th, thead th:first-child, .mantine-Table-th) {
+  border: 0;
+  background: transparent;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] .data-table tbody .mantine-Table-td,
+html[data-style='verre'] .data-table tbody td:first-child {
+  border-block: 1px solid var(--verre-ligne-trait);
+  border-inline: 0;
+  background: var(--verre-ligne-fond);
+  font-weight: 500;
+  transition: background-color var(--suivi-motion);
+}
+html[data-style='verre'] .data-table tbody td:first-child {
+  border-inline-start: 1px solid var(--verre-ligne-trait);
+  border-start-start-radius: var(--verre-rayon-ligne);
+  border-end-start-radius: var(--verre-rayon-ligne);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] .data-table tbody td:last-child {
+  border-inline-end: 1px solid var(--verre-ligne-trait);
+  border-start-end-radius: var(--verre-rayon-ligne);
+  border-end-end-radius: var(--verre-rayon-ligne);
+}
+html[data-style='verre'] .data-table tbody tr:hover > td,
+html[data-style='verre'] .data-table tbody tr:hover > td:first-child {
+  background: var(--verre-ligne-survol);
+}
+html[data-style='verre'] .mantine-Table-th {
+  background: transparent;
+  color: var(--verre-secondaire-2);
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------- Onglets en rail, entrée active en relief */
+html[data-style='verre']
+  :is(.app-main .onglets-rubriques, .mantine-Tabs-list:not([data-orientation='vertical']), .retex-onglets, .as-tabs) {
+  padding: 0.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--verre-rail-fond);
+  box-shadow: var(--verre-rail-ombre);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html[data-style='verre']
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ) {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--verre-secondaire-2);
+  font-weight: 600;
+}
+html[data-style='verre']
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  ):hover:not(:disabled, [data-disabled]) {
+  background: var(--verre-survol);
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre']
+  :is(
+    .app-main .onglets-rubriques a[aria-current='page'],
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab[data-active],
+    .retex-onglet[aria-current='page'],
+    .as-tabs > button[aria-selected='true']
+  ) {
+  border-color: var(--verre-relief-bord);
+  background: var(--verre-relief-fond);
+  box-shadow: var(--verre-relief-ombre);
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre']
+  :is(
+    .app-main .onglets-rubriques a,
+    .mantine-Tabs-list:not([data-orientation='vertical']) > .mantine-Tabs-tab,
+    .retex-onglet,
+    .as-tabs > button
+  )::after {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- Pastilles */
+html[data-style='verre'] .mantine-Badge-root {
+  height: auto;
+  min-height: 1.5rem;
+  padding: 0.1875rem 0.625rem;
+  border: 1px solid color-mix(in srgb, var(--badge-color, currentColor) 50%, transparent);
+  border-radius: 999px;
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+html[data-style='verre'] .mantine-Badge-root[data-variant='light'] {
+  background: color-mix(in srgb, var(--badge-color, currentColor) 16%, transparent);
+}
+
+/* ---------------------------------------------------------------- En-tête de la coquille : allégé, translucide */
+html[data-style='verre'] .shell-header,
+html[data-style='verre'][data-mantine-color-scheme='dark'] .shell-header {
+  border: 0;
+  background: var(--verre-entete);
+  box-shadow: none;
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] .shell-header .header-user {
+  font-weight: 700;
+}
+
+/* ========================================================================
+   MENU OFFICIEL (menu_officiel.py, classes mo-*) : gélules, bulles de verre, rubrique ouverte et entrée active en relief,
+   filet vertical des sous-entrées, recherche en gélule creuse, « Compte et administration » en boutons ronds.
+   ======================================================================== */
+html[data-style='verre'] .shell-nav,
+html[data-style='verre'][data-mantine-color-scheme='dark'] .shell-nav {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+html[data-style='verre'] .nav-neon,
+html[data-style='verre'] .nav-tiroir.mantine-Drawer-content {
+  color: var(--menu-texte);
+}
+html[data-style='verre'] .shell-nav .nav-neon,
+html[data-style='verre'] .nav-tiroir.mantine-Drawer-content {
+  border: 1px solid var(--verre-bord);
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre);
+  -webkit-backdrop-filter: var(--verre-flou);
+  backdrop-filter: var(--verre-flou);
+}
+html[data-style='verre'] .nav-tiroir.mantine-Drawer-content {
+  background: var(--verre-surface-flottante);
+}
+html[data-style='verre'] .nav-tiroir :is(.mantine-Drawer-header, .mantine-Drawer-close) {
+  color: var(--menu-texte);
+}
+@media (min-width: 36em) {
+  html[data-style='verre'] .shell-nav {
+    padding: 0.5rem 0.25rem;
+  }
+  html[data-style='verre'] .shell-nav .nav-neon {
+    border-radius: var(--verre-rayon-menu);
+  }
+}
+/* Tablette : rail d'icônes seules, bulles centrées. */
+@media (min-width: 36em) and (max-width: 63.99em) {
+  html[data-style='verre'] .shell-nav .nav-neon .mantine-NavLink-root,
+  html[data-style='verre'] .shell-nav .nav-neon .nav-famille,
+  html[data-style='verre'] .shell-nav .nav-neon [data-identite='dashboard'] {
+    justify-content: center;
+    padding-inline: 0;
+  }
+  html[data-style='verre'] .shell-nav .nav-neon .mantine-NavLink-section[data-position='left'] {
+    margin: 0;
+  }
+}
+@media (min-width: 64em) {
+  html[data-style='verre'] .shell-nav {
+    padding: 0;
+  }
+  html[data-style='verre'] .shell-nav .shell-nav-inner.nav-neon {
+    top: 0.875rem;
+    min-height: calc(100dvh - 1.75rem);
+    max-height: calc(100dvh - 1.75rem);
+    margin: 0.875rem 0 0.875rem 0.875rem;
+    padding: 1rem 0.75rem 0.75rem;
+  }
+}
+
+/* Marque : pastille ronde dégradée, nom en gras ; la devise en petites capitales n'est pas reprise (lisibilité). */
+html[data-style='verre'] .nav-neon .nav-marque {
+  gap: 0.75rem;
+  margin-bottom: 0;
+  padding: 0 0.375rem 0.25rem;
+  border-bottom: 0;
+}
+html[data-style='verre'] .nav-neon .nav-marque .brand-mark:not(.brand-mark--logo) {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #d946ef, #7c3aed 55%, #4f46e5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 8px 20px rgba(124, 58, 237, 0.45);
+}
+html[data-style='verre'] .nav-neon .nav-marque strong {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+html[data-style='verre'] .nav-neon .nav-marque small {
+  display: none;
+}
+
+/* Recherche Ctrl K : gélule creuse, sans la lueur tournante. */
+html[data-style='verre'] .nav-neon .nav-recherche {
+  margin-block: 0.75rem 0.125rem;
+}
+html[data-style='verre'] .nav-neon .nav-recherche__cadre {
+  padding: 0;
+  overflow: visible;
+  border-radius: 999px;
+}
+html[data-style='verre'] .nav-neon .nav-recherche__cadre::before {
+  display: none;
+}
+html[data-style='verre'] .nav-neon .nav-recherche__champ {
+  block-size: 2.375rem;
+  padding-inline: 0.875rem 0.625rem;
+  border: 1px solid var(--verre-creux-bord);
+  border-radius: 999px;
+  background: var(--verre-creux-fond);
+  box-shadow: var(--verre-creux-ombre);
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] .nav-neon .nav-recherche__champ:focus-within {
+  border-color: var(--verre-focus);
+}
+html[data-style='verre'] .nav-neon .nav-recherche__champ svg {
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] .nav-neon .nav-recherche__champ input {
+  color: var(--menu-texte);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+html[data-style='verre'] .nav-neon .nav-recherche__champ input::placeholder {
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] .nav-neon .nav-recherche__touche {
+  border: 0;
+  color: var(--verre-discret);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .nav-neon :is(.nav-recherche__resultats, .nav-recherche__vide) {
+  border-color: var(--verre-bord);
+  border-radius: 1.125rem;
+  background: var(--verre-surface-flottante);
+  color: var(--menu-texte);
+}
+html[data-style='verre'] .nav-neon .nav-recherche__resultats li {
+  border-radius: 999px;
+}
+html[data-style='verre'] .nav-neon .nav-recherche__resultats li[aria-selected='true'] {
+  background: var(--verre-relief-fond);
+  color: var(--menu-selection);
+}
+
+/* Intitulés de section : capitales espacées, 13 px en gras. */
+html[data-style='verre'] .nav-neon .nav-caption {
+  margin: 0.75rem 0 0.3125rem 0.875rem;
+  padding: 0;
+  color: var(--verre-discret);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  /* En capitales à 13 px, « Compte et administration » ne tiendrait pas sur une ligne : casse de la phrase. */
+  text-transform: none;
+}
+
+/* Entrées : gélules ; bulle de verre ronde autour de l'icône au trait, dans la couleur de la rubrique. */
+html[data-style='verre'] .nav-neon .mantine-NavLink-root,
+html[data-style='verre'] .nav-neon .nav-famille,
+html[data-style='verre'] .nav-neon [data-identite='dashboard'] {
+  min-height: 2.5rem;
+  margin-block: 0.0625rem;
+  padding: 0 0.75rem 0 0.3125rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  box-shadow: none;
+  color: var(--menu-texte);
+}
+html[data-style='verre'] .nav-neon .mantine-NavLink-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+html[data-style='verre'] .nav-neon .mantine-NavLink-root:hover {
+  border-color: transparent;
+  background: var(--verre-survol);
+  color: var(--menu-selection);
+}
+html[data-style='verre'] .nav-neon .mantine-NavLink-root:focus-visible {
+  outline: 2px solid var(--menu-focus);
+  outline-offset: 1px;
+}
+html[data-style='verre'] .nav-neon .mantine-NavLink-section[data-position='left'] {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  margin-inline-end: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+html[data-style='verre'][data-mantine-color-scheme='light'] .nav-neon .mantine-NavLink-section[data-position='left'] {
+  border-color: rgba(30, 34, 70, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: none;
+}
+html[data-style='verre'] .nav-neon .mantine-NavLink-root .nav-icone.nav-icone--neon,
+html[data-style='verre'] .nav-neon .mantine-NavLink-root .nav-icone {
+  width: 1.125rem;
+  height: 1.125rem;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  color: var(--menu-teinte, var(--menu-texte));
+}
+html[data-style='verre'] .nav-neon .mantine-NavLink-root .nav-icone.nav-icone--admin {
+  width: 1rem;
+  height: 1rem;
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+/* Compteurs discrets ; le chevron cède la place au compteur (l'état déplié reste porté par aria-expanded). */
+html[data-style='verre'] .nav-neon .nav-compte {
+  color: var(--verre-discret);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .nav-neon .nav-famille > .mantine-NavLink-section[data-position='right'] {
+  display: none;
+}
+/* Rubrique ouverte : léger relief ; bulle teintée de la couleur de la rubrique, icône blanche. */
+html[data-style='verre'] .nav-neon .nav-famille:is([data-expanded], [data-active]) {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--verre-survol);
+  box-shadow: none;
+  color: var(--menu-selection);
+}
+html[data-style='verre'][data-mantine-color-scheme='light'] .nav-neon .nav-famille:is([data-expanded], [data-active]) {
+  border-color: rgba(30, 34, 70, 0.1);
+  background: rgba(255, 255, 255, 0.6);
+}
+html[data-style='verre']
+  .nav-neon
+  .nav-famille:is([data-expanded], [data-active])
+  > .mantine-NavLink-section[data-position='left'] {
+  border-color: var(--menu-teinte);
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--menu-teinte) 80%, transparent),
+    color-mix(in srgb, var(--menu-teinte) 53%, transparent)
+  );
+}
+html[data-style='verre'] .nav-neon .nav-famille:is([data-expanded], [data-active]) .nav-icone {
+  color: #ffffff;
+}
+/* Entrée active (tableau de bord, administration) : relief, bulle violette. */
+html[data-style='verre'] .nav-neon .mantine-NavLink-root[data-active]:not(.nav-destination, .nav-famille) {
+  border-color: var(--verre-relief-bord);
+  background: var(--verre-relief-fond);
+  box-shadow: var(--verre-relief-ombre);
+  color: var(--menu-selection);
+}
+html[data-style='verre']
+  .nav-neon
+  .mantine-NavLink-root[data-active]:not(.nav-destination, .nav-famille)
+  > .mantine-NavLink-section[data-position='left'] {
+  border-color: var(--verre-bulle-active-bord);
+  background: var(--verre-bulle-active);
+}
+html[data-style='verre'] .nav-neon .mantine-NavLink-root[data-active]:not(.nav-destination, .nav-famille) .nav-icone {
+  color: #ffffff;
+}
+
+/* Sous-entrées : filet vertical à gauche, gélules plus basses, entrée ouverte en relief. */
+html[data-style='verre'] .nav-neon .mantine-NavLink-children,
+html[data-style='verre'] .nav-neon .mantine-NavLink-children:has(.nav-destination[data-identite]) {
+  margin: 0.1875rem 0 0.3125rem 1.25rem;
+  padding-inline-start: 0.875rem;
+  border-inline-start: 2px solid var(--menu-trait);
+}
+html[data-style='verre'] .nav-neon .nav-destination {
+  min-height: 1.875rem;
+  margin-block: 0.0625rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid transparent;
+  color: var(--menu-destination);
+}
+html[data-style='verre'] .nav-neon .nav-destination .mantine-NavLink-label {
+  font-size: 0.84375rem;
+  font-weight: 500;
+}
+html[data-style='verre'] .nav-neon .nav-destination[data-active] {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: var(--verre-relief-fond);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 4px 12px rgba(0, 0, 0, 0.35);
+  color: var(--menu-selection);
+}
+html[data-style='verre'][data-mantine-color-scheme='light'] .nav-neon .nav-destination[data-active] {
+  border-color: var(--verre-relief-bord);
+  box-shadow: var(--verre-relief-ombre);
+}
+html[data-style='verre'] .nav-neon .nav-destination[data-active] .mantine-NavLink-label {
+  font-weight: 600;
+}
+html[data-style='verre'] .nav-neon .nav-destination[data-active]::before {
+  display: none;
+}
+
+/* Compte et administration : sur ordinateur, rangée de boutons ronds à icône seule. Le libellé reste dans le lien,
+   masqué visuellement (lu par les lecteurs d'écran) ; l'info-bulle le montre au survol et au focus (Layout.tsx). */
+html[data-style='verre'] .nav-neon .nav-administration {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 0;
+}
+@media (min-width: 64em) {
+  html[data-style='verre'] .nav-neon .nav-administration {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    row-gap: 0.5rem;
+    padding-inline: 0.25rem;
+  }
+  html[data-style='verre'] .nav-neon .nav-administration > .nav-caption {
+    flex: 1 0 100%;
+    margin: 0 0 0.125rem 0.625rem;
+  }
+  html[data-style='verre'] .nav-neon .nav-administration .mantine-NavLink-root {
+    justify-content: center;
+    width: 2.375rem;
+    min-width: 2.375rem;
+    height: 2.375rem;
+    min-height: 2.375rem;
+    min-block-size: 2.375rem;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      0 6px 16px rgba(0, 0, 0, 0.35);
+    color: var(--verre-texte);
+  }
+  html[data-style='verre'][data-mantine-color-scheme='light'] .nav-neon .nav-administration .mantine-NavLink-root {
+    border-color: rgba(30, 34, 70, 0.12);
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(30, 34, 70, 0.1);
+  }
+  html[data-style='verre'] .nav-neon .nav-administration .mantine-NavLink-root[data-active] {
+    border-color: var(--verre-bulle-active-bord);
+    background: var(--verre-bulle-active);
+  }
+  html[data-style='verre'] .nav-neon .nav-administration .mantine-NavLink-root[data-active] .nav-icone {
+    color: #ffffff;
+  }
+  html[data-style='verre'] .nav-neon .nav-administration .mantine-NavLink-section[data-position='left'] {
+    width: auto;
+    height: auto;
+    margin: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+  html[data-style='verre'] .nav-neon .nav-administration .mantine-NavLink-root[data-active] > .mantine-NavLink-section {
+    background: none;
+  }
+  html[data-style='verre'] .nav-neon .nav-administration .mantine-NavLink-body {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* Pied : organisation et version à gauche, bouton rond du thème à droite. */
+html[data-style='verre'] .nav-neon .nav-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.625rem;
+  margin-top: 0.625rem;
+  padding: 0.5rem 0.375rem 0;
+  border-top: 1px solid var(--menu-trait);
+}
+html[data-style='verre'] .nav-neon .nav-footer > .nav-signature {
+  grid-column: 1;
+  justify-content: flex-start;
+  padding: 0;
+  text-align: start;
+}
+html[data-style='verre'] .nav-neon .nav-footer > .nav-signature .mantine-Text-root {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .nav-neon .nav-footer > .nav-commandes {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+html[data-style='verre'] .nav-neon .nav-footer > .app-version {
+  grid-column: 1;
+  justify-self: start;
+  text-align: start;
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .nav-neon .nav-footer .theme-bascule {
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  min-height: 2rem;
+  border: 1px solid var(--verre-gelule-bord);
+  border-radius: 50%;
+  background: var(--verre-gelule-fond);
+  box-shadow: var(--verre-gelule-reflet);
+  color: var(--menu-texte);
+}
+
+/* ========================================================================
+   TABLEAU DE BORD (Main.dc.html) : cartes en verre, gros chiffres colorés selon leur sens, ligne d'en-tête allégée.
+   Les données affichées et leur logique sont inchangées.
+   ======================================================================== */
+html[data-style='verre'] .app-main:has(.tdb) > .page > .page-eyebrow {
+  display: none;
+}
+html[data-style='verre'] .app-main:has(.tdb) .page-header h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+html[data-style='verre'] .app-main .page-header .lecture {
+  color: var(--verre-secondaire);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+html[data-style='verre'] .tdb .tdb-dalle {
+  padding: 1.125rem 1.25rem 1rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: var(--verre-rayon);
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre);
+  -webkit-backdrop-filter: var(--verre-flou);
+  backdrop-filter: var(--verre-flou);
+}
+html[data-style='verre'] .tdb .tdb-dalle:hover {
+  border-color: var(--verre-bord-fort);
+  box-shadow: var(--verre-reflet), var(--verre-ombre);
+}
+html[data-style='verre'] .tdb .tdb-dalle-titre {
+  color: var(--verre-texte);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+html[data-style='verre']
+  .tdb
+  :is(
+    .tdb-dalle-sous-titre,
+    .na-note,
+    .na-ligne,
+    .na-legende,
+    .na-barres li,
+    .na-compteur span,
+    .na-compteur small,
+    .tdb-phare-detail,
+    .tdb-phare-legende,
+    .tdb-chiffre-legende,
+    .tdb-chiffre-detail,
+    .na-etat,
+    .graph-vide
+  ) {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+html[data-style='verre'] .tdb .na-ligne b,
+html[data-style='verre'] .tdb .na-legende b,
+html[data-style='verre'] .tdb .na-barres b {
+  color: var(--verre-texte);
+  font-weight: 700;
+}
+/* Flèche de détail : bouton rond de verre. */
+html[data-style='verre'] .tdb .na-detail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  padding: 0;
+  border: 1px solid var(--verre-creux-bord);
+  border-radius: 50%;
+  background: var(--verre-survol);
+  color: var(--verre-texte-menu);
+}
+html[data-style='verre'] .tdb .na-detail:hover {
+  background: var(--verre-relief-fond);
+  color: var(--verre-texte-fort);
+}
+/* Pied de statistiques : libellé lisible, chiffre en couleur de sens de la dalle. */
+html[data-style='verre'] .tdb .na-stats {
+  gap: 1.125rem;
+  border-top-color: var(--verre-ligne-trait);
+}
+html[data-style='verre'] .tdb .na-stats dt {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .tdb .na-stats dd {
+  color: var(--verre-sens, var(--verre-texte));
+  font-size: 1.25rem;
+  font-weight: 650;
+}
+html[data-style='verre'] .tdb .na-compteur strong {
+  color: var(--verre-sens, var(--verre-texte));
+  font-size: 2.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+html[data-style='verre'] .tdb .tdb-chiffre-valeur:not([class*='tdb-t-']),
+html[data-style='verre'] .tdb .tdb-phare-valeur {
+  color: var(--verre-sens, var(--verre-texte));
+  font-weight: 650;
+}
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='conformite'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='conformite-referentiels'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='mise-en-oeuvre'] {
+  --verre-sens: var(--verre-sarcelle);
+}
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='applicabilite'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='mesures'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='phare'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='vue-consolidee'] {
+  --verre-sens: var(--verre-violet);
+}
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='niveau-risque'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='risques-continuite'] {
+  --verre-sens: var(--verre-ambre);
+}
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='incidents'] {
+  --verre-sens: var(--verre-rose);
+}
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='constats'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle^='ecarts'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='plan-audit'] {
+  --verre-sens: var(--verre-bleu);
+}
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='plan-action'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='actions-etats'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle^='actions-'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='echeances'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='recurrences'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='plans'] {
+  --verre-sens: var(--verre-orange);
+}
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='maturite'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='indicateurs'] {
+  --verre-sens: var(--verre-vert);
+}
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='journal'],
+html[data-style='verre'] .tdb .tdb-dalle[data-dalle='bandeau'] {
+  --verre-sens: var(--verre-texte);
+}
+/* Bandeau : verre teinté violet, titre en gras, surtitre lisible. */
+html[data-style='verre'] .tdb .tdb-dalle.tdb-bandeau {
+  border-color: rgba(196, 181, 253, 0.3);
+  background:
+    linear-gradient(155deg, rgba(124, 58, 237, 0.3), rgba(79, 70, 229, 0.08) 55%, rgba(26, 120, 120, 0.14)),
+    var(--verre-surface);
+}
+html[data-style='verre'][data-mantine-color-scheme='light'] .tdb .tdb-dalle.tdb-bandeau {
+  border-color: rgba(124, 58, 237, 0.25);
+  background:
+    linear-gradient(155deg, rgba(124, 58, 237, 0.16), rgba(79, 70, 229, 0.05) 55%, rgba(26, 120, 120, 0.08)),
+    var(--verre-surface);
+}
+html[data-style='verre'] .tdb .na-surtitre {
+  padding: 0;
+  border: 0;
+  color: var(--verre-violet);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+html[data-style='verre'] .tdb .na-hero-titre {
+  text-shadow: none;
+}
+html[data-style='verre'] .tdb .na-hero-titre > span {
+  color: var(--verre-secondaire);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+html[data-style='verre'] .tdb .na-hero-titre strong {
+  color: var(--verre-texte-fort);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+html[data-style='verre'] .tdb .na-hero-titre small {
+  color: var(--verre-secondaire);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+/* Rail des tableaux favoris et outils ronds. */
+html[data-style='verre'] .tdb .tdb-favoris {
+  padding: 0.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--verre-rail-fond);
+  box-shadow: var(--verre-rail-ombre);
+}
+html[data-style='verre'] .tdb .tdb-favoris > a {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--verre-secondaire-2);
+  font-weight: 600;
+}
+html[data-style='verre'] .tdb .tdb-favoris > a:is([aria-current], [aria-selected='true'], [data-actif]) {
+  border-color: var(--verre-relief-bord);
+  background: var(--verre-relief-fond);
+  box-shadow: var(--verre-relief-ombre);
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre'] .tdb .tdb-outil {
+  width: 2.5rem;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  border: 1px solid var(--verre-gelule-bord);
+  border-radius: 50%;
+  background: var(--verre-gelule-fond);
+  box-shadow: var(--verre-gelule-reflet);
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre'] .tdb .tdb-outil[data-variant='filled'] {
+  border-color: var(--verre-primaire-bord);
+  background: var(--verre-primaire);
+  box-shadow: var(--verre-primaire-ombre);
+  color: #ffffff;
+}
+/* Cartes d'accès et présence, sous le tableau de bord. */
+html[data-style='verre'] .app-main .acces-icone {
+  border-radius: 50%;
+}
+
+/* ========================================================================
+   REPLIS : transparence réduite, contraste renforcé, navigateur sans backdrop-filter, couleurs forcées
+   ======================================================================== */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-style='verre'] {
+    --verre-surface: var(--verre-surface-opaque);
+    --verre-surface-flottante: var(--verre-surface-opaque);
+    --verre-entete: var(--verre-fond-page);
+    --verre-ligne-fond: rgba(255, 255, 255, 0.06);
+  }
+  html[data-style='verre'][data-mantine-color-scheme='light'] {
+    --verre-ligne-fond: #ffffff;
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  html[data-style='verre'] {
+    --verre-surface: var(--verre-surface-opaque);
+    --verre-surface-flottante: var(--verre-surface-opaque);
+    --verre-entete: var(--verre-fond-page);
+    --verre-flou: none;
+    --verre-flou-leger: none;
+    --verre-halos: none;
+    --verre-creux-fond: var(--verre-fond-page);
+    --verre-rail-fond: var(--verre-fond-page);
+    --verre-ligne-fond: var(--verre-surface-opaque);
+    --verre-ligne-survol: var(--verre-surface-opaque);
+  }
+}
+@media (prefers-contrast: more) {
+  html[data-style='verre'] {
+    --verre-bord: currentColor;
+    --verre-creux-bord: currentColor;
+    --verre-gelule-bord: currentColor;
+    --verre-secondaire: var(--verre-texte);
+    --verre-secondaire-2: var(--verre-texte);
+    --verre-discret: var(--verre-texte);
+    --menu-secondaire: var(--verre-texte);
+    --menu-destination: var(--verre-texte);
+  }
+}
+@media (forced-colors: active) {
+  html[data-style='verre'] :is(.mantine-Card-root, .mantine-Paper-root, .tdb .tdb-dalle, .shell-nav .nav-neon) {
+    border: 1px solid CanvasText;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  html[data-style='verre'] .nav-neon .mantine-NavLink-root[data-active] {
+    border-color: Highlight;
+  }
+}
+@media print {
+  html[data-style='verre'] body {
+    background: none;
+  }
+  html[data-style='verre'] :is(.mantine-Card-root, .mantine-Paper-root, .tdb .tdb-dalle) {
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

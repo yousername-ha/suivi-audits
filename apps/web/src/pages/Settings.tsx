@@ -44,6 +44,7 @@ import { api, ApiError, download, errorMessage, get } from '../api';
 import { CopyCommand, ErrorAlert } from '../components/common';
 import { appliquerStyleFenetres, styleFenetres } from '../fenetres';
 import { appliquerPolice, policeEssai } from '../police';
+import { styleInstance } from '../style-instance';
 import { CLE_FLUX_EXTERNES, FluxFermeAlerte } from '../components/FluxExternes';
 import { useValidationFlux } from '../components/ValidationFlux';
 import { CLE_LOGO_ORGANISATION } from '../components/MarqueOrganisation';
@@ -590,7 +591,7 @@ function ApercuConservationPanel() {
 /** Style global de l'instance : aperçu local tant que la section n'est pas enregistrée ; abandonné en quittant le panneau. */
 function StyleGlobal({ p }: { p: P }) {
   const enregistre = useMe().appearance.style;
-  const choisi = p.values.style === 'clair' ? 'clair' : 'sage';
+  const choisi = styleInstance(p.values.style);
   useEffect(() => {
     document.documentElement.dataset.style = choisi;
     return () => {
@@ -615,6 +616,12 @@ function StyleGlobal({ p }: { p: P }) {
           value="clair"
           label="Clair bleuté"
           description="Fonds et bordures bleutés ; navigation vert profond conservée."
+          disabled={p.ro}
+        />
+        <Radio
+          value="verre"
+          label="Verre"
+          description="Surfaces translucides sur fond sombre à halos, menu en gélules ; variante claire en mode clair."
           disabled={p.ro}
         />
       </Stack>

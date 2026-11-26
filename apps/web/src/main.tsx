@@ -33,6 +33,9 @@ import '@suivi/ui/neon-fiches-pages.css';
 import '@suivi/ui/neon-fiches-sobres.css';
 // Vulnérabilités et veille réglementaire : feuille limitée à ces modules (zone principale), chargée en dernier.
 import '@suivi/ui/neon-vulnerabilites.css';
+// Style d'instance « Verre » (décision du RSSI du 26/11/2026) : chaque règle est limitée à html[data-style='verre'].
+// Chargé en dernier, sans effet sur les autres styles.
+import '@suivi/ui/verre.css';
 import { FichesSansDefilement } from './components/FichesSansDefilement';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';

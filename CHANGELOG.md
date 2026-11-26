@@ -2,6 +2,29 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [Non publié]
+
+### Notes de mise à jour
+
+- Aucune migration, aucune commande sur le serveur, aucun flux nouveau vers l'extérieur. Le style par défaut ne change pas :
+  le style « Verre » ne s'applique que si un administrateur le choisit dans Paramètres > Apparence. Aucune action.
+  (session « Projet audit_suivi Coeur »)
+
+### Ajouté
+
+- **Style d'instance « Verre »** (refonte verre, lot 1, décision du RSSI du 26/11/2026) : troisième style de Paramètres >
+  Apparence, à côté de « Référence 08 — Sauge » (défaut, inchangé) et « Clair bleuté », choisi d'un clic pour toute
+  l'instance et réversible. Fond sombre à halos violet, sarcelle et ambre ; cartes, sections, fenêtres, tiroirs et listes
+  flottantes en verre translucide ; boutons en gélule (principal en dégradé violet), sélecteurs segmentés et onglets en
+  rail, champs creux, lignes de tableau en verre, pastilles translucides ; police Plex Sans (sauf autre police d'essai
+  choisie) et aucun petit texte sous 13 px. Menu officiel : entrées en gélules, icône dans une bulle de verre à la couleur
+  de la rubrique, compteurs discrets, rubrique ouverte et entrée active en relief, sous-entrées à filet vertical, recherche
+  Ctrl K en gélule creuse, « Compte et administration » en rangée de boutons ronds (libellé lu par les lecteurs d'écran et
+  montré en info-bulle). Tableau de bord : dalles en verre, grands chiffres colorés selon leur sens, en-tête allégé ; mêmes
+  données. Variante claire en verre blanc ; repli opaque pour la transparence réduite, le contraste renforcé et les
+  navigateurs sans `backdrop-filter`. Feuille `packages/ui/src/verre.css`, dont chaque règle est limitée à
+  `html[data-style='verre']` (test de charte). (session « Projet audit_suivi Coeur »)
+
 ## [7.8.0] — 2026-11-26
 
 ### Notes de mise à jour

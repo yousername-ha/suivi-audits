@@ -79,9 +79,11 @@ export const ReferentielsSettings = z.object({
 });
 export const THEMES = ['auto', 'clair', 'sombre'] as const;
 export const DENSITES = ['compacte', 'normale', 'confortable'] as const;
-/** Style global de l'instance (identique pour tous les comptes) : « sage » = Référence 08 (défaut), « clair » = clair bleuté.
-    Il ne remplace que les fonds et bordures claires ; le mode clair/sombre reste une préférence distincte. */
-export const STYLES = ['sage', 'clair'] as const;
+/** Style global de l'instance (identique pour tous les comptes) : « sage » = Référence 08 (défaut), « clair » = clair bleuté,
+    « verre » = surfaces translucides de la refonte « verre » (décision du RSSI du 26/11/2026, feuille verre.css de la charte).
+    Le mode clair/sombre reste une préférence distincte. */
+export const STYLES = ['sage', 'clair', 'verre'] as const;
+export type StyleInstance = (typeof STYLES)[number];
 /** Style des fenêtres et panneaux, à l'essai pour toute l'instance (addendum du 19/11/2026 à l'ADR 0093, à réduire à un
     seul style une fois le choix fait) : « barre » = barre d'accent dégradée en haut (B, défaut), « lisere » = liseré
     dégradé sur tout le contour (A). Appliqué par l'attribut data-fenetres de <html>. */
