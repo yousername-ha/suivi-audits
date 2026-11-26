@@ -47,8 +47,9 @@ CREATE TABLE sso_fournisseurs (
 );
 
 -- Demandes de connexion (AuthnRequest, HTTP-Redirect) : usage unique, cinq minutes ; InResponseTo obligatoire. Le chemin
--- de retour est un chemin relatif interne. Une ré-authentification (ForceAuthn) nomme le compte et la session concernés :
--- l'état n'est jamais lié par cookie (le cookie SameSite=Strict ne passe pas sur le POST du fournisseur).
+-- de retour est un chemin relatif interne. Une ré-authentification (ForceAuthn) nomme le compte et la session concernés.
+-- Le cookie de session (SameSite=Strict) ne passe pas sur le POST du fournisseur : la demande est liée au navigateur par un
+-- témoin dédié (SameSite=None, Secure, HttpOnly, chemin /api/auth/sso/, cinq minutes), dont seule l'empreinte est gardée.
 CREATE TABLE sso_requetes (
   id              text PRIMARY KEY CHECK (char_length(id) BETWEEN 1 AND 100 AND id ~ '^[A-Za-z_][A-Za-z0-9_.-]*$'),
   fournisseur_id  uuid NOT NULL REFERENCES sso_fournisseurs(id) ON DELETE CASCADE,
@@ -57,6 +58,9 @@ CREATE TABLE sso_requetes (
                                        AND char_length(retour) <= 500),
   user_id         uuid REFERENCES users(id) ON DELETE CASCADE,
   session_hash    bytea,
+  -- Liaison au navigateur qui a lancé la demande (décision du RSSI du 25/11/2026) : SHA-256 du témoin à usage unique posé au
+  -- départ (32 octets aléatoires, jamais stockés en clair), comparé à l'adresse de retour.
+  liaison         bytea NOT NULL CHECK (octet_length(liaison) = 32),
   cree_le         timestamptz NOT NULL DEFAULT now(),
   expire_le       timestamptz NOT NULL,
   consommee_le    timestamptz,

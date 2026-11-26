@@ -1035,6 +1035,7 @@ export interface SsoRequetes {
   retour: string;
   user_id: string | null;
   session_hash: Buffer | null;
+  liaison: Buffer;
   cree_le: ColumnType<Date, Date | string | undefined, Date | string>;
   expire_le: ColumnType<Date, Date | string, Date | string>;
   consommee_le: ColumnType<Date | null, Date | string | null, Date | string | null>;

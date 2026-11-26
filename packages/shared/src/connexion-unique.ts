@@ -55,6 +55,8 @@ export const SSO_BORNES = {
   corpsAcs: 256 * 1024,
   /** Métadonnées d'un fournisseur (lecture automatique ou import), en octets. */
   metadonnees: 1024 * 1024,
+  /** Durée du témoin qui lie la demande au navigateur qui l'a lancée (décision du RSSI du 25/11/2026), en secondes. */
+  temoinSecondes: 300,
   /** Validité d'une demande de connexion (AuthnRequest), en minutes ; usage unique. */
   requeteMinutes: 5,
   /** Tolérance d'horloge sur NotBefore et NotOnOrAfter, en secondes. */
@@ -241,6 +243,7 @@ export const MOTIFS_REFUS_SSO = [
   'compte_local',
   'compte_desactive',
   'reauth_autre_compte',
+  'navigateur',
   'fournisseur',
   'statut',
   'invalide',

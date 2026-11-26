@@ -29,7 +29,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   [ADR 0114](docs/adr/0114-connexion-unique-saml.md)) : bouton « Se connecter avec … » par fournisseur actif sur la page de
   connexion, au-dessus du formulaire local ; connexion à l'initiative du service seulement (demande HTTP-Redirect signée,
   enregistrée en base, à usage unique et valable cinq minutes ; réponse HTTP-POST sur une adresse de retour propre à chaque
-  fournisseur, seule route exemptée du contrôle d'origine ; IdP-initiated refusé). Analyse XML durcie (ni DTD ni entité,
+  fournisseur, seule route exemptée du contrôle d'origine ; IdP-initiated refusé). La demande est liée au navigateur qui l'a
+  lancée par un témoin dédié à usage unique (`Secure`, `HttpOnly`, `SameSite=None`, limité à `/api/auth/sso/`, cinq minutes) :
+  une réponse postée depuis un autre navigateur est refusée et signalée (décision du RSSI du 25/11/2026). Analyse XML durcie (ni DTD ni entité,
   taille bornée), assertion signée obligatoire (réponse ou assertion, SHA-256 ou plus), contrôles `Audience`, `Destination`,
   `Recipient`, `NotBefore`/`NotOnOrAfter` (deux minutes de tolérance), `InResponseTo` obligatoire et anti-rejeu. La
   connexion n'est acceptée que si l'assertion prouve une double authentification faite chez le fournisseur (claim
@@ -41,7 +43,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   adresses de retour et certificat à déclarer chez le fournisseur, fournisseurs, état du flux et des métadonnées (relues
   toutes les six heures par l'exécutant d'exploitation, ou importées à la main), expiration du certificat de signature.
   Alertes de sécurité : certificat du fournisseur qui expire dans moins de 30 jours, relecture en échec, certificat changé,
-  refus pour double authentification absente ou signature invalide. Journal `auth.sso_*`. Le principe « l'API ne lit aucun
+  refus pour double authentification absente, signature invalide ou réponse venue d'un autre navigateur. Journal `auth.sso_*`. Le principe « l'API ne lit aucun
   XML » devient « aucun XML hors SAML ». La feuille de route prévoyait OIDC : SAML retenu. (session « Projet audit_suivi Coeur »)
 
 ### Modifié

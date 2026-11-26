@@ -68,8 +68,12 @@ destination est l'hôte de l'adresse saisie par l'administrateur, montrée et va
   l'adresse elle-même désigne les certificats à utiliser, sans lire le document avant sa validation. **Seule route** exemptée du
   contrôle d'origine (`origineExterne: 'acs-saml'` de `route()`, refusée à l'enregistrement pour toute autre adresse, sans
   session ni CSRF) ; analyseur de formulaire propre à cette route (contexte Fastify encapsulé), corps limité à 256 Kio, un
-  champ répété est refusé. L'état n'est jamais lié par cookie (le cookie `SameSite=Strict` ne passe pas sur le POST du
-  fournisseur). Succès : session ouverte à l'état `mfaOk` (`sessions.par_sso`), redirection 303 vers le chemin de retour ; le
+  champ répété est refusé. Le cookie de session (`SameSite=Strict`) ne passe pas sur le POST du fournisseur : la demande est
+  **liée au navigateur** qui l'a lancée par un témoin dédié (décision du RSSI du 25/11/2026), un par demande et nommé d'après
+  son identifiant, 32 octets aléatoires dont seule l'empreinte SHA-256 est en base (`sso_requetes.liaison`), `Secure`,
+  `HttpOnly`, `SameSite=None`, chemin `/api/auth/sso/`, cinq minutes ; il est comparé en temps constant sur l'adresse de
+  retour, puis effacé, que la connexion réussisse ou non. Une réponse valide postée depuis un autre navigateur est refusée
+  (motif `navigateur`, alerte de sécurité). Même liaison pour la ré-authentification (`ForceAuthn`). Succès : session ouverte à l'état `mfaOk` (`sessions.par_sso`), redirection 303 vers le chemin de retour ; le
   cookie `SameSite=Strict` posé sur cette réponse accompagne ensuite les appels de l'interface (`/api/auth/me`, même origine).
   Refus : 303 vers `/login?sso=<code>` (refus, mfa, compte, expire, indisponible), jamais le motif exact.
 - **Contrôles** : XML durci avant toute analyse (`connexion-unique/xml.ts` : taille, UTF-8 strict, aucun `<!` autre qu'un
@@ -157,11 +161,9 @@ Les tests signent leurs réponses avec la même bibliothèque. Aucune autre part
 6. **Installer une mise à jour et remettre la base à vide** restent sous code TOTP : réservés aux comptes locaux (l'aller-retour
    SSO pourrait y remplacer le code, à décider).
 7. **Entra ID** : seul l'hôte `login.microsoftonline.com` (pas les nuages souverains).
-8. **Risque résiduel, état non lié au navigateur** (consigne : ne pas lier l'état par cookie) : la demande est liée au
-   fournisseur, pas au navigateur qui l'a lancée. Une personne qui a elle-même un compte « sso » pourrait faire poster sa
-   propre réponse, encore valable, par le navigateur d'une autre (connexion forcée sur le compte de l'attaquant, sans accès
-   aux données de la victime). Parade possible, à décider : un témoin `SameSite=None; Secure; HttpOnly` de cinq minutes, propre
-   à la demande, vérifié sur l'adresse de retour.
+8. **Connexion forcée (login CSRF)** : risque relevé pendant la réalisation (une personne qui a elle-même un compte « sso »
+   faisant poster sa propre réponse par le navigateur d'une autre). **Décidé par le RSSI le 25/11/2026 : liaison de la
+   demande au navigateur par un témoin dédié** (voir « Adresse de retour » ci-dessus).
 
 ## Conséquences
 

@@ -343,6 +343,10 @@ export class AlertesSecurite {
           titre: `Connexion unique refusée : signature invalide (${fournisseur})`,
           message: `Le ${quand} (heure de Paris), une réponse attribuée à « ${fournisseur} »${qui ? ` pour « ${qui} »` : ''} a été refusée : signature absente, invalide ou d’un algorithme refusé (${detail || 'signature'}). Ce peut être une réponse forgée, ou un certificat changé chez le fournisseur : relisez ses métadonnées. Détail dans le journal d’audit (action « auth.sso_refus »).`,
         },
+        refus_navigateur: {
+          titre: `Connexion unique refusée : réponse d’un autre navigateur (${fournisseur})`,
+          message: `Le ${quand} (heure de Paris), une réponse valide de « ${fournisseur} »${qui ? ` pour « ${qui} »` : ''} a été refusée : elle n’est pas revenue dans le navigateur qui avait lancé la demande (témoin de liaison absent ou différent). Ce peut être une tentative de connexion forcée sur le compte d’une autre personne, ou un navigateur qui bloque les cookies de l’application. Détail dans le journal d’audit (action « auth.sso_refus », motif « navigateur »).`,
+        },
         certificat_expire: {
           titre: `Certificat du fournisseur d’identité « ${fournisseur} » bientôt expiré`,
           message: `Le certificat de signature du fournisseur « ${fournisseur} » expire le ${e.expireLe ? paris(new Date(e.expireLe)) : 'prochainement'} (heure de Paris). Renouvelez-le chez le fournisseur, puis relisez ou importez ses métadonnées (Configuration système, Sécurité, Connexion unique) ; après l’expiration, plus personne ne pourra se connecter par lui.`,

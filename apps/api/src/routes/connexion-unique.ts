@@ -14,15 +14,16 @@ import {
   Uuid,
   codeEchecSso,
 } from '@suivi/shared';
-import type { FastifyReply } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { sql } from 'kysely';
 import { z } from 'zod';
-import type { Session } from '../auth.js';
-import { retourInterne } from '../connexion-unique/index.js';
+import { parseCookies, type Session } from '../auth.js';
+import { nomTemoinSso, retourInterne } from '../connexion-unique/index.js';
 import { requireIfMatch, setEtag } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import { route, URL_ACS_SAML } from '../http/route.js';
 import { CSP_FILE, setBaseHeaders } from '../http/security.js';
+import type { Services } from '../services.js';
 
 const IdParams = z.object({ id: Uuid });
 const Vide = z.object({}).strict();
@@ -30,6 +31,36 @@ const Vide = z.object({}).strict();
 /** Redirection 303 (après un POST) ou 302, vers un chemin interne ou l'adresse du fournisseur. */
 const rediriger = (reply: FastifyReply, url: string, code: 302 | 303) =>
   reply.code(code).header('Location', url).send();
+
+/* Témoin de liaison au navigateur (décision du RSSI du 25/11/2026). Un témoin par demande, nommé d'après son identifiant
+   (aucun écrasement entre demandes parallèles), valeur aléatoire de 32 octets dont seule l'empreinte est en base. SameSite=None :
+   seul ce témoin accompagne le POST du fournisseur (navigation intersite) ; il est HttpOnly, limité à /api/auth/sso/, valable
+   cinq minutes, et effacé à l'adresse de retour. Le cookie de session reste SameSite=Strict. Toujours Secure : les navigateurs
+   refusent SameSite=None sans Secure, et acceptent Secure sur http://localhost (essais locaux). Nom préfixé « __Secure- » en
+   HTTPS seulement, même règle que le cookie de session. */
+const CHEMIN_TEMOIN = '/api/auth/sso/';
+function poserTemoin(
+  svc: Services,
+  req: FastifyRequest,
+  reply: FastifyReply,
+  requeteId: string,
+  valeur: string,
+  maxAge: number,
+) {
+  const securise = svc.auth.cookieSecurise(req);
+  reply.header(
+    'Set-Cookie',
+    `${nomTemoinSso(requeteId, securise)}=${valeur}; Path=${CHEMIN_TEMOIN}; HttpOnly; SameSite=None; Secure; Max-Age=${maxAge}`,
+  );
+}
+/** Témoins de liaison présentés (nom selon la même règle que le cookie de session), par identifiant de demande. */
+function temoinsPresentes(svc: Services, req: FastifyRequest): Map<string, string> {
+  const prefixe = nomTemoinSso('', svc.auth.cookieSecurise(req));
+  const out = new Map<string, string>();
+  for (const [nom, valeur] of parseCookies(req.headers.cookie))
+    if (nom.startsWith(prefixe) && nom.length <= prefixe.length + 60) out.set(nom.slice(prefixe.length), valeur);
+  return out;
+}
 
 export const connexionUniqueRoutes = [
   /* ---------------------------------------------------------------- Connexion */
@@ -50,21 +81,22 @@ export const connexionUniqueRoutes = [
     access: 'public',
     params: IdParams,
     query: z.object({ retour: z.string().max(500).optional() }).strict(),
-    handler: async ({ svc, reply, ip, params, query }) => {
+    handler: async ({ svc, req, reply, ip, params, query }) => {
       if (!svc.limits.ssoByIp(ip)) throw new HttpError(429, 'Trop de tentatives. Réessayez dans quelques minutes.');
       const retour = retourInterne(query.retour);
       if (!retour)
         throw new HttpError(400, 'Chemin de retour refusé : un chemin interne à l’application est attendu.', {
           reason: 'retour',
         });
-      let url: string;
+      let d: Awaited<ReturnType<typeof svc.connexionUnique.demarrer>>;
       try {
-        url = await svc.connexionUnique.demarrer(params.id, { but: 'connexion', retour });
+        d = await svc.connexionUnique.demarrer(params.id, { but: 'connexion', retour });
       } catch (e) {
         if (e instanceof HttpError && e.status === 404) return rediriger(reply, '/login?sso=indisponible', 302);
         throw e;
       }
-      return rediriger(reply, url, 302);
+      poserTemoin(svc, req, reply, d.requeteId, d.temoin, SSO_BORNES.temoinSecondes);
+      return rediriger(reply, d.url, 302);
     },
   }),
   route({
@@ -87,7 +119,14 @@ export const connexionUniqueRoutes = [
         await svc.db.audit(null, ip, 'auth.rate_limited', '', { sso: true });
         return rediriger(reply, '/login?sso=refus', 303);
       }
-      const r = await svc.connexionUnique.valider(params.id, body.SAMLResponse);
+      // Témoins de liaison présentés : lus, puis tous effacés, que la connexion réussisse ou échoue (usage unique).
+      const temoins = temoinsPresentes(svc, req);
+      for (const requeteId of temoins.keys()) poserTemoin(svc, req, reply, requeteId, '', 0);
+      const r = await svc.connexionUnique.valider(
+        params.id,
+        body.SAMLResponse,
+        (requeteId) => temoins.get(requeteId) ?? null,
+      );
       if (!r.ok) {
         await svc.db.audit(
           r.compte ?? (r.identifiant ? { username: r.identifiant.slice(0, 64) } : null),
@@ -103,11 +142,17 @@ export const connexionUniqueRoutes = [
             ...(r.detail ? { detail: r.detail } : {}),
           },
         );
-        // Refus pour double authentification absente ou signature invalide : alerte de sécurité (ADR 0074).
-        if (r.motif === 'mfa_absente' || r.motif === 'signature' || r.motif === 'algorithme')
+        // Refus pour double authentification absente, signature invalide ou réponse postée depuis un autre navigateur :
+        // alerte de sécurité (ADR 0074).
+        if (['mfa_absente', 'signature', 'algorithme', 'navigateur'].includes(r.motif))
           await svc.connexionUnique.alerter([
             {
-              type: r.motif === 'mfa_absente' ? 'refus_mfa' : 'refus_signature',
+              type:
+                r.motif === 'mfa_absente'
+                  ? 'refus_mfa'
+                  : r.motif === 'navigateur'
+                    ? 'refus_navigateur'
+                    : 'refus_signature',
               fournisseurId: params.id,
               fournisseur: r.fournisseur ?? 'fournisseur inconnu',
               identifiant: r.compte?.username ?? r.identifiant,
@@ -155,7 +200,7 @@ export const connexionUniqueRoutes = [
     access: 'session',
     body: ReauthSsoBody,
     response: ReauthSsoOut,
-    handler: async ({ svc, s, body }) => {
+    handler: async ({ svc, req, reply, s, body }) => {
       const sess = s as Session;
       if (svc.auth.stage(sess) !== 'ok') throw new HttpError(403, 'Authentification incomplète.');
       if (!sess.user.sso)
@@ -173,13 +218,15 @@ export const connexionUniqueRoutes = [
         .select('sso_fournisseur_id')
         .where('id', '=', sess.user.id)
         .executeTakeFirstOrThrow();
-      const url = await svc.connexionUnique.demarrer(u.sso_fournisseur_id!, {
+      const d = await svc.connexionUnique.demarrer(u.sso_fournisseur_id!, {
         but: 'reauth',
         retour,
         userId: sess.user.id,
         sessionHash: sess.sid,
       });
-      return { url };
+      // Même liaison au navigateur que la connexion : le témoin accompagne la réponse de cet appel (même origine).
+      poserTemoin(svc, req, reply, d.requeteId, d.temoin, SSO_BORNES.temoinSecondes);
+      return { url: d.url };
     },
   }),
 

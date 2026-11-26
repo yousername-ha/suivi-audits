@@ -71,17 +71,35 @@ const reinitialiserLimites = () => {
   t.svc.limits.loginByUser.reset();
 };
 
+/** Navigateur qui a lancé la dernière demande : il détient le témoin de liaison (décision du RSSI du 25/11/2026), que le
+    POST du fournisseur rapporte dans le même navigateur. */
+let dernierDepart: Agent | null = null;
+const TEMOIN = /suivi_sso_/;
+/** Départ vers le fournisseur, dans un navigateur donné (témoin de liaison gardé pour le POST qui suit). */
+async function depart(url: string, nav = new Agent(t, IDP_ORIGINE)) {
+  const r = await nav.get(url);
+  dernierDepart = nav;
+  return r;
+}
 /** Départ vers le fournisseur : identifiant de la demande enregistrée. */
 async function demande(fournisseur: string, retour = '/accueil'): Promise<string> {
   reinitialiserLimites();
-  const r = await new Agent(t).get(`/api/auth/sso/${fournisseur}/connexion?retour=${encodeURIComponent(retour)}`);
+  const r = await depart(`/api/auth/sso/${fournisseur}/connexion?retour=${encodeURIComponent(retour)}`);
   expect(r.statusCode, r.body).toBe(302);
   return lireDemande(String(r.headers.location)).id;
 }
 
-/** POST du formulaire HTTP-POST par le navigateur, depuis la page du fournisseur (autre origine), sans cookie. */
-async function poster(fournisseur: string, b64: string, agent = new Agent(t, IDP_ORIGINE)) {
+/** POST du formulaire HTTP-POST par le navigateur, depuis la page du fournisseur (autre origine). Par défaut, le navigateur
+    rapporte le témoin de liaison de la dernière demande ; `temoin: false` simule un autre navigateur. */
+async function poster(
+  fournisseur: string,
+  b64: string,
+  agent = new Agent(t, IDP_ORIGINE),
+  o: { temoin?: boolean } = {},
+) {
   reinitialiserLimites();
+  if (o.temoin !== false && dernierDepart && dernierDepart !== agent)
+    for (const [k, v] of dernierDepart.cookies) if (TEMOIN.test(k)) agent.cookies.set(k, v);
   return agent.req('POST', `/api/auth/sso/${fournisseur}/acs`, {
     body: `SAMLResponse=${encodeURIComponent(b64)}&RelayState=`,
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
@@ -168,7 +186,7 @@ afterAll(async () => t?.close());
 
 describe('connexion unique : succès', () => {
   it('Entra ID : demande signée (HTTP-Redirect), réponse vérifiée, session complète par cookie SameSite=Strict, redirection 303', async () => {
-    const r0 = await new Agent(t).get(`/api/auth/sso/${entra}/connexion?retour=/accueil`);
+    const r0 = await depart(`/api/auth/sso/${entra}/connexion?retour=/accueil`);
     expect(r0.statusCode).toBe(302);
     const d = lireDemande(String(r0.headers.location));
     expect(d.url.origin + d.url.pathname).toBe('https://login.example.org/saml2');
@@ -182,7 +200,10 @@ describe('connexion unique : succès', () => {
     const r = await poster(entra, reponse(optsEntra(d.id)), navigateur);
     expect(r.statusCode, r.body).toBe(303);
     expect(r.headers.location).toBe('/accueil');
-    const cookie = String(r.headers['set-cookie']);
+    const poses = [r.headers['set-cookie'] ?? []].flat().map(String);
+    const cookie = poses.find((c) => c.startsWith('__Host-suivi_sid=')) ?? '';
+    // Le témoin de liaison est effacé à l'adresse de retour (usage unique).
+    expect(poses.some((c) => /^__Secure-suivi_sso_.+=; Path=\/api\/auth\/sso\/;.*Max-Age=0/.test(c))).toBe(true);
     expect(cookie).toMatch(/^__Host-suivi_sid=.+; Path=\/; HttpOnly; SameSite=Strict; Secure/);
     // Navigation suivante : l'interface appelle /api/auth/me en même origine, le cookie l'accompagne.
     const me = await navigateur.me();
@@ -199,7 +220,7 @@ describe('connexion unique : succès', () => {
     expect(j.rowCount).toBe(1);
   });
   it('Keycloak : classe de contexte demandée et prouvée, rapprochement par attribut, réponse signée', async () => {
-    const r0 = await new Agent(t).get(`/api/auth/sso/${keycloak}/connexion`);
+    const r0 = await depart(`/api/auth/sso/${keycloak}/connexion`);
     const d = lireDemande(String(r0.headers.location));
     expect(d.xml).toContain('RequestedAuthnContext');
     expect(d.xml).toContain('https://refeds.org/profile/mfa');
@@ -223,7 +244,7 @@ describe('connexion unique : refus', () => {
     const r = await poster(fournisseur, b64);
     expect(r.statusCode, r.body).toBe(303);
     expect(r.headers.location).toBe(`/login?sso=${code}`);
-    expect(r.headers['set-cookie']).toBeUndefined();
+    expect(String(r.headers['set-cookie'] ?? '')).not.toContain('suivi_sid');
     expect((await dernierRefus())?.motif).toBe(motif);
   };
   it('signature absente : refus et alerte de sécurité', async () => {
@@ -394,6 +415,64 @@ describe('connexion unique : XML durci', () => {
   });
 });
 
+describe('connexion unique : liaison au navigateur (décision du RSSI du 25/11/2026)', () => {
+  it('réponse valide postée sans le témoin de liaison (autre navigateur) : refus, journal et alerte', async () => {
+    const avant = await alertes('sso:refus_navigateur');
+    const r = await poster(entra, reponse(optsEntra(await demande(entra))), new Agent(t, IDP_ORIGINE), {
+      temoin: false,
+    });
+    expect(r.statusCode).toBe(303);
+    expect(r.headers.location).toBe('/login?sso=refus');
+    expect(String(r.headers['set-cookie'] ?? '')).not.toContain('suivi_sid');
+    expect((await dernierRefus())?.motif).toBe('navigateur');
+    expect(await alertes('sso:refus_navigateur')).toBeGreaterThan(avant);
+  });
+  it('réponse valide postée avec le témoin d’une autre demande : refus', async () => {
+    const a = await demande(entra);
+    const navA = dernierDepart!;
+    const b = await demande(entra);
+    // Le navigateur de la demande A rapporte la réponse destinée à la demande B.
+    const r = await poster(entra, reponse(optsEntra(b)), navA, { temoin: false });
+    expect(r.headers.location).toBe('/login?sso=refus');
+    expect((await dernierRefus())?.motif).toBe('navigateur');
+    expect(a).not.toBe(b);
+  });
+  it('témoin posé au départ : Secure, HttpOnly, SameSite=None, limité à /api/auth/sso/, cinq minutes', async () => {
+    reinitialiserLimites();
+    const r = await depart(`/api/auth/sso/${entra}/connexion`);
+    const t0 =
+      [r.headers['set-cookie'] ?? []]
+        .flat()
+        .map(String)
+        .find((c) => /suivi_sso_/.test(c)) ?? '';
+    expect(t0).toMatch(
+      /^__Secure-suivi_sso__[0-9a-f]{40}=[A-Za-z0-9_-]{43}; Path=\/api\/auth\/sso\/; HttpOnly; SameSite=None; Secure; Max-Age=300$/,
+    );
+    // Seule l'empreinte est en base, jamais la valeur.
+    const valeur = t0.split(';')[0]!.split('=')[1]!;
+    const ligne = await t.svc.db.one<{ liaison: Buffer }>(
+      'SELECT liaison FROM sso_requetes ORDER BY cree_le DESC LIMIT 1',
+    );
+    expect(Buffer.compare(ligne!.liaison, crypto.createHash('sha256').update(valeur).digest())).toBe(0);
+  });
+  it('réussite avec le bon témoin, puis témoin effacé : la même réponse rejouée dans ce navigateur est refusée', async () => {
+    const nav = new Agent(t, IDP_ORIGINE);
+    const id = await (async () => {
+      reinitialiserLimites();
+      const r = await depart(`/api/auth/sso/${entra}/connexion?retour=/accueil`, nav);
+      return lireDemande(String(r.headers.location)).id;
+    })();
+    const b64 = reponse(optsEntra(id));
+    const ok = await poster(entra, b64, nav, { temoin: false });
+    expect(ok.headers.location).toBe('/accueil');
+    expect([...nav.cookies.keys()].some((k) => /suivi_sso_/.test(k))).toBe(false);
+    const rejeu = await poster(entra, b64, nav, { temoin: false });
+    // Demande déjà consommée : refusée (présentée comme une demande expirée), sans session.
+    expect(rejeu.headers.location).toMatch(/^\/login\?sso=/);
+    expect(String(rejeu.headers['set-cookie'] ?? '')).not.toContain('suivi_sid');
+  });
+});
+
 describe('connexion unique : chemin de retour, origine', () => {
   it('chemin de retour externe refusé (aucune redirection ouverte)', async () => {
     for (const retour of ['https://evil.example.org/', '//evil.example.org', '/\\evil.example.org', '/api/auth/me']) {
@@ -457,6 +536,7 @@ describe('connexion unique : comptes', () => {
     expect((await a.post(`/api/admin/users/${id}/reset-password`)).statusCode).toBe(409);
     // Ré-authentification : aller-retour SAML avec ForceAuthn, retour vers la page de départ.
     const ra = await nav.post('/api/account/reauth/sso', { retour: '/compte' });
+    dernierDepart = nav;
     expect(ra.statusCode, ra.body).toBe(200);
     const d = lireDemande(ra.json().url);
     expect(d.xml).toContain('ForceAuthn="true"');
@@ -464,11 +544,12 @@ describe('connexion unique : comptes', () => {
     const r = await poster(entra, reponse(optsEntra(d.id)));
     expect(r.statusCode).toBe(303);
     expect(r.headers.location).toBe('/compte');
-    expect(r.headers['set-cookie']).toBeUndefined();
+    expect(String(r.headers['set-cookie'] ?? '')).not.toContain('suivi_sid');
     const f = await nav.get('/api/account/factors');
     expect(f.json().reauthJusqua).not.toBeNull();
     // Une ré-authentification par un autre compte du fournisseur est refusée.
     const ra2 = await nav.post('/api/account/reauth/sso', { retour: '/compte' });
+    dernierDepart = nav;
     const r2 = await poster(entra, reponse(optsEntra(lireDemande(ra2.json().url).id, { nameId: 'chloe@example.org' })));
     expect(r2.headers.location).toBe('/compte');
   });

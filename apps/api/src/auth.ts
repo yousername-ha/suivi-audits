@@ -174,8 +174,13 @@ export class Auth {
   }
 
   /* ---------------------------------------------------------------- Cookie et sessions */
+  /** Même règle pour tous les cookies posés par l'API (session, témoin de la connexion unique) : Secure et nom préfixé en
+      HTTPS (COOKIE_SECURE=auto), ou selon COOKIE_SECURE. */
+  cookieSecurise(req: FastifyRequest): boolean {
+    return this.cfg.cookieSecure === 'true' || (this.cfg.cookieSecure === 'auto' && isHttps(req));
+  }
   private cookie(req: FastifyRequest) {
-    const secure = this.cfg.cookieSecure === 'true' || (this.cfg.cookieSecure === 'auto' && isHttps(req));
+    const secure = this.cookieSecurise(req);
     return { name: secure ? COOKIE_SECURE : COOKIE_PLAIN, secure };
   }
   private setCookie(req: FastifyRequest, reply: FastifyReply, value: string, maxAge?: number) {

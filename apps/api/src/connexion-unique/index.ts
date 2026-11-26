@@ -35,7 +35,13 @@ export const EMPREINTE_SSO = 'sso$inutilisable';
 
 /** Évènement d'alerte de sécurité (ADR 0074) propre à la connexion unique. */
 export interface AlerteSsoEvt {
-  type: 'refus_mfa' | 'refus_signature' | 'certificat_expire' | 'metadonnees_echec' | 'certificat_change';
+  type:
+    | 'refus_mfa'
+    | 'refus_signature'
+    | 'refus_navigateur'
+    | 'certificat_expire'
+    | 'metadonnees_echec'
+    | 'certificat_change';
   fournisseurId: string;
   fournisseur: string;
   identifiant?: string | null;
@@ -44,6 +50,30 @@ export interface AlerteSsoEvt {
 }
 
 type Ligne = Selectable<SsoFournisseurs>;
+/** Demande consommée sur l'adresse de retour. */
+interface RequeteConsommee {
+  id: string;
+  but: 'connexion' | 'reauth';
+  retour: string;
+  user_id: string | null;
+  session_hash: Buffer | null;
+  liaison: Buffer;
+}
+
+/** Témoin qui lie une demande au navigateur qui l'a lancée (décision du RSSI du 25/11/2026) : un témoin par demande, nommé
+    d'après son identifiant, pour que plusieurs demandes en parallèle (deux onglets, un départ puis une ré-authentification)
+    ne s'écrasent pas ; 32 octets aléatoires, dont seule l'empreinte SHA-256 est gardée en base. */
+export const PREFIXE_TEMOIN_SSO = 'suivi_sso_';
+export const nomTemoinSso = (requeteId: string, securise: boolean) =>
+  `${securise ? '__Secure-' : ''}${PREFIXE_TEMOIN_SSO}${requeteId}`;
+/** Identifiant de demande : « _ » puis 40 chiffres hexadécimaux (sûr dans un nom de cookie et un attribut XML ID). */
+const nouvelIdDemande = () => `_${crypto.randomBytes(20).toString('hex')}`;
+const ID_DEMANDE = /^_[0-9a-f]{40}$/;
+/** Comparaison en temps constant de l'empreinte du témoin présenté avec celle de la demande. */
+export function temoinValide(presente: string | null | undefined, liaison: Buffer): boolean {
+  if (!presente || presente.length > 100 || liaison.length !== 32) return false;
+  return crypto.timingSafeEqual(crypto.createHash('sha256').update(presente, 'utf8').digest(), liaison);
+}
 type CertificatStocke = CertificatLu;
 
 /** Chemin de retour : relatif et interne (« /… », jamais « // » ni « /\ »), sans caractère de contrôle, hors de l'API. */
@@ -694,13 +724,14 @@ export class ConnexionUnique {
   private cache(
     fournisseurId: string,
     o: {
-      demande?: { but: 'connexion' | 'reauth'; retour: string; userId: string | null; sessionHash: Buffer | null };
-      consommee?: (r: {
+      demande?: {
         but: 'connexion' | 'reauth';
         retour: string;
-        user_id: string | null;
-        session_hash: Buffer | null;
-      }) => void;
+        userId: string | null;
+        sessionHash: Buffer | null;
+        liaison: Buffer;
+      };
+      consommee?: (r: RequeteConsommee) => void;
     },
   ): CacheProvider {
     const k = this.db.k;
@@ -716,6 +747,7 @@ export class ConnexionUnique {
             retour: o.demande.retour,
             user_id: o.demande.userId,
             session_hash: o.demande.sessionHash,
+            liaison: o.demande.liaison,
             expire_le: sql<Date>`now() + make_interval(mins => ${SSO_BORNES.requeteMinutes})`,
           })
           .execute();
@@ -751,7 +783,7 @@ export class ConnexionUnique {
           .where('fournisseur_id', '=', fournisseurId)
           .where('consommee_le', 'is', null)
           .where('expire_le', '>', sql<Date>`now()`)
-          .returning(['but', 'retour', 'user_id', 'session_hash', 'cree_le'])
+          .returning(['id', 'but', 'retour', 'user_id', 'session_hash', 'liaison', 'cree_le'])
           .executeTakeFirst();
         if (!r) return null;
         o.consommee?.(r);
@@ -768,7 +800,7 @@ export class ConnexionUnique {
     };
   }
 
-  private instance(l: Ligne, cache: CacheProvider, forceAuthn = false): SAML {
+  private instance(l: Ligne, cache: CacheProvider, forceAuthn = false, idDemande?: string): SAML {
     const cle = this.cleSp;
     const demanderContexte = l.type !== 'entra' && l.mfa_source === 'authn_context';
     return new SAML({
@@ -786,6 +818,7 @@ export class ConnexionUnique {
       requestIdExpirationPeriodMs: SSO_BORNES.requeteMinutes * 60e3,
       rejectReplayedAssertions: true,
       cacheProvider: cache,
+      ...(idDemande ? { generateUniqueId: () => idDemande } : {}),
       identifierFormat: null,
       forceAuthn,
       // Keycloak et générique : la classe de contexte attendue est demandée (le fournisseur impose alors la double
@@ -797,33 +830,40 @@ export class ConnexionUnique {
     });
   }
 
-  /** Adresse de connexion chez le fournisseur (HTTP-Redirect), après enregistrement de la demande. */
+  /** Adresse de connexion chez le fournisseur (HTTP-Redirect), après enregistrement de la demande ; avec l'identifiant de la
+      demande et la valeur du témoin de liaison à poser dans le navigateur (jamais gardée en clair). */
   async demarrer(
     id: string,
     o: { but: 'connexion' | 'reauth'; retour: string; userId?: string; sessionHash?: Buffer },
-  ): Promise<string> {
+  ): Promise<{ url: string; requeteId: string; temoin: string }> {
     const l = await this.ligne(id);
     if (!l || !l.actif || !this.pret(l) || !this.spEntityId)
       throw new HttpError(404, 'Ce fournisseur d’identité n’est pas disponible.', { reason: 'fournisseur' });
+    const requeteId = nouvelIdDemande();
+    const temoin = crypto.randomBytes(32).toString('base64url');
+    const liaison = crypto.createHash('sha256').update(temoin, 'utf8').digest();
     const saml = this.instance(
       l,
       this.cache(l.id, {
-        demande: { but: o.but, retour: o.retour, userId: o.userId ?? null, sessionHash: o.sessionHash ?? null },
+        demande: {
+          but: o.but,
+          retour: o.retour,
+          userId: o.userId ?? null,
+          sessionHash: o.sessionHash ?? null,
+          liaison,
+        },
       }),
       o.but === 'reauth',
+      requeteId,
     );
-    return saml.getAuthorizeUrlAsync('', undefined, {});
+    return { url: await saml.getAuthorizeUrlAsync('', undefined, {}), requeteId, temoin };
   }
 
-  /** Réponse reçue sur l'adresse de retour : validation complète, puis compte rapproché. Ne lève pas pour un refus. */
-  async valider(id: string, samlResponse: string): Promise<ResultatAcs> {
+  /** Réponse reçue sur l'adresse de retour : validation complète, liaison au navigateur (`temoin` : valeur du témoin
+      présenté pour une demande donnée), puis compte rapproché. Ne lève pas pour un refus. */
+  async valider(id: string, samlResponse: string, temoin: (requeteId: string) => string | null): Promise<ResultatAcs> {
     const l = await this.ligne(id);
-    let requete: {
-      but: 'connexion' | 'reauth';
-      retour: string;
-      user_id: string | null;
-      session_hash: Buffer | null;
-    } | null = null;
+    let requete: RequeteConsommee | null = null;
     const refus = (
       motif: MotifRefusSso,
       detail: string | null = null,
@@ -874,6 +914,14 @@ export class ConnexionUnique {
       return refus(motifErreurSaml(e), e instanceof Error ? e.message : null);
     }
     if (!profil || !requete) return refus('invalide', 'Aucune assertion d’authentification.');
+    // Liaison au navigateur (décision du RSSI du 25/11/2026) : la réponse doit revenir dans le navigateur qui a lancé la
+    // demande. Une réponse valide postée depuis un autre navigateur (connexion forcée) est refusée.
+    const consommee = requete as RequeteConsommee;
+    if (!ID_DEMANDE.test(consommee.id) || !temoinValide(temoin(consommee.id), consommee.liaison))
+      return refus(
+        'navigateur',
+        'Témoin de liaison absent ou différent : la réponse ne revient pas dans le navigateur de la demande.',
+      );
     const brute = profil.getAssertion?.() as X | undefined;
     const assertion = brute && typeof brute.Assertion === 'object' ? (brute.Assertion as X) : null;
     if (!assertion) return refus('invalide', 'Assertion illisible.');
@@ -919,12 +967,7 @@ export class ConnexionUnique {
     }
     if (compte.disabled || (compte.expires_at && new Date(compte.expires_at) <= new Date()))
       return refus('compte_desactive', null, { compte: qui, identifiant });
-    const r = requete as {
-      but: 'connexion' | 'reauth';
-      retour: string;
-      user_id: string | null;
-      session_hash: Buffer | null;
-    };
+    const r = consommee;
     if (r.but === 'reauth' && r.user_id !== compte.id)
       return refus('reauth_autre_compte', null, { compte: qui, identifiant });
     return {
