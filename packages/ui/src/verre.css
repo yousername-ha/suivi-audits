@@ -1261,11 +1261,11 @@ html[data-style='verre'] .app-main .acces-icone {
 html[data-style='verre'] {
   --acr-encre: #13200a;
   --acr-encre-2: #2c4113;
-  --acr-lueur: #cfe59a;
+  --acr-lueur: #bcd786;
   --acr-fond:
-    radial-gradient(80% 60% at 50% 34%, rgba(255, 255, 255, 0.32), transparent 62%),
-    radial-gradient(130% 110% at 50% 50%, #c6df8c 0%, #a3c45c 48%, #7e9f3e 100%);
-  /* Halo vert adouci (demande du RSSI du 26/11/2026 : vert plus doux et plus foncé). */
+    radial-gradient(80% 60% at 50% 34%, rgba(255, 255, 255, 0.1), transparent 62%),
+    radial-gradient(130% 110% at 50% 50%, #9fbd62 0%, #82a346 48%, #5f7e2c 100%);
+  /* Halo vert adouci (demandes du RSSI du 26/11/2026 : vert plus doux, plus foncé, moins de blanc). */
   --acr-halo: 130, 170, 60;
   --acr-prisme-fort: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 220'%3E%3Cdefs%3E%3ClinearGradient id='f' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.6'/%3E%3Cstop offset='.45' stop-color='%23fff' stop-opacity='.12'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='.35'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M18 62 L96 8 L228 30 L232 150 L150 212 L10 170 Z' fill='url(%23f)' stroke='%233c5a0a' stroke-opacity='.35' stroke-width='5' stroke-linejoin='round'/%3E%3Cpath d='M18 62 L96 8 L228 30 L232 150 L150 212 L10 170 Z' fill='none' stroke='%23fff' stroke-opacity='.95' stroke-width='2.5' stroke-linejoin='round'/%3E%3Cpath d='M34 70 L100 26 L212 44 L216 144 L146 194 L28 160 Z' fill='none' stroke='%23fff' stroke-opacity='.6' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M46 76 l8 -5 M200 52 l6 6 M204 140 l-6 6 M40 152 l7 4' stroke='%23fff' stroke-opacity='.9' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
   --acr-pastille-fond: rgba(20, 32, 10, 0.88);
@@ -1324,12 +1324,12 @@ html[data-style='verre'] .auth-connexion .auth-verre-pastille {
   place-items: center;
   width: 3.25rem;
   height: 3.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 0.9rem;
   background: var(--acr-fond);
   color: var(--acr-encre);
   box-shadow:
-    inset 0 0 14px rgba(255, 255, 255, 0.55),
+    inset 0 0 14px rgba(255, 255, 255, 0.16),
     0 0 26px rgba(var(--acr-halo), 0.45);
 }
 html[data-style='verre'] .auth-connexion .auth-verre-bouclier {
@@ -1393,13 +1393,13 @@ html[data-style='verre'] .auth-connexion .auth-carte--valider {
   width: 100%;
   margin: 0.4rem 0 0;
   padding: 0.85rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 0.85rem;
   background: var(--acr-fond);
   color: var(--acr-encre);
   font-weight: 700;
   box-shadow:
-    inset 0 0 18px rgba(255, 255, 255, 0.5),
+    inset 0 0 18px rgba(255, 255, 255, 0.14),
     0 0 26px rgba(var(--acr-halo), 0.4);
 }
 html[data-style='verre'] .auth-connexion .auth-carte--valider::before,
@@ -1418,7 +1418,7 @@ html[data-style='verre']
   .auth-connexion
   .auth-panneau
   .mantine-Button-root:is([data-variant='filled'], :not([data-variant])):not(:disabled, [data-disabled]) {
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   background: var(--acr-fond);
   color: var(--acr-encre);
   box-shadow: 0 0 22px rgba(var(--acr-halo), 0.35);
@@ -1447,14 +1447,14 @@ html[data-style='verre'][data-mantine-color-scheme] .tdb .tdb-dalle.tdb-bandeau 
   --verre-secondaire: var(--acr-encre-2);
   --verre-violet: var(--acr-encre-2);
   --verre-sens: var(--acr-encre);
-  border-color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.3);
   background:
     var(--acr-prisme-fort) right -1.4rem top -1.2rem / 10.5rem auto no-repeat,
     var(--acr-fond);
   color: var(--acr-encre);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.4),
-    inset 0 0 50px rgba(255, 255, 255, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    inset 0 0 50px rgba(255, 255, 255, 0.1),
     inset 0 -30px 60px rgba(110, 165, 10, 0.32),
     0 0 40px rgba(var(--acr-halo), 0.38),
     0 0 110px rgba(var(--acr-halo), 0.18);
@@ -1482,7 +1482,7 @@ html[data-style='verre'] .tdb .tdb-dalle.tdb-bandeau .neon-motif {
 }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
   html[data-style='verre'][data-mantine-color-scheme] .tdb .tdb-dalle.tdb-bandeau {
-    background: #a3c45c;
+    background: #82a346;
     box-shadow: none;
   }
 }
