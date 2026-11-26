@@ -33,14 +33,24 @@ describe('style « Verre »', () => {
     expect(feuilles.filter((f) => f === '@suivi/ui/verre.css')).toHaveLength(1);
   });
 
-  it('dalle phare du tableau de bord en acrylique lumineux (26/11/2026), connexion inchangée', () => {
+  it('dalle phare du tableau de bord en acrylique lumineux (26/11/2026)', () => {
     const verre = lire('../../../packages/ui/src/verre.css');
     expect(verre).toContain('.tdb .tdb-dalle.tdb-bandeau {');
-    expect(verre).not.toContain('.auth-');
-    expect(lire('../src/pages/Login.tsx')).not.toContain('dataset.style');
     // Repli : fond uni, sans lueur, pour la transparence réduite, le contraste renforcé et les couleurs forcées.
     expect(verre).toMatch(
       /@media \(prefers-reduced-transparency: reduce\), \(prefers-contrast: more\), \(forced-colors: active\) \{\s*html\[data-style='verre'\]\[data-mantine-color-scheme\] \.tdb \.tdb-dalle\.tdb-bandeau \{\s*background: #d0f45e;/,
     );
+  });
+
+  it('connexion : maquette 1 du canevas avec la touche acrylique, en-tête masqué hors du style « Verre »', () => {
+    const login = lire('../src/pages/Login.tsx');
+    expect(login).toContain('const style = styleInstance(me.appearance?.style);');
+    expect(login).toContain('document.documentElement.dataset.style = style;');
+    expect(login).toMatch(/<div className="auth-verre-tete" aria-hidden="true">/);
+    expect(login).toContain('Bon retour');
+    expect(lire('../../../packages/ui/src/styles.css')).toMatch(/\.auth-verre-tete \{\s*display: none;/);
+    const verre = lire('../../../packages/ui/src/verre.css');
+    expect(verre).toMatch(/html\[data-style='verre'\] \.auth-connexion \.auth-verre-tete \{\s*display: flex;/);
+    expect(verre).toContain("html[data-style='verre'] .auth-connexion .auth-carte--valider {");
   });
 });

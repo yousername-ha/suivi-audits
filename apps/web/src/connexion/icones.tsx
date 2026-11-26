@@ -49,3 +49,10 @@ export const IconeFleche = () => (
     <path d="M5 12h14M13 6l6 6-6 6" />
   </Icone>
 );
+/** Bouclier coché : pastille d'en-tête de la connexion en style « Verre » (maquette 1 du canevas de la refonte). */
+export const IconeBouclier = () => (
+  <Icone className="auth-verre-bouclier">
+    <path d="M12 3 5 6v5c0 4.5 3 8.2 7 10 4-1.8 7-5.5 7-10V6z" />
+    <path d="m9 12 2 2 4-4" />
+  </Icone>
+);

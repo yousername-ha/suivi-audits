@@ -1453,6 +1453,11 @@ h3,
   letter-spacing: -0.05em;
 }
 
+/* En-tête de la connexion propre au style « Verre » (verre.css) : masqué dans les autres styles. */
+.auth-verre-tete {
+  display: none;
+}
+
 /* Sceau : en haut à droite, derrière le texte. */
 .auth-panneau > .auth-sceau {
   position: absolute;

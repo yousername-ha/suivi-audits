@@ -24,9 +24,17 @@ import { AjoutCle, EnrolementImpose } from '../components/ClesSecurite';
 import { OndeMenu } from '../components/OndeMenu';
 import { dispositionConnexion, type DispositionConnexion } from '../components/onde-menu';
 import { FondConnexion } from '../connexion/FondConnexion';
-import { IconeCadenas, IconeFleche, IconeOeil, IconeOeilBarre, IconePersonne } from '../connexion/icones';
+import {
+  IconeBouclier,
+  IconeCadenas,
+  IconeFleche,
+  IconeOeil,
+  IconeOeilBarre,
+  IconePersonne,
+} from '../connexion/icones';
 import { Sceau } from '../connexion/Sceau';
 import { fetchMe, useMe, useRefreshMe } from '../session';
+import { styleInstance } from '../style-instance';
 import { connexionParCle, MESSAGE_NAVIGATEUR, navigateurCompatible } from '../webauthn';
 import { destinationApresConnexion, retourSur } from '../installation-flux';
 import { lienConnexionSso, messageEchecSso } from '../connexion-unique';
@@ -68,6 +76,12 @@ function AuthCard({ title, etape = true, children }: { title: string; etape?: bo
   const panneau = useRef<HTMLElement>(null);
   const titre = useRef<HTMLHeadingElement>(null);
   const disposition = useDispositionOnde(panneau, titre);
+  const me = useMe();
+  // Style de l'instance dès la connexion : le style « Verre » a sa propre page (maquette 1 du canevas de la refonte).
+  const style = styleInstance(me.appearance?.style);
+  useEffect(() => {
+    document.documentElement.dataset.style = style;
+  }, [style]);
   // Panneau sans nom accessible : le h1 suffit, et un nom ferait doublon avec les libellés des champs.
   return (
     <main className="auth-wrap auth-connexion">
@@ -76,6 +90,14 @@ function AuthCard({ title, etape = true, children }: { title: string; etape?: bo
         {disposition && <OndeMenu connexion={disposition} />}
         <Sceau />
         <VisuallyHidden component="h1">{title}</VisuallyHidden>
+        {/* En-tête du style « Verre » (masqué dans les autres styles) : décoratif, le h1 porte le nom de l'étape. */}
+        <div className="auth-verre-tete" aria-hidden="true">
+          <span className="auth-verre-pastille">
+            <IconeBouclier />
+          </span>
+          <span className="auth-verre-titre">Bon retour</span>
+          <span className="auth-verre-org">{[me.appName, me.orgName].filter(Boolean).join(' — ')}</span>
+        </div>
         <span className="auth-kicker">Gouvernance · Risques · Conformité</span>
         <h2 className="auth-accroche" ref={titre}>
           Une vision claire.
