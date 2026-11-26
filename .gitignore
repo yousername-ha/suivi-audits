@@ -34,6 +34,7 @@ tests/e2e/rssi-virtuel/.pilote*/
 
 # Données de développement (docker-compose.dev.yml) et copie de .env faite pendant une mise à jour
 .donnees-dev/
+.donnees-verre/
 .env.avant-mise-a-jour
 
 # Vérification d’archives (Python standard)

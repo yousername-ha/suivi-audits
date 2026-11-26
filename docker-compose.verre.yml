@@ -1,0 +1,65 @@
+# Évaluation de la refonte « Verre » (branche refonte-verre seulement, décision du RSSI du 26/11/2026) :
+#   docker compose -f docker-compose.verre.yml up --build
+# Puis ouvrir http://localhost:5173 : aucune page de connexion, compte fictif administrateur, jeu de démonstration chargé,
+# style d'instance « Verre ». Pile jetable : données dans ./.donnees-verre (ignoré par git) ; pour repartir de zéro,
+#   docker compose -f docker-compose.verre.yml down   puis supprimer le dossier .donnees-verre.
+# Seule la « porte » (scripts/evaluation-verre/porte.ts) est publiée, sur 127.0.0.1 : l'interface et l'API restent
+# internes à la pile. Ne jamais déployer ce fichier sur un serveur, ni le reporter hors de refonte-verre.
+name: suivi-audits-verre
+
+x-node: &node
+  image: node:26-alpine
+  working_dir: /work
+  environment: &env
+    DB_HOST: db
+    DB_USER: postgres
+    DB_PASSWORD: ''
+    SECRETS_DIR: /dev-secrets
+    COOKIE_SECURE: 'false'
+    PUBLIC_URL: http://localhost:5173
+    # Pas de second facteur à enrôler : la session d'évaluation est ouverte par la porte.
+    MFA_REQUIRED: 'false'
+    LOG_LEVEL: info
+  volumes:
+    - .:/work
+    - ./.donnees-verre/secrets:/dev-secrets
+    - verrenodemodules:/work/node_modules
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: suivi
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - ./.donnees-verre/postgres18:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d suivi']
+      interval: 5s
+      retries: 20
+
+  api:
+    <<: *node
+    command: >
+      sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && pnpm install --frozen-lockfile &&
+             node -e \"const f='/dev-secrets/doc_master_key',fs=require('fs');fs.mkdirSync('/dev-secrets',{recursive:true});fs.existsSync(f)||fs.writeFileSync(f,require('crypto').randomBytes(32).toString('base64'))\" &&
+             pnpm --filter @suivi/api dev"
+    depends_on:
+      db: { condition: service_healthy }
+
+  web:
+    <<: *node
+    command: sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && until [ -d node_modules/.pnpm ]; do sleep 2; done && pnpm --filter @suivi/web dev --host 0.0.0.0"
+    environment:
+      API_URL: http://api:8080
+    depends_on: [api]
+
+  porte:
+    <<: *node
+    command: sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && until wget -q -O /dev/null http://api:8080/api/health/ready; do sleep 3; done && pnpm --filter @suivi/api exec tsx --conditions=source ../../scripts/evaluation-verre/porte.ts"
+    ports:
+      - '127.0.0.1:5173:5173'
+    depends_on: [api, web]
+
+volumes:
+  verrenodemodules: # dépendances (pas des données)
