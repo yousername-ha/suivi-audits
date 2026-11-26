@@ -153,6 +153,12 @@ export function loadConfig(env: Env = process.env) {
     appName,
     /** Clés de sécurité FIDO2 / WebAuthn (ADR 0079). */
     webauthn: configWebauthn(env, publicUrl, appName),
+    /** Connexion unique SAML (ADR 0114) : clé et certificat du service, générés par le service init (jamais dans le dépôt).
+        Absents : les demandes de connexion partent sans signature. */
+    sso: {
+      cleSp: secret('saml_sp_key', 'SAML_SP_KEY'),
+      certificatSp: secret('saml_sp_cert', 'SAML_SP_CERT'),
+    },
     orgName: env.ORG_NAME || 'Mon organisation',
     seedFile: env.SEED_FILE || path.join(APP_ROOT, 'seed', 'state.json'),
     /** Rapports d'exploitation (DATA_DIR/etat sur le serveur, monté en lecture seule) : mises à jour, sauvegardes. */

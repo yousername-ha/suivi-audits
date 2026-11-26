@@ -8,3 +8,4 @@ export * from './tableau-de-bord.tsx';
 export * from './neon-graphiques.tsx';
 export * from './liste-defilante.tsx';
 export * from './focus-fiche.ts';
+export * from './focus-erreur.ts';

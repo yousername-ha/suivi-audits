@@ -1,8 +1,10 @@
 /* Connexion : mot de passe, puis double authentification (code TOTP, clé de sécurité ou code de récupération), enrôlement TOTP
-   (avec ajout facultatif d'une clé), enrôlement d'une clé imposé, changement de mot de passe imposé. */
+   (avec ajout facultatif d'une clé), enrôlement d'une clé imposé, changement de mot de passe imposé. Connexion unique SAML
+   (ADR 0114) : un bouton par fournisseur actif, au-dessus du formulaire local ; le bouton est un lien (navigation de la
+   page entière vers le fournisseur, sans script), et un refus revient ici avec un code (« ?sso= ») et son message. */
 import { Alert, Button, Loader, PasswordInput, PinInput, Stack, Text, TextInput, VisuallyHidden } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import type { QuestionsFluxOut } from '@suivi/shared';
+import type { OptionsConnexionSsoOut, QuestionsFluxOut } from '@suivi/shared';
 import { useQuery } from '@tanstack/react-query';
 import qrcode from 'qrcode-generator';
 import {
@@ -27,6 +29,7 @@ import { Sceau } from '../connexion/Sceau';
 import { fetchMe, useMe, useRefreshMe } from '../session';
 import { connexionParCle, MESSAGE_NAVIGATEUR, navigateurCompatible } from '../webauthn';
 import { destinationApresConnexion, retourSur } from '../installation-flux';
+import { lienConnexionSso, messageEchecSso } from '../connexion-unique';
 
 /* Panneau unique centré : bandeau, accroche, puis le formulaire de l'étape (connexion, code, enrôlement, mot de passe). */
 /** Horizon de l'onde : à mi-chemin entre le bas du titre et le haut de la première carte, mesuré sur la mise en page
@@ -38,7 +41,7 @@ function useDispositionOnde(panneau: RefObject<HTMLElement | null>, titre: RefOb
     const h2 = titre.current;
     if (!p || !h2) return;
     const mesurer = () => {
-      const carte = p.querySelector('.auth-carte--identifiant, .auth-etape');
+      const carte = p.querySelector('.auth-sso, .auth-carte--identifiant, .auth-etape');
       if (!carte) return;
       const d = dispositionConnexion(
         p.getBoundingClientRect(),
@@ -107,6 +110,13 @@ export function LoginPage() {
     queryFn: () => get<{ needed: boolean; adminExists: boolean }>('/api/setup'),
     enabled: me.stage === 'anon',
   });
+  const sso = useQuery({
+    queryKey: ['sso-fournisseurs'],
+    queryFn: () => get<OptionsConnexionSsoOut>('/api/auth/sso/fournisseurs'),
+    enabled: me.stage === 'anon',
+    retry: false,
+  });
+  const echecSso = messageEchecSso(params.get('sso'));
 
   // Session complète : la page demandée, ou d'abord la dernière étape de l'installation (flux vers l'extérieur, ADR 0097)
   // tant que le compte créé par l'installation ne l'a ni terminée ni passée. Un échec de lecture ne bloque pas la connexion.
@@ -200,19 +210,50 @@ export function LoginPage() {
   return (
     <PasswordLogin
       busy={busy}
-      err={err}
+      err={
+        err ??
+        (echecSso && (
+          <Alert color="red" role="alert">
+            {echecSso}
+          </Alert>
+        ))
+      }
+      sso={<BoutonsConnexionUnique fournisseurs={sso.data ?? []} retour={next} />}
       onLogin={(username, password) => run(() => post('/api/auth/login', { username, password }))}
     />
+  );
+}
+
+/** Connexion unique (ADR 0114) : un lien par fournisseur actif et prêt, au-dessus du formulaire local. */
+export function BoutonsConnexionUnique({
+  fournisseurs,
+  retour,
+}: {
+  fournisseurs: OptionsConnexionSsoOut;
+  retour: string;
+}) {
+  if (!fournisseurs.length) return null;
+  return (
+    <nav className="auth-sso" aria-label="Connexion unique">
+      {fournisseurs.map((f) => (
+        <Button key={f.id} component="a" href={lienConnexionSso(f.id, retour)} variant="default" fullWidth>
+          {`Se connecter avec ${f.libelle}`}
+        </Button>
+      ))}
+      <p className="auth-sso__ou">ou avec un compte local de l’application</p>
+    </nav>
   );
 }
 
 function PasswordLogin({
   busy,
   err,
+  sso,
   onLogin,
 }: {
   busy: boolean;
   err: ReactNode;
+  sso: ReactNode;
   onLogin: (u: string, p: string) => void;
 }) {
   const [u, setU] = useState('');
@@ -223,6 +264,7 @@ function PasswordLogin({
   const verifierMajuscules = (e: KeyboardEvent<HTMLInputElement>) => setMajuscules(e.getModifierState('CapsLock'));
   return (
     <AuthCard title="Connexion" etape={false}>
+      {sso}
       <form
         className="auth-pile"
         onSubmit={(e: FormEvent) => {

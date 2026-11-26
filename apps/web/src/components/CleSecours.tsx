@@ -24,6 +24,7 @@ import {
   type CleSecoursAEnregistrer,
   type CleSecoursEtat,
   type CleSecoursGeneree,
+  jourParis,
 } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -44,7 +45,7 @@ export function useEtatCleSecours(actif: boolean, suivre = false) {
   });
 }
 
-const nomFichier = () => `cle-secours-sauvegardes-${new Date().toISOString().slice(0, 10)}.txt`;
+const nomFichier = () => `cle-secours-sauvegardes-${jourParis()}.txt`;
 
 /** Génère la clé, la fait télécharger, puis demande la preuve de rangement (8 derniers caractères de la clé privée). */
 export function GenerationCleSecours({ onChange }: { onChange: (c: CleSecoursAEnregistrer | null) => void }) {

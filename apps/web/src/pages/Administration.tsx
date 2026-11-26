@@ -24,6 +24,7 @@ import { CleSecoursPanel } from '../components/CleSecours';
 import { FluxExternesPanel } from '../components/FluxExternes';
 import { MandatairePanel } from '../components/Mandataire';
 import { AntivirusPanel } from '../components/Antivirus';
+import { ConnexionUniquePanel } from '../components/ConnexionUnique';
 import { AdresseSitePanel } from '../components/AdresseSite';
 import { CalendriersPanel } from './AdminCalendriers';
 import { FonctionsPanel } from './AdminFonctions';
@@ -301,6 +302,11 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
         {can('administration', 'administrer') && <RemiseAVidePanel />}
       </Stack>
     ),
+    /* Fenêtre de consultation : la liste des instantanés s'allonge à chaque enregistrement de l'état de suivi. Découpée en
+       parties, elle coûtait plusieurs secondes de mise en page par calcul et pouvait basculer sans fin entre découpage et
+       défilement (test de bout en bout de l'Administration hors délai, 25/11/2026). Défilement vertical habituel, comme
+       « Mises à jour et versions ». */
+    consultation: true,
   },
   {
     id: 'courriel',
@@ -319,6 +325,9 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
     icone: 'maj',
     teinte: 'bleu',
     detail: () => <UpdatesPanel />,
+    /* Retour du RSSI du 24/11/2026 : découpée en parties, la fenêtre coupait l'encadré de l'installation et le bouton
+       « Installer » n'était plus atteignable qu'au clavier. Fenêtre d'opération : défilement vertical habituel. */
+    consultation: true,
   },
   {
     id: 'flux-externes',
@@ -366,6 +375,7 @@ const DEFINITIONS: Omit<Carte, 'peut'>[] = [
         <SectionLoader section="securite" onDirty={m} titreVisible={false} />
         {can('administration', 'administrer') && <PoivrePanel />}
         {can('administration', 'lire') && <PolitiqueClesPanel ecriture={can('administration', 'administrer')} />}
+        {can('administration', 'lire') && <ConnexionUniquePanel ecriture={can('administration', 'administrer')} />}
         {can('administration', 'lire') && <AntivirusPanel />}
       </Stack>
     ),

@@ -26,6 +26,7 @@ import {
   type RondeAssistantDto,
   type RondeDeclencheur,
   type SourceAssistant,
+  jourParis,
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import type { Logger } from 'pino';
@@ -166,6 +167,7 @@ export class RondesAssistant {
       clesEnregistrees: 0,
       cleRequise: false,
       mustChangePassword: false,
+      sso: false,
     };
   }
 
@@ -390,7 +392,7 @@ export class RondesAssistant {
         profil,
         consigne: consigneRonde(
           profil,
-          new Date().toISOString().slice(0, 10),
+          jourParis(),
           missions.map((m) => m.consigne),
           memoire.map((m) => m.contenu).reverse(),
           await this.annexes(profil),

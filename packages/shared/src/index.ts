@@ -1,3 +1,5 @@
+// En premier : zod sans compilation à la volée dans le navigateur, avant la création des schémas (zod-navigateur.ts).
+import './zod-navigateur.js';
 export * from './setup-token.js';
 export * from './roles.js';
 export * from './permissions.js';
@@ -8,6 +10,7 @@ export * from './affichage.js';
 export * from './exploitation.js';
 export * from './modules.js';
 export * from './updates.js';
+export * from './heure-paris.js';
 export * from './remise-a-vide.js';
 export * from './mot-de-passe.js';
 export * from './poivre.js';
@@ -62,6 +65,7 @@ export * from './notifications.js';
 export * from './texte.js';
 export * from './assistant.js';
 export * from './flux-externes.js';
+export * from './connexion-unique.js';
 export * from './vulnerabilites.js';
 export * from './integrations.js';
 export * from './veille-vulnerabilites.js';

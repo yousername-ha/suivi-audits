@@ -2,6 +2,116 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
+## [7.8.0] — 2026-11-26
+
+### Notes de mise à jour
+
+- Connexion unique SAML ([ADR 0114](docs/adr/0114-connexion-unique-saml.md)) : migration `107` additive (trois tables vides,
+  colonnes ajoutées aux comptes et aux sessions avec leur valeur par défaut : tout compte existant reste en connexion
+  locale), appliquée au démarrage, quelques secondes. Nouvelle dépendance de l'API `@node-saml/node-saml` 5.2.0. Au
+  démarrage, le service `init` génère la clé et le certificat du service de connexion unique (`saml_sp_key`, `saml_sp_cert`,
+  dossier des secrets), sauvegardés avec les autres secrets. **Nouveau flux vers l'extérieur `sso-saml`, fermé par défaut**
+  (lecture des métadonnées des fournisseurs, vers `login.microsoftonline.com` pour Entra ID ou l'hôte réglé pour Keycloak) :
+  il ne s'ouvre que lorsqu'un administrateur enregistre une adresse de métadonnées et valide sa destination ; à autoriser
+  ensuite sur le pare-feu. Aucune action si la connexion unique n'est pas utilisée. (session « Projet audit_suivi Coeur »)
+- Aucune migration, aucune commande sur le serveur. Nouvel en-tête `Content-Security-Policy-Report-Only` (Trusted Types en
+  observation) servi par Caddy pour l'interface et la page de mise à jour ; la CSP appliquée est inchangée. La configuration
+  et la page du frontal changent : à la fin de la mise à jour depuis l'interface, le frontal du site est redémarré une fois
+  ([ADR 0103](docs/adr/0103-frontal-mis-a-jour-a-la-demande.md)), coupure de quelques secondes annoncée par la page de
+  suivi, qui reprend seule. Aucun flux nouveau vers l'extérieur : les violations se lisent dans la console du navigateur,
+  sans point de collecte des rapports. (session « Projet audit_suivi Coeur »)
+- Aucune migration, aucune commande sur le serveur, aucun flux nouveau vers l'extérieur. Aucune action. Les incidents déjà
+  enregistrés ne sont pas repris (décision du RSSI du 24/11/2026).
+
+### Ajouté
+
+- **Connexion unique SAML 2.0** pour Microsoft Entra ID et Keycloak (décisions du RSSI du 25/11/2026,
+  [ADR 0114](docs/adr/0114-connexion-unique-saml.md)) : bouton « Se connecter avec … » par fournisseur actif sur la page de
+  connexion, au-dessus du formulaire local ; connexion à l'initiative du service seulement (demande HTTP-Redirect signée,
+  enregistrée en base, à usage unique et valable cinq minutes ; réponse HTTP-POST sur une adresse de retour propre à chaque
+  fournisseur, seule route exemptée du contrôle d'origine ; IdP-initiated refusé). La demande est liée au navigateur qui l'a
+  lancée par un témoin dédié à usage unique (`Secure`, `HttpOnly`, `SameSite=None`, limité à `/api/auth/sso/`, cinq minutes) :
+  une réponse postée depuis un autre navigateur est refusée et signalée (décision du RSSI du 25/11/2026). Analyse XML durcie (ni DTD ni entité,
+  taille bornée), assertion signée obligatoire (réponse ou assertion, SHA-256 ou plus), contrôles `Audience`, `Destination`,
+  `Recipient`, `NotBefore`/`NotOnOrAfter` (deux minutes de tolérance), `InResponseTo` obligatoire et anti-rejeu. La
+  connexion n'est acceptée que si l'assertion prouve une double authentification faite chez le fournisseur (claim
+  `authnmethodsreferences` d'Entra ID, classe du contexte de Keycloak, réglable par fournisseur). Comptes créés d'avance en
+  « connexion unique » avec l'identifiant attendu, aucune création à la volée, droits attribués dans l'application seulement ;
+  un compte « sso » n'a ni mot de passe ni TOTP ni clé (refus uniforme à la connexion par mot de passe), se ré-authentifie
+  par le fournisseur (`ForceAuthn`), se déconnecte localement ; le dernier administrateur local actif ne peut pas passer en
+  connexion unique. Carte « Connexion unique (SAML) » dans Configuration système > Sécurité : identifiant du service,
+  adresses de retour et certificat à déclarer chez le fournisseur, fournisseurs, état du flux et des métadonnées (relues
+  toutes les six heures par l'exécutant d'exploitation, ou importées à la main), expiration du certificat de signature.
+  Alertes de sécurité : certificat du fournisseur qui expire dans moins de 30 jours, relecture en échec, certificat changé,
+  refus pour double authentification absente, signature invalide ou réponse venue d'un autre navigateur. Journal `auth.sso_*`. Le principe « l'API ne lit aucun
+  XML » devient « aucun XML hors SAML ». La feuille de route prévoyait OIDC : SAML retenu. (session « Projet audit_suivi Coeur »)
+
+### Modifié
+
+- Accessibilité, **focus après une action refusée** (guide « accessible-error-announcement », décision du RSSI du
+  24/11/2026) : dans une fenêtre, un panneau ou un formulaire, quand une action lancée par un bouton fait apparaître une
+  erreur alors que le focus est resté sur ce bouton, le focus rejoint le premier champ invalide (`aria-invalid`), sinon le
+  message d'erreur (`ErrorAlert`, devenu focalisable) ; une saisie en cours n'est jamais interrompue. Dans une fiche
+  découpée en parties, la partie de l'élément focalisé s'affiche. Mécanisme commun `packages/ui/src/focus-erreur.ts`,
+  installé une fois au démarrage, sans modifier les formulaires. (session « Projet audit_suivi Coeur »)
+- Accessibilité, **texte agrandi par le système** (guide « respect-os-text-scale ») : `<meta name="text-scale"
+  content="scale">` dans l'interface et la page de mise à jour (navigateurs qui le reconnaissent, Chrome et Edge 146) ; le
+  titre de la présentation du contexte suit le texte agrandi (part en `rem` ajoutée à sa taille fluide, rendu inchangé en
+  taille d'affichage 100 % aux largeurs des captures de référence). (session « Projet audit_suivi Coeur »)
+- Charte, **feuilles de style modernisées** (décision du RSSI du 24/11/2026, lot « charte CSS », en CSS statique et dans le
+  thème, sans script ni style en ligne) : la page ne défile plus sous une fenêtre ou un panneau ouvert (voile et conteneur
+  qui retiennent le geste, `overscroll-behavior` ; le verrou de Mantine reste coupé par la CSP, la fenêtre défile toujours ;
+  Chrome et Edge 144, Firefox 150) ; barres de défilement aux couleurs du thème clair ou sombre, contraste d'au moins 3:1
+  vérifié sur chaque fond, teintes propres au menu bleu nuit et couleurs nettement contrastées sous « contraste renforcé »
+  (`prefers-contrast: more`) ; titres équilibrés sur leurs lignes (`text-wrap: balance`) et textes d'aide sans mot isolé
+  en dernière ligne (`pretty`) ; police de repli locale aux dimensions de Lexend et de chaque police à l'essai
+  (`size-adjust`, `ascent-override`, `descent-override`), affichée pendant leur chargement, pour que les lignes et les
+  fiches ne changent plus de taille à l'arrivée de la police (session « Projet audit_suivi Coeur »).
+
+### Corrigé
+
+- Fiches en parties : une fenêtre dont le découpage allait et venait (découpée, puis au défilement habituel, puis de nouveau
+  découpée) sans que son contenu change occupait le navigateur en continu tant qu'elle restait ouverte, chaque calcul
+  relançant l'autre par l'observateur de taille (fenêtre « Sauvegardes et restauration » avec une longue liste
+  d'instantanés : plusieurs dizaines de secondes, au point de faire dépasser son délai au test de bout en bout de
+  l'Administration). Après deux bascules, la fenêtre garde son défilement habituel jusqu'au prochain changement du
+  contenu, de l'écran ou des préférences d'affichage. (session « Projet audit_suivi Coeur »)
+- Administration, **« Sauvegardes et restauration » en fenêtre de consultation** : elle garde son défilement vertical,
+  comme « Mises à jour et versions », au lieu d'être découpée en parties. La liste des instantanés de l'état de suivi
+  qu'elle porte depuis le 19/11/2026 s'allonge à chaque enregistrement ; découpée, la fenêtre coûtait plusieurs secondes
+  de mise en page par calcul. (session « Projet audit_suivi Coeur »)
+- **Jour et heure civils de Paris** au lieu de l'UTC (décision du RSSI du 24/11/2026) : nouveau module partagé
+  `heure-paris` (`jourParis`, `maintenantLocalParis`, fondés sur `Intl.DateTimeFormat` et le fuseau `Europe/Paris`, sans
+  dépendance). Incidents : l'heure de détection et l'heure de résolution posées par défaut sont l'heure de Paris au format
+  du champ (`AAAA-MM-JJThh:mm`, sans fuseau, comme la saisie), et non plus l'heure UTC, en retard d'une heure en hiver et de
+  deux en été ; l'année du numéro `INC-AAAA-nnn` suit aussi Paris ; les heures par défaut du RETEX suivent Paris quel que
+  soit le fuseau du navigateur. Veille des vulnérabilités : une échéance KEV n'est plus jugée dépassée ou à venir selon le
+  jour UTC (faux entre minuit et 1 h ou 2 h). Même correction pour « aujourd'hui » dans les comparaisons d'échéances et de
+  revues (tableau de bord, risques, cartes de synthèse, boîtes du Pilotage, revue de direction, plans, évaluations de
+  fournisseurs, import Tenacy, assistant), pour les dates proposées par défaut dans les formulaires (récurrences, mesures
+  d'indicateur, évaluation de fournisseur, mois des tâches) et pour la date des noms de fichiers d'export. Un test de
+  l'interface refuse le retour de `new Date().toISOString().slice(…)` (session « Projet audit_suivi Coeur »).
+- Système > **Mises à jour et versions** (retour du RSSI du 24/11/2026) : sur un écran peu haut, la fenêtre était découpée
+  en parties et ne défilait plus ; l'encadré de l'installation était coupé et le bouton « Installer la version » n'était
+  atteignable qu'au clavier, après le code de double authentification. La fenêtre garde désormais son défilement vertical
+  habituel. Au téléphone, la flèche entre les deux cartes de versions est verticale et ne les traverse plus (session
+  « Projet audit_suivi Coeur »).
+
+### Sécurité
+
+- **Trusted Types en observation** (décision du RSSI du 24/11/2026, [ADR 0006](docs/adr/0006-front-react-mantine-csp-stricte.md),
+  addendum du 24/11/2026) : les frontaux (`docker/Caddyfile`, `Caddyfile.internal`, `Caddyfile.gateway`) servent
+  `Content-Security-Policy-Report-Only: require-trusted-types-for 'script'; trusted-types suivi-xml` pour l'interface et
+  `… trusted-types 'none'` pour la page de mise à jour, sans `report-uri` ni `report-to`. Les deux analyses XML du
+  navigateur (rapport Nessus, classeur `.xlsx`) passent par la politique nommée `suivi-xml`
+  (`apps/web/src/trusted-types.ts`, détection de l'API et repli sans elle, refus des déclarations DOCTYPE et ENTITY).
+  Zod n'essaie plus de compiler à la volée dans le navigateur (`packages/shared/src/zod-navigateur.ts`, réglage `jitless`
+  quand un document existe ; l'API n'est pas concernée) : sa sonde `new Function`, refusée par la CSP, produisait à chaque
+  page une violation de la CSP appliquée, invisible dans la console, et une violation Trusted Types. Contrôles HTTP de la CI et test `trusted-types.test.ts` (en-têtes, liste des politiques, aucun point d'injection écrit
+  dans les sources) ; les tests de bout en bout relèvent aussi les violations Trusted Types de la console. Passage en
+  application stricte après une campagne de bout en bout propre, sur décision ultérieure du RSSI. (session « Projet
+  audit_suivi Coeur »)
+
 ## [7.7.0] — 2026-11-24
 
 ### Notes de mise à jour

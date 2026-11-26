@@ -103,8 +103,23 @@
   overflow: hidden auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  scrollbar-color: var(--suivi-trait) transparent;
+  /* Couleurs de barre héritées de la racine (styles.css), contraste renforcé compris. */
   overflow-wrap: anywhere;
+}
+/* Page immobile sous une fenêtre ou un panneau ouvert, sans script (lot « charte CSS » du 24/11/2026, guide
+   « prevent-page-scroll-under-modal-dialog ») : le verrou de Mantine reste coupé (lockScroll: false, son outil injecte une
+   balise <style> interdite par la CSP, ADR 0006) et la page n'est jamais figée par overflow: hidden sur html ou body.
+   Le voile et le conteneur de placement (inner, transparent aux clics) deviennent des zones de défilement sans
+   défilement (overflow: hidden) qui retiennent le geste (overscroll-behavior: contain) ; le cadre de la fenêtre le retient
+   aussi quand son corps est en butée ou ne dépasse pas. La fenêtre défile toujours : seul l'enchaînement vers la page est
+   coupé. Fenêtres empilées : chacune a son voile et son conteneur. Amélioration progressive (Chrome et Edge 144,
+   Firefox 150) ; ailleurs, un corps qui défile retient déjà le geste (règle ci-dessus). */
+:is(.mantine-Modal-overlay, .mantine-Drawer-overlay, .mantine-Modal-inner, .mantine-Drawer-inner) {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+:is(.mantine-Modal-content, .mantine-Drawer-content) {
+  overscroll-behavior: contain;
 }
 /* Pied : les boutons de la fenêtre restent visibles au bas du corps pendant le défilement. */
 :is(.mantine-Modal-body, .mantine-Drawer-body) .fenetre-actions,
@@ -369,7 +384,9 @@ html[data-fenetres='lisere']
   max-width: 32ch;
   margin: 0.75rem 0 0;
   color: var(--neon-titre);
-  font-size: clamp(1.5rem, 2.6vw, 2.15rem);
+  /* Part liée au texte (rem) et part liée à la largeur (vw) : le titre suit le texte agrandi par le système (meta
+     text-scale) ; mêmes bornes, rendu inchangé à 390, 768, 1366, 1440 et 1920 px en taille d'affichage 100 %. */
+  font-size: clamp(1.5rem, 0.4rem + 2.05vw, 2.15rem);
   font-weight: 600;
   line-height: 1.18;
   letter-spacing: -0.045em;

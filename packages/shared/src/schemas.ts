@@ -7,6 +7,7 @@ import { PoivreAEnregistrer } from './poivre.js';
 import { CleSecoursAEnregistrer } from './cle-secours.js';
 import { AdresseSite } from './adresse-site.js';
 import { FENETRES, POLICES } from './settings.js';
+import { ModeConnexion, SSO_BORNES } from './connexion-unique.js';
 
 export const USERNAME_RE = /^[a-zA-Z0-9._@-]{2,64}$/;
 export const CLASSIFICATIONS = ['public', 'interne', 'restreint', 'confidentiel'] as const;
@@ -95,6 +96,8 @@ export const MeOut = z.object({
       mustChangePassword: z.boolean(),
       roles: z.array(z.string()),
       expiresAt: z.string().nullable(),
+      /** Compte « connexion unique » (ADR 0114) : ni mot de passe ni second facteur locaux. */
+      sso: z.boolean().optional(),
     })
     .nullable(),
   /** Droits effectifs (module:action) ; l'interface s'en sert pour masquer ce qui n'est pas permis. */
@@ -148,6 +151,11 @@ export const RoleAssignment = z.object({
 });
 export type RoleAssignment = z.infer<typeof RoleAssignment>;
 
+/** Identifiant attendu du fournisseur d'identité pour un compte « connexion unique » (ADR 0114). */
+const IdentifiantExterne = text(SSO_BORNES.valeur)
+  .min(1, 'Identifiant attendu du fournisseur obligatoire.')
+  // eslint-disable-next-line no-control-regex
+  .regex(/^[^\u0000-\u001f\u007f]+$/, 'Caractères de contrôle refusés.');
 export const UserCreateBody = z.object({
   username: Username,
   displayName: text(120).optional(),
@@ -155,6 +163,10 @@ export const UserCreateBody = z.object({
   roles: z.array(RoleAssignment).max(50).default([]),
   groups: z.array(z.uuid()).max(100).default([]),
   expiresAt: ExpiresAt.optional(),
+  /** Connexion unique (ADR 0114) : le compte est créé d'avance, marqué « sso », avec son fournisseur et l'identifiant attendu. */
+  modeConnexion: ModeConnexion.optional(),
+  fournisseurId: z.uuid().optional(),
+  identifiantExterne: IdentifiantExterne.optional(),
 });
 export const UserPatchBody = z.object({
   displayName: text(120).optional(),
@@ -164,6 +176,10 @@ export const UserPatchBody = z.object({
   expiresAt: ExpiresAt.optional(),
   roles: z.array(RoleAssignment).max(50).optional(),
   groups: z.array(z.uuid()).max(100).optional(),
+  /** Passage en connexion unique (fournisseur et identifiant attendu exigés) ou retour en connexion locale. */
+  modeConnexion: ModeConnexion.optional(),
+  fournisseurId: z.uuid().optional(),
+  identifiantExterne: IdentifiantExterne.optional(),
 });
 export const UserOut = z.object({
   id: z.string(),
@@ -180,6 +196,10 @@ export const UserOut = z.object({
   created_at: z.string(),
   sessions: z.number(),
   version: z.number(),
+  /** Connexion unique (ADR 0114) : mode, fournisseur et identifiant attendu (null pour un compte local). */
+  mode_connexion: ModeConnexion,
+  sso_fournisseur_id: z.string().nullable(),
+  sso_identifiant: z.string().nullable(),
   roles: z.array(z.object({ id: z.string(), name: z.string(), modules: z.array(z.string()).nullable() })),
   groups: z.array(z.object({ id: z.string(), name: z.string() })),
 });

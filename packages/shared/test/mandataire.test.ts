@@ -163,7 +163,13 @@ describe('flux et mandataire', () => {
     const g = fluxParUsageMandataire();
     expect(g.utilise.map((f) => f.id)).toEqual(['veille-vulnerabilites', 'algolighthouse', 'veille-reglementaire']);
     expect(g.direct.map((f) => f.id)).toEqual(['courriel', 'tenable']);
-    expect(g.non_pris_en_charge.map((f) => f.id)).toEqual(['assistant', 'acme', 'antivirus', 'mises-a-jour']);
+    expect(g.non_pris_en_charge.map((f) => f.id)).toEqual([
+      'assistant',
+      'acme',
+      'antivirus',
+      'mises-a-jour',
+      'sso-saml',
+    ]);
   });
   it('mandataire actif : la ligne de pare-feu de la veille devient la sortie vers le mandataire, destinations inchangées', () => {
     const veille = fluxExterne('veille-vulnerabilites');

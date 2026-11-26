@@ -23,6 +23,26 @@
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC,
     U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
+/* Police de repli stable (lot « charte CSS » du 24/11/2026, guide « visually-stable-font-fallbacks ») : tant que Lexend se
+   charge (font-display: swap) ou si elle manque, le texte s'affiche dans une police locale (Arial ou ses équivalents
+   métriques) mise aux dimensions de Lexend, au lieu de la police du système : la largeur des lignes, donc leur découpage
+   et la hauteur des fiches, ne saute plus au chargement. Réglages mesurés dans Chrome sur un texte courant en graisse
+   400 (largeur à 0,01 % près ; ascendante 1, descendante 0,25 et interligne nul de Lexend). Limitée aux caractères de
+   Lexend : une fois Lexend chargée, les autres caractères gardent la police du système. Une police locale ne se
+   télécharge pas (CSP font-src 'self' inchangée). */
+@font-face {
+  font-family: 'Lexend repli';
+  font-style: normal;
+  src: local('Arial'), local('ArialMT'), local('Helvetica'), local('Liberation Sans'), local('Arimo');
+  size-adjust: 108.58%;
+  ascent-override: 92.09%;
+  descent-override: 23.02%;
+  line-gap-override: 0%;
+  /* Réunion des deux plages de Lexend ci-dessus (latin et latin étendu). */
+  unicode-range:
+    U+0000-02CC, U+02CE-02D7, U+02DA, U+02DC-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF,
+    U+2000-206F, U+20A0-20C0, U+2113, U+2122, U+2191, U+2193, U+2212, U+2215, U+2C60-2C7F, U+A720-A7FF, U+FEFF, U+FFFD;
+}
 /* Charte graphique — styles statiques (CSP « style-src 'self' » : aucun style injecté).
    Couleurs : variables --suivi-* et --mantine-* générées depuis tokens.ts (mantine-vars.css). */
 
@@ -687,6 +707,43 @@ body {
   text-rendering: optimizeLegibility;
   /* Lexend est dessinée large : aucun resserrement du texte courant. */
   letter-spacing: 0;
+}
+
+/* Barres de défilement (lot « charte CSS » du 24/11/2026, guides « customize-scrollbar-color-and-thickness » et
+   « adapt-scrollbar-to-contrast-preferences ») : pouce aux teintes du thème sur piste transparente (3:1 au moins avec
+   chaque fond, couples vérifiés par le test de contraste). scrollbar-color est hérité : posé sur la racine, il vaut pour
+   la page et pour toutes les zones qui défilent (fenêtres, listes, tableaux) ; aucune zone ne le redéfinit, sauf le menu
+   bleu nuit, commun aux deux thèmes. Les épaisseurs (scrollbar-width) restent celles de chaque zone. Aucune règle
+   ::-webkit-scrollbar : un navigateur sans scrollbar-color (Safari avant 26.2) garde ses barres habituelles. Ne jamais
+   animer scrollbar-color (scintillement sous WebKit). */
+:root {
+  scrollbar-color: var(--suivi-barre-pouce) var(--suivi-barre-piste);
+}
+:is(.shell-nav, .nav-tiroir) {
+  scrollbar-color: var(--menu-barre-pouce) var(--menu-barre-piste);
+}
+@media (prefers-contrast: more) {
+  :root {
+    scrollbar-color: var(--suivi-barre-pouce-contraste) var(--suivi-barre-piste-contraste);
+  }
+  :is(.shell-nav, .nav-tiroir) {
+    scrollbar-color: var(--menu-barre-pouce-contraste) var(--menu-barre-piste-contraste);
+  }
+}
+
+/* Coupure des lignes (lot « charte CSS » du 24/11/2026, guide « improve-text-layout-and-legibility ») :
+   - titres équilibrés (balance), comme les titres Mantine (headings.textWrap du thème) : les titres écrits en HTML
+     simple le sont aussi ; spécificité nulle, toute règle propre à un titre l'emporte ;
+   - textes d'aide et descriptions sans mot isolé en dernière ligne (pretty) : description de page, « À propos de cette
+     page », aides des champs. Propriété détaillée text-wrap-style : le passage à la ligne (white-space, text-wrap-mode)
+     d'un élément n'est pas touché.
+   Amélioration progressive : un navigateur qui ignore la valeur coupe les lignes comme avant (pretty : Chrome et Edge,
+   Safari 26 ; pas Firefox). Aucune des deux ne change la largeur d'un bloc. */
+:where(h1, h2, h3, h4, h5, h6) {
+  text-wrap: balance;
+}
+:is(.lecture, .a-propos__texte, .mantine-InputWrapper-description, .champ-aide-texte) {
+  text-wrap-style: pretty;
 }
 h1,
 h2,
@@ -1473,6 +1530,25 @@ h3,
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Connexion unique (ADR 0114) : un bouton par fournisseur d'identité, au-dessus des cartes du compte local ; l'onde du
+   panneau se place alors au-dessus de ces boutons. */
+.auth-sso {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  width: min(24rem, calc(100% - 3rem));
+  margin-block: var(--suivi-ecart-onde) 0;
+}
+.auth-sso + .auth-pile {
+  margin-top: var(--mantine-spacing-md);
+}
+.auth-sso__ou {
+  margin: 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--suivi-nav-secondaire);
 }
 
 /* Les trois cartes empilées : identifiant, mot de passe (décalée), bouton (décalée encore). */

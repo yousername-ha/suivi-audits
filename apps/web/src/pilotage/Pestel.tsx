@@ -4,7 +4,7 @@
 import { Button, Group, Loader, Stack, Text } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { syntheseParties, type EnjeuPestel, type ProcessusCartes, type VuePestel } from '@suivi/shared';
+import { jourParis, syntheseParties, type EnjeuPestel, type ProcessusCartes, type VuePestel } from '@suivi/shared';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { CARTES_PROCESSUS_KEY } from '../processus/CartesProcessus';
@@ -83,7 +83,7 @@ export function SynthesePartiesBandeau({ smsi }: { smsi: string }) {
     enabled: smsi === SOCLE,
   });
   if (smsi !== SOCLE || !q.data) return null;
-  const s = syntheseParties(q.data.interested ?? [], new Date().toISOString().slice(0, 10));
+  const s = syntheseParties(q.data.interested ?? [], jourParis());
   return (
     <Group gap="lg" aria-label="Synthèse des parties intéressées">
       {[

@@ -81,7 +81,8 @@ export class MotsDePasse {
     const n = await this.db.k
       .selectFrom('users')
       .select([
-        sql<number>`count(*)::int`.as('comptes'),
+        // Comptes à mot de passe : un compte « connexion unique » (ADR 0114) n'a qu'une empreinte inutilisable.
+        sql<number>`(count(*) FILTER (WHERE mode_connexion = 'local'))::int`.as('comptes'),
         sql<number>`(count(*) FILTER (WHERE password_hash LIKE 'poivre$%'))::int`.as('poivrees'),
       ])
       .executeTakeFirstOrThrow();

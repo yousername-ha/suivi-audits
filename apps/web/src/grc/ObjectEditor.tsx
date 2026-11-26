@@ -32,6 +32,7 @@ import {
   type RiskMethod,
   type TacheAction,
   RISK_REF_KINDS,
+  jourParis,
 } from '@suivi/shared';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
@@ -62,7 +63,7 @@ const initial = (kind: GrcKind, policy: BusinessPolicy, method?: MethodVersion):
           priority: 'normal',
           refs: [],
           recurrence: {
-            start: new Date().toISOString().slice(0, 10),
+            start: jourParis(),
             time: '09:00',
             timezone: 'Europe/Paris',
             unit: 'month',
@@ -158,7 +159,7 @@ export function ObjectEditor({
     [error, setError] = useState<unknown>(null),
     [saving, setSaving] = useState(false),
     [archiveConfirm, setArchiveConfirm] = useState(false),
-    [date, setDate] = useState(new Date().toISOString().slice(0, 10)),
+    [date, setDate] = useState(jourParis()),
     [registreId, setRegistreId] = useState<string | null>(null),
     [legacyComment, setLegacyComment] = useState(''),
     [proof, setProof] = useState('');

@@ -13,6 +13,7 @@ import { sql } from 'kysely';
 import { SEUIL_ESPACE_LIBRE_POURCENT, type HostState, type SettingsValues } from '@suivi/shared';
 import type { VerrouillageEvt } from './auth.js';
 import type { AlerteCleEvt } from './webauthn.js';
+import type { AlerteSsoEvt } from './connexion-unique/index.js';
 import { DEMANDEUR_ALERTE } from './alertes-exploitation.js';
 import type { Db } from './db/db.js';
 import { COMPTE_ACTIF, adresseUtilisable, porteLeRole } from './notifications-metier.js';
@@ -109,7 +110,9 @@ export class AlertesSecurite {
       createdAt: new Date(l.created_at).toISOString(),
       ...(l.due_key.startsWith('disque:')
         ? { lien: '/systeme/sauvegardes', libelleLien: 'Sauvegardes et restauration' }
-        : { lien: '/admin/audit', libelleLien: 'Journal d’audit' }),
+        : l.due_key.startsWith('sso:')
+          ? { lien: '/systeme/securite', libelleLien: 'Sécurité, connexion unique (SAML)' }
+          : { lien: '/admin/audit', libelleLien: 'Journal d’audit' }),
     }));
   }
 
@@ -316,6 +319,108 @@ export class AlertesSecurite {
       });
     } catch (err) {
       this.db.log.error({ err: (err as Error).message }, 'alerte de clé de sécurité non émise');
+    }
+  }
+
+  /** Connexion unique SAML (ADR 0114) : refus pour double authentification absente ou signature invalide, certificat de
+      signature d'un fournisseur qui expire dans moins de 30 jours, relecture des métadonnées en échec ou certificat changé.
+      Notification dans l'application aux administrateurs actifs et courriel au contact technique et aux administrateurs, même
+      plafond horaire que les autres alertes ; ne lève jamais. Aucune assertion, aucun certificat complet dans le message. */
+  async sso(e: AlerteSsoEvt): Promise<void> {
+    try {
+      const general = (await this.settings.read('general')).values as SettingsValues['general'];
+      const nom = propre(general.appName, 80) || 'Suivi des audits';
+      const fournisseur = propre(e.fournisseur, 120);
+      const qui = e.identifiant ? propre(e.identifiant, 120) : null;
+      const quand = paris(new Date());
+      const detail = e.detail ? propre(e.detail, 300) : '';
+      const { titre, message } = {
+        refus_mfa: {
+          titre: `Connexion unique refusée : double authentification absente (${fournisseur})`,
+          message: `Le ${quand} (heure de Paris), une connexion par « ${fournisseur} »${qui ? ` pour « ${qui} »` : ''} a été refusée : l’assertion ne prouvait pas une double authentification faite chez le fournisseur. Vérifiez la politique d’accès conditionnel ou le parcours d’authentification du fournisseur ; si la tentative n’est pas expliquée, traitez-la comme un incident. Détail dans le journal d’audit (action « auth.sso_refus »).`,
+        },
+        refus_signature: {
+          titre: `Connexion unique refusée : signature invalide (${fournisseur})`,
+          message: `Le ${quand} (heure de Paris), une réponse attribuée à « ${fournisseur} »${qui ? ` pour « ${qui} »` : ''} a été refusée : signature absente, invalide ou d’un algorithme refusé (${detail || 'signature'}). Ce peut être une réponse forgée, ou un certificat changé chez le fournisseur : relisez ses métadonnées. Détail dans le journal d’audit (action « auth.sso_refus »).`,
+        },
+        refus_navigateur: {
+          titre: `Connexion unique refusée : réponse d’un autre navigateur (${fournisseur})`,
+          message: `Le ${quand} (heure de Paris), une réponse valide de « ${fournisseur} »${qui ? ` pour « ${qui} »` : ''} a été refusée : elle n’est pas revenue dans le navigateur qui avait lancé la demande (témoin de liaison absent ou différent). Ce peut être une tentative de connexion forcée sur le compte d’une autre personne, ou un navigateur qui bloque les cookies de l’application. Détail dans le journal d’audit (action « auth.sso_refus », motif « navigateur »).`,
+        },
+        certificat_expire: {
+          titre: `Certificat du fournisseur d’identité « ${fournisseur} » bientôt expiré`,
+          message: `Le certificat de signature du fournisseur « ${fournisseur} » expire le ${e.expireLe ? paris(new Date(e.expireLe)) : 'prochainement'} (heure de Paris). Renouvelez-le chez le fournisseur, puis relisez ou importez ses métadonnées (Configuration système, Sécurité, Connexion unique) ; après l’expiration, plus personne ne pourra se connecter par lui.`,
+        },
+        metadonnees_echec: {
+          titre: `Métadonnées du fournisseur « ${fournisseur} » non relues`,
+          message: `La relecture des métadonnées du fournisseur « ${fournisseur} » a échoué le ${quand} (heure de Paris) : ${detail || 'erreur sans détail'} La configuration déjà lue reste en service. Vérifiez l’adresse, le pare-feu et le certificat du serveur du fournisseur, ou importez le fichier à la main.`,
+        },
+        certificat_change: {
+          titre: `Certificat du fournisseur d’identité « ${fournisseur} » changé`,
+          message: `Les métadonnées relues le ${quand} (heure de Paris) portent un certificat de signature nouveau pour « ${fournisseur} » (empreintes : ${detail || 'voir le journal'}). Si ce renouvellement n’est pas prévu chez le fournisseur, traitez-le comme un incident. Détail dans le journal d’audit (action « auth.sso_metadonnees_lues »).`,
+        },
+      }[e.type];
+      const dest = await this.destinataires();
+      const admins = await this.administrateurs();
+      await this.db.tx(async (c, k) => {
+        await c.query('SELECT pg_advisory_xact_lock(hashtext($1))', [VERROU_ALERTE]);
+        const fenetre = await k
+          .selectFrom('audit_log')
+          .select(sql<number>`count(*)::int`.as('n'))
+          .where('action', '=', 'securite.alerte_sso')
+          // Plafond par type : une rafale de refus ne masque pas l'alerte d'expiration d'un certificat.
+          .where(sql`details->>'type'`, '=', e.type)
+          .where('ts', '>', sql<Date>`now() - interval '1 hour'`)
+          .executeTakeFirstOrThrow();
+        if (fenetre.n >= ALERTES_PAR_HEURE) return;
+        await this.db.audit(
+          null,
+          null,
+          'securite.alerte_sso',
+          fournisseur,
+          { type: e.type, fournisseur: e.fournisseurId },
+          c,
+        );
+        const corps = [
+          'Bonjour,',
+          '',
+          message,
+          '',
+          `Connexion unique : ${this.lien('/systeme/securite')}`,
+          `Journal d'audit : ${this.lien('/admin/audit')}`,
+          '',
+          'Message automatique ; il ne contient ni assertion, ni certificat complet, ni donnée métier.',
+        ].join('\n');
+        for (const a of dest)
+          await k
+            .insertInto('courriel_jobs')
+            .values({
+              kind: 'notification',
+              requested_by: DEMANDEUR_ALERTE,
+              to_address: a,
+              subject: `[${nom}] ${titre}`.slice(0, 180),
+              body: corps,
+            })
+            .execute();
+        // Même clé pour tous les destinataires d'une même alerte.
+        const cle = `sso:${e.type}:${e.fournisseurId}:${Date.now()}`;
+        for (const id of admins)
+          await k
+            .insertInto('grc_notifications')
+            .values({
+              smsi_id: null,
+              object_id: null,
+              user_id: id,
+              kind: KIND_ALERTE_SECURITE,
+              due_key: cle,
+              title: titre.slice(0, 180),
+              message,
+            })
+            .onConflict((oc) => oc.doNothing())
+            .execute();
+      });
+    } catch (err) {
+      this.db.log.error({ err: (err as Error).message }, 'alerte de connexion unique non émise');
     }
   }
 

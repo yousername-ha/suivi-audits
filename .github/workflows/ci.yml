@@ -80,6 +80,7 @@ jobs:
           python3 -m unittest discover -s scripts/tests -p test_integration_http.py
           python3 -m unittest discover -s scripts/tests -p test_veille_vulnerabilites.py
           python3 -m unittest discover -s scripts/tests -p test_veille_reglementaire.py
+          python3 -m unittest discover -s scripts/tests -p test_sso_metadonnees.py
       - name: OpenAPI
         run: pnpm --filter @suivi/api openapi "$GITHUB_WORKSPACE/openapi.json"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -265,6 +266,13 @@ jobs:
           test "$(curl -sk https://localhost/healthz)" = ok
           test "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' http://localhost/setup)" = "308 https://localhost/setup"
           curl -skI https://localhost/ | grep -i "^content-security-policy: default-src 'self'; script-src 'self'; style-src 'self'"
+          # Trusted Types en observation (ADR 0006, addendum du 24/11/2026) : interface (politique suivi-xml) et page de mise
+          # à jour (aucune politique), sans point de collecte des rapports.
+          curl -skI https://localhost/ | grep -i "^content-security-policy-report-only: require-trusted-types-for 'script'; trusted-types suivi-xml"
+          curl -skI https://localhost/update/ | grep -i "^content-security-policy-report-only: require-trusted-types-for 'script'; trusted-types 'none'"
+          if curl -skI https://localhost/ https://localhost/update/ | grep -qiE "^content-security-policy.*(report-uri|report-to)"; then
+            echo "::error::Point de collecte des rapports CSP non autorisé"; exit 1
+          fi
           test "$(curl -sk -o /dev/null -w '%{http_code}' https://localhost/api/events)" = 401
           test "$(docker compose exec -T app id -u)" = 1000
           test "$(docker compose exec -T web id -u)" = 1001

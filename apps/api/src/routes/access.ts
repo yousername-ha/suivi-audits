@@ -22,6 +22,7 @@ import {
   UserPatchBody,
   Uuid,
   type RoleAssignment,
+  jourParis,
 } from '@suivi/shared';
 import { sql } from 'kysely';
 import crypto from 'node:crypto';
@@ -43,6 +44,7 @@ import {
 } from '../rights.js';
 import { tempPassword } from '../security/crypto.js';
 import type { Services } from '../services.js';
+import { EMPREINTE_SSO } from '../connexion-unique/index.js';
 
 type Q = Pick<Client, 'query'>;
 const IdParams = z.object({ id: Uuid });
@@ -67,6 +69,9 @@ const comptes = (k: Kdb) =>
     'u.last_login_at',
     'u.created_at',
     'u.version',
+    'u.mode_connexion',
+    'u.sso_fournisseur_id',
+    'u.sso_identifiant',
     sql<number>`(SELECT count(*) FROM sessions s WHERE s.user_id = u.id AND s.expires_at > now())::int`.as('sessions'),
     sql<
       UserOut['roles']
@@ -172,6 +177,37 @@ async function cutSessions(c: Q, userIds: readonly string[]) {
       .execute();
 }
 
+/** Doublon de compte : identifiant de connexion, ou identifiant attendu d'un fournisseur (ADR 0114). */
+const doublon = (e: { code?: string; constraint?: string }): never => {
+  if (e.code === '23505')
+    throw new HttpError(
+      409,
+      e.constraint === 'users_sso_identifiant'
+        ? 'Cet identifiant du fournisseur est déjà attribué à un autre compte.'
+        : 'Cet identifiant existe déjà.',
+    );
+  throw e;
+};
+
+/** Connexion unique (ADR 0114) : fournisseur connu et identifiant attendu exigés pour un compte « sso ». */
+async function exigerFournisseur(
+  svc: Services,
+  k: Kdb,
+  fournisseurId: string | undefined,
+  identifiant: string | undefined,
+) {
+  if (!fournisseurId || !identifiant)
+    throw new HttpError(
+      422,
+      'Compte en connexion unique : choisissez le fournisseur et saisissez l’identifiant attendu.',
+      {
+        reason: 'sso_incomplet',
+      },
+    );
+  if (!(await svc.connexionUnique.existe(fournisseurId, k)))
+    throw new HttpError(422, 'Fournisseur d’identité inconnu.', { reason: 'sso_fournisseur' });
+}
+
 const expiresValue = (v: string | null | undefined) =>
   v === undefined ? undefined : v === null ? null : /^\d{4}-\d{2}-\d{2}$/.test(v) ? `${v}T23:59:59Z` : v;
 
@@ -271,15 +307,18 @@ export const accessRoutes = [
     access: 'administration:administrer',
     body: UserCreateBody,
     status: 201,
-    response: TempPasswordOut.extend({ id: z.string() }),
+    // Compte « connexion unique » (ADR 0114) : aucun mot de passe temporaire (null).
+    response: TempPasswordOut.extend({ id: z.string(), temporaryPassword: z.string().nullable() }),
     handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
-      const pw = tempPassword();
-      // Identifiant choisi par le serveur : l'empreinte poivrée y est liée.
+      const sso = body.modeConnexion === 'sso';
+      const pw = sso ? null : tempPassword();
+      // Identifiant choisi par le serveur : l'empreinte poivrée y est liée. Compte « sso » : empreinte inutilisable.
       const nouvelId = svc.motsDePasse.nouvelId();
-      const hash = await svc.motsDePasse.hacher(nouvelId, pw);
+      const hash = pw === null ? EMPREINTE_SSO : await svc.motsDePasse.hacher(nouvelId, pw);
       const { id, after } = await svc.db
         .tx(async (c, k) => {
+          if (sso) await exigerFournisseur(svc, k, body.fournisseurId, body.identifiantExterne);
           const u = await k
             .insertInto('users')
             .values({
@@ -288,8 +327,11 @@ export const accessRoutes = [
               display_name: body.displayName || body.username,
               email: body.email || '',
               password_hash: hash,
-              must_change_password: true,
+              must_change_password: !sso,
               expires_at: expiresValue(body.expiresAt) ?? null,
+              mode_connexion: sso ? 'sso' : 'local',
+              sso_fournisseur_id: sso ? body.fournisseurId! : null,
+              sso_identifiant: sso ? body.identifiantExterne!.trim() : null,
             })
             .returning('id')
             .executeTakeFirstOrThrow();
@@ -297,13 +339,22 @@ export const accessRoutes = [
           await setUserGroups(c, u.id, body.groups);
           await assertScopedRoles(c, [u.id]);
           const after = await rightsSnapshot(c, [u.id]);
-          await svc.db.audit(sess.user, ip, 'admin.user_create', body.username, { after }, c);
+          await svc.db.audit(
+            sess.user,
+            ip,
+            'admin.user_create',
+            body.username,
+            {
+              after,
+              ...(sso
+                ? { connexion: 'sso', fournisseur: body.fournisseurId, identifiantExterne: body.identifiantExterne }
+                : {}),
+            },
+            c,
+          );
           return { id: u.id, after };
         }, sess.user.username)
-        .catch((e: { code?: string }) => {
-          if (e.code === '23505') throw new HttpError(409, 'Cet identifiant existe déjà.');
-          throw e;
-        });
+        .catch(doublon);
       void after;
       return { id, temporaryPassword: pw };
     },
@@ -335,11 +386,14 @@ export const accessRoutes = [
     handler: async ({ svc, s, ip, req, reply, params, body }) => {
       const sess = s as Session;
       const expected = requireIfMatch(req);
+      const connexionChange =
+        body.modeConnexion !== undefined || body.fournisseurId !== undefined || body.identifiantExterne !== undefined;
       const rightsChange =
         body.roles !== undefined ||
         body.groups !== undefined ||
         body.disabled !== undefined ||
-        body.expiresAt !== undefined;
+        body.expiresAt !== undefined ||
+        connexionChange;
       if (rightsChange) assertNotSelf(sess.user.id, [params.id]);
       // Champs modifiables : liste fermée, typée par le schéma de la base.
       const m: {
@@ -349,6 +403,14 @@ export const accessRoutes = [
         expires_at?: string | null;
         failed_logins?: number;
         locked_until?: null;
+        mode_connexion?: 'local' | 'sso';
+        sso_fournisseur_id?: string | null;
+        sso_identifiant?: string | null;
+        password_hash?: string;
+        must_change_password?: boolean;
+        totp_secret?: null;
+        totp_pending?: null;
+        totp_enabled?: boolean;
       } = {};
       if (body.displayName !== undefined) m.display_name = body.displayName;
       if (body.email !== undefined) m.email = body.email;
@@ -358,36 +420,83 @@ export const accessRoutes = [
         m.failed_logins = 0;
         m.locked_until = null;
       }
-      const { out } = await svc.db.tx(async (c, k) => {
-        const cur = await userById(c, params.id);
-        if (!cur) throw new HttpError(404, 'Compte introuvable.');
-        if (cur.version !== expected) throw conflict(cur as unknown as { version: number });
-        const before = rightsChange ? await rightsSnapshot(c, [params.id]) : null;
-        if (Object.keys(m).length || body.roles || body.groups)
-          await k
-            .updateTable('users')
-            .set((eb) => ({ ...m, version: eb('version', '+', 1), updated_at: sql<Date>`now()` }))
-            .where('id', '=', params.id)
-            .execute();
-        if (body.roles) await setUserRoles(c, params.id, body.roles);
-        if (body.groups) await setUserGroups(c, params.id, body.groups);
-        if (rightsChange) {
-          await assertScopedRoles(c, [params.id]);
-          await assertAdminRemains(c);
-          await cutSessions(c, [params.id]);
-        }
-        const out = (await userById(c, params.id))!;
-        const after = rightsChange ? await rightsSnapshot(c, [params.id]) : null;
-        await svc.db.audit(
-          sess.user,
-          ip,
-          'admin.user_update',
-          out.username,
-          { changes: Object.keys(m), ...(rightsChange ? { before, after } : {}), version: out.version },
-          c,
-        );
-        return { out };
-      }, sess.user.username);
+      const { out } = await svc.db
+        .tx(async (c, k) => {
+          const cur = await userById(c, params.id);
+          if (!cur) throw new HttpError(404, 'Compte introuvable.');
+          if (cur.version !== expected) throw conflict(cur as unknown as { version: number });
+          const before = rightsChange ? await rightsSnapshot(c, [params.id]) : null;
+          // Connexion unique (ADR 0114). Passage en « sso » : fournisseur et identifiant attendu exigés, empreinte inutilisable,
+          // TOTP effacé, clés révoquées et codes effacés (ni mot de passe ni second facteur locaux). Retour en « local » : le
+          // compte n'a pas de mot de passe, l'administrateur lui en remet un temporaire (« Mot de passe temporaire »).
+          let passeEnSso = false;
+          if (connexionChange) {
+            const mode = body.modeConnexion ?? cur.mode_connexion;
+            if (mode === 'sso') {
+              const fournisseur = body.fournisseurId ?? cur.sso_fournisseur_id ?? undefined;
+              const identifiant = body.identifiantExterne ?? cur.sso_identifiant ?? undefined;
+              await exigerFournisseur(svc, k, fournisseur, identifiant);
+              m.mode_connexion = 'sso';
+              m.sso_fournisseur_id = fournisseur!;
+              m.sso_identifiant = identifiant!.trim();
+              if (cur.mode_connexion !== 'sso') {
+                passeEnSso = true;
+                m.password_hash = EMPREINTE_SSO;
+                m.must_change_password = false;
+                m.totp_secret = null;
+                m.totp_pending = null;
+                m.totp_enabled = false;
+              }
+            } else {
+              if (body.fournisseurId !== undefined || body.identifiantExterne !== undefined)
+                throw new HttpError(422, 'Un compte en connexion locale n’a ni fournisseur ni identifiant attendu.');
+              m.mode_connexion = 'local';
+              m.sso_fournisseur_id = null;
+              m.sso_identifiant = null;
+              if (cur.mode_connexion === 'sso') m.must_change_password = true;
+            }
+          }
+          if (Object.keys(m).length || body.roles || body.groups)
+            await k
+              .updateTable('users')
+              .set((eb) => ({ ...m, version: eb('version', '+', 1), updated_at: sql<Date>`now()` }))
+              .where('id', '=', params.id)
+              .execute();
+          if (body.roles) await setUserRoles(c, params.id, body.roles);
+          if (body.groups) await setUserGroups(c, params.id, body.groups);
+          if (passeEnSso) await svc.webauthn.reinitialiser(k, params.id, sess.user.username);
+          if (rightsChange) {
+            await assertScopedRoles(c, [params.id]);
+            await assertAdminRemains(c);
+            await cutSessions(c, [params.id]);
+          }
+          const out = (await userById(c, params.id))!;
+          const after = rightsChange ? await rightsSnapshot(c, [params.id]) : null;
+          await svc.db.audit(
+            sess.user,
+            ip,
+            'admin.user_update',
+            out.username,
+            {
+              changes: Object.keys(m).filter((x) => !['password_hash', 'totp_secret', 'totp_pending'].includes(x)),
+              ...(rightsChange ? { before, after } : {}),
+              ...(connexionChange
+                ? {
+                    connexion: {
+                      avant: cur.mode_connexion,
+                      apres: out.mode_connexion,
+                      fournisseur: out.sso_fournisseur_id,
+                      identifiantExterne: out.sso_identifiant,
+                    },
+                  }
+                : {}),
+              version: out.version,
+            },
+            c,
+          );
+          return { out };
+        }, sess.user.username)
+        .catch(doublon);
       setEtag(reply, out.version);
       return out;
     },
@@ -402,6 +511,19 @@ export const accessRoutes = [
     response: TempPasswordOut,
     handler: async ({ svc, s, ip, params }) => {
       const sess = s as Session;
+      const mode = await svc.db.k
+        .selectFrom('users')
+        .select('mode_connexion')
+        .where('id', '=', params.id)
+        .executeTakeFirst();
+      if (mode?.mode_connexion === 'sso')
+        throw new HttpError(
+          409,
+          'Compte en connexion unique : il n’a pas de mot de passe. Repassez-le d’abord en connexion locale.',
+          {
+            reason: 'compte_sso',
+          },
+        );
       const pw = tempPassword();
       const hash = await svc.motsDePasse.hacher(params.id, pw);
       await svc.db.tx(async (c, k) => {
@@ -416,6 +538,7 @@ export const accessRoutes = [
             updated_at: sql<Date>`now()`,
           }))
           .where('id', '=', params.id)
+          .where('mode_connexion', '=', 'local')
           .executeTakeFirst();
         if (!Number(r.numUpdatedRows)) throw new HttpError(404, 'Compte introuvable.');
         await svc.auth.destroyUserSessions(params.id, null, c);
@@ -504,7 +627,7 @@ export const accessRoutes = [
     query: z.object({ format: z.enum(['csv', 'xlsx']).default('csv') }),
     handler: async ({ svc, s, ip, query, reply }) => {
       const rows = await accessReview(svc);
-      const day = new Date().toISOString().slice(0, 10);
+      const day = jourParis();
       await svc.db.audit((s as Session).user, ip, 'admin.access_review_export', query.format, { rows: rows.length });
       reply.header('Cache-Control', 'no-store');
       if (query.format === 'xlsx') {

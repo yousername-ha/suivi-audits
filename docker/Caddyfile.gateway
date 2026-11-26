@@ -66,6 +66,9 @@
 		try_files {path} /index.html
 		header Cache-Control "no-store"
 		header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+		# Trusted Types en observation (ADR 0006, addendum du 24/11/2026) : violations signalées dans la console seulement,
+		# sans blocage ni point de collecte. La page de mise à jour ne crée aucune politique.
+		header Content-Security-Policy-Report-Only "require-trusted-types-for 'script'; trusted-types 'none'"
 		file_server
 	}
 	@maintenance {
@@ -112,6 +115,7 @@
 			rewrite * /index.html
 			header Cache-Control "no-store"
 			header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+			header Content-Security-Policy-Report-Only "require-trusted-types-for 'script'; trusted-types 'none'"
 			file_server {
 				status 200
 			}

@@ -20,7 +20,7 @@ import { chargerDemoDemandee, demanderDemo } from '../demo-installation.js';
 import { proposerQuestionsFlux } from '../installation-flux.js';
 import { sql } from 'kysely';
 import { z } from 'zod';
-import { accessStage, type Session } from '../auth.js';
+import { accessStage, refuserFacteurLocalSso, type Session } from '../auth.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
 import { permanentAdminCount } from '../rights.js';
@@ -54,6 +54,7 @@ function meOut(svc: Services, s: Session | null): MeOutT {
           mustChangePassword: s.user.mustChangePassword,
           roles: s.user.roles,
           expiresAt: s.user.expiresAt,
+          sso: s.user.sso,
         }
       : null,
     preferences: s && svc.auth.stage(s) === 'ok' ? s.user.preferences : null,
@@ -306,6 +307,7 @@ export const authRoutes = [
     response: StageOut,
     handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
+      refuserFacteurLocalSso(sess.user);
       if (!['ok', 'password'].includes(svc.auth.stage(sess))) throw new HttpError(403, 'Authentification incomplète.');
       const u = await svc.db.k
         .selectFrom('users')
@@ -349,6 +351,7 @@ export const authRoutes = [
     response: TotpBeginOut,
     handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
+      refuserFacteurLocalSso(sess.user);
       const st = svc.auth.stage(sess);
       if (!['ok', 'enroll'].includes(st)) throw new HttpError(403, 'Authentification incomplète.');
       if (st === 'ok' && sess.user.totpEnabled) await exigerMotDePasse(svc, sess.user, ip, body.password);
@@ -374,6 +377,7 @@ export const authRoutes = [
     response: StageOut,
     handler: async ({ svc, req, reply, s, ip, body }) => {
       const sess = s as Session;
+      refuserFacteurLocalSso(sess.user);
       if (!['ok', 'enroll'].includes(svc.auth.stage(sess))) throw new HttpError(403, 'Authentification incomplète.');
       const u = await svc.db.k
         .selectFrom('users')
@@ -413,6 +417,7 @@ export const authRoutes = [
     body: PasswordBody,
     handler: async ({ svc, s, ip, body }) => {
       const sess = s as Session;
+      refuserFacteurLocalSso(sess.user);
       if (svc.cfg.mfaRequired) throw new HttpError(403, 'La double authentification est obligatoire sur ce serveur.');
       await exigerMotDePasse(svc, sess.user, ip, body.password);
       // Jamais le dernier facteur fort : sans clé utilisable, le TOTP reste (ADR 0079).
@@ -501,6 +506,7 @@ export async function exigerMotDePasse(
   ip: string | null,
   password: string | undefined,
 ) {
+  refuserFacteurLocalSso(user);
   limiterMotDePasse(svc, user.id);
   const u = await motDePasse(svc, user.id);
   if (!(await svc.motsDePasse.verifier(user.id, password || '', u.password_hash))) {

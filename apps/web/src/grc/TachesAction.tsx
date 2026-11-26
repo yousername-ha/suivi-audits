@@ -5,7 +5,7 @@
    If-Match), par qui peut la modifier ; sans ce droit, la section est en lecture seule. Le responsable d'une tâche est un
    simple affichage : il n'ouvre l'action à personne. Cocher toutes les tâches ne termine pas l'action. */
 import { ActionIcon, Button, Checkbox, Menu, Text, TextInput } from '@mantine/core';
-import { avancementTaches, TACHES_ACTION_MAX, type TacheAction } from '@suivi/shared';
+import { jourParis, avancementTaches, TACHES_ACTION_MAX, type TacheAction } from '@suivi/shared';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { libelleDesignation, SelecteurResponsableTypé, useProposables } from '../components/selecteurs';
 import { PastilleResponsable } from './TimelineCommun';
@@ -33,7 +33,7 @@ export function TachesAction({
   useLayoutEffect(() => {
     jauge.current?.style.setProperty('--taches-avancement', `${av?.pourcentage ?? 0}%`);
   }, [av?.pourcentage]);
-  const aujourdhui = new Date().toISOString().slice(0, 10);
+  const aujourdhui = jourParis();
   const maj = (id: string, patch: Partial<TacheAction>) =>
     onChange(taches.map((t) => (t.id === id ? { ...t, ...patch } : t)));
   const plein = taches.length >= TACHES_ACTION_MAX;

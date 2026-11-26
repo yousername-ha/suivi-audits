@@ -7,10 +7,22 @@
    - Élargissement : une fenêtre de formulaire trop haute s'élargit d'abord sur un écran de bureau (data-fiche-etendue).
    - Repli : si le découpage n'est pas sûr (document intégré, bloc plus haut qu'une partie, attribut
      data-fiche-defilement ou classe fiche-defilement posés par l'écran pour une fenêtre de consultation), la fenêtre
-     garde son défilement vertical habituel. Il en va de même d'une fenêtre faite surtout d'un long tableau. */
+     garde son défilement vertical habituel. Il en va de même d'une fenêtre faite surtout d'un long tableau, et d'une
+     fenêtre dont le découpage va et vient (découpée, puis au défilement, puis de nouveau découpée) sans que son contenu,
+     l'écran ou les préférences d'affichage changent : elle garde son défilement jusqu'au prochain changement. */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { nommerParties, titreCourt, trouverPied, type RepereDePartie } from './fiches-parties';
+import { CIBLES_ERREUR } from '@suivi/ui';
+import {
+  decoupageInstable,
+  nommerParties,
+  noterIssue,
+  SUIVI_INITIAL,
+  titreCourt,
+  trouverPied,
+  type RepereDePartie,
+  type SuiviIssues,
+} from './fiches-parties';
 
 interface Pagination {
   page: number;
@@ -75,6 +87,9 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
     // Hauteur retenue au dernier calcul : conservée tant qu'elle donne le même découpage, pour que la fenêtre ne
     // change pas de taille à chaque frappe.
     let retenue = { hauteur: 0, parties: 0, disponible: 0 };
+    // Issues successives sans changement du contenu, de l'écran ni des préférences : un va-et-vient entre découpage et
+    // défilement fait garder le défilement (voir noterIssue).
+    let suivi: SuiviIssues = SUIVI_INITIAL;
     // Élargissement d'une fenêtre de formulaire trop haute (écran de bureau) : essayé une fois par ouverture et par
     // taille d'écran, gardé s'il réduit nettement la hauteur du contenu. null : pas encore essayé.
     let etendue: boolean | null = null;
@@ -119,18 +134,26 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
       modifiees.clear();
     };
     /** Repli sur le défilement habituel ; la raison est posée sur le cadre (data-fiche-repli) pour la recette. */
-    const defilementClassique = (raison?: 'indivisible' | 'tableau' | 'tronque' | 'chevauchement', detail?: string) => {
+    const defilementClassique = (
+      raison?: 'indivisible' | 'tableau' | 'tronque' | 'chevauchement' | 'instable',
+      detail?: string,
+    ) => {
       retablir();
       if (raison) cadre.setAttribute('data-fiche-repli', detail ? `${raison} (${detail})` : raison);
       total = 0;
       courant = 0;
       titres = [];
       retenue = { hauteur: 0, parties: 0, disponible: 0 };
+      suivi = noterIssue(suivi, 'defilement');
       publier([], 0);
     };
     const mesurer = () => {
       demande = 0;
       if (fini || !visible(cadre) || !corps.clientWidth) return;
+      if (decoupageInstable(suivi)) {
+        defilementClassique('instable');
+        return;
+      }
       const focus = document.activeElement;
       retablir();
       corps.scrollLeft = 0;
@@ -291,6 +314,7 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
         return;
       }
       total = parties;
+      suivi = noterIssue(suivi, 'decoupee');
       cadre.style.setProperty('--fiche-pas', `${pas}px`);
       rail.replaceChildren(...Array.from({ length: total }, () => document.createElement('i')));
       if (total < 2) {
@@ -341,12 +365,22 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
         (e) => visible(e) && !e.closest('[data-fiche-actions-fixes]'),
       );
       const erreur = alerte?.textContent?.trim() ?? '';
-      if (alerte && erreur && erreur !== derniereErreur) courant = pageDe(alerte);
+      // Le focus déjà posé sur une erreur (premier champ invalide après un refus, voir focus-erreur.ts dans packages/ui)
+      // garde sa partie : elle peut suivre celle du message d'erreur.
+      const surErreur =
+        focus instanceof HTMLElement && corps.contains(focus) && focus.matches(CIBLES_ERREUR) && visible(focus);
+      if (alerte && erreur && erreur !== derniereErreur && !surErreur) courant = pageDe(alerte);
       derniereErreur = erreur;
       afficher(courant);
     };
     const planifier = () => {
       if (!demande && !fini) demande = requestAnimationFrame(mesurer);
+    };
+    /** Contenu, écran ou préférences changés : le découpage est réessayé, même après un va-et-vient. Un changement de
+        taille seul (observateur de taille) ne le réessaie pas : il peut venir du calcul précédent. */
+    const planifierApresChangement = () => {
+      suivi = SUIVI_INITIAL;
+      planifier();
     };
     const suivreFocus = (e: FocusEvent | Event) => {
       if (total > 1 && e.target instanceof HTMLElement && !e.target.closest('[data-fiche-actions-fixes]')) {
@@ -379,7 +413,7 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
           }
         }
       }
-      planifier();
+      planifierApresChangement();
     });
     observer.observe(corps, {
       childList: true,
@@ -392,14 +426,14 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
     const ecran = () => {
       etendue = null;
       cadre.removeAttribute('data-fiche-etendue');
-      planifier();
+      planifierApresChangement();
     };
     window.addEventListener('resize', ecran);
-    const dimensions = new ResizeObserver(planifier);
+    const dimensions = new ResizeObserver(() => planifier());
     dimensions.observe(cadre);
     dimensions.observe(corps);
     if (corps.firstElementChild) dimensions.observe(corps.firstElementChild);
-    const preferences = new MutationObserver(planifier);
+    const preferences = new MutationObserver(planifierApresChangement);
     preferences.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['data-densite', 'data-taille', 'data-style', 'data-mur'],
@@ -413,7 +447,7 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
     corps.addEventListener('focusin', suivreFocus);
     corps.addEventListener('invalid', suivreFocus, true);
     corps.addEventListener('scroll', suivreDefilement);
-    corps.addEventListener('toggle', planifier, true);
+    corps.addEventListener('toggle', planifierApresChangement, true);
     corps.addEventListener('keydown', clavierCorps);
     mesurer();
     return () => {
@@ -427,7 +461,7 @@ function FichePaginee({ cadre }: { cadre: HTMLElement }) {
       corps.removeEventListener('focusin', suivreFocus);
       corps.removeEventListener('invalid', suivreFocus, true);
       corps.removeEventListener('scroll', suivreDefilement);
-      corps.removeEventListener('toggle', planifier, true);
+      corps.removeEventListener('toggle', planifierApresChangement, true);
       corps.removeEventListener('keydown', clavierCorps);
       retablir();
       rail.remove();

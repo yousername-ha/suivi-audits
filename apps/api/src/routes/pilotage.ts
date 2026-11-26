@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { GrcRef, GRC_MODULES, PilotageRecord, Recurrence, SuppressionBody } from '@suivi/shared';
+import { jourParis, GrcRef, GRC_MODULES, PilotageRecord, Recurrence, SuppressionBody } from '@suivi/shared';
 import type { Session } from '../auth.js';
 import { Pilotage } from '../pilotage/service.js';
 import { PilotageObjectifs } from '../pilotage/objectifs.js';
@@ -43,7 +43,7 @@ export const pilotageRoutes = [
       const modele = modeleRevue({ name: fiche.name, data: fiche.data });
       const fichier = { docx, pptx, xlsx: classeur }[query.format](modele);
       await svc.db.audit(u, ip, 'grc.revue.export', params.id, { format: query.format });
-      const jour = new Date().toISOString().slice(0, 10);
+      const jour = jourParis();
       return reply
         .header('Cache-Control', 'no-store')
         .header(

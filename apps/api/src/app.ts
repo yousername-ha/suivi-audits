@@ -21,6 +21,7 @@ import { mandataireRoutes } from './routes/mandataire.js';
 import { operationRoutes } from './routes/operations.js';
 import { authRoutes } from './routes/auth.js';
 import { webauthnRoutes } from './routes/webauthn.js';
+import { connexionUniqueRoutes } from './routes/connexion-unique.js';
 import { documentRoutes } from './routes/documents.js';
 import { eventRoutes } from './routes/events.js';
 import { importRoutes } from './routes/import.js';
@@ -120,6 +121,7 @@ export function allRoutes(): RouteDef[] {
     ...systemRoutes(() => list),
     ...authRoutes,
     ...webauthnRoutes,
+    ...connexionUniqueRoutes,
     ...documentRoutes,
     ...accessRoutes,
     ...contactsCriseComptesRoutes,
@@ -196,8 +198,12 @@ export async function buildApp(svc: Services): Promise<FastifyInstance> {
   const purge = setInterval(() => {
     svc.auth.purgeExpired().catch(() => {});
     svc.webauthn.purgerChallenges().catch(() => {});
+    svc.connexionUnique.purger().catch(() => {});
   }, 10 * 60e3);
   purge.unref();
+  // Connexion unique (ADR 0114) : certificats de signature des fournisseurs qui expirent dans moins de 30 jours (alerte).
+  const echeancesSso = setInterval(() => svc.connexionUnique.verifierEcheances().catch(() => {}), 60 * 60e3);
+  echeancesSso.unref();
   // Comptes arrivés à expiration : désactivés automatiquement (et sessions fermées), au démarrage puis toutes les 5 min.
   const expire = () =>
     expireAccounts(svc.db)
@@ -216,6 +222,7 @@ export async function buildApp(svc: Services): Promise<FastifyInstance> {
     svc.bus.off('change', onSettings);
     await svc.modules.end();
     clearInterval(purge);
+    clearInterval(echeancesSso);
     clearInterval(expiry);
     clearInterval(debugEchu);
   });
