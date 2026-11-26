@@ -32,4 +32,17 @@ describe('style « Verre »', () => {
     expect(feuilles.at(-1)).toBe('@suivi/ui/verre.css');
     expect(feuilles.filter((f) => f === '@suivi/ui/verre.css')).toHaveLength(1);
   });
+
+  it('page de connexion : habillée par le style de l’instance avant toute session (acrylique lumineux du 26/11/2026)', () => {
+    const login = lire('../src/pages/Login.tsx');
+    expect(login).toContain('const style = styleInstance(useMe().appearance?.style);');
+    expect(login).toContain('document.documentElement.dataset.style = style;');
+    const verre = lire('../../../packages/ui/src/verre.css');
+    expect(verre).toContain("html[data-style='verre'] .auth-connexion > .auth-panneau {");
+    expect(verre).toContain('.tdb .tdb-dalle.tdb-bandeau {');
+    // Repli : sans prisme ni lueur pour la transparence réduite, le contraste renforcé et les couleurs forcées.
+    expect(verre).toMatch(
+      /@media \(prefers-reduced-transparency: reduce\), \(prefers-contrast: more\), \(forced-colors: active\) \{\s*html\[data-style='verre'\] \.auth-connexion > \.auth-panneau::after \{\s*display: none;/,
+    );
+  });
 });

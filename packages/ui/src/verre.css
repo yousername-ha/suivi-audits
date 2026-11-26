@@ -1254,6 +1254,197 @@ html[data-style='verre'] .app-main .acces-icone {
 }
 
 /* ========================================================================
+   ACRYLIQUE LUMINEUX (demande du RSSI du 26/11/2026) : connexion et dalle phare du tableau de bord
+   Bloc d'acrylique vert acide translucide qui éclaire de l'intérieur, prisme de verre clair posé en biais, encre verte
+   très foncée (contraste élevé, plus de chiffres blancs). Version sobre pour la connexion (halo réduit, prisme discret) ;
+   sur le tableau de bord, seule la dalle phare est concernée (essai A retenu).
+   ======================================================================== */
+html[data-style='verre'] {
+  --acr-encre: #13200a;
+  --acr-encre-2: #2c4113;
+  --acr-lueur: #dcff7a;
+  --acr-fond:
+    radial-gradient(80% 60% at 50% 34%, rgba(255, 255, 255, 0.55), transparent 62%),
+    radial-gradient(130% 110% at 50% 50%, #eeffaa 0%, #d0f45e 46%, #aadd30 100%);
+  --acr-prisme: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 220'%3E%3Cdefs%3E%3ClinearGradient id='f' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.42'/%3E%3Cstop offset='.45' stop-color='%23fff' stop-opacity='.08'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='.22'/%3E%3C/linearGradient%3E%3ClinearGradient id='a' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.95'/%3E%3Cstop offset='.5' stop-color='%23fff' stop-opacity='.35'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='.9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M18 62 L96 8 L228 30 L232 150 L150 212 L10 170 Z' fill='url(%23f)' stroke='url(%23a)' stroke-width='2.5' stroke-linejoin='round'/%3E%3Cpath d='M34 70 L100 26 L212 44 L216 144 L146 194 L28 160 Z' fill='none' stroke='%23fff' stroke-opacity='.38' stroke-width='1.4' stroke-linejoin='round'/%3E%3Cpath d='M46 76 l8 -5 M200 52 l6 6 M204 140 l-6 6 M40 152 l7 4' stroke='%23fff' stroke-opacity='.7' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  --acr-prisme-fort: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 220'%3E%3Cdefs%3E%3ClinearGradient id='f' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fff' stop-opacity='.6'/%3E%3Cstop offset='.45' stop-color='%23fff' stop-opacity='.12'/%3E%3Cstop offset='1' stop-color='%23fff' stop-opacity='.35'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M18 62 L96 8 L228 30 L232 150 L150 212 L10 170 Z' fill='url(%23f)' stroke='%233c5a0a' stroke-opacity='.35' stroke-width='5' stroke-linejoin='round'/%3E%3Cpath d='M18 62 L96 8 L228 30 L232 150 L150 212 L10 170 Z' fill='none' stroke='%23fff' stroke-opacity='.95' stroke-width='2.5' stroke-linejoin='round'/%3E%3Cpath d='M34 70 L100 26 L212 44 L216 144 L146 194 L28 160 Z' fill='none' stroke='%23fff' stroke-opacity='.6' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M46 76 l8 -5 M200 52 l6 6 M204 140 l-6 6 M40 152 l7 4' stroke='%23fff' stroke-opacity='.9' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
+  --acr-pastille-fond: rgba(20, 32, 10, 0.88);
+  --acr-pastille-bord: rgba(220, 255, 120, 0.7);
+}
+
+/* --- Connexion : bloc acrylique sur fond bleu gris (clair) ou vert nuit (sombre) --- */
+html[data-style='verre'] .auth-connexion .auth-fond {
+  display: none;
+}
+html[data-style='verre'] .auth-wrap.auth-connexion {
+  background: radial-gradient(70% 60% at 50% 45%, #f4f8fb, #d6e0e9 60%, #bccad7);
+}
+html[data-style='verre'][data-mantine-color-scheme='dark'] .auth-wrap.auth-connexion {
+  background: radial-gradient(60% 55% at 50% 48%, #18241e, #0c1311 55%, #070a09);
+}
+html[data-style='verre'] .auth-connexion > .auth-panneau {
+  --mantine-color-text: var(--acr-encre);
+  --mantine-color-dimmed: var(--acr-encre-2);
+  --mantine-color-green-text: #1f5c00;
+  --mantine-color-red-text: #9b1c1c;
+  --suivi-nav-texte: var(--acr-encre);
+  --suivi-nav-secondaire: var(--acr-encre-2);
+  overflow: visible;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 2rem;
+  background: var(--acr-fond);
+  color: var(--acr-encre);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    inset 0 0 44px rgba(255, 255, 255, 0.5),
+    inset 0 -28px 56px rgba(110, 165, 10, 0.28),
+    0 18px 40px rgba(40, 70, 0, 0.18),
+    0 0 36px rgba(200, 246, 80, 0.28);
+}
+html[data-style='verre'] .auth-connexion .onde-menu {
+  opacity: 0.3;
+  mix-blend-mode: multiply;
+}
+/* Prisme discret à la place du sceau, en débord sur l'angle. */
+html[data-style='verre'] .auth-connexion > .auth-panneau > .auth-sceau {
+  visibility: hidden;
+}
+html[data-style='verre'] .auth-connexion > .auth-panneau::after {
+  position: absolute;
+  z-index: 2;
+  top: -2.2rem;
+  right: -2.4rem;
+  width: 11rem;
+  height: 10rem;
+  content: '';
+  background: var(--acr-prisme) center / contain no-repeat;
+  opacity: 0.8;
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+html[data-style='verre'] .auth-connexion .auth-kicker {
+  align-self: flex-start;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--acr-pastille-bord);
+  border-radius: 0.7rem;
+  background: var(--acr-pastille-fond);
+  color: var(--acr-lueur);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .auth-connexion .auth-accroche {
+  color: var(--acr-encre);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+html[data-style='verre'] .auth-connexion :is(.auth-carte--identifiant, .auth-carte--mot-de-passe) {
+  --suivi-nav-fond: rgba(255, 255, 255, 0.62);
+  --suivi-nav-texte: var(--acr-encre);
+  --suivi-nav-secondaire: var(--acr-encre-2);
+  --suivi-nav-repere: var(--acr-encre-2);
+  --suivi-nav-active: rgba(255, 255, 255, 0.85);
+  --suivi-nav-survol: rgba(20, 32, 10, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.3);
+  color: var(--acr-encre);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 10px 24px rgba(70, 110, 0, 0.18);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] .auth-connexion .auth-carte--mot-de-passe {
+  background: rgba(255, 255, 255, 0.42);
+}
+html[data-style='verre'] .auth-connexion .auth-label {
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .auth-connexion .auth-champ::placeholder {
+  opacity: 0.75;
+}
+/* « Se connecter » : même gélule à lueur tournante (choix du 19/11/2026), passée au vert acide sur encre verte. */
+html[data-style='verre'] .auth-connexion .auth-carte--valider {
+  color: var(--acr-lueur);
+  font-weight: 700;
+  box-shadow: 0 12px 28px rgba(30, 55, 0, 0.3);
+}
+html[data-style='verre'] .auth-connexion .auth-carte--valider::before {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0turn 0.7turn,
+    rgba(214, 248, 106, 0.35) 0.82turn,
+    #d6f86a 0.93turn,
+    #f6ffd0 0.97turn,
+    transparent 0.995turn
+  );
+}
+html[data-style='verre'] .auth-connexion .auth-carte--valider::after {
+  background:
+    linear-gradient(90deg, rgba(214, 248, 106, 0.22), rgba(214, 248, 106, 0.05) 45%, transparent 75%),
+    linear-gradient(160deg, #1f3010, #0e1707);
+}
+html[data-style='verre'] .auth-connexion .auth-carte--valider :is(svg, .auth-attente) {
+  --loader-color: var(--acr-lueur);
+  color: var(--acr-lueur);
+}
+html[data-style='verre'] .auth-connexion .auth-aide {
+  color: var(--acr-encre-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+
+/* --- Tableau de bord : dalle phare en acrylique, encre verte --- */
+html[data-style='verre'][data-mantine-color-scheme] .tdb .tdb-dalle.tdb-bandeau {
+  --verre-texte: var(--acr-encre);
+  --verre-texte-fort: var(--acr-encre);
+  --verre-secondaire: var(--acr-encre-2);
+  --verre-violet: var(--acr-encre-2);
+  --verre-sens: var(--acr-encre);
+  border-color: rgba(255, 255, 255, 0.75);
+  background:
+    var(--acr-prisme-fort) right -1.4rem top -1.2rem / 10.5rem auto no-repeat,
+    var(--acr-fond);
+  color: var(--acr-encre);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4),
+    inset 0 0 50px rgba(255, 255, 255, 0.55),
+    inset 0 -30px 60px rgba(110, 165, 10, 0.32),
+    0 0 46px rgba(200, 246, 80, 0.5),
+    0 0 130px rgba(200, 246, 80, 0.28);
+}
+html[data-style='verre']
+  .tdb
+  .tdb-dalle.tdb-bandeau
+  :is(.tdb-dalle-titre, .tdb-dalle-sous-titre, .na-stats dt, .na-stats dd) {
+  color: var(--acr-encre);
+}
+html[data-style='verre'] .tdb .tdb-dalle.tdb-bandeau .na-stats dd {
+  font-weight: 800;
+}
+html[data-style='verre'] .tdb .tdb-dalle.tdb-bandeau .na-hero > .na-surtitre {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--acr-pastille-bord);
+  border-radius: 0.6rem;
+  background: var(--acr-pastille-fond);
+  color: var(--acr-lueur);
+}
+html[data-style='verre'] .tdb .tdb-dalle.tdb-bandeau .neon-motif {
+  opacity: 0.22;
+  filter: grayscale(1) brightness(0.3);
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
+  html[data-style='verre'] .auth-connexion > .auth-panneau::after {
+    display: none;
+  }
+  html[data-style='verre'][data-mantine-color-scheme] .tdb .tdb-dalle.tdb-bandeau {
+    background: #d0f45e;
+    box-shadow: none;
+  }
+}
+
+/* ========================================================================
    REPLIS : transparence réduite, contraste renforcé, navigateur sans backdrop-filter, couleurs forcées
    ======================================================================== */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
