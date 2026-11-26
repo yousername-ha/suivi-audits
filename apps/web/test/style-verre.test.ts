@@ -38,7 +38,7 @@ describe('style « Verre »', () => {
     expect(verre).toContain('.tdb .tdb-dalle.tdb-bandeau {');
     // Repli : fond uni, sans lueur, pour la transparence réduite, le contraste renforcé et les couleurs forcées.
     expect(verre).toMatch(
-      /@media \(prefers-reduced-transparency: reduce\), \(prefers-contrast: more\), \(forced-colors: active\) \{\s*html\[data-style='verre'\]\[data-mantine-color-scheme\] \.tdb \.tdb-dalle\.tdb-bandeau \{\s*background: #d0f45e;/,
+      /@media \(prefers-reduced-transparency: reduce\), \(prefers-contrast: more\), \(forced-colors: active\) \{\s*html\[data-style='verre'\]\[data-mantine-color-scheme\] \.tdb \.tdb-dalle\.tdb-bandeau \{\s*background: #a3c45c;/,
     );
   });
 
