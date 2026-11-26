@@ -135,7 +135,9 @@ describe('carte d’administration « Connexion unique (SAML) »', () => {
     const html = carte(sso([fournisseur()]), true);
     expect(html).toContain('Connexion unique (SAML)');
     expect(html).toContain('https://suivi.example.org/api/auth/sso/sp');
-    expect(html).toContain('BEGIN CERTIFICATE');
+    // Certificat du service : copié par un bouton, pas affiché (le bloc PEM empêchait la fenêtre de se découper).
+    expect(html).toContain('Copier le certificat du service');
+    expect(html).not.toContain('BEGIN CERTIFICATE');
     expect(html).toContain('Entra ID (fictif)');
     expect(html).toContain(`https://suivi.example.org/api/auth/sso/${ID}/acs`);
     expect(html).toContain('Flux des métadonnées ouvert, appliqué');

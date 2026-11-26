@@ -8,6 +8,7 @@ import {
   Badge,
   Button,
   Card,
+  CopyButton,
   FileButton,
   Group,
   Modal,
@@ -123,10 +124,20 @@ function ServiceSaml({ sp }: { sp: ConnexionUniqueOut['sp'] }) {
       {sp.certificat ? (
         <>
           <Text size="sm">
-            Les demandes de connexion sont signées (RSA SHA-256). Certificat du service, valable jusqu’au{' '}
-            {fmtDate(sp.certificatExpireLe)} :
+            Les demandes de connexion sont signées (RSA SHA-256). Certificat du service (PEM), valable jusqu’au{' '}
+            {fmtDate(sp.certificatExpireLe)}, à déclarer chez le fournisseur s’il vérifie la signature des demandes :
           </Text>
-          <CopyCommand command={sp.certificat.trim()} />
+          {/* Copié plutôt qu'affiché : un bloc PEM d'une trentaine de lignes alourdit la fenêtre « Sécurité » et
+              l'empêche de se découper en parties. */}
+          <Group>
+            <CopyButton value={sp.certificat.trim()}>
+              {({ copied, copy }) => (
+                <Button size="compact-sm" variant={copied ? 'filled' : 'default'} onClick={copy}>
+                  {copied ? 'Certificat copié' : 'Copier le certificat du service'}
+                </Button>
+              )}
+            </CopyButton>
+          </Group>
         </>
       ) : (
         <Text size="sm" c="dimmed">
