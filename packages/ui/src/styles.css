@@ -1532,6 +1532,25 @@ h3,
   }
 }
 
+/* Connexion unique (ADR 0114) : un bouton par fournisseur d'identité, au-dessus des cartes du compte local ; l'onde du
+   panneau se place alors au-dessus de ces boutons. */
+.auth-sso {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  width: min(24rem, calc(100% - 3rem));
+  margin-block: var(--suivi-ecart-onde) 0;
+}
+.auth-sso + .auth-pile {
+  margin-top: var(--mantine-spacing-md);
+}
+.auth-sso__ou {
+  margin: 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--suivi-nav-secondaire);
+}
+
 /* Les trois cartes empilées : identifiant, mot de passe (décalée), bouton (décalée encore). */
 .auth-pile {
   display: flex;

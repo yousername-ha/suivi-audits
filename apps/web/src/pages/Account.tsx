@@ -1,5 +1,6 @@
 /* Mon compte : affichage (taille, densité, thème), mot de passe, double authentification, clés de sécurité (sécurité du compte),
-   sessions ouvertes ; coordonnées de crise si la personne est contact de crise (ADR 0107). */
+   sessions ouvertes ; coordonnées de crise si la personne est contact de crise (ADR 0107). Compte « connexion unique »
+   (ADR 0114) : ni mot de passe ni second facteur locaux ; la confirmation d'identité passe par le fournisseur. */
 import {
   Alert,
   Badge,
@@ -14,7 +15,7 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { TAILLE_LABELS, TAILLES, type Preferences } from '@suivi/shared';
+import { TAILLE_LABELS, TAILLES, type FacteursOut, type Preferences } from '@suivi/shared';
 import { notifications } from '@mantine/notifications';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import qrcode from 'qrcode-generator';
@@ -49,11 +50,60 @@ export function AccountPage() {
       <AffichageCard />
       <ContactCriseCompteCarte />
       <NotificationsCard />
-      <PasswordCard minLen={me.passwordMinLength} />
-      <TotpCard />
-      <ClesSecuriteCard />
+      {me.user?.sso ? (
+        <ConnexionUniqueCompteCard />
+      ) : (
+        <>
+          <PasswordCard minLen={me.passwordMinLength} />
+          <TotpCard />
+          <ClesSecuriteCard />
+        </>
+      )}
       <SessionsCard />
     </Stack>
+  );
+}
+
+/** Compte « connexion unique » (ADR 0114) : la double authentification est faite chez le fournisseur d'identité ; confirmer
+    son identité (opérations sensibles) se fait par un aller-retour vers lui, qui redemande l'authentification. */
+function ConnexionUniqueCompteCard() {
+  const f = useQuery({ queryKey: ['account', 'factors'], queryFn: () => get<FacteursOut>('/api/account/factors') });
+  const [err, setErr] = useState<string | null>(null);
+  const [envoi, setEnvoi] = useState(false);
+  const confirmer = async () => {
+    setErr(null);
+    setEnvoi(true);
+    try {
+      const r = await post<{ url: string }>('/api/account/reauth/sso', { retour: window.location.pathname });
+      window.location.assign(r.url);
+    } catch (e) {
+      setErr(errorMessage(e));
+      setEnvoi(false);
+    }
+  };
+  return (
+    <Card withBorder>
+      <Title order={2} size="h4" mb="xs">
+        Connexion unique
+      </Title>
+      <Stack gap="xs">
+        <Text size="sm">
+          Vous vous connectez par votre fournisseur d’identité, qui vérifie votre mot de passe et votre double
+          authentification : ils se gèrent chez lui, pas dans cette application.
+        </Text>
+        {f.data?.reauthJusqua && (
+          <Text size="sm" role="status">
+            Identité confirmée jusqu’à <span className="horodatage">{fmtDate(f.data.reauthJusqua)}</span>.
+          </Text>
+        )}
+        {err && <Alert color="red">{err}</Alert>}
+        <div>
+          <Button variant="default" loading={envoi} onClick={() => void confirmer()}>
+            Confirmer mon identité auprès du fournisseur
+          </Button>
+        </div>
+      </Stack>
+    </Card>
   );
 }
 

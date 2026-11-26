@@ -1,6 +1,7 @@
 /* Module Vulnérabilités (ADR 0100, lot N1 ; décision du RSSI du 19/11/2026) : import d'un scan Nessus déposé dans la carte
    « Intégrations » (connecteur « nessus-fichier » : ni adresse, ni clé, ni flux, ni exécutant). Le fichier .nessus est lu
-   dans le navigateur ; l'API ne lit aucun XML : elle reçoit un extrait en JSON, par lots de machines entières, revalidé
+   dans le navigateur ; l'API ne lit aucun XML hors SAML (ADR 0114 : seule la connexion unique analyse du XML, dans
+   connexion-unique/) : elle reçoit un extrait en JSON, par lots de machines entières, revalidé
    champ par champ (packages/shared/src/import-nessus.ts), et le range par le chemin d'écriture des synchronisations de
    Tenable Security Center (tenable.ts, `rangerPassage`) : mêmes tables, même numéro de passage par instance.
    - Un import est une exécution de l'instance (opération « importer »), inscrite directement « en cours » au début, sous le

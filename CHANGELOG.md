@@ -2,10 +2,18 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation : [versionnage sémantique](https://semver.org/lang/fr/) (`MAJEUR.MINEUR.CORRECTIF`). Chaque version publiée correspond à une étiquette `vX.Y.Z` et aux images `ghcr.io/yousername-ha/suivi-audits-api` et `suivi-audits-web` de même numéro.
 
-## [Non publié]
+## [7.8.0] — 2026-11-26
 
 ### Notes de mise à jour
 
+- Connexion unique SAML ([ADR 0114](docs/adr/0114-connexion-unique-saml.md)) : migration `107` additive (trois tables vides,
+  colonnes ajoutées aux comptes et aux sessions avec leur valeur par défaut : tout compte existant reste en connexion
+  locale), appliquée au démarrage, quelques secondes. Nouvelle dépendance de l'API `@node-saml/node-saml` 5.2.0. Au
+  démarrage, le service `init` génère la clé et le certificat du service de connexion unique (`saml_sp_key`, `saml_sp_cert`,
+  dossier des secrets), sauvegardés avec les autres secrets. **Nouveau flux vers l'extérieur `sso-saml`, fermé par défaut**
+  (lecture des métadonnées des fournisseurs, vers `login.microsoftonline.com` pour Entra ID ou l'hôte réglé pour Keycloak) :
+  il ne s'ouvre que lorsqu'un administrateur enregistre une adresse de métadonnées et valide sa destination ; à autoriser
+  ensuite sur le pare-feu. Aucune action si la connexion unique n'est pas utilisée. (session « Projet audit_suivi Coeur »)
 - Aucune migration, aucune commande sur le serveur. Nouvel en-tête `Content-Security-Policy-Report-Only` (Trusted Types en
   observation) servi par Caddy pour l'interface et la page de mise à jour ; la CSP appliquée est inchangée. La configuration
   et la page du frontal changent : à la fin de la mise à jour depuis l'interface, le frontal du site est redémarré une fois
@@ -14,6 +22,29 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   sans point de collecte des rapports. (session « Projet audit_suivi Coeur »)
 - Aucune migration, aucune commande sur le serveur, aucun flux nouveau vers l'extérieur. Aucune action. Les incidents déjà
   enregistrés ne sont pas repris (décision du RSSI du 24/11/2026).
+
+### Ajouté
+
+- **Connexion unique SAML 2.0** pour Microsoft Entra ID et Keycloak (décisions du RSSI du 25/11/2026,
+  [ADR 0114](docs/adr/0114-connexion-unique-saml.md)) : bouton « Se connecter avec … » par fournisseur actif sur la page de
+  connexion, au-dessus du formulaire local ; connexion à l'initiative du service seulement (demande HTTP-Redirect signée,
+  enregistrée en base, à usage unique et valable cinq minutes ; réponse HTTP-POST sur une adresse de retour propre à chaque
+  fournisseur, seule route exemptée du contrôle d'origine ; IdP-initiated refusé). La demande est liée au navigateur qui l'a
+  lancée par un témoin dédié à usage unique (`Secure`, `HttpOnly`, `SameSite=None`, limité à `/api/auth/sso/`, cinq minutes) :
+  une réponse postée depuis un autre navigateur est refusée et signalée (décision du RSSI du 25/11/2026). Analyse XML durcie (ni DTD ni entité,
+  taille bornée), assertion signée obligatoire (réponse ou assertion, SHA-256 ou plus), contrôles `Audience`, `Destination`,
+  `Recipient`, `NotBefore`/`NotOnOrAfter` (deux minutes de tolérance), `InResponseTo` obligatoire et anti-rejeu. La
+  connexion n'est acceptée que si l'assertion prouve une double authentification faite chez le fournisseur (claim
+  `authnmethodsreferences` d'Entra ID, classe du contexte de Keycloak, réglable par fournisseur). Comptes créés d'avance en
+  « connexion unique » avec l'identifiant attendu, aucune création à la volée, droits attribués dans l'application seulement ;
+  un compte « sso » n'a ni mot de passe ni TOTP ni clé (refus uniforme à la connexion par mot de passe), se ré-authentifie
+  par le fournisseur (`ForceAuthn`), se déconnecte localement ; le dernier administrateur local actif ne peut pas passer en
+  connexion unique. Carte « Connexion unique (SAML) » dans Configuration système > Sécurité : identifiant du service,
+  adresses de retour et certificat à déclarer chez le fournisseur, fournisseurs, état du flux et des métadonnées (relues
+  toutes les six heures par l'exécutant d'exploitation, ou importées à la main), expiration du certificat de signature.
+  Alertes de sécurité : certificat du fournisseur qui expire dans moins de 30 jours, relecture en échec, certificat changé,
+  refus pour double authentification absente, signature invalide ou réponse venue d'un autre navigateur. Journal `auth.sso_*`. Le principe « l'API ne lit aucun
+  XML » devient « aucun XML hors SAML ». La feuille de route prévoyait OIDC : SAML retenu. (session « Projet audit_suivi Coeur »)
 
 ### Modifié
 

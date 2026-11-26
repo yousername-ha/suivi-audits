@@ -67,7 +67,7 @@ describe('mandataire sortant : carte et règles', () => {
     expect(g.map((x) => [x.libelle, x.flux.map((f) => f.id)])).toEqual([
       ['Utilise le mandataire', ['veille-vulnerabilites', 'algolighthouse', 'veille-reglementaire']],
       ['Accès direct, par construction', ['courriel', 'tenable']],
-      ['Pas encore pris en charge', ['assistant', 'acme', 'antivirus', 'mises-a-jour']],
+      ['Pas encore pris en charge', ['assistant', 'acme', 'antivirus', 'mises-a-jour', 'sso-saml']],
     ]);
     expect(g.flatMap((x) => x.flux.map((f) => f.id)).sort()).toEqual([...FLUX_MODULES].sort());
   });

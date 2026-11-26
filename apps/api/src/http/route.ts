@@ -47,6 +47,11 @@ export interface RouteDef<B = unknown, Q = unknown, P = unknown> {
   params?: ZodType<P>;
   /** Corps binaire (application/octet-stream), reçu sous forme de Buffer. */
   raw?: boolean;
+  /** Adresse de retour de la connexion unique SAML (ADR 0114) : la SEULE route dont le POST vient d'une autre origine (le
+      navigateur, renvoyé par le fournisseur d'identité, poste le formulaire HTTP-POST). Le contrôle d'origine n'y est pas
+      appliqué ; le corps est un formulaire (application/x-www-form-urlencoded) lu par un analyseur propre à cette route.
+      Réservé à URL_ACS_SAML, sans session ni jeton CSRF : vérifié à l'enregistrement. */
+  origineExterne?: 'acs-saml';
   /** Taille maximale du corps en octets (par défaut 1 Mio), éventuellement calculée depuis la configuration. */
   bodyLimit?: number | ((cfg: Config) => number);
   response?: ZodType;
@@ -60,82 +65,123 @@ export interface RouteDef<B = unknown, Q = unknown, P = unknown> {
 export const route = <B = undefined, Q = undefined, P = undefined>(d: RouteDef<B, Q, P>): RouteDef<any, any, any> => d;
 
 const UNSAFE = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+/** Seule adresse admise pour `origineExterne` (ADR 0114). */
+export const URL_ACS_SAML = '/api/auth/sso/:id/acs';
+
+/** Formulaire HTTP-POST de la réponse SAML : champs simples, chacun une fois au plus (un champ répété est refusé). */
+export function lireFormulaire(corps: string): Record<string, string> {
+  const p = new URLSearchParams(corps);
+  const out: Record<string, string> = Object.create(null) as Record<string, string>;
+  for (const k of new Set(p.keys())) {
+    const v = p.getAll(k);
+    if (v.length !== 1) throw new HttpError(400, 'Formulaire refusé : champ répété.');
+    out[k] = v[0]!;
+  }
+  return { ...out };
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function registerRoutes(app: FastifyInstance, svc: Services, defs: RouteDef<any, any, any>[]) {
   for (const d of defs) {
     if (Array.isArray(d.access) && new Set(d.access.map((p) => p.split(':')[0])).size !== 1)
       throw new Error(`${d.url} : les permissions alternatives doivent appartenir au même module.`);
+    if (
+      d.origineExterne &&
+      (d.origineExterne !== 'acs-saml' ||
+        d.url !== URL_ACS_SAML ||
+        d.method !== 'POST' ||
+        d.access !== 'public' ||
+        d.csrf !== false)
+    )
+      throw new Error(`${d.url} : l’exception d’origine est réservée à l’adresse de retour SAML (${URL_ACS_SAML}).`);
     const methods = Array.isArray(d.method) ? d.method : [d.method];
-    app.route({
-      method: methods,
-      url: d.url,
-      ...(d.bodyLimit ? { bodyLimit: typeof d.bodyLimit === 'function' ? d.bodyLimit(svc.cfg) : d.bodyLimit } : {}),
-      handler: async (req, reply) => {
-        // Limite globale par adresse IP, avant toute lecture en base (session, droits) : toutes les routes passent ici.
-        if (!svc.limits.global(req.ip)) {
-          reply.header('Retry-After', '60');
-          throw new HttpError(429, 'Trop de requêtes. Réessayez dans une minute.');
-        }
-        let s = await svc.auth.load(req);
-        const execute = async () => {
-          if (UNSAFE.has(req.method) && svc.updates.state().maintenance)
-            throw new HttpError(503, 'Mise à jour en cours. Vos données sont conservées.');
-          if (s) s = { ...s, user: { ...s.user, rights: await svc.modules.rights(s.user.rights) } };
-          let wall: WallSession | null = null;
-          if (UNSAFE.has(req.method)) {
-            if (!sameOrigin(req, svc.cfg)) throw new HttpError(403, 'Origine refusée.');
-            if (d.csrf !== false) {
-              if (!s) throw new HttpError(401, 'Session expirée. Reconnectez-vous.', { stage: 'anon' });
-              if (!safeEqual(req.headers['x-csrf-token'] || '', s.csrf))
-                throw new HttpError(403, 'Jeton CSRF invalide. Rechargez la page.');
-            }
+    // Adresse de retour SAML : analyseur de formulaire propre à cette route (contexte Fastify encapsulé), corps borné.
+    const cible = (enregistrer: (a: FastifyInstance) => void) => {
+      if (!d.origineExterne) return enregistrer(app);
+      void app.register(async (sous) => {
+        sous.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, (_req, corps, fait) => {
+          try {
+            fait(null, lireFormulaire(corps as string));
+          } catch (e) {
+            fait(e as Error, undefined);
           }
-          if (d.access === 'session') {
-            if (!s) throw new HttpError(401, 'Session expirée. Reconnectez-vous.', { stage: 'anon' });
-          } else if (d.access === 'mur') {
-            // Session nominative avec lecture métier, sinon écran mural activé (cookie dédié), sinon refus.
-            if (!(s && svc.auth.stage(s) === 'ok' && s.user.rights.canReadAnyBusiness())) {
-              wall = await svc.walls.load(req);
-              if (!wall) {
-                if (s && svc.auth.stage(s) === 'ok') svc.auth.requireBusinessRead(s);
-                throw new HttpError(401, 'Écran non autorisé : activez-le depuis l’administration.', { stage: 'anon' });
+        });
+        enregistrer(sous);
+      });
+    };
+    cible((app) =>
+      app.route({
+        method: methods,
+        url: d.url,
+        ...(d.bodyLimit ? { bodyLimit: typeof d.bodyLimit === 'function' ? d.bodyLimit(svc.cfg) : d.bodyLimit } : {}),
+        handler: async (req, reply) => {
+          // Limite globale par adresse IP, avant toute lecture en base (session, droits) : toutes les routes passent ici.
+          if (!svc.limits.global(req.ip)) {
+            reply.header('Retry-After', '60');
+            throw new HttpError(429, 'Trop de requêtes. Réessayez dans une minute.');
+          }
+          let s = await svc.auth.load(req);
+          const execute = async () => {
+            if (UNSAFE.has(req.method) && svc.updates.state().maintenance)
+              throw new HttpError(503, 'Mise à jour en cours. Vos données sont conservées.');
+            if (s) s = { ...s, user: { ...s.user, rights: await svc.modules.rights(s.user.rights) } };
+            let wall: WallSession | null = null;
+            if (UNSAFE.has(req.method)) {
+              if (!d.origineExterne && !sameOrigin(req, svc.cfg)) throw new HttpError(403, 'Origine refusée.');
+              if (d.csrf !== false) {
+                if (!s) throw new HttpError(401, 'Session expirée. Reconnectez-vous.', { stage: 'anon' });
+                if (!safeEqual(req.headers['x-csrf-token'] || '', s.csrf))
+                  throw new HttpError(403, 'Jeton CSRF invalide. Rechargez la page.');
               }
             }
-          } else if (d.access === 'auth') svc.auth.requireAuth(s);
-          else if (d.access === 'metier') svc.auth.requireBusinessRead(s);
-          else if (Array.isArray(d.access)) {
-            // L'une des permissions suffit ; sans aucune, le refus nomme la première.
-            const liste = d.access as readonly Permission[];
-            svc.auth.requireAuth(s);
-            await svc.modules.assert(liste[0]!.split(':')[0] as Module);
-            if (!liste.some((p) => s!.user.rights.has(p))) svc.auth.requirePermission(s, liste[0]!);
-          } else if (d.access !== 'public') {
-            const p = d.access as Permission;
-            svc.auth.requireAuth(s);
-            await svc.modules.assert(p.split(':')[0] as Module);
-            svc.auth.requirePermission(s, p);
-          }
-          const body = d.raw ? req.body : d.body ? d.body.parse(req.body ?? {}) : undefined;
-          const query = d.query ? d.query.parse(req.query ?? {}) : undefined;
-          const params = d.params ? d.params.parse(req.params ?? {}) : undefined;
-          const out = await d.handler({ req, reply, s, wall, ip: req.ip, body, query, params, svc });
-          if (reply.sent) return reply;
-          if (out === undefined) return reply.code(204).send();
-          return reply.code(d.status ?? 200).send(out);
-        };
-        return s || d.access === 'mur'
-          ? svc.modules.run(
-              UNSAFE.has(req.method) &&
-                !!s &&
-                svc.auth.stage(s) === 'ok' &&
-                !d.moduleConfiguration &&
-                d.access !== 'public',
-              execute,
-            )
-          : execute();
-      },
-    });
+            if (d.access === 'session') {
+              if (!s) throw new HttpError(401, 'Session expirée. Reconnectez-vous.', { stage: 'anon' });
+            } else if (d.access === 'mur') {
+              // Session nominative avec lecture métier, sinon écran mural activé (cookie dédié), sinon refus.
+              if (!(s && svc.auth.stage(s) === 'ok' && s.user.rights.canReadAnyBusiness())) {
+                wall = await svc.walls.load(req);
+                if (!wall) {
+                  if (s && svc.auth.stage(s) === 'ok') svc.auth.requireBusinessRead(s);
+                  throw new HttpError(401, 'Écran non autorisé : activez-le depuis l’administration.', {
+                    stage: 'anon',
+                  });
+                }
+              }
+            } else if (d.access === 'auth') svc.auth.requireAuth(s);
+            else if (d.access === 'metier') svc.auth.requireBusinessRead(s);
+            else if (Array.isArray(d.access)) {
+              // L'une des permissions suffit ; sans aucune, le refus nomme la première.
+              const liste = d.access as readonly Permission[];
+              svc.auth.requireAuth(s);
+              await svc.modules.assert(liste[0]!.split(':')[0] as Module);
+              if (!liste.some((p) => s!.user.rights.has(p))) svc.auth.requirePermission(s, liste[0]!);
+            } else if (d.access !== 'public') {
+              const p = d.access as Permission;
+              svc.auth.requireAuth(s);
+              await svc.modules.assert(p.split(':')[0] as Module);
+              svc.auth.requirePermission(s, p);
+            }
+            const body = d.raw ? req.body : d.body ? d.body.parse(req.body ?? {}) : undefined;
+            const query = d.query ? d.query.parse(req.query ?? {}) : undefined;
+            const params = d.params ? d.params.parse(req.params ?? {}) : undefined;
+            const out = await d.handler({ req, reply, s, wall, ip: req.ip, body, query, params, svc });
+            if (reply.sent) return reply;
+            if (out === undefined) return reply.code(204).send();
+            return reply.code(d.status ?? 200).send(out);
+          };
+          return s || d.access === 'mur'
+            ? svc.modules.run(
+                UNSAFE.has(req.method) &&
+                  !!s &&
+                  svc.auth.stage(s) === 'ok' &&
+                  !d.moduleConfiguration &&
+                  d.access !== 'public',
+                execute,
+              )
+            : execute();
+        },
+      }),
+    );
   }
 }
 
@@ -183,6 +229,13 @@ export function buildOpenApi(defs: RouteDef<any, any, any>[], info: { title: str
         },
       };
       if (d.body) op.requestBody = { required: true, content: { 'application/json': { schema: toSchema(d.body) } } };
+      if (d.origineExterne)
+        op.requestBody = {
+          required: true,
+          content: {
+            'application/x-www-form-urlencoded': d.body ? { schema: toSchema(d.body) } : { schema: { type: 'object' } },
+          },
+        };
       if (d.raw)
         op.requestBody = {
           required: true,

@@ -28,6 +28,7 @@
      cve-inconnue-claim | cve-inconnue-finish <id>  CVE inconnue de la veille : réclame une consultation de cve.org et NVD ({actif, demande}), la termine
      cve-tenable-claim | cve-tenable-finish <id>  CVE inconnue : réclame une recherche des contrôles Tenable qui la citent, la termine
      veille-annonces-claim | -lot <id> | -finish <id>  sources facultatives de la veille (Cloudflare Radar, tldrcve) : mêmes commandes que la veille
+     sso-metadonnees-claim | sso-metadonnees-finish <id>  connexion unique : réclame une lecture de métadonnées due, en rapporte le contenu (JSON sur l'entrée standard)
      flux-souhaites              flux vers l'extérieur voulus ouverts (JSON, ADR 0097)
      flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
      flux-reprise                reprise des modules en service jamais décidés (JSON sur l'entrée standard), puis flux voulus ouverts
@@ -54,6 +55,8 @@ import {
   RapportCveTenable,
   RapportVersionsCpe,
   RapportExecution,
+  RapportMetadonneesSso,
+  SSO_BORNES,
   type SettingsValues,
 } from '@suivi/shared';
 import { sql } from 'kysely';
@@ -91,6 +94,7 @@ const HELP = `Commandes : docker compose exec app suivi <commande> [arguments]
   cve-inconnue-claim | cve-inconnue-finish <id>  CVE inconnue de la veille : consultation de cve.org et NVD ({actif, demande})
   cve-tenable-claim | cve-tenable-finish <id>  CVE inconnue : contrôles Tenable qui la citent
   veille-annonces-claim | -lot <id> | -finish <id>  sources facultatives de la veille (Cloudflare Radar, tldrcve)
+  sso-metadonnees-claim | sso-metadonnees-finish <id>  connexion unique : lecture des métadonnées d'un fournisseur (JSON sur l'entrée standard)
   flux-souhaites              flux vers l'extérieur voulus ouverts (JSON)
   flux-appliques              état appliqué de chaque flux, rapporté par l'exécutant (JSON sur l'entrée standard)
   flux-reprise                modules en service jamais décidés enregistrés ouverts (JSON sur l'entrée standard), puis flux voulus ouverts
@@ -253,6 +257,29 @@ async function main() {
         process.exit(2);
       }
       await svc.integrations.terminer(arg!, p.data);
+      break;
+    }
+    case 'sso-metadonnees-claim': {
+      // Connexion unique (ADR 0114) : flux « sso-saml » fermé, rien n'est remis.
+      const lecture = await svc.connexionUnique.reclamerLecture();
+      if (lecture) console.log(JSON.stringify(lecture));
+      break;
+    }
+    case 'sso-metadonnees-finish': {
+      // Rapport de l'exécutant, validé strictement : base64 borné, ou erreur sur une ligne ; le XML est contrôlé par l'API.
+      const brut = await readStdin(SSO_BORNES.metadonnees * 2);
+      let valeur: unknown;
+      try {
+        valeur = brut === null ? null : JSON.parse(brut);
+      } catch {
+        valeur = null;
+      }
+      const p = RapportMetadonneesSso.safeParse(valeur);
+      if (!z.uuid().safeParse(arg).success || !p.success) {
+        console.error('Rapport refusé : identifiant, taille ou contenu invalide.');
+        process.exit(2);
+      }
+      console.log(JSON.stringify({ issue: await svc.connexionUnique.terminerLecture(arg!, p.data) }));
       break;
     }
     case 'veille-claim': {

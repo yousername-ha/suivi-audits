@@ -81,6 +81,12 @@ describe('matrice automatique : chaque route refuse sans la permission requise',
     'PATCH /api/account/webauthn/:id',
     'DELETE /api/account/webauthn/:id',
     'POST /api/account/recovery-codes',
+    // Connexion unique SAML (ADR 0114) : boutons de la page de connexion, départ vers le fournisseur, adresse de retour et
+    // ré-authentification du compte connecté ; testé dans connexion-unique.test.ts.
+    'GET /api/auth/sso/fournisseurs',
+    'GET /api/auth/sso/:id/connexion',
+    'POST /api/auth/sso/:id/acs',
+    'POST /api/account/reauth/sso',
     'GET /api/events',
     'GET /api/presence',
     'POST /api/presence',

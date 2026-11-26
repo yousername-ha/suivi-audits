@@ -122,6 +122,7 @@ export async function utilisateurPourCalcul(db: Db, id: string): Promise<Session
       'preferences',
       'totp_enabled',
       'must_change_password',
+      'mode_connexion',
     ])
     .where('id', '=', id)
     .executeTakeFirst();
@@ -141,12 +142,14 @@ export async function utilisateurPourCalcul(db: Db, id: string): Promise<Session
     clesEnregistrees: 0,
     cleRequise: false,
     mustChangePassword: u.must_change_password,
+    sso: u.mode_connexion === 'sso',
   };
 }
 
 /** Nombre d'administrateurs actifs et permanents : comptes non désactivés, sans date d'expiration,
-    détenant « administration:administrer » (rôle direct ou par un groupe). */
-export async function permanentAdminCount(c: Q): Promise<number> {
+    détenant « administration:administrer » (rôle direct ou par un groupe). `localSeulement` : comptes en connexion locale
+    (mot de passe, TOTP, clé), hors connexion unique (ADR 0114). */
+export async function permanentAdminCount(c: Q, o: { localSeulement?: boolean } = {}): Promise<number> {
   const r = await surConnexion(c)
     .with('admin_roles', (db) =>
       db
@@ -160,6 +163,7 @@ export async function permanentAdminCount(c: Q): Promise<number> {
     .select(sql<number>`count(*)::int`.as('n'))
     .where('u.disabled', '=', false)
     .where('u.expires_at', 'is', null)
+    .$if(!!o.localSeulement, (q) => q.where('u.mode_connexion', '=', 'local'))
     .where((eb) =>
       eb.or([
         eb.exists(
@@ -191,6 +195,14 @@ export async function assertAdminRemains(c: Q) {
     throw new HttpError(
       409,
       'Impossible : il doit rester au moins un administrateur actif, sans date d’expiration. Désignez-en un autre d’abord.',
+    );
+  // Décision du RSSI du 25/11/2026 (ADR 0114) : au moins un administrateur local (mot de passe, TOTP, clé) reste toujours
+  // actif, en secours de la connexion unique. Sans compte « sso », ce contrôle est le précédent.
+  if ((await permanentAdminCount(c, { localSeulement: true })) < 1)
+    throw new HttpError(
+      409,
+      'Impossible : il doit rester au moins un administrateur local actif (mot de passe et double authentification de l’application), sans date d’expiration, en secours de la connexion unique.',
+      { reason: 'dernier_admin_local' },
     );
 }
 

@@ -52,6 +52,11 @@ export const TABLES_CONFIGURATION = [
   'webauthn_credentials',
   'webauthn_challenges',
   'recovery_codes',
+  // Connexion unique SAML (ADR 0114) : fournisseurs configurés par l'administrateur, demandes de connexion et identifiants
+  // d'assertions déjà reçues ; effacés avec les comptes qui s'y rattachent.
+  'sso_fournisseurs',
+  'sso_requetes',
+  'sso_assertions_vues',
   'user_roles',
   'user_groups',
   'groups',
@@ -290,7 +295,8 @@ export const TABLES_TRAVAIL = [
 /** Tables à vider pour une portée (users est traité à part : suppression des lignes, pour les clés étrangères). */
 export function tablesAVider(portee: RemiseAVidePortee): string[] {
   const t: string[] = [...TABLES_TRAVAIL];
-  if (portee === 'tout') t.push(...TABLES_CONFIGURATION.filter((x) => x !== 'users'));
+  // Comptes et fournisseurs de la connexion unique (référencés par les comptes) : effacés ligne à ligne, après le TRUNCATE.
+  if (portee === 'tout') t.push(...TABLES_CONFIGURATION.filter((x) => x !== 'users' && x !== 'sso_fournisseurs'));
   return t;
 }
 
@@ -358,7 +364,7 @@ export class RemiseAVide {
         );
       // Les triggers d'immuabilité sont suspendus le temps de l'effacement (propriétaire des tables) ; la transaction
       // les rétablit ou, en cas d'échec, annule tout.
-      const touchees = [...aVider, ...(portee === 'tout' ? ['users'] : [])];
+      const touchees = [...aVider, ...(portee === 'tout' ? ['users', 'sso_fournisseurs'] : [])];
       // Lot PRIO-1 (décision du RSSI du 20/11/2026) : la remise à vide du travail garde les fréquences choisies pour les
       // sources de la veille (un réglage, comme celle des connecteurs, qui suit leur instance) ; l'état des sources
       // (dernière collecte, fenêtre NVD, référence de planification) repart de zéro. La portée « tout » efface aussi la
@@ -389,6 +395,7 @@ export class RemiseAVide {
         await k.insertInto('vulnerabilites_veille_annonces_sources').values(reglagesAnnonces).execute();
       if (portee === 'tout') {
         await k.deleteFrom('users').execute();
+        await k.deleteFrom('sso_fournisseurs').execute();
         await k.deleteFrom('roles').where('system', '=', false).execute();
       }
       for (const t of touchees) await sql`ALTER TABLE ${sql.table(t)} ENABLE TRIGGER USER`.execute(k);

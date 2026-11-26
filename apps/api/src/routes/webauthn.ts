@@ -23,7 +23,7 @@ import {
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { sql } from 'kysely';
 import { z } from 'zod';
-import type { Session } from '../auth.js';
+import { refuserFacteurLocalSso, type Session } from '../auth.js';
 import { conflict, requireIfMatch, setEtag } from '../http/concurrency.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
@@ -54,9 +54,13 @@ function exigerEtape(svc: Services, s: Session, etapes: string[]) {
 /** Ré-authentification récente (mot de passe et second facteur depuis moins de REAUTH_MINUTES). */
 function exigerReauth(s: Session) {
   if (!s.reauthAt || Date.now() - s.reauthAt.getTime() > REAUTH_MINUTES * 60e3)
-    throw new HttpError(403, 'Confirmez votre identité (mot de passe et second facteur) pour continuer.', {
-      reason: 'reauth',
-    });
+    throw new HttpError(
+      403,
+      s.user.sso
+        ? 'Confirmez votre identité auprès de votre fournisseur d’identité (connexion unique) pour continuer.'
+        : 'Confirmez votre identité (mot de passe et second facteur) pour continuer.',
+      { reason: 'reauth' },
+    );
 }
 function limiter(ok: boolean) {
   if (!ok) throw new HttpError(429, 'Trop de tentatives. Réessayez dans quelques minutes.');
@@ -273,6 +277,7 @@ export const webauthnRoutes = [
     body: Vide,
     handler: async ({ svc, s }) => {
       const sess = s as Session;
+      refuserFacteurLocalSso(sess.user);
       exigerEtape(svc, sess, ['ok', 'enroll_key']);
       if (!svc.webauthn.disponible) return { options: null };
       limiter(svc.limits.webauthnBySession(sess.sid.toString('hex')) && svc.limits.webauthnByUser(sess.user.id));
@@ -290,6 +295,8 @@ export const webauthnRoutes = [
     handler: async ({ svc, req, s, ip, body }) => {
       const sess = s as Session;
       const c = ctx(req, ip);
+      // Compte « connexion unique » : la ré-authentification passe par le fournisseur (POST /api/account/reauth/sso).
+      refuserFacteurLocalSso(sess.user);
       exigerEtape(svc, sess, ['ok', 'enroll_key']);
       await exigerMotDePasse(svc, sess.user, ip, body.password);
       limiter(svc.limits.mfaByUser(sess.user.id));
@@ -341,6 +348,7 @@ export const webauthnRoutes = [
     body: Vide,
     handler: async ({ svc, s }) => {
       const sess = s as Session;
+      refuserFacteurLocalSso(sess.user);
       exigerDisponible(svc);
       exigerEtape(svc, sess, ['ok', 'enroll_key']);
       exigerReauth(sess);
@@ -361,6 +369,7 @@ export const webauthnRoutes = [
     handler: async ({ svc, req, reply, s, ip, body }) => {
       const sess = s as Session;
       const c = ctx(req, ip);
+      refuserFacteurLocalSso(sess.user);
       exigerDisponible(svc);
       exigerEtape(svc, sess, ['ok', 'enroll_key']);
       exigerReauth(sess);
@@ -481,6 +490,7 @@ export const webauthnRoutes = [
     response: CodesRecuperationOut,
     handler: async ({ svc, req, s, ip }) => {
       const sess = s as Session;
+      refuserFacteurLocalSso(sess.user);
       exigerReauth(sess);
       limiter(svc.limits.webauthnGestionByUser(sess.user.id));
       const codes = await svc.webauthn.genererCodes(sess.user.id);

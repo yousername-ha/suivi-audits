@@ -112,5 +112,5 @@ Modules repris : `frameworks` (ReCyF et autres), ~~`appGaps`~~ (retiré, ADR 008
 ## Phase 4 — Exports, SSO, fin de l'outil historique
 
 - Exports Word, Excel et PowerPoint générés par le serveur (rapport d'audit, revue de direction, DdA), sur le moteur introduit en phase 3.
-- Authentification unique **OIDC** (Entra ID, Keycloak…), TOTP conservé pour les comptes locaux de secours.
+- Authentification unique **SAML 2.0** (Entra ID, Keycloak), retenue par le RSSI le 25/11/2026 à la place d’OIDC ([ADR 0114](adr/0114-connexion-unique-saml.md)) : double authentification prouvée par le fournisseur, comptes créés d’avance, TOTP conservé pour les comptes locaux de secours (au moins un administrateur local).
 - Suppression de `/legacy` et de `app_state` après la reprise de tous les modules, et un dernier export d'archive.

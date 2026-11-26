@@ -27,8 +27,10 @@ import {
   MODULES,
   PERMISSION_RESERVEE_LIBELLES,
   PERMISSIONS_RESERVEES,
+  type ConnexionUniqueOut,
   type EffectiveRightsOut,
   type GroupOut,
+  type ModeConnexion,
   type Module,
   type Permission,
   type RoleAssignment,
@@ -44,6 +46,7 @@ import { ContactCriseCompteEditeur } from '../components/ContactCriseCompte';
 import { FacteursCompte } from '../components/FacteursCompte';
 import { EditeurReglages } from '../notifications/Reglages';
 import { useCan, useMe } from '../session';
+import { champsConnexion } from '../connexion-unique';
 import { ficheCliquable } from '../fiche-cliquable';
 import { DataTable } from '@suivi/ui';
 
@@ -51,6 +54,9 @@ const useRoles = () => useQuery({ queryKey: ['admin', 'roles'], queryFn: () => g
 const useGroups = () =>
   useQuery({ queryKey: ['admin', 'groups'], queryFn: () => get<GroupOut[]>('/api/admin/groups') });
 const useUsers = () => useQuery({ queryKey: ['admin', 'users'], queryFn: () => get<UserOut[]>('/api/admin/users') });
+/** Fournisseurs de la connexion unique (ADR 0114), pour le choix du mode de connexion d'un compte. */
+const useFournisseursSso = () =>
+  useQuery({ queryKey: ['admin', 'sso'], queryFn: () => get<ConnexionUniqueOut>('/api/admin/sso') });
 const SCOPED = 'auditeur_externe';
 const moduleOptions = (mods: readonly Module[]) => mods.map((m) => ({ value: m, label: MODULE_LABELS[m] }));
 const isExpired = (d: string | null) => !!d && new Date(d) <= new Date();
@@ -80,6 +86,10 @@ interface UserForm {
   groups: string[];
   expiresAt: string;
   disabled: boolean;
+  /** Connexion unique (ADR 0114) : mode, fournisseur et identifiant attendu du fournisseur. */
+  modeConnexion: ModeConnexion;
+  fournisseurId: string;
+  identifiantExterne: string;
 }
 
 const COLONNES_COMPTES: Colonne[] = [
@@ -185,8 +195,15 @@ export function UsersPanel() {
                         </Badge>
                       )}
                       {locked && <Badge color="red">verrouillé</Badge>}
-                      {!u.totp_enabled && <Badge color="orange">TOTP à configurer</Badge>}
-                      {u.must_change_password && <Badge color="yellow">mot de passe temporaire</Badge>}
+                      {u.mode_connexion === 'sso' && (
+                        <Badge color="teal" variant="light">
+                          connexion unique
+                        </Badge>
+                      )}
+                      {u.mode_connexion !== 'sso' && !u.totp_enabled && <Badge color="orange">TOTP à configurer</Badge>}
+                      {u.mode_connexion !== 'sso' && u.must_change_password && (
+                        <Badge color="yellow">mot de passe temporaire</Badge>
+                      )}
                       {u.sessions > 0 && <Badge variant="light">{u.sessions} session(s)</Badge>}
                     </Group>
                   </Table.Td>
@@ -207,40 +224,45 @@ export function UsersPanel() {
                           <Button size="compact-sm" variant="default" onClick={() => setForm({ user: u })}>
                             Modifier
                           </Button>
-                          <ConfirmButton
-                            size="compact-sm"
-                            variant="light"
-                            color="orange"
-                            message={`Générer un mot de passe temporaire pour ${u.username} ? Ses sessions seront fermées.`}
-                            onConfirm={() =>
-                              act(async () => {
-                                const r = await api<{ temporaryPassword: string }>(
-                                  'POST',
-                                  `/api/admin/users/${u.id}/reset-password`,
-                                );
-                                setSecret({
-                                  title: `Mot de passe temporaire de ${u.username}`,
-                                  value: r.temporaryPassword,
-                                });
-                              })
-                            }
-                          >
-                            Mot de passe
-                          </ConfirmButton>
-                          <ConfirmButton
-                            size="compact-sm"
-                            variant="light"
-                            color="orange"
-                            message={`Réinitialiser la double authentification de ${u.username} (téléphone perdu) ? Il devra la reconfigurer.`}
-                            onConfirm={() =>
-                              act(
-                                () => api('POST', `/api/admin/users/${u.id}/reset-mfa`),
-                                'Double authentification réinitialisée.',
-                              )
-                            }
-                          >
-                            TOTP
-                          </ConfirmButton>
+                          {/* Compte « connexion unique » : ni mot de passe ni TOTP locaux (ADR 0114). */}
+                          {u.mode_connexion !== 'sso' && (
+                            <>
+                              <ConfirmButton
+                                size="compact-sm"
+                                variant="light"
+                                color="orange"
+                                message={`Générer un mot de passe temporaire pour ${u.username} ? Ses sessions seront fermées.`}
+                                onConfirm={() =>
+                                  act(async () => {
+                                    const r = await api<{ temporaryPassword: string }>(
+                                      'POST',
+                                      `/api/admin/users/${u.id}/reset-password`,
+                                    );
+                                    setSecret({
+                                      title: `Mot de passe temporaire de ${u.username}`,
+                                      value: r.temporaryPassword,
+                                    });
+                                  })
+                                }
+                              >
+                                Mot de passe
+                              </ConfirmButton>
+                              <ConfirmButton
+                                size="compact-sm"
+                                variant="light"
+                                color="orange"
+                                message={`Réinitialiser la double authentification de ${u.username} (téléphone perdu) ? Il devra la reconfigurer.`}
+                                onConfirm={() =>
+                                  act(
+                                    () => api('POST', `/api/admin/users/${u.id}/reset-mfa`),
+                                    'Double authentification réinitialisée.',
+                                  )
+                                }
+                              >
+                                TOTP
+                              </ConfirmButton>
+                            </>
+                          )}
                           {locked && (
                             <Button
                               size="compact-sm"
@@ -291,7 +313,14 @@ export function UsersPanel() {
           <UserEditor
             user={form.user}
             self={form.user?.id === me.user?.id}
-            onCreated={(username, pw) => setSecret({ title: `Compte ${username} créé`, value: pw })}
+            onCreated={(username, pw) =>
+              pw
+                ? setSecret({ title: `Compte ${username} créé`, value: pw })
+                : notifications.show({
+                    color: 'teal',
+                    message: `Compte ${username} créé : il se connecte par la connexion unique, sans mot de passe.`,
+                  })
+            }
             onDone={() => setForm(null)}
           />
         )}
@@ -350,11 +379,13 @@ function UserEditor({
 }: {
   user: UserOut | null;
   self: boolean;
-  onCreated: (username: string, pw: string) => void;
+  onCreated: (username: string, pw: string | null) => void;
   onDone: () => void;
 }) {
   const roles = useRoles();
   const groups = useGroups();
+  const sso = useFournisseursSso();
+  const fournisseurs = sso.data?.fournisseurs ?? [];
   const act = useAct();
   const scoped = user?.roles.find((r) => r.id === SCOPED);
   const [f, setF] = useState<UserForm>({
@@ -366,6 +397,9 @@ function UserEditor({
     groups: user ? user.groups.map((g) => g.id) : [],
     expiresAt: user?.expires_at?.slice(0, 10) ?? '',
     disabled: user?.disabled ?? false,
+    modeConnexion: user?.mode_connexion ?? 'local',
+    fournisseurId: user?.sso_fournisseur_id ?? '',
+    identifiantExterne: user?.sso_identifiant ?? '',
   });
   const [err, setErr] = useState<string | null>(null);
   const auditor = f.roles.includes(SCOPED);
@@ -373,11 +407,12 @@ function UserEditor({
     id === SCOPED ? { roleId: id, modules: f.auditorModules as Module[] } : { roleId: id },
   );
 
+  const connexion = champsConnexion(f, user);
   const save = async () => {
     setErr(null);
     try {
       if (!user) {
-        const r = await api<{ temporaryPassword: string }>('POST', '/api/admin/users', {
+        const r = await api<{ temporaryPassword: string | null }>('POST', '/api/admin/users', {
           body: {
             username: f.username,
             displayName: f.displayName,
@@ -385,6 +420,7 @@ function UserEditor({
             roles: assignments,
             groups: f.groups,
             expiresAt: f.expiresAt || null,
+            ...connexion,
           },
         });
         onCreated(f.username, r.temporaryPassword);
@@ -395,7 +431,13 @@ function UserEditor({
             email: f.email,
             ...(self
               ? {}
-              : { roles: assignments, groups: f.groups, expiresAt: f.expiresAt || null, disabled: f.disabled }),
+              : {
+                  roles: assignments,
+                  groups: f.groups,
+                  expiresAt: f.expiresAt || null,
+                  disabled: f.disabled,
+                  ...connexion,
+                }),
           },
           ifMatch: user.version,
         });
@@ -484,6 +526,55 @@ function UserEditor({
         onChange={(e) => setF({ ...f, expiresAt: e.currentTarget.value })}
         disabled={self}
       />
+      {(fournisseurs.length > 0 || f.modeConnexion === 'sso') && (
+        <>
+          <Select
+            label="Connexion"
+            description="Connexion unique : le compte se connecte seulement par son fournisseur d’identité, qui prouve la double authentification ; ni mot de passe ni TOTP. Les droits restent ceux attribués ici."
+            data={[
+              { value: 'local', label: 'Connexion locale (mot de passe et double authentification)' },
+              { value: 'sso', label: 'Connexion unique (SAML)' },
+            ]}
+            value={f.modeConnexion}
+            onChange={(v) => setF({ ...f, modeConnexion: v === 'sso' ? 'sso' : 'local' })}
+            allowDeselect={false}
+            disabled={self}
+          />
+          {f.modeConnexion === 'sso' && (
+            <>
+              <Select
+                label="Fournisseur d’identité"
+                required
+                data={fournisseurs.map((x) => ({ value: x.id, label: x.libelle }))}
+                value={f.fournisseurId || null}
+                onChange={(v) => setF({ ...f, fournisseurId: v ?? '' })}
+                allowDeselect={false}
+                disabled={self}
+              />
+              <TextInput
+                label="Identifiant attendu du fournisseur"
+                description="Valeur reçue dans l’assertion (NameID ou attribut réglé pour ce fournisseur), par exemple l’adresse de connexion de la personne. Sans distinction de casse."
+                required
+                value={f.identifiantExterne}
+                onChange={(e) => setF({ ...f, identifiantExterne: e.currentTarget.value })}
+                disabled={self}
+              />
+              {user && user.mode_connexion !== 'sso' && (
+                <Alert color="orange">
+                  Passer ce compte en connexion unique efface son mot de passe et sa double authentification locaux
+                  (TOTP, clés de sécurité, codes de récupération) et ferme ses sessions.
+                </Alert>
+              )}
+            </>
+          )}
+          {user && user.mode_connexion === 'sso' && f.modeConnexion === 'local' && (
+            <Alert color="orange">
+              Revenu en connexion locale, le compte n’a pas de mot de passe : générez ensuite un mot de passe
+              temporaire.
+            </Alert>
+          )}
+        </>
+      )}
       {user && (
         <Select
           label="État"

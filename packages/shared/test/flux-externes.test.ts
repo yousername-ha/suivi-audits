@@ -31,6 +31,7 @@ describe('registre des flux vers l’extérieur', () => {
       'veille-vulnerabilites',
       'algolighthouse',
       'veille-reglementaire',
+      'sso-saml',
     ]);
     expect(FLUX_EXTERNES.map((f) => f.id)).toEqual([...FLUX_MODULES]);
   });
@@ -199,6 +200,7 @@ describe('reprise de l’existant (précision du RSSI du 16/11/2026)', () => {
     // nommés, pas oubliés.
     expect([...FLUX_SANS_REPRISE].sort()).toEqual([
       'algolighthouse',
+      'sso-saml',
       'tenable',
       'veille-reglementaire',
       'veille-vulnerabilites',

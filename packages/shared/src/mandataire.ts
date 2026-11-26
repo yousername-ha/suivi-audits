@@ -154,6 +154,8 @@ export const USAGE_MANDATAIRE: Record<FluxModule, UsageMandataire> = {
   acme: 'non_pris_en_charge',
   // Veille réglementaire (ADR 0110) : même script et même tunnel que la veille des vulnérabilités.
   'veille-reglementaire': 'utilise',
+  // Connexion unique SAML (ADR 0114) : lecture directe des métadonnées dans ce lot.
+  'sso-saml': 'non_pris_en_charge',
 };
 export const LIBELLES_USAGE_MANDATAIRE: Record<UsageMandataire, string> = {
   utilise: 'Utilise le mandataire',
@@ -174,6 +176,8 @@ export const MOTIFS_USAGE_MANDATAIRE: Record<FluxModule, string> = {
   acme: 'Sort encore directement : le passage par le mandataire n’est pas réalisé (lot à venir).',
   'veille-reglementaire':
     'Les demandes vers les flux des sources réglementaires passent par un tunnel à travers le mandataire ; le certificat de chaque source reste vérifié.',
+  'sso-saml':
+    'Sort encore directement : la lecture des métadonnées par le mandataire n’est pas réalisée (lot à venir). Un fournisseur interne (Keycloak) est joint directement.',
 };
 
 /** Ligne de pare-feu d'un flux qui passe par le mandataire : la sortie va au mandataire, pas aux destinations. */

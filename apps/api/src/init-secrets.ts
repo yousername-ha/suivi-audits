@@ -14,11 +14,14 @@
         db_superuser_password  -> postgres seul          (0400, uid 70)
         db_app_password        -> postgres + application (0440, uid 70, gid 1000)
         doc_master_key         -> application seule      (0400, uid 1000)
+        saml_sp_key            -> application seule      (0400, uid 1000) : clé RSA du service de connexion unique (ADR 0114)
+        saml_sp_cert           -> application seule      (0400, uid 1000) : son certificat auto-signé (public, dix ans)
    Sans DONNEES (ancien déploiement à volumes nommés) : seules les étapes 3 et l'attribution des dossiers du frontal
    (CADDY_DIRS) sont faites, comme avant. */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { certificatAutoSigne } from './security/certificat-auto-signe.js';
 
 const PG_UID = parseInt(process.env.PG_UID || '70', 10);
 const APP_UID = parseInt(process.env.APP_UID || '1000', 10);
@@ -254,6 +257,65 @@ function genererSecrets(dir: string): number {
     }
     fs.chownSync(f, s.uid, s.gid);
     fs.chmodSync(f, s.mode);
+  }
+  return created + genererCleSaml(dir);
+}
+
+/** Crée `f` en exclusivité (mode 0400) puis y écrit `contenu()` ; rend false si le fichier existe déjà. Un échec de la
+    génération retire le fichier vide, pour qu'un prochain démarrage le recrée. */
+function creerExclusif(f: string, contenu: () => string): boolean {
+  let fd: number;
+  try {
+    fd = fs.openSync(f, 'wx', 0o400);
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'EEXIST') return false;
+    throw e;
+  }
+  try {
+    fs.writeFileSync(fd, contenu());
+  } catch (e) {
+    fs.closeSync(fd);
+    fs.rmSync(f, { force: true });
+    throw e;
+  }
+  fs.closeSync(fd);
+  return true;
+}
+
+/** Clé et certificat du service de la connexion unique SAML (ADR 0114) : la clé signe les demandes de connexion, le
+    certificat (public) se recopie chez le fournisseur d'identité. Création exclusive, jamais de remplacement : un
+    certificat manquant est refait à partir de la clé existante. */
+export function genererCleSaml(dir: string): number {
+  let created = 0;
+  const cleF = path.join(dir, 'saml_sp_key');
+  const certF = path.join(dir, 'saml_sp_cert');
+  // Création exclusive (« wx ») avant toute génération : aucun contrôle d'existence préalable (pas de fenêtre entre le
+  // contrôle et l'écriture), un fichier existant n'est jamais remplacé.
+  if (
+    creerExclusif(cleF, () =>
+      crypto
+        .generateKeyPairSync('rsa', { modulusLength: 3072 })
+        .privateKey.export({ type: 'pkcs8', format: 'pem' })
+        .toString(),
+    )
+  ) {
+    created++;
+    console.log('secret créé : saml_sp_key');
+  }
+  if (
+    creerExclusif(certF, () =>
+      certificatAutoSigne(fs.readFileSync(cleF, 'utf8'), {
+        nomCommun: 'Suivi des audits SMSI - connexion unique',
+        jours: 3650,
+      }),
+    )
+  ) {
+    created++;
+    console.log('secret créé : saml_sp_cert');
+  }
+  for (const f of [cleF, certF]) {
+    fs.chownSync(f, APP_UID, APP_GID);
+    fs.chmodSync(f, 0o400);
   }
   return created;
 }
