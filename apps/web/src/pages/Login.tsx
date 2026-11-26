@@ -27,7 +27,6 @@ import { FondConnexion } from '../connexion/FondConnexion';
 import { IconeCadenas, IconeFleche, IconeOeil, IconeOeilBarre, IconePersonne } from '../connexion/icones';
 import { Sceau } from '../connexion/Sceau';
 import { fetchMe, useMe, useRefreshMe } from '../session';
-import { styleInstance } from '../style-instance';
 import { connexionParCle, MESSAGE_NAVIGATEUR, navigateurCompatible } from '../webauthn';
 import { destinationApresConnexion, retourSur } from '../installation-flux';
 import { lienConnexionSso, messageEchecSso } from '../connexion-unique';
@@ -69,11 +68,6 @@ function AuthCard({ title, etape = true, children }: { title: string; etape?: bo
   const panneau = useRef<HTMLElement>(null);
   const titre = useRef<HTMLHeadingElement>(null);
   const disposition = useDispositionOnde(panneau, titre);
-  // Style de l'instance dès la connexion (le style « Verre » habille aussi cette page), comme la coquille une fois connecté.
-  const style = styleInstance(useMe().appearance?.style);
-  useEffect(() => {
-    document.documentElement.dataset.style = style;
-  }, [style]);
   // Panneau sans nom accessible : le h1 suffit, et un nom ferait doublon avec les libellés des champs.
   return (
     <main className="auth-wrap auth-connexion">
