@@ -350,6 +350,22 @@ html[data-style='verre']
 html[data-style='verre'] :is(.mantine-Modal-body, .mantine-Drawer-body) .fenetre-actions {
   background: transparent;
 }
+/* Pied collant des fenêtres (Fermer, Enregistrer) : plaque de verre aux coins arrondis au lieu de la bande opaque
+   héritée de Neon (remarque du RSSI du 27/11/2026). Le flou masque le texte qui défile dessous ; l'ombre opaque de Neon
+   sous le pied est retirée. */
+html[data-style='verre']
+  :is(.mantine-Modal-content, .mantine-Drawer-content)
+  :is(.mantine-Modal-body, .mantine-Drawer-body)
+  :is(.fenetre-actions, .mantine-Stack-root > .mantine-Group-root:last-child:has(> .mantine-Button-root)) {
+  margin-block-end: 0.5rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: var(--verre-rayon-ligne);
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
 html[data-style='verre'] :is(.mantine-Modal-title, .mantine-Drawer-title) {
   font-weight: 700;
 }
@@ -486,6 +502,22 @@ html[data-style='verre'] .data-table .mantine-Table-table {
   border-collapse: separate;
   border-spacing: 0 0.375rem;
   padding-inline: 0.5rem;
+}
+/* En-tête collant des listes : transparent au lieu du fond opaque de la surface (remarque du RSSI du 27/11/2026) ; le flou
+   est porté par les cellules d'en-tête, arrondies aux extrémités comme les lignes. */
+html[data-style='verre'] :is([data-liste-fiches], .data-table) thead.mantine-Table-thead,
+html[data-style='verre'] [data-liste-fiches] thead {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html[data-style='verre'] .data-table thead tr > :is(th, .mantine-Table-th):first-child {
+  border-start-start-radius: var(--verre-rayon-ligne);
+  border-end-start-radius: var(--verre-rayon-ligne);
+}
+html[data-style='verre'] .data-table thead tr > :is(th, .mantine-Table-th):last-child {
+  border-start-end-radius: var(--verre-rayon-ligne);
+  border-end-end-radius: var(--verre-rayon-ligne);
 }
 html[data-style='verre'] .data-table :is(thead th, thead th:first-child, .mantine-Table-th) {
   border: 0;
