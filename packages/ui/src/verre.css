@@ -1490,20 +1490,25 @@ html[data-style='verre'] .tdb .tdb-dalle.tdb-bandeau .neon-motif {
 }
 
 /* ========================================================================
-   LOT 2 : ONGLET ORGANISATION (maquettes 28 à 34 du canevas retenu)
+   LOTS 2 ET 3 : ONGLETS ORGANISATION ET PILOTAGE (maquettes 28 à 38 du canevas retenu)
    En-tête comme les maquettes : surtitre de la famille, grand titre, description, puis les onglets ; compteurs en
    tuiles à grand chiffre ; colonnes de Processus en panneaux de verre. La cartographie garde sa disposition (choix du
-   RSSI). Limité aux pages de la famille Organisation (attribut data-famille posé par la coquille).
+   RSSI). Limité aux pages des familles Organisation et Pilotage (attribut data-famille posé par la coquille) ;
+   surtitre vert pour Organisation, bleu pour Pilotage, comme le menu.
    ======================================================================== */
-html[data-style='verre'] .app-main[data-famille='organisation']:has(> .page > .page-header) {
+html[data-style='verre']
+  .app-main:is([data-famille='organisation'], [data-famille='pilotage']):has(> .page > .page-header) {
   display: flex;
   flex-direction: column;
   gap: var(--mantine-spacing-lg);
 }
-html[data-style='verre'] .app-main[data-famille='organisation'] > .page:has(> .page-header) {
+html[data-style='verre']
+  .app-main:is([data-famille='organisation'], [data-famille='pilotage'])
+  > .page:has(> .page-header) {
   display: contents;
 }
-html[data-style='verre'] .app-main[data-famille='organisation']:has(> .page > .page-header)::before {
+html[data-style='verre']
+  .app-main:is([data-famille='organisation'], [data-famille='pilotage']):has(> .page > .page-header)::before {
   order: -30;
   margin-bottom: calc(var(--mantine-spacing-lg) * -1 + 0.2rem);
   content: attr(data-famille-libelle);
@@ -1513,18 +1518,20 @@ html[data-style='verre'] .app-main[data-famille='organisation']:has(> .page > .p
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-html[data-style='verre'] .app-main[data-famille='organisation'] > .page > .page-header {
+html[data-style='verre'] .app-main:is([data-famille='organisation'], [data-famille='pilotage']) > .page > .page-header {
   order: -20;
 }
-html[data-style='verre'] .app-main[data-famille='organisation']:has(> .page > .page-header) > .entete-module {
+html[data-style='verre']
+  .app-main:is([data-famille='organisation'], [data-famille='pilotage']):has(> .page > .page-header)
+  > .entete-module {
   order: -10;
 }
 html[data-style='verre']
-  .app-main[data-famille='organisation']:has(> .page > .page-header)
+  .app-main:is([data-famille='organisation'], [data-famille='pilotage']):has(> .page > .page-header)
   > :not(.entete-module, .page) {
   order: -40;
 }
-html[data-style='verre'] .app-main[data-famille='organisation'] .page-header h1 {
+html[data-style='verre'] .app-main:is([data-famille='organisation'], [data-famille='pilotage']) .page-header h1 {
   color: var(--verre-texte-fort);
   font-size: 1.75rem;
   font-weight: 700;
@@ -1605,6 +1612,20 @@ html[data-style='verre'] .app-main[data-famille='organisation'] .pr-lane-header 
   color: var(--verre-texte-fort);
   font-size: 1rem;
   font-weight: 700;
+}
+
+/* Pilotage : surtitre bleu ; Revues de direction, les trois temps en panneaux de verre (maquette 38). */
+html[data-style='verre'] .app-main[data-famille='pilotage']:has(> .page > .page-header)::before {
+  color: var(--verre-bleu);
+}
+html[data-style='verre'] .app-main[data-famille='pilotage'] .revue-temps {
+  padding: 1rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: var(--verre-rayon);
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre-douce);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
 }
 
 /* ========================================================================

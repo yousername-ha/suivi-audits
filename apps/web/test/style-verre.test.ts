@@ -54,7 +54,7 @@ describe('style « Verre »', () => {
     expect(verre).toContain("html[data-style='verre'] .auth-connexion .auth-carte--valider {");
   });
 
-  it('lot 2, Organisation : famille de la page posée par la coquille, en-tête et compteurs habillés en style « Verre »', () => {
+  it('lots 2 et 3, Organisation et Pilotage : famille de la page posée par la coquille, en-tête et compteurs habillés en style « Verre »', () => {
     const layout = lire('../src/components/Layout.tsx');
     expect(layout).toContain('data-famille={familleDeLaPage}');
     expect(layout).toContain('data-famille-libelle={localiser(loc.pathname)?.famille.label}');
