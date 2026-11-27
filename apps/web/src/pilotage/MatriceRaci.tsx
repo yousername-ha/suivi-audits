@@ -40,6 +40,9 @@ import {
 const AUCUNE = '';
 const OPTIONS = [{ value: AUCUNE, label: '—' }, ...RACI_LETTRES.map((l) => ({ value: l, label: l }))];
 const cle = (id: string) => ['grc', 'fournisseurs-raci', id];
+/** Clé et adresse de la matrice d'un fournisseur, partagées avec le pied de la fiche « Verre » (auteur de la modification). */
+export const cleMatriceRaci = cle;
+export const urlMatriceRaci = (id: string) => `/api/suppliers/${encodeURIComponent(id)}/raci`;
 
 /** Légende de la maquette. */
 export function LegendeRaci() {
@@ -217,7 +220,7 @@ export function MatriceRaciFournisseur({
     [brouillon, setBrouillon] = useState<{ version: number; contenu: ContenuRaci } | null>(null),
     [erreur, setErreur] = useState<unknown>(null),
     [envoi, setEnvoi] = useState(false);
-  const url = `/api/suppliers/${encodeURIComponent(fournisseurId)}/raci`;
+  const url = urlMatriceRaci(fournisseurId);
   const lue = useQuery({ queryKey: cle(fournisseurId), queryFn: () => get<MatriceRaciReponse>(url) });
   const matrice = lue.data?.matrice ?? null;
   const contenu: ContenuRaci | null =

@@ -25,7 +25,8 @@ import { FREQUENCES_CONTROLE, TYPES_CERTIFICAT, jourParis, partSaas } from '@sui
 import { DataTable, StatusChip } from '@suivi/ui';
 import { api, get, post } from '../api';
 import { ErrorAlert } from '../components/common';
-import { useCan } from '../session';
+import { useCan, useMe } from '../session';
+import { FicheFournisseurVerre, TitreFicheVerre, type OngletFiche } from './FicheFournisseurVerre';
 import { FournisseursStudio, PuceFournisseur } from './FournisseursStudio';
 import { GroupesDuFournisseurSection } from './GroupesDuFournisseur';
 import { MatriceRaciFournisseur } from './MatriceRaci';
@@ -95,12 +96,14 @@ const LIBELLE_CHAMP: Record<ChampFournisseur, string> = {
 export function Fournisseurs() {
   const can = useCan(),
     qc = useQueryClient(),
+    verre = useMe().appearance.style === 'verre',
     modifier = can('fournisseurs', 'modifier'),
     [nom, setNom] = useState<string | null>(null),
     [evaluer, setEvaluer] = useState<Fournisseur | null>(null),
     [historique, setHistorique] = useState<Fournisseur | null>(null),
     [perimetres, setPerimetres] = useState<Fournisseur | null>(null),
     [fiche, setFiche] = useState<Fournisseur | null>(null),
+    [ongletFiche, setOngletFiche] = useState<OngletFiche>('fiche'),
     [filtre, setFiltre] = useState('all'),
     [type, setType] = useState('all'),
     [recherche, setRecherche] = useState(''),
@@ -134,7 +137,15 @@ export function Fournisseurs() {
      l'onglet « Machines et responsabilités ». Un identifiant inconnu n'ouvre rien. */
   const ficheAdresse = tous.find((f) => f.id === params.get('fiche')) ?? null,
     ficheOuverte = fiche ?? ficheAdresse,
-    ongletInitial = !fiche && ficheAdresse && params.get('onglet') === 'machines' ? 'responsabilites' : 'fiche';
+    ongletInitial: OngletFiche = fiche
+      ? ongletFiche
+      : ficheAdresse && params.get('onglet') === 'machines'
+        ? 'responsabilites'
+        : 'fiche';
+  const ouvrirFiche = (f: Fournisseur, onglet: OngletFiche = 'fiche') => {
+    setOngletFiche(onglet);
+    setFiche(f);
+  };
   const fermerFiche = () => {
     setFiche(null);
     if (params.has('fiche') || params.has('onglet')) {
@@ -182,11 +193,13 @@ export function Fournisseurs() {
         onFiltre={setFiltre}
         onType={setType}
         onCreer={() => setNom('')}
-        onFiche={setFiche}
+        onFiche={(f) => ouvrirFiche(f)}
         onEvaluer={setEvaluer}
         onHistorique={setHistorique}
         onPerimetres={setPerimetres}
         cellule={cellule}
+        verre={verre}
+        onRaci={(f) => ouvrirFiche(f, 'responsabilites')}
       />
       <Modal opened={nom !== null} onClose={() => setNom(null)} title="Ajouter un fournisseur">
         <Stack>
@@ -206,7 +219,16 @@ export function Fournisseurs() {
         opened={!!ficheOuverte}
         onClose={fermerFiche}
         size="xl"
-        title={ficheOuverte ? `Fiche de ${ficheOuverte.name}` : ''}
+        classNames={verre ? { content: 'fsv-fiche-fenetre fiche-defilement' } : undefined}
+        title={
+          !ficheOuverte ? (
+            ''
+          ) : verre ? (
+            <TitreFicheVerre nom={ficheOuverte.name} id={ficheOuverte.id} />
+          ) : (
+            `Fiche de ${ficheOuverte.name}`
+          )
+        }
       >
         {ficheOuverte && (
           <FicheFournisseur
@@ -214,6 +236,12 @@ export function Fournisseurs() {
             fournisseur={ficheOuverte}
             modifiable={modifier}
             ongletInitial={ongletInitial}
+            verre={verre}
+            onEvaluer={() => {
+              const f = ficheOuverte;
+              fermerFiche();
+              setEvaluer(f);
+            }}
             onDone={fermerFiche}
           />
         )}
@@ -258,16 +286,21 @@ function controlesTypes(hds: boolean): ControleFournisseur[] {
 }
 
 /** Fiche d'un fournisseur : identité, certificats et contrôles périodiques (mêmes informations que l'outil de suivi) ;
-    onglet « Machines et responsabilités » : matrice RACI (ADR 0113). */
+    onglet « Machines et responsabilités » : matrice RACI (ADR 0113). Style « Verre » : mêmes champs et mêmes écritures,
+    répartis dans les quatre onglets du dessin validé par le RSSI le 27/11/2026 (FicheFournisseurVerre). */
 function FicheFournisseur({
   fournisseur,
   modifiable,
   ongletInitial = 'fiche',
+  verre = false,
+  onEvaluer,
   onDone,
 }: {
   fournisseur: Fournisseur;
   modifiable: boolean;
-  ongletInitial?: 'fiche' | 'responsabilites';
+  ongletInitial?: OngletFiche;
+  verre?: boolean;
+  onEvaluer: () => void;
   onDone: () => void;
 }) {
   const qc = useQueryClient(),
@@ -325,8 +358,215 @@ function FicheFournisseur({
       setEnvoi(false);
     }
   };
+  const identite = (
+    <>
+      <Group grow align="flex-start">
+        <TextInput label="Nom" disabled={!modifiable} value={nom} onChange={(e) => setNom(e.currentTarget.value)} />
+        <Stack gap="xs">
+          <Checkbox
+            label="Service SaaS"
+            disabled={!modifiable}
+            checked={saas}
+            onChange={(e) => setSaas(e.currentTarget.checked)}
+          />
+          <Checkbox
+            label="Fournisseur critique"
+            description="Affiché aussi sur le périmètre fournisseur relié à cette fiche."
+            disabled={!modifiable}
+            checked={critique}
+            onChange={(e) => setCritique(e.currentTarget.checked)}
+          />
+        </Stack>
+      </Group>
+      <Group grow align="flex-start">
+        <TextInput
+          label="Rattachement (annuaire)"
+          disabled={!modifiable}
+          value={rattachement}
+          onChange={(e) => setRattachement(e.currentTarget.value)}
+        />
+        <TextInput
+          label="Contact"
+          disabled={!modifiable}
+          value={contact}
+          onChange={(e) => setContact(e.currentTarget.value)}
+        />
+      </Group>
+      <Textarea
+        label="Notes"
+        autosize
+        minRows={2}
+        disabled={!modifiable}
+        value={notes}
+        onChange={(e) => setNotes(e.currentTarget.value)}
+      />
+      {fournisseur.mfa !== 'Oui' && (
+        <Alert>
+          {fournisseur.mfa === 'Non' ? 'MFA non activée.' : 'MFA non confirmée.'} Activer la MFA ou documenter une
+          mesure de réduction du risque.
+        </Alert>
+      )}
+    </>
+  );
+  const certificats = (
+    <>
+      <Text fw={600}>Certificats</Text>
+      {!certs.length && (
+        <Text size="sm">
+          {fournisseur.hds === 'Oui' || fournisseur.critical === 'Oui'
+            ? 'Certificat attendu (fournisseur critique ou hébergeur HDS).'
+            : 'Aucun certificat enregistré.'}
+        </Text>
+      )}
+      {certs.map((c, i) => (
+        <Group key={i} align="flex-end" wrap="wrap">
+          <Select
+            label="Certificat"
+            allowDeselect={false}
+            disabled={!modifiable}
+            data={[...TYPES_CERTIFICAT]}
+            value={(TYPES_CERTIFICAT as readonly string[]).includes(c.type) ? c.type : 'Autre'}
+            onChange={(v) => majCert(i, { type: v ?? 'Autre' })}
+          />
+          <TextInput
+            label="Valide jusqu’au"
+            type="date"
+            disabled={!modifiable}
+            value={c.validUntil ?? ''}
+            onChange={(e) => majCert(i, { validUntil: e.currentTarget.value })}
+          />
+          <TextInput
+            label="Reçu le"
+            type="date"
+            disabled={!modifiable}
+            value={c.received ?? ''}
+            onChange={(e) => majCert(i, { received: e.currentTarget.value })}
+          />
+          <TextInput
+            label="Périmètre couvert"
+            disabled={!modifiable}
+            value={c.scope ?? ''}
+            onChange={(e) => majCert(i, { scope: e.currentTarget.value })}
+          />
+          <TextInput
+            label="Emplacement du fichier"
+            disabled={!modifiable}
+            value={c.location ?? ''}
+            onChange={(e) => majCert(i, { location: e.currentTarget.value })}
+          />
+          {modifiable && (
+            <Button variant="subtle" onClick={() => setCerts((l) => l.filter((_, k) => k !== i))}>
+              Retirer le certificat
+            </Button>
+          )}
+        </Group>
+      ))}
+      {modifiable && (
+        <Group>
+          <Button variant="default" onClick={() => setCerts((l) => [...l, { type: 'ISO 27001' }])}>
+            Ajouter un certificat
+          </Button>
+        </Group>
+      )}
+    </>
+  );
+  const controlesFiche = (
+    <>
+      <Text fw={600}>Contrôles à effectuer</Text>
+      {!controles.length && <Text size="sm">Aucun contrôle.</Text>}
+      {controles.map((c, i) => (
+        <Group key={c.id ?? i} align="flex-end" wrap="wrap">
+          <TextInput
+            label="Contrôle"
+            disabled={!modifiable}
+            value={c.t}
+            onChange={(e) => majCtl(i, { t: e.currentTarget.value })}
+          />
+          <TextInput
+            label="Référence"
+            disabled={!modifiable}
+            value={c.ref ?? ''}
+            onChange={(e) => majCtl(i, { ref: e.currentTarget.value })}
+          />
+          <Select
+            label="Fréquence"
+            allowDeselect={false}
+            disabled={!modifiable}
+            data={Object.entries(FREQUENCES_CONTROLE).map(([m, l]) => ({ value: m, label: l }))}
+            value={String(c.freq ?? 12)}
+            onChange={(v) => majCtl(i, { freq: Number(v ?? 12) })}
+          />
+          <TextInput
+            label="Dernier contrôle"
+            type="date"
+            disabled={!modifiable}
+            value={c.last ?? ''}
+            onChange={(e) => majCtl(i, { last: e.currentTarget.value })}
+          />
+          <Select
+            label="Résultat"
+            allowDeselect={false}
+            disabled={!modifiable}
+            data={[
+              { value: '', label: '–' },
+              { value: 'Conforme', label: 'Conforme' },
+              { value: 'Non conforme', label: 'Non conforme' },
+            ]}
+            value={c.result ?? ''}
+            onChange={(v) => majCtl(i, { result: v ?? '' })}
+          />
+          <TextInput
+            label="Commentaire"
+            disabled={!modifiable}
+            value={c.comment ?? ''}
+            onChange={(e) => majCtl(i, { comment: e.currentTarget.value })}
+          />
+          {modifiable && (
+            <Button variant="subtle" onClick={() => setControles((l) => l.filter((_, k) => k !== i))}>
+              Retirer le contrôle
+            </Button>
+          )}
+        </Group>
+      ))}
+      {modifiable && (
+        <Group>
+          <Button variant="default" onClick={() => setControles((l) => [...l, { t: 'Nouveau contrôle', freq: 12 }])}>
+            Ajouter un contrôle
+          </Button>
+          <Button
+            variant="default"
+            onClick={() => setControles((l) => [...l, ...controlesTypes(fournisseur.hds === 'Oui')])}
+          >
+            Ajouter les contrôles types
+          </Button>
+        </Group>
+      )}
+    </>
+  );
+  const enregistrerFiche = modifiable && (
+    <Button loading={envoi} disabled={nom.trim().length < 2} onClick={enregistrer}>
+      Enregistrer la fiche
+    </Button>
+  );
+  if (verre)
+    return (
+      <FicheFournisseurVerre
+        fournisseur={fournisseur}
+        modifiable={modifiable}
+        ongletInitial={ongletInitial}
+        erreur={<ErrorAlert error={erreur} />}
+        identite={identite}
+        certificats={certificats}
+        controles={controlesFiche}
+        criteres={<CriteresDuFournisseur fournisseur={fournisseur} />}
+        historique={<HistoriqueEvaluations fournisseur={fournisseur} />}
+        enregistrer={enregistrerFiche}
+        onEvaluer={onEvaluer}
+        onDone={onDone}
+      />
+    );
   return (
-    <Tabs defaultValue={ongletInitial}>
+    <Tabs defaultValue={ongletInitial === 'responsabilites' ? 'responsabilites' : 'fiche'}>
       <Tabs.List>
         <Tabs.Tab value="fiche">Fiche</Tabs.Tab>
         <Tabs.Tab value="responsabilites">Machines et responsabilités</Tabs.Tab>
@@ -334,193 +574,16 @@ function FicheFournisseur({
       <Tabs.Panel value="fiche" pt="md">
         <Stack>
           <ErrorAlert error={erreur} />
-          <Group grow align="flex-start">
-            <TextInput label="Nom" disabled={!modifiable} value={nom} onChange={(e) => setNom(e.currentTarget.value)} />
-            <Stack gap="xs">
-              <Checkbox
-                label="Service SaaS"
-                disabled={!modifiable}
-                checked={saas}
-                onChange={(e) => setSaas(e.currentTarget.checked)}
-              />
-              <Checkbox
-                label="Fournisseur critique"
-                description="Affiché aussi sur le périmètre fournisseur relié à cette fiche."
-                disabled={!modifiable}
-                checked={critique}
-                onChange={(e) => setCritique(e.currentTarget.checked)}
-              />
-            </Stack>
-          </Group>
-          <Group grow align="flex-start">
-            <TextInput
-              label="Rattachement (annuaire)"
-              disabled={!modifiable}
-              value={rattachement}
-              onChange={(e) => setRattachement(e.currentTarget.value)}
-            />
-            <TextInput
-              label="Contact"
-              disabled={!modifiable}
-              value={contact}
-              onChange={(e) => setContact(e.currentTarget.value)}
-            />
-          </Group>
-          <Textarea
-            label="Notes"
-            autosize
-            minRows={2}
-            disabled={!modifiable}
-            value={notes}
-            onChange={(e) => setNotes(e.currentTarget.value)}
-          />
-          {fournisseur.mfa !== 'Oui' && (
-            <Alert>
-              {fournisseur.mfa === 'Non' ? 'MFA non activée.' : 'MFA non confirmée.'} Activer la MFA ou documenter une
-              mesure de réduction du risque.
-            </Alert>
-          )}
+          {identite}
           <CriteresDuFournisseur fournisseur={fournisseur} />
-          <Text fw={600}>Certificats</Text>
-          {!certs.length && (
-            <Text size="sm">
-              {fournisseur.hds === 'Oui' || fournisseur.critical === 'Oui'
-                ? 'Certificat attendu (fournisseur critique ou hébergeur HDS).'
-                : 'Aucun certificat enregistré.'}
-            </Text>
-          )}
-          {certs.map((c, i) => (
-            <Group key={i} align="flex-end" wrap="wrap">
-              <Select
-                label="Certificat"
-                allowDeselect={false}
-                disabled={!modifiable}
-                data={[...TYPES_CERTIFICAT]}
-                value={(TYPES_CERTIFICAT as readonly string[]).includes(c.type) ? c.type : 'Autre'}
-                onChange={(v) => majCert(i, { type: v ?? 'Autre' })}
-              />
-              <TextInput
-                label="Valide jusqu’au"
-                type="date"
-                disabled={!modifiable}
-                value={c.validUntil ?? ''}
-                onChange={(e) => majCert(i, { validUntil: e.currentTarget.value })}
-              />
-              <TextInput
-                label="Reçu le"
-                type="date"
-                disabled={!modifiable}
-                value={c.received ?? ''}
-                onChange={(e) => majCert(i, { received: e.currentTarget.value })}
-              />
-              <TextInput
-                label="Périmètre couvert"
-                disabled={!modifiable}
-                value={c.scope ?? ''}
-                onChange={(e) => majCert(i, { scope: e.currentTarget.value })}
-              />
-              <TextInput
-                label="Emplacement du fichier"
-                disabled={!modifiable}
-                value={c.location ?? ''}
-                onChange={(e) => majCert(i, { location: e.currentTarget.value })}
-              />
-              {modifiable && (
-                <Button variant="subtle" onClick={() => setCerts((l) => l.filter((_, k) => k !== i))}>
-                  Retirer le certificat
-                </Button>
-              )}
-            </Group>
-          ))}
-          {modifiable && (
-            <Group>
-              <Button variant="default" onClick={() => setCerts((l) => [...l, { type: 'ISO 27001' }])}>
-                Ajouter un certificat
-              </Button>
-            </Group>
-          )}
-          <Text fw={600}>Contrôles à effectuer</Text>
-          {!controles.length && <Text size="sm">Aucun contrôle.</Text>}
-          {controles.map((c, i) => (
-            <Group key={c.id ?? i} align="flex-end" wrap="wrap">
-              <TextInput
-                label="Contrôle"
-                disabled={!modifiable}
-                value={c.t}
-                onChange={(e) => majCtl(i, { t: e.currentTarget.value })}
-              />
-              <TextInput
-                label="Référence"
-                disabled={!modifiable}
-                value={c.ref ?? ''}
-                onChange={(e) => majCtl(i, { ref: e.currentTarget.value })}
-              />
-              <Select
-                label="Fréquence"
-                allowDeselect={false}
-                disabled={!modifiable}
-                data={Object.entries(FREQUENCES_CONTROLE).map(([m, l]) => ({ value: m, label: l }))}
-                value={String(c.freq ?? 12)}
-                onChange={(v) => majCtl(i, { freq: Number(v ?? 12) })}
-              />
-              <TextInput
-                label="Dernier contrôle"
-                type="date"
-                disabled={!modifiable}
-                value={c.last ?? ''}
-                onChange={(e) => majCtl(i, { last: e.currentTarget.value })}
-              />
-              <Select
-                label="Résultat"
-                allowDeselect={false}
-                disabled={!modifiable}
-                data={[
-                  { value: '', label: '–' },
-                  { value: 'Conforme', label: 'Conforme' },
-                  { value: 'Non conforme', label: 'Non conforme' },
-                ]}
-                value={c.result ?? ''}
-                onChange={(v) => majCtl(i, { result: v ?? '' })}
-              />
-              <TextInput
-                label="Commentaire"
-                disabled={!modifiable}
-                value={c.comment ?? ''}
-                onChange={(e) => majCtl(i, { comment: e.currentTarget.value })}
-              />
-              {modifiable && (
-                <Button variant="subtle" onClick={() => setControles((l) => l.filter((_, k) => k !== i))}>
-                  Retirer le contrôle
-                </Button>
-              )}
-            </Group>
-          ))}
-          {modifiable && (
-            <Group>
-              <Button
-                variant="default"
-                onClick={() => setControles((l) => [...l, { t: 'Nouveau contrôle', freq: 12 }])}
-              >
-                Ajouter un contrôle
-              </Button>
-              <Button
-                variant="default"
-                onClick={() => setControles((l) => [...l, ...controlesTypes(fournisseur.hds === 'Oui')])}
-              >
-                Ajouter les contrôles types
-              </Button>
-            </Group>
-          )}
+          {certificats}
+          {controlesFiche}
           {/* Pied déclaré : la fiche est rangée dans un onglet, hors de la structure reconnue d'office. */}
           <Group justify="flex-end" className="fenetre-actions">
             <Button variant="default" onClick={onDone}>
               Fermer
             </Button>
-            {modifiable && (
-              <Button loading={envoi} disabled={nom.trim().length < 2} onClick={enregistrer}>
-                Enregistrer la fiche
-              </Button>
-            )}
+            {enregistrerFiche}
           </Group>
         </Stack>
       </Tabs.Panel>

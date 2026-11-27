@@ -836,6 +836,7 @@ export function ObjectifsProcessus({ smsi, vue = 'processus' }: { smsi: string; 
           processus={rProcessus}
           modifiable={modifiable}
           onClose={() => setOuvert(null)}
+          synthese={objectifs.flatMap((o) => o.indicateurs).find((x) => x.id === ouvert.id)}
           automatique={(() => {
             const i = ligne(rIndicateurs, ouvert.id)!;
             const fait = objectifs.flatMap((o) => o.indicateurs).find((x) => x.id === ouvert.id);

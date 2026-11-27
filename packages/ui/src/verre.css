@@ -3031,6 +3031,775 @@ html[data-style='verre'] .ris-carte .matrice-cellule:has(.matrice-choix[aria-pre
 }
 
 /* ========================================================================
+   ORGANISATION ET PILOTAGE : FOURNISSEURS ET INDICATEURS (dessins validés par le RSSI le 27/11/2026)
+   - Liste des fournisseurs compacte qui se déplie (FournisseursVerre.tsx) : une ligne par fournisseur, accès au format
+     « SSO ✓ · MFA ✕ » (coche verte, croix rose, tiret sans objet), la ligne dépliée et son détail forment une seule
+     plaque de verre bordée de violet.
+   - Fiche du fournisseur (FicheFournisseurVerre.tsx) : pastille aux initiales, puces, groupes de machines en cartes,
+     matrice RACI dans un panneau.
+   - Fenêtre d'un indicateur (FicheIndicateurVerre.tsx) : verre teinté sarcelle → violet, série et graphique, saisie
+     d'une mesure dans un panneau violet.
+   Teintes : jetons du verre (redéfinis par le fond bleu nuit et le mode clair), mélangées par color-mix.
+   ======================================================================== */
+html[data-style='verre'] .fournisseurs-studio[data-presentation='verre'] .fs-stat > strong {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* Pastilles aux initiales : six teintes décoratives, texte de la teinte sur un fond de la même teinte. */
+html[data-style='verre'] .fsv-initiales {
+  --fsv-teinte: var(--verre-violet);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid color-mix(in srgb, var(--fsv-teinte) 55%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--fsv-teinte) 26%, transparent);
+  box-shadow: var(--verre-gelule-reflet);
+  color: var(--fsv-teinte);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+html[data-style='verre'] .fsv-initiales[data-teinte='1'] {
+  --fsv-teinte: var(--verre-bleu);
+}
+html[data-style='verre'] .fsv-initiales[data-teinte='2'] {
+  --fsv-teinte: var(--verre-sarcelle);
+}
+html[data-style='verre'] .fsv-initiales[data-teinte='3'] {
+  --fsv-teinte: var(--verre-ambre);
+}
+html[data-style='verre'] .fsv-initiales[data-teinte='4'] {
+  --fsv-teinte: var(--verre-rose);
+}
+html[data-style='verre'] .fsv-initiales[data-teinte='5'] {
+  --fsv-teinte: var(--verre-vert);
+}
+html[data-style='verre'] .fsv-initiales--grand {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 1rem;
+  font-size: 1.125rem;
+}
+
+/* Puces d'état (bon, attention, problème, information, neutre). */
+html[data-style='verre'] .fsv-puce {
+  --fsv-ton: var(--verre-secondaire);
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1875rem 0.625rem;
+  border: 1px solid color-mix(in srgb, var(--fsv-ton) 50%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fsv-ton) 16%, transparent);
+  color: var(--fsv-ton);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+html[data-style='verre'] .fsv-puce[data-tone='good'] {
+  --fsv-ton: var(--verre-vert);
+}
+html[data-style='verre'] .fsv-puce[data-tone='bad'] {
+  --fsv-ton: var(--verre-rouge);
+}
+html[data-style='verre'] .fsv-puce[data-tone='warn'] {
+  --fsv-ton: var(--verre-ambre);
+}
+html[data-style='verre'] .fsv-puce[data-tone='info'] {
+  --fsv-ton: var(--verre-sarcelle);
+}
+html[data-style='verre'] .fsv-puces {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+/* Accès : « SSO ✓ · MFA ✕ ». */
+html[data-style='verre'] .fsv-acces {
+  color: var(--verre-texte-fort);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+html[data-style='verre'] .fsv-signe {
+  font-weight: 700;
+}
+html[data-style='verre'] .fsv-signe[data-tone='good'] {
+  color: var(--verre-vert);
+}
+html[data-style='verre'] .fsv-signe[data-tone='bad'] {
+  color: var(--verre-rouge);
+}
+html[data-style='verre'] .fsv-signe[data-tone='warn'] {
+  color: var(--verre-ambre);
+}
+html[data-style='verre'] .fsv-signe[data-tone='neutral'] {
+  color: var(--verre-secondaire);
+}
+
+/* Lignes de la liste : identité, colonnes compactes, chevron rond. */
+html[data-style='verre'] .data-table table.fsv-table {
+  width: 100%;
+  min-width: 52rem;
+  table-layout: fixed;
+}
+html[data-style='verre'] .data-table table.fsv-table > tbody > tr.fsv-ligne {
+  cursor: pointer;
+}
+html[data-style='verre'] .data-table table.fsv-table > tbody > tr > td {
+  padding-block: 0.6875rem;
+  vertical-align: middle;
+}
+/* Rangée uniforme (dessin) : la première cellule ne porte ni flou ni fond plus sombre ; en-têtes alignés à gauche. */
+html[data-style='verre'] .data-table table.fsv-table > tbody > tr > td:first-child {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html[data-style='verre'] .fournisseurs-studio .data-table table.fsv-table > thead th {
+  width: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: start;
+  white-space: nowrap;
+}
+html[data-style='verre'] .fournisseurs-studio .data-table table.fsv-table > thead th:first-child {
+  width: 28%;
+}
+html[data-style='verre'] .fournisseurs-studio .data-table table.fsv-table > thead th:nth-child(2) {
+  width: 15%;
+}
+html[data-style='verre'] .fournisseurs-studio .data-table table.fsv-table > thead th:nth-child(3) {
+  width: 18%;
+}
+html[data-style='verre'] .fournisseurs-studio .data-table table.fsv-table > thead th:nth-child(4) {
+  width: 19%;
+}
+html[data-style='verre'] .fournisseurs-studio .data-table table.fsv-table > thead th:nth-child(5) {
+  width: 14%;
+}
+html[data-style='verre'] .fournisseurs-studio .data-table table.fsv-table > thead th:last-child {
+  width: 4.5rem;
+}
+html[data-style='verre'] .fsv-edition .mantine-Input-input {
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .fsv-identite {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+html[data-style='verre'] .fsv-nom {
+  display: block;
+  color: var(--verre-texte-fort);
+  font-size: 0.90625rem;
+  font-weight: 700;
+}
+html[data-style='verre'] :is(.fsv-sous, .fsv-retard) {
+  display: block;
+  margin-top: 0.125rem;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+html[data-style='verre'] .fsv-retard {
+  color: var(--verre-rouge);
+  font-weight: 600;
+}
+html[data-style='verre'] .fsv-prochain {
+  color: var(--verre-texte-menu);
+  font-weight: 600;
+}
+html[data-style='verre'] .fsv-vide {
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] .fsv-col-chevron {
+  width: 3.5rem;
+  text-align: end;
+}
+html[data-style='verre'] .fsv-chevron {
+  width: 2.125rem;
+  height: 2.125rem;
+}
+html[data-style='verre'] .fsv-chevron__icone {
+  width: 0.875rem;
+  height: 0.875rem;
+  transition: transform var(--suivi-motion);
+}
+html[data-style='verre'] .fsv-chevron[aria-expanded='true'] {
+  border-color: var(--verre-primaire-bord);
+  background: color-mix(in srgb, var(--verre-violet) 26%, transparent);
+}
+html[data-style='verre'] .fsv-chevron[aria-expanded='true'] .fsv-chevron__icone {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-style='verre'] .fsv-chevron__icone {
+    transition: none;
+  }
+}
+
+/* Ligne dépliée et détail : une seule plaque, bord violet, collée à la ligne (même décalage que l'espacement des lignes). */
+html[data-style='verre'] .data-table table.fsv-table > tbody > tr[aria-expanded='true'] > td,
+html[data-style='verre'] .data-table table.fsv-table > tbody > tr.fsv-detail > td {
+  border-color: color-mix(in srgb, var(--verre-violet) 38%, transparent);
+  background: var(--verre-ligne-survol);
+}
+html[data-style='verre'] .data-table table.fsv-table > tbody > tr[aria-expanded='true'] > td:first-child {
+  border-end-start-radius: 0;
+}
+html[data-style='verre'] .data-table table.fsv-table > tbody > tr[aria-expanded='true'] > td:last-child {
+  border-end-end-radius: 0;
+}
+html[data-style='verre'] .data-table table.fsv-table > tbody > tr[aria-expanded='true'] > td {
+  border-block-end-color: transparent;
+}
+html[data-style='verre'] .data-table table.fsv-table > tbody > tr.fsv-detail > td {
+  padding: 0 0.875rem 0.875rem;
+  border-block-start: 0;
+  border-inline: 1px solid color-mix(in srgb, var(--verre-violet) 38%, transparent);
+  border-radius: 0 0 var(--verre-rayon-ligne) var(--verre-rayon-ligne);
+  cursor: default;
+  transform: translateY(-0.4375rem);
+}
+html[data-style='verre'] .fsv-detail__blocs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 1.625rem;
+  padding: 0.875rem 0.25rem 0.75rem;
+  border-block-start: 1px solid var(--verre-ligne-trait);
+}
+@media (max-width: 64em) {
+  html[data-style='verre'] .fsv-detail__blocs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+html[data-style='verre'] .fsv-bloc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+html[data-style='verre'] .fsv-bloc :is(p, h3) {
+  margin: 0;
+}
+html[data-style='verre'] .fsv-etiquette {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .fsv-texte {
+  color: var(--verre-secondaire);
+  font-size: 0.84375rem;
+  font-weight: 500;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+html[data-style='verre'] .fsv-texte--fort {
+  color: var(--verre-texte-fort);
+  font-weight: 600;
+}
+html[data-style='verre'] .fsv-texte--discret {
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .fsv-ligne-puce {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--verre-texte-fort);
+  font-size: 0.84375rem;
+  font-weight: 600;
+}
+html[data-style='verre'] .fsv-certificat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+html[data-style='verre'] .fsv-alerte {
+  color: var(--verre-ambre);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .fsv-alerte[data-tone='bad'] {
+  color: var(--verre-rouge);
+}
+html[data-style='verre'] .fsv-controles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .fsv-controles > li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.625rem;
+  color: var(--verre-secondaire);
+  font-size: 0.84375rem;
+  font-weight: 500;
+}
+html[data-style='verre'] .fsv-prevu {
+  color: var(--verre-texte-fort);
+  font-weight: 600;
+  white-space: nowrap;
+}
+html[data-style='verre'] .fsv-score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  color: var(--verre-secondaire);
+  font-size: 0.84375rem;
+  font-weight: 500;
+}
+html[data-style='verre'] .fsv-score__chiffre {
+  color: var(--verre-texte-fort);
+  font-size: 1.75rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+html[data-style='verre'] .fsv-edition {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 0.75rem;
+  margin-top: 0.375rem;
+}
+html[data-style='verre'] .fsv-edition__champ {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .fsv-edition__champ .mantine-Select-root {
+  width: 6.5rem;
+}
+html[data-style='verre'] .fsv-detail__commandes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.125rem 0.25rem 0;
+}
+html[data-style='verre'] .fsv-commande {
+  height: 2.25rem;
+  font-size: 0.84375rem;
+}
+html[data-style='verre'] .fsv-detail__note {
+  margin-inline-start: auto;
+}
+
+/* Fiche du fournisseur : en-tête aux initiales, puces, cartes des groupes, panneau de la matrice RACI. */
+html[data-style='verre'] .mantine-Modal-content.fsv-fiche-fenetre .mantine-Modal-header {
+  border-block-end: 0;
+}
+html[data-style='verre'] .fsv-fiche-titre {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .fsv-fiche__puces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: calc(var(--mantine-spacing-md) * -1) 0 0 4.25rem;
+}
+/* Pied des fenêtres à onglets (fiche du fournisseur, indicateur) : leur corps défile sous le pied, qui reste lisible sur
+   un verre presque opaque au lieu de la plaque translucide des fenêtres découpées en parties. */
+html[data-style='verre']
+  .mantine-Modal-root
+  .mantine-Modal-content:is(.fsv-fiche-fenetre, .indv-fenetre)
+  .mantine-Modal-body
+  .mantine-Group-root.fenetre-actions:is(.fsv-fiche__pied, .indv-pied) {
+  background: var(--verre-surface-opaque);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html[data-style='verre'] .fsv-onglet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+}
+html[data-style='verre'] .fsv-fiche .fs-chip {
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .fsv-fiche-modif {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+html[data-style='verre'] .fsv-groupes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .fsv-groupe {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: 1.125rem;
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet);
+}
+html[data-style='verre'] .fsv-groupe__nom {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+html[data-style='verre'] .fsv-groupe__nom > strong {
+  color: var(--verre-texte-fort);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+html[data-style='verre'] .fsv-groupe__failles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin: 0;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+  text-align: end;
+}
+html[data-style='verre'] .fsv-groupe__nombre {
+  font-size: 1.625rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+html[data-style='verre'] .fsv-groupe__failles[data-tone='bad'] .fsv-groupe__nombre {
+  color: var(--verre-rouge);
+}
+html[data-style='verre'] .fsv-groupe__failles[data-tone='good'] .fsv-groupe__nombre {
+  color: var(--verre-vert);
+}
+html[data-style='verre'] .fsv-groupe > a {
+  color: var(--verre-violet);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .mantine-Modal-content.fsv-fiche-fenetre {
+  --modal-size: 72rem;
+}
+/* Matrice RACI : la matrice défile dans son cadre plutôt que d'écraser ses cases ; contrôle sur une ligne. */
+html[data-style='verre'] .fsv-raci .mantine-Table-table {
+  min-width: 60rem;
+}
+html[data-style='verre'] .fsv-raci :is(.mantine-Badge-root, .mantine-Badge-label) {
+  width: max-content;
+  max-width: none;
+  white-space: nowrap;
+}
+html[data-style='verre'] .fsv-raci {
+  padding: 1.125rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: 1.25rem;
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet);
+}
+html[data-style='verre'] .fsv-raci .mantine-Alert-root[data-variant='light'] {
+  border: 1px solid color-mix(in srgb, var(--verre-ambre) 35%, transparent);
+  border-radius: 0.75rem;
+}
+
+/* Fenêtre d'un indicateur : verre teinté sarcelle → violet, en-tête sans filet, onglets à droite des puces. */
+html[data-style='verre'] .mantine-Modal-content.indv-fenetre {
+  --modal-size: 70rem;
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--verre-sarcelle) 22%, transparent),
+      transparent 32%,
+      transparent 75%,
+      color-mix(in srgb, var(--verre-violet) 16%, transparent)
+    ),
+    var(--verre-surface-flottante);
+}
+html[data-style='verre'] .mantine-Modal-content.indv-fenetre .mantine-Modal-header {
+  border-block-end: 0;
+}
+html[data-style='verre'] .indv-titre {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.875rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+html[data-style='verre'] .indv-pastille {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border: 1px solid color-mix(in srgb, var(--verre-sarcelle) 50%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--verre-sarcelle) 24%, transparent);
+  box-shadow: var(--verre-gelule-reflet);
+  color: var(--verre-sarcelle);
+}
+html[data-style='verre'] .indv-pastille > svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+html[data-style='verre'] .indv-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+html[data-style='verre'] .indv-puces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0 4.125rem;
+}
+html[data-style='verre'] .indv-puce {
+  --indv-ton: var(--verre-secondaire);
+  padding: 0.1875rem 0.625rem;
+  border: 1px solid color-mix(in srgb, var(--indv-ton) 40%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--indv-ton) 14%, transparent);
+  color: var(--verre-texte-fort);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .indv-puce[data-ton='code'] {
+  --indv-ton: var(--verre-violet);
+}
+html[data-style='verre'] :is(.indv-puce, .indv-chiffre__valeur)[data-etat='ok'] {
+  --indv-ton: var(--verre-vert);
+}
+html[data-style='verre'] :is(.indv-puce, .indv-chiffre__valeur)[data-etat='ko'] {
+  --indv-ton: var(--verre-rouge);
+}
+html[data-style='verre'] :is(.indv-puce, .indv-chiffre__valeur)[data-etat='undef'] {
+  --indv-ton: var(--verre-ambre);
+}
+html[data-style='verre'] .indv-puce[data-etat] {
+  color: var(--indv-ton);
+}
+html[data-style='verre'] .indv-suivi {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 1.125rem;
+  align-items: start;
+}
+@media (max-width: 56em) {
+  html[data-style='verre'] .indv-suivi {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+html[data-style='verre'] .indv-gauche {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+  min-width: 0;
+}
+html[data-style='verre'] .indv-bloc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1.125rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: 1.375rem;
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet);
+}
+html[data-style='verre'] .indv-bloc__tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+html[data-style='verre'] .indv-bloc__titre {
+  margin: 0;
+  color: var(--verre-secondaire);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+html[data-style='verre'] .indv-chiffre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.875rem;
+  margin: 0;
+}
+html[data-style='verre'] .indv-chiffre__valeur {
+  --indv-ton: var(--verre-texte-fort);
+  color: var(--indv-ton);
+  font-size: 4rem;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1;
+}
+html[data-style='verre'] .indv-chiffre__cible {
+  color: var(--verre-secondaire);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+html[data-style='verre'] .indv-tendance {
+  margin-inline-start: auto;
+  padding: 0.1875rem 0.625rem;
+  border: 1px solid var(--verre-bord-fort);
+  border-radius: 999px;
+  background: var(--verre-survol);
+  color: var(--verre-texte-fort);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .indv-tendance[data-favorable='true'] {
+  color: var(--verre-vert);
+}
+html[data-style='verre'] .indv-tendance[data-favorable='false'] {
+  color: var(--verre-rouge);
+}
+html[data-style='verre'] .indv-graphique__cadre {
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+html[data-style='verre'] .indv-graphique__svg {
+  display: block;
+}
+html[data-style='verre'] .indv-zone-cible {
+  fill: color-mix(in srgb, var(--verre-sarcelle) 12%, transparent);
+}
+html[data-style='verre'] .indv-degrade-haut {
+  stop-color: var(--verre-sarcelle);
+  stop-opacity: 0.45;
+}
+html[data-style='verre'] .indv-degrade-bas {
+  stop-color: var(--verre-sarcelle);
+  stop-opacity: 0.02;
+}
+html[data-style='verre'] .indv-courbe {
+  stroke: var(--verre-sarcelle);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+html[data-style='verre'] .indv-ligne-cible {
+  stroke: color-mix(in srgb, var(--verre-sarcelle) 70%, transparent);
+  stroke-width: 1.5;
+}
+html[data-style='verre'] .indv-etiquette-cible {
+  fill: var(--verre-sarcelle);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .indv-point {
+  fill: var(--verre-sarcelle);
+}
+html[data-style='verre'] .indv-point--dernier {
+  fill: var(--verre-texte-fort);
+  stroke: var(--verre-sarcelle);
+  stroke-width: 2;
+}
+html[data-style='verre'] .indv-axe {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0.375rem 0 0;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+html[data-style='verre'] :is(.indv-vide, .indv-note) {
+  margin: 0;
+  color: var(--verre-secondaire);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+html[data-style='verre'] .indv-definition {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 0;
+}
+html[data-style='verre'] .indv-definition dt {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+html[data-style='verre'] .indv-definition dd {
+  margin: 0;
+  color: var(--verre-texte-fort);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+html[data-style='verre'] .indv-saisie {
+  border-color: color-mix(in srgb, var(--verre-violet) 30%, var(--verre-bord));
+  background:
+    linear-gradient(165deg, color-mix(in srgb, var(--verre-violet) 22%, transparent), transparent 80%),
+    var(--verre-surface);
+}
+html[data-style='verre'] .indv-saisie .indv-bloc__titre {
+  color: var(--verre-violet);
+}
+html[data-style='verre'] .indv-alerte {
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--verre-ambre) 40%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--verre-ambre) 12%, transparent);
+  color: var(--verre-ambre);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .indv-enregistrer {
+  height: 2.875rem;
+}
+html[data-style='verre'] .indv-dernieres {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .indv-dernieres > li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--verre-secondaire);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+html[data-style='verre'] .indv-dernieres strong {
+  color: var(--verre-texte-fort);
+  font-weight: 600;
+}
+
+/* ========================================================================
    REPLIS : transparence réduite, contraste renforcé, navigateur sans backdrop-filter, couleurs forcées
    ======================================================================== */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

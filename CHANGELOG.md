@@ -51,6 +51,24 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Modifié
 
+- **Fournisseurs et fenêtre d'un indicateur aux dessins validés, dans le style « Verre »** (décisions du RSSI du
+  27/11/2026 ; les styles « Sauge » et « Clair bleuté » restent inchangés). Liste des fournisseurs compacte qui se déplie :
+  colonnes Fournisseur (pastille aux initiales, nom, type et rattachement), Accès au format « SSO ✓ · MFA ✕ » (coche
+  verte, croix rose, tiret sans objet ; valeur dite en toutes lettres aux lecteurs d'écran), Criticité et HDS, Évaluation
+  courante (résumé des réponses oui / non / non évalué, sans note), Prochain contrôle ; un clic sur la ligne ou sur son
+  chevron (`aria-expanded`) la déplie vers le bas, une seule ligne à la fois : accès et rattachement, certificats et
+  échéance (alerte à 90 jours, même seuil que le serveur), contrôles périodiques, dernière évaluation (critères satisfaits,
+  conclusion, date, périmètres), puis « Ouvrir la fiche », « Nouvelle évaluation », « Qui décide quoi », historique et
+  périmètres ; l'édition directe de SSO, MFA, criticité et HDS y reste. Tuiles en « oui / services SaaS ». Fiche du
+  fournisseur : pastille aux initiales, puces (critique, hébergeur HDS, certificat à traiter), onglets « Fiche »,
+  « Contrats et certificats », « Évaluations » (critères rattachés, nouvelle évaluation, historique) et « Machines et
+  responsabilités » (groupes de machines en cartes, matrice RACI), pied avec l'auteur et la date de la dernière
+  modification de la matrice RACI. Fenêtre d'un indicateur : en-tête (code, état, origine de la valeur), onglets
+  « Suivi », « Définition », « Historique » ; Suivi : valeur courante, cible, variation entre les deux dernières mesures,
+  graphique sur 6 mois, 12 mois ou toute la série (zone où la cible est respectée), définition résumée, « Saisir une
+  mesure » avec une alerte si la valeur saisie manque la cible, « Dernières mesures » ; lien vers les données d'un
+  indicateur calculé. Mêmes champs, droits et écritures ; aucune route d'API ni migration. (session « Projet audit_suivi
+  Coeur »)
 - **Gestion des risques aux dessins validés** (Registre des risques, Études EBIOS RM, Cartographie des risques ; décisions
   du RSSI du 27/11/2026), dans tous les styles, en verre dans le style « Verre » (surtitre « Risques », titre, description,
   onglets). Toute échelle affichée (niveaux, couleurs, libellés, plages de score, seuil d'acceptation) vient de la méthode

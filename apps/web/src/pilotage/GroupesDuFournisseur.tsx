@@ -2,7 +2,8 @@
    validée par le RSSI le 23/11/2026 ; route du lot GRP-MACHINES, ADR 0100). Sans aucun détail de machine : nom et description
    du groupe, machines que la personne lit, mention quand d'autres lui échappent, failles critiques ouvertes de ces seules
    machines (décision du RSSI du 23/11/2026), lien vers le parc filtré sur le groupe. Section affichée seulement avec le droit
-   de lire le module Vulnérabilités ; le rattachement se fait depuis la fenêtre du groupe. */
+   de lire le module Vulnérabilités ; le rattachement se fait depuis la fenêtre du groupe. Style « Verre » (dessin validé
+   par le RSSI le 27/11/2026) : mêmes informations en cartes (nom, machines, failles critiques ouvertes, « Voir le parc »). */
 import { Stack, Table, Text, Title, VisuallyHidden } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
@@ -25,7 +26,18 @@ export function libelleMachinesLues(n: number, horsLecture: boolean): string {
 /** Module désactivé (409) ou droit retiré entre-temps (403) : la section se tait plutôt que d'afficher une erreur. */
 const silencieuse = (e: unknown) => e instanceof ApiError && (e.status === 403 || e.status === 409);
 
-export function GroupesDuFournisseurSection({ fournisseurId }: { fournisseurId: string }) {
+/** Failles critiques ouvertes : « 1 faille critique ouverte », « 3 failles critiques ouvertes ». */
+export const libelleFaillesCritiques = (n: number) =>
+  n > 1 ? 'failles critiques ouvertes' : 'faille critique ouverte';
+
+export function GroupesDuFournisseurSection({
+  fournisseurId,
+  cartes = false,
+}: {
+  fournisseurId: string;
+  /** Présentation en cartes (style « Verre »). */
+  cartes?: boolean;
+}) {
   const can = useCan();
   const visible = can('vulnerabilites', 'lire') && can('fournisseurs', 'lire');
   const q = useQuery({
@@ -48,7 +60,27 @@ export function GroupesDuFournisseurSection({ fournisseurId }: { fournisseurId: 
       {q.isSuccess && !groupes.length && (
         <Text size="sm">Aucun groupe de machines n’est rattaché à ce fournisseur.</Text>
       )}
-      {groupes.length > 0 && (
+      {groupes.length > 0 && cartes && (
+        <ul className="fsv-groupes" aria-label="Groupes de machines maintenus par le fournisseur">
+          {groupes.map((g) => (
+            <li className="fsv-groupe" key={g.id}>
+              <div className="fsv-groupe__nom">
+                <strong>{g.nom}</strong>
+                <span>{libelleMachinesLues(g.machinesLues, g.horsLecture)}</span>
+                {g.description && <span>{g.description}</span>}
+              </div>
+              <p className="fsv-groupe__failles" data-tone={g.faillesCritiquesOuvertes ? 'bad' : 'good'}>
+                <span className="fsv-groupe__nombre">{g.faillesCritiquesOuvertes}</span>
+                <span>{libelleFaillesCritiques(g.faillesCritiquesOuvertes)}</span>
+              </p>
+              <Link to={lienParcDuGroupe(g.id)} aria-label={`Voir le parc du groupe « ${g.nom} »`}>
+                Voir le parc
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      {groupes.length > 0 && !cartes && (
         <DataTable label="Groupes de machines maintenus par le fournisseur">
           <Table>
             <Table.Thead>

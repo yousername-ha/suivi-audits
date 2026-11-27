@@ -2,10 +2,12 @@
    registre réel ; requêtes, droits et écritures restent dans Fournisseurs.tsx. Vue compacte par défaut, détail à la
    demande, lignes ouvrables (même fiche que le bouton « Fiche »), états colorés. Recherche et filtres des listes (refonte
    Verre, 27/11/2026) : vues, recherche (nom, identifiant, rattachement, contact, notes), puces Situation et Type avec
-   leur nombre ; l'ajout au bout de la ligne.
+   leur nombre ; l'ajout au bout de la ligne. Style « Verre » (dessin validé par le RSSI le 27/11/2026) : tuiles en
+   « oui / services SaaS », liste compacte qui se déplie vers le bas (FournisseursVerre.tsx) au lieu du tableau.
    Les couleurs sont portées par des classes (neon-fournisseurs.css), jamais par un style en ligne (CSP stricte). */
 import { ActionIcon, Button, Table, Tooltip } from '@mantine/core';
 import { useState, type MouseEvent, type ReactNode } from 'react';
+import { jourParis } from '@suivi/shared';
 import { APropos, DataTable, retenirFocusFiche } from '@suivi/ui';
 import { BoiteOutils, Surligne, type CriterePuces } from '../components/BarreOutils';
 import { ficheCliquable } from '../fiche-cliquable';
@@ -20,6 +22,7 @@ import {
   type Fournisseur,
   type TonFournisseur,
 } from './fournisseurs-types';
+import { ListeFournisseursVerre } from './FournisseursVerre';
 
 const icones: Record<string, ReactNode> = {
   compact: <path d="M7 6h14M7 12h14M7 18h14M3 6h.01M3 12h.01M3 18h.01" />,
@@ -177,6 +180,10 @@ export interface FournisseursStudioProps {
   onHistorique: (f: Fournisseur) => void;
   onPerimetres: (f: Fournisseur) => void;
   cellule: (f: Fournisseur, champ: ChampFournisseur) => ReactNode;
+  /** Style « Verre » : liste compacte qui se déplie (dessin validé par le RSSI le 27/11/2026). */
+  verre?: boolean;
+  /** « Qui décide quoi » : fiche ouverte sur l'onglet « Machines et responsabilités » (style « Verre »). */
+  onRaci?: (f: Fournisseur) => void;
 }
 
 const TYPES = [
@@ -220,7 +227,8 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
       onChange: (v) => p.onType(v ?? 'all'),
     },
   ];
-  const pourcentage = (s: { saas: number; pct: number }) => (p.disponible && s.saas ? `${s.pct} %` : '—');
+  const pourcentage = (s: { oui: number; saas: number; pct: number }) =>
+    !p.disponible || !s.saas ? '—' : p.verre ? `${s.oui} / ${s.saas}` : `${s.pct} %`;
   const indicateurs = [
     {
       libelle: 'Répertoire',
@@ -239,20 +247,24 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
     {
       libelle: 'SaaS avec MFA',
       valeur: pourcentage(p.mfa),
-      detail: `${p.mfa.oui} / ${p.mfa.saas} services SaaS`,
+      detail: p.verre ? `${p.mfa.saas - p.mfa.oui} sans MFA confirmée` : `${p.mfa.oui} / ${p.mfa.saas} services SaaS`,
       icone: 'shield',
       ton: 'vert',
     },
     {
       libelle: 'SaaS avec SSO',
       valeur: pourcentage(p.sso),
-      detail: `${p.sso.oui} / ${p.sso.saas} services SaaS`,
+      detail: p.verre ? `${p.sso.saas - p.sso.oui} sans SSO confirmé` : `${p.sso.oui} / ${p.sso.saas} services SaaS`,
       icone: 'key',
       ton: 'bleu',
     },
   ] as const;
   return (
-    <section className="fournisseurs-studio" aria-label="Registre des fournisseurs">
+    <section
+      className="fournisseurs-studio"
+      data-presentation={p.verre ? 'verre' : undefined}
+      aria-label="Registre des fournisseurs"
+    >
       <APropos>
         Les fournisseurs et leurs évaluations appartiennent à l’organisation, pas à un périmètre : un fournisseur évalué
         l’est de la même façon dans tous les périmètres où il est rattaché. Les critères sont définis par vos soins ;
@@ -275,10 +287,14 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
           titre={p.disponible ? `${p.tous.length} fournisseur${p.tous.length > 1 ? 's' : ''}` : undefined}
           total={p.disponible ? p.tous.length : 0}
           affiches={p.affiches.length}
-          vues={[
-            { value: 'compact', label: 'Vue compacte', icone: <Icone nom="compact" /> },
-            { value: 'detail', label: 'Vue détaillée', icone: <Icone nom="detail" /> },
-          ]}
+          vues={
+            p.verre
+              ? undefined
+              : [
+                  { value: 'compact', label: 'Vue compacte', icone: <Icone nom="compact" /> },
+                  { value: 'detail', label: 'Vue détaillée', icone: <Icone nom="detail" /> },
+                ]
+          }
           vue={densite}
           onVue={(v) => setDensite(v === 'detail' ? 'detail' : 'compact')}
           recherche={{
@@ -307,143 +323,161 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
           {' · '}Évaluations communes à tous les périmètres · Les critères sont définis par l’organisation ; aucun seuil
           ni score global n’est ajouté.
           {p.disponible && ` · ${p.tous.filter((f) => f.mfa !== 'Oui').length} sans MFA confirmée`}
+          {p.verre && p.affiches.length > 0 && ' · Cliquez sur une ligne pour la déplier.'}
         </p>
-        <DataTable label="Fournisseurs et applications, défilement horizontal possible">
-          <Table className="fs-table" data-density={densite}>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th scope="col">
-                  Fournisseur ou application <span className="fs-th-sub">Type · rattachement</span>
-                </Table.Th>
-                <Table.Th scope="col">
-                  Accès <span className="fs-th-sub">SSO · MFA</span>
-                </Table.Th>
-                <Table.Th scope="col">
-                  Critique <span className="fs-th-sub">Hébergeur HDS</span>
-                </Table.Th>
-                <Table.Th scope="col">Certificats</Table.Th>
-                <Table.Th scope="col">
-                  Contrôles <span className="fs-th-sub">Prochain</span>
-                </Table.Th>
-                <Table.Th scope="col">
-                  Évaluation courante <span className="fs-th-sub">Critères rattachés · Périmètres</span>
-                </Table.Th>
-                <Table.Th scope="col" className="col-actions">
-                  <span className="fs-visually-hidden">Actions</span>
-                </Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {p.affiches.map((f) => (
-                <Table.Tr
-                  key={f.id}
-                  className="fs-row"
-                  data-attention={attentionFournisseur(f)}
-                  {...ficheCliquable(() => p.onFiche(f), `Afficher la fiche de ${f.name}`)}
-                >
-                  <Table.Td>
-                    <div className="fs-identity">
-                      <span className="fs-glyph" aria-hidden="true">
-                        <Icone nom={f.saas ? 'cloud' : 'box'} />
-                      </span>
-                      <div>
-                        <strong>
-                          <Surligne texte={f.name} recherche={p.recherche} />
-                        </strong>
+        {p.verre ? (
+          p.affiches.length > 0 && (
+            <ListeFournisseursVerre
+              affiches={p.affiches}
+              modifier={p.modifier}
+              recherche={p.recherche}
+              aujourdhui={jourParis()}
+              onFiche={p.onFiche}
+              onEvaluer={p.onEvaluer}
+              onHistorique={p.onHistorique}
+              onPerimetres={p.onPerimetres}
+              onRaci={p.onRaci ?? p.onFiche}
+              cellule={p.cellule}
+            />
+          )
+        ) : (
+          <DataTable label="Fournisseurs et applications, défilement horizontal possible">
+            <Table className="fs-table" data-density={densite}>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th scope="col">
+                    Fournisseur ou application <span className="fs-th-sub">Type · rattachement</span>
+                  </Table.Th>
+                  <Table.Th scope="col">
+                    Accès <span className="fs-th-sub">SSO · MFA</span>
+                  </Table.Th>
+                  <Table.Th scope="col">
+                    Critique <span className="fs-th-sub">Hébergeur HDS</span>
+                  </Table.Th>
+                  <Table.Th scope="col">Certificats</Table.Th>
+                  <Table.Th scope="col">
+                    Contrôles <span className="fs-th-sub">Prochain</span>
+                  </Table.Th>
+                  <Table.Th scope="col">
+                    Évaluation courante <span className="fs-th-sub">Critères rattachés · Périmètres</span>
+                  </Table.Th>
+                  <Table.Th scope="col" className="col-actions">
+                    <span className="fs-visually-hidden">Actions</span>
+                  </Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {p.affiches.map((f) => (
+                  <Table.Tr
+                    key={f.id}
+                    className="fs-row"
+                    data-attention={attentionFournisseur(f)}
+                    {...ficheCliquable(() => p.onFiche(f), `Afficher la fiche de ${f.name}`)}
+                  >
+                    <Table.Td>
+                      <div className="fs-identity">
+                        <span className="fs-glyph" aria-hidden="true">
+                          <Icone nom={f.saas ? 'cloud' : 'box'} />
+                        </span>
+                        <div>
+                          <strong>
+                            <Surligne texte={f.name} recherche={p.recherche} />
+                          </strong>
+                          <small>
+                            {f.saas ? 'SaaS' : 'Hors SaaS'} · {f.rattachement || f.id}
+                          </small>
+                          <small className="fs-context">
+                            <Surligne texte={f.notes || 'Aucune note renseignée'} recherche={p.recherche} />
+                          </small>
+                        </div>
+                      </div>
+                    </Table.Td>
+                    <Table.Td>
+                      <div className="fs-cell">
+                        <span className="fs-pair">
+                          <span aria-hidden="true">SSO</span>
+                          {p.cellule(f, 'sso')}
+                        </span>
+                        <span className="fs-pair">
+                          <span aria-hidden="true">MFA</span>
+                          {p.cellule(f, 'mfa')}
+                        </span>
+                      </div>
+                    </Table.Td>
+                    <Table.Td>
+                      <div className="fs-cell">
+                        <span className="fs-pair">
+                          <span aria-hidden="true">Crit.</span>
+                          {p.cellule(f, 'critical')}
+                        </span>
+                        <span className="fs-pair">
+                          <span aria-hidden="true">HDS</span>
+                          {p.cellule(f, 'hds')}
+                        </span>
+                      </div>
+                    </Table.Td>
+                    <Table.Td>
+                      <div className="fs-cell">
+                        {f.certificateState[0] ? (
+                          <PuceFournisseur ton={tonCertificats(f.certificateState[1])}>
+                            {f.certificateState[0]}
+                          </PuceFournisseur>
+                        ) : (
+                          <PuceFournisseur>–</PuceFournisseur>
+                        )}
                         <small>
-                          {f.saas ? 'SaaS' : 'Hors SaaS'} · {f.rattachement || f.id}
-                        </small>
-                        <small className="fs-context">
-                          <Surligne texte={f.notes || 'Aucune note renseignée'} recherche={p.recherche} />
+                          {f.certs.length} certificat{f.certs.length > 1 ? 's' : ''}
                         </small>
                       </div>
-                    </div>
-                  </Table.Td>
-                  <Table.Td>
-                    <div className="fs-cell">
-                      <span className="fs-pair">
-                        <span aria-hidden="true">SSO</span>
-                        {p.cellule(f, 'sso')}
-                      </span>
-                      <span className="fs-pair">
-                        <span aria-hidden="true">MFA</span>
-                        {p.cellule(f, 'mfa')}
-                      </span>
-                    </div>
-                  </Table.Td>
-                  <Table.Td>
-                    <div className="fs-cell">
-                      <span className="fs-pair">
-                        <span aria-hidden="true">Crit.</span>
-                        {p.cellule(f, 'critical')}
-                      </span>
-                      <span className="fs-pair">
-                        <span aria-hidden="true">HDS</span>
-                        {p.cellule(f, 'hds')}
-                      </span>
-                    </div>
-                  </Table.Td>
-                  <Table.Td>
-                    <div className="fs-cell">
-                      {f.certificateState[0] ? (
-                        <PuceFournisseur ton={tonCertificats(f.certificateState[1])}>
-                          {f.certificateState[0]}
-                        </PuceFournisseur>
-                      ) : (
-                        <PuceFournisseur>–</PuceFournisseur>
-                      )}
-                      <small>
-                        {f.certs.length} certificat{f.certs.length > 1 ? 's' : ''}
-                      </small>
-                    </div>
-                  </Table.Td>
-                  <Table.Td>
-                    <div className="fs-cell">
-                      <Controles f={f} />
-                    </div>
-                  </Table.Td>
-                  <Table.Td>
-                    <div className="fs-cell">
-                      <Evaluation f={f} />
-                      <CriteresLigne f={f} />
-                      <small>{f.scopes.length ? `${f.scopes.length} rattaché(s)` : 'Aucun périmètre'}</small>
-                    </div>
-                  </Table.Td>
-                  <Table.Td className="col-actions">
-                    <div className="fs-actions">
-                      <Action
-                        libelle={`Fiche du fournisseur ${f.name}`}
-                        info="Fiche"
-                        icone="fiche"
-                        onClick={() => p.onFiche(f)}
-                      />
-                      {p.modifier && (
+                    </Table.Td>
+                    <Table.Td>
+                      <div className="fs-cell">
+                        <Controles f={f} />
+                      </div>
+                    </Table.Td>
+                    <Table.Td>
+                      <div className="fs-cell">
+                        <Evaluation f={f} />
+                        <CriteresLigne f={f} />
+                        <small>{f.scopes.length ? `${f.scopes.length} rattaché(s)` : 'Aucun périmètre'}</small>
+                      </div>
+                    </Table.Td>
+                    <Table.Td className="col-actions">
+                      <div className="fs-actions">
                         <Action
-                          libelle={`Évaluer le fournisseur ${f.name}`}
-                          info="Évaluer"
-                          icone="evaluer"
-                          onClick={() => p.onEvaluer(f)}
+                          libelle={`Fiche du fournisseur ${f.name}`}
+                          info="Fiche"
+                          icone="fiche"
+                          onClick={() => p.onFiche(f)}
                         />
-                      )}
-                      <Action
-                        libelle={`Historique des évaluations de ${f.name}`}
-                        info="Historique des évaluations"
-                        icone="historique"
-                        onClick={() => p.onHistorique(f)}
-                      />
-                      <Action
-                        libelle={`Périmètres de rattachement de ${f.name}`}
-                        info="Périmètres de rattachement"
-                        icone="perimetres"
-                        onClick={() => p.onPerimetres(f)}
-                      />
-                    </div>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </DataTable>
+                        {p.modifier && (
+                          <Action
+                            libelle={`Évaluer le fournisseur ${f.name}`}
+                            info="Évaluer"
+                            icone="evaluer"
+                            onClick={() => p.onEvaluer(f)}
+                          />
+                        )}
+                        <Action
+                          libelle={`Historique des évaluations de ${f.name}`}
+                          info="Historique des évaluations"
+                          icone="historique"
+                          onClick={() => p.onHistorique(f)}
+                        />
+                        <Action
+                          libelle={`Périmètres de rattachement de ${f.name}`}
+                          info="Périmètres de rattachement"
+                          icone="perimetres"
+                          onClick={() => p.onPerimetres(f)}
+                        />
+                      </div>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </DataTable>
+        )}
         {!p.affiches.length && (
           <p className="fs-empty">
             {p.chargement
