@@ -50,6 +50,7 @@ import { Perimetres } from '../pilotage/Perimetres';
 import { Fournisseurs } from '../pilotage/Fournisseurs';
 import { CriteresFournisseurs } from '../pilotage/CriteresFournisseurs';
 import { FournisseursPerimetre } from '../pilotage/FournisseursPerimetre';
+import { QuiDecideQuoi } from '../pilotage/QuiDecideQuoi';
 import { Journey } from '../pilotage/Journey';
 import { Relations } from '../grc/Relations';
 import { pilotageReport } from '../pilotage/report';
@@ -348,6 +349,8 @@ export function PilotagePage() {
                     onSchedule={setSchedule}
                   />
                 )}
+                {/* « Qui décide quoi » (ADR 0115) : matrice RACI des décisions, sous la liste des fiches du registre. */}
+                {section === 'responsabilites' && <QuiDecideQuoi key={smsi} smsi={smsi} />}
                 {['continuite', 'exercices', 'preuves', 'controles', 'amelioration', 'revues'].includes(section) &&
                   can('import_export', 'exporter') && <ExportRegister smsi={smsi} kind={config.kind} />}
               </>

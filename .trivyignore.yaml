@@ -9,4 +9,6 @@ vulnerabilities:
       go-jose v3 est embarqué par Caddy et n'a aucun correctif publié (la v4 est corrigée en 4.1.6 et fixée dans
       docker/web.Dockerfile). Déni de service à l'analyse de clés JWK RSA, sans effet sur la confidentialité ni l'intégrité.
       Décision du RSSI du 28/10/2026 : accepter jusqu'au 27/11/2026 ou jusqu'à la sortie d'un Caddy sans go-jose v3.
-    expired_at: 2026-11-27
+      Prolongée par décision du RSSI du 27/11/2026 : jusqu'au 27/12/2026, aux mêmes conditions (Caddy 2.11.9, dernière
+      version publiée, embarque toujours go-jose v3 ; seule la branche de développement de Caddy l'a retiré).
+    expired_at: 2026-12-27

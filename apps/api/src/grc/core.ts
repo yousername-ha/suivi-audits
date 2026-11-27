@@ -54,6 +54,7 @@ import { GrcCouverture } from './couverture.js';
 import type { NotificationsMetier } from '../notifications-metier.js';
 import { GrcSuppliers } from './suppliers.js';
 import { GrcRaciFournisseurs } from './raci-fournisseurs.js';
+import { GrcRaciDecisions } from './raci-decisions.js';
 import { GrcRisks } from './risks.js';
 import { GrcStudyConfig } from './study-config.js';
 import { LegacyTasks } from './legacy-tasks.js';
@@ -238,6 +239,8 @@ export class Grc {
   readonly suppliers: GrcSuppliers;
   /** Matrice RACI des fournisseurs (ADR 0113). */
   readonly raciFournisseurs: GrcRaciFournisseurs;
+  /** Matrice « Qui décide quoi » des rôles et responsabilités, une par périmètre (ADR 0115). */
+  readonly raciDecisions: GrcRaciDecisions;
   readonly risks: GrcRisks;
   readonly studyConfig: GrcStudyConfig;
   readonly tasks: GrcTasks;
@@ -262,6 +265,7 @@ export class Grc {
     this.evaluations = new GrcEvaluationsExigences(this);
     this.suppliers = new GrcSuppliers(this);
     this.raciFournisseurs = new GrcRaciFournisseurs(this);
+    this.raciDecisions = new GrcRaciDecisions(this);
     this.risks = new GrcRisks(this);
     this.studyConfig = new GrcStudyConfig(this);
     this.tasks = new GrcTasks(this);

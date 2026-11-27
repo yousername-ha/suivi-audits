@@ -69,6 +69,15 @@ Caddy épinglée à la dernière publiée et ouvre une demande quand le correcti
 Il ne modifie aucun fichier. Première exception : go-jose v3 dans Caddy, jusqu'au 27/11/2026 ; go-jose v4 est fixé à 4.1.6
 dans `docker/web.Dockerfile`.
 
+## Addendum du 27/11/2026 — prolongation de l'exception go-jose v3
+
+L'exception go-jose v3 (CVE-2026-116587) a expiré le 27/11/2026 : le scan des images a échoué comme prévu. Réexamen du même
+jour : Caddy 2.11.9, dernière version publiée, embarque toujours go-jose v3 ; seule la branche de développement de Caddy
+l'a retiré (son `go.mod` ne cite plus que go-jose v4). L'exposition est inchangée : déni de service à l'analyse de clés JWK
+RSA, sans effet sur la confidentialité ni l'intégrité. Décision du RSSI du 27/11/2026 : prolonger l'exception de 30 jours,
+jusqu'au 27/12/2026, ou jusqu'à la sortie d'un Caddy sans go-jose v3 si elle est plus proche ; la veille Caddy reste le
+signal de retrait.
+
 ## Addendum du 28/10/2026 — images de base épinglées par empreinte
 
 Les images tierces des Dockerfiles (`node`, `caddy`, `golang`, `alpine`) et du compose de production (`postgres` 17 et 18,

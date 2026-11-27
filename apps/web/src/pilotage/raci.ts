@@ -1,6 +1,8 @@
 /* Matrice RACI d'un fournisseur (ADR 0113) : opérations pures sur la matrice en cours de saisie (ajout, renommage, retrait
    et ordre des lignes et des colonnes, lettre d'une case). Aucune requête ni aucun composant React ici. La règle « un A,
-   au moins un R » est celle du paquet partagé (controleRaci), la même que celle du serveur. */
+   au moins un R » est celle du paquet partagé (controleRaci), la même que celle du serveur. Les mêmes opérations servent
+   à la matrice « Qui décide quoi » des rôles et responsabilités (ADR 0115, qui-decide-quoi.ts) : décisions en lignes,
+   rôles du registre en colonnes. */
 import {
   RACI_ACTEUR_FOURNISSEUR,
   RACI_BORNES,
@@ -19,6 +21,24 @@ export interface ContenuRaci {
 export interface ColonneRaci extends ElementRaci {
   fournisseur: boolean;
 }
+/** Colonne de la grille commune (TableauRaci, matrice « Qui décide quoi ») : renommable et retirable ou non ; une colonne
+    « retirée » (rôle qui a quitté le registre) n'accepte plus que l'effacement de ses lettres. */
+export interface ColonneGrilleRaci extends ElementRaci {
+  renommable: boolean;
+  retirable: boolean;
+  retiree?: boolean;
+}
+/** Colonnes de la matrice d'un fournisseur pour la grille : celle du fournisseur est fixe, les fonctions se renomment et
+    se retirent. */
+export const colonnesGrilleFournisseur = (
+  c: Pick<ContenuRaci, 'acteurs'>,
+  nomFournisseur: string,
+): ColonneGrilleRaci[] =>
+  colonnesRaci(c, nomFournisseur).map(({ fournisseur, ...col }) => ({
+    ...col,
+    renommable: !fournisseur,
+    retirable: !fournisseur,
+  }));
 
 export const colonnesRaci = (c: Pick<ContenuRaci, 'acteurs'>, nomFournisseur: string): ColonneRaci[] => [
   { id: RACI_ACTEUR_FOURNISSEUR, libelle: nomFournisseur, fournisseur: true },
@@ -37,7 +57,7 @@ export function avecLettre(c: ContenuRaci, activite: string, acteur: string, let
 }
 
 /** Identifiant libre « <préfixe>-<n> », jamais « fournisseur ». */
-export function identifiantLibre(prefixe: 'activite' | 'acteur', pris: readonly string[]): string {
+export function identifiantLibre(prefixe: 'activite' | 'acteur' | 'decision', pris: readonly string[]): string {
   const vus = new Set(pris);
   let n = 1;
   while (vus.has(`${prefixe}-${n}`)) n++;
@@ -49,8 +69,12 @@ export const peutAjouterActeur = (c: ContenuRaci) => c.acteurs.length < RACI_BOR
 
 export function ajouterActivite(c: ContenuRaci, libelle = 'Nouvelle activité'): ContenuRaci {
   if (!peutAjouterActivite(c)) return c;
+  return ajouterLigne(c, 'activite', libelle);
+}
+/** Ajoute une ligne en fin de matrice, sous un identifiant libre ; la borne est contrôlée par l'appelant. */
+export function ajouterLigne(c: ContenuRaci, prefixe: 'activite' | 'decision', libelle: string): ContenuRaci {
   const id = identifiantLibre(
-    'activite',
+    prefixe,
     c.activites.map((a) => a.id),
   );
   return { ...c, activites: [...c.activites, { id, libelle }] };

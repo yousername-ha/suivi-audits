@@ -1,5 +1,14 @@
 import { z } from 'zod';
-import { jourParis, GrcRef, GRC_MODULES, PilotageRecord, Recurrence, SuppressionBody } from '@suivi/shared';
+import {
+  jourParis,
+  GrcRef,
+  GRC_MODULES,
+  MatriceDecisionsBody,
+  MatriceDecisionsReponse,
+  PilotageRecord,
+  Recurrence,
+  SuppressionBody,
+} from '@suivi/shared';
 import type { Session } from '../auth.js';
 import { Pilotage } from '../pilotage/service.js';
 import { PilotageObjectifs } from '../pilotage/objectifs.js';
@@ -11,7 +20,7 @@ import { PorteeLecture } from '../acces/portee.js';
 import { horsRegistresMasques } from '../grc/registres.js';
 import { HttpError } from '../http/errors.js';
 import { route } from '../http/route.js';
-import { requireIfMatch } from '../http/concurrency.js';
+import { requireIfMatch, setEtag } from '../http/concurrency.js';
 import { classeur, docx, pptx } from '../export/office.js';
 import { modeleRevue } from '../export/revue.js';
 const base = { tags: ['Pilotage'], access: 'metier' as const };
@@ -19,6 +28,44 @@ const scope = z.object({ smsi: z.uuid() });
 const cleObjectifs = z.enum(['processes', 'objectives', 'indicators']);
 const recordBody = z.object({ ref: GrcRef, decision: PilotageRecord }).strict();
 export const pilotageRoutes = [
+  /* Matrice « Qui décide quoi » des rôles et responsabilités (ADR 0115) : une par périmètre, vide au départ. */
+  route({
+    tags: ['Pilotage'],
+    access: 'pilotage:lire' as const,
+    method: 'GET',
+    url: '/api/grc/:smsi/pilotage/responsabilites/raci',
+    params: scope,
+    response: MatriceDecisionsReponse,
+    summary:
+      'Matrice « Qui décide quoi » du périmètre (décisions × rôles du registre) et contrôle de la règle « un A, au moins un R »',
+    handler: async ({ svc, s, params, reply }) => {
+      const r = await svc.grc.raciDecisions.lire(params.smsi, (s as Session).user);
+      if (r.matrice) setEtag(reply, r.matrice.version);
+      return r;
+    },
+  }),
+  route({
+    tags: ['Pilotage'],
+    access: 'pilotage:modifier' as const,
+    method: 'PUT',
+    url: '/api/grc/:smsi/pilotage/responsabilites/raci',
+    params: scope,
+    body: MatriceDecisionsBody,
+    response: MatriceDecisionsReponse,
+    summary:
+      'Créer (If-Match "0") ou remplacer la matrice « Qui décide quoi » du périmètre ; la règle est signalée, jamais bloquante',
+    handler: async ({ svc, s, params, body, req, reply, ip }) => {
+      const r = await svc.grc.raciDecisions.enregistrer(
+        params.smsi,
+        body,
+        requireIfMatch(req),
+        (s as Session).user,
+        ip,
+      );
+      setEtag(reply, r.matrice.version);
+      return r;
+    },
+  }),
   route({
     ...base,
     method: 'GET',
