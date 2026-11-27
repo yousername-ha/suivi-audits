@@ -59,10 +59,13 @@ describe('style « Verre »', () => {
     expect(layout).toContain('data-famille={familleDeLaPage}');
     expect(layout).toContain('data-famille-libelle={localiser(loc.pathname)?.famille.label}');
     const verre = lire('../../../packages/ui/src/verre.css');
-    expect(verre).toContain(
-      "html[data-style='verre'] .app-main[data-famille='organisation'] > .page:has(> .page-header) {",
+    // Prettier coupe les longs sélecteurs : comparaison sur le texte aux blancs normalisés.
+    const plat = verre.replace(/\s+/g, ' ');
+    expect(plat).toContain(
+      "html[data-style='verre'] .app-main:is([data-famille='organisation'], [data-famille='pilotage']) > .page:has(> .page-header) {",
     );
     expect(verre).toContain('content: attr(data-famille-libelle);');
     expect(verre).toContain("html[data-style='verre'] .app-main[data-famille='organisation'] .pr-lane {");
+    expect(verre).toContain("html[data-style='verre'] .app-main[data-famille='pilotage'] .revue-temps {");
   });
 });
