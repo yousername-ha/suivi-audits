@@ -154,6 +154,12 @@ function relais() {
       res.writeHead(204).end();
       return;
     }
+    // Script du service de mise à jour, servi en production par le frontal : absent de cette pile, il est remplacé par un
+    // script vide (sinon 404 dans la console du navigateur à chaque page).
+    if (req.method === 'GET' && req.url?.split('?')[0] === '/update/client.js') {
+      res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' }).end('');
+      return;
+    }
     let t: string;
     try {
       t = await sessionCourante();
