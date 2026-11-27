@@ -54,27 +54,34 @@ export function nettoyerLibelleRaci(s: string): string {
       .trim()
   );
 }
-const IDENTIFIANT = z
+/** Identifiant d'une ligne ou d'une colonne (réutilisé par la matrice « Qui décide quoi », ADR 0115). */
+export const IdentifiantRaci = z
   .string()
   .regex(
     /^[a-z0-9][a-z0-9-]{0,39}$/,
     'Identifiant attendu : lettres minuscules, chiffres et tirets, 40 caractères au plus.',
   );
-const LIBELLE = z
+/** Libellé d'une ligne ou d'une colonne, nettoyé (réutilisé par la matrice « Qui décide quoi », ADR 0115). */
+export const LibelleRaci = z
   .string()
   .max(2000)
   .transform(nettoyerLibelleRaci)
   .pipe(
     z.string().min(1, 'Libellé vide.').max(RACI_BORNES.libelle, `Libellé limité à ${RACI_BORNES.libelle} caractères.`),
   );
-export const RaciActivite = z.object({ id: IDENTIFIANT, libelle: LIBELLE }).strict();
+export const RaciActivite = z.object({ id: IdentifiantRaci, libelle: LibelleRaci }).strict();
 export const RaciActeur = z
   .object({
-    id: IDENTIFIANT.refine((v) => v !== RACI_ACTEUR_FOURNISSEUR, 'Identifiant réservé à la colonne du fournisseur.'),
-    libelle: LIBELLE,
+    id: IdentifiantRaci.refine(
+      (v) => v !== RACI_ACTEUR_FOURNISSEUR,
+      'Identifiant réservé à la colonne du fournisseur.',
+    ),
+    libelle: LibelleRaci,
   })
   .strict();
-export const RaciCase = z.object({ activite: IDENTIFIANT, acteur: IDENTIFIANT, lettre: z.enum(RACI_LETTRES) }).strict();
+export const RaciCase = z
+  .object({ activite: IdentifiantRaci, acteur: IdentifiantRaci, lettre: z.enum(RACI_LETTRES) })
+  .strict();
 export type RaciCase = z.infer<typeof RaciCase>;
 
 /** Contenu d'une matrice, tel qu'il s'enregistre (PUT /api/suppliers/:id/raci, avec If-Match). Les acteurs sont les
@@ -162,14 +169,19 @@ export function controleRaci(m: Pick<MatriceRaciBody, 'activites' | 'acteurs' | 
   const acteurs = new Set([RACI_ACTEUR_FOURNISSEUR, ...m.acteurs.map((a) => a.id)]);
   return m.activites.map((act) => {
     const lettres = m.cases.filter((k) => k.activite === act.id && acteurs.has(k.acteur)).map((k) => k.lettre);
-    const a = lettres.filter((l) => l === 'A').length;
-    const r = lettres.filter((l) => l === 'R').length;
-    const ecarts: EcartRaci[] = [];
-    if (a === 0) ecarts.push('aucun_a');
-    if (a > 1) ecarts.push('plusieurs_a');
-    if (r === 0) ecarts.push('aucun_r');
-    return { activite: act.id, libelle: act.libelle, a, r, ecarts };
+    return { activite: act.id, libelle: act.libelle, ...regleRaci(lettres) };
   });
+}
+/** Règle d'une ligne, à partir de ses lettres : exactement un A et au moins un R. Commune à la matrice des fournisseurs
+    (controleRaci) et à la matrice « Qui décide quoi » des rôles et responsabilités (controleDecisionsRaci, ADR 0115). */
+export function regleRaci(lettres: readonly LettreRaci[]): { a: number; r: number; ecarts: EcartRaci[] } {
+  const a = lettres.filter((l) => l === 'A').length;
+  const r = lettres.filter((l) => l === 'R').length;
+  const ecarts: EcartRaci[] = [];
+  if (a === 0) ecarts.push('aucun_a');
+  if (a > 1) ecarts.push('plusieurs_a');
+  if (r === 0) ecarts.push('aucun_r');
+  return { a, r, ecarts };
 }
 /** Texte du contrôle d'une activité : « Conforme », ou ses écarts (« Aucun A, Aucun R »). */
 export function libelleControleRaci(c: Pick<ControleActiviteRaci, 'ecarts'>): string {

@@ -952,6 +952,15 @@ export interface Registres {
   responsable: ColumnType<JsonValue | null, string | null, string | null>;
 }
 
+export interface ResponsabilitesRaci {
+  smsi_id: string;
+  decisions: ColumnType<JsonValue, string, string>;
+  cases: ColumnType<JsonValue, string, string>;
+  version: Generated<number>;
+  mise_a_jour_le: ColumnType<Date, Date | string | undefined, Date | string>;
+  mise_a_jour_par: string;
+}
+
 export interface Roles {
   id: string;
   name: string;
@@ -2737,6 +2746,7 @@ export interface DB {
   recovery_codes: RecoveryCodes;
   registre_perimetres: RegistrePerimetres;
   registres: Registres;
+  responsabilites_raci: ResponsabilitesRaci;
   roles: Roles;
   schema_migrations: SchemaMigrations;
   sessions: Sessions;

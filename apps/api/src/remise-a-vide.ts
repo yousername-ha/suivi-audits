@@ -177,6 +177,8 @@ export const TABLES_TRAVAIL = [
   'sup_scope_links',
   // Matrices RACI des fournisseurs (ADR 0113) : saisies par les utilisateurs, effacées avec le registre des fournisseurs.
   'fournisseurs_raci',
+  // Matrices « Qui décide quoi » des rôles et responsabilités (ADR 0115) : saisies par les utilisateurs, une par périmètre.
+  'responsabilites_raci',
   'cfg_items',
   'cfg_versions',
   'cfg_usages',
