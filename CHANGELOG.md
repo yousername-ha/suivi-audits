@@ -12,6 +12,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Ajouté
 
+- **Essai du fond bleu nuit** (refonte Verre, demande du RSSI du 27/11/2026) : en style « Verre » et en mode sombre, un
+  bouton de l'en-tête (goutte, à côté du thème) bascule toute la plateforme entre le fond actuel et un fond bleu nuit
+  (halos bleus, verre teinté de bleu). Choix gardé dans le navigateur, pour comparer ; aucun réglage de l'instance.
 - **Style d'instance « Verre »** (refonte verre, lot 1, décision du RSSI du 26/11/2026) : troisième style de Paramètres >
   Apparence, à côté de « Référence 08 — Sauge » (défaut, inchangé) et « Clair bleuté », choisi d'un clic pour toute
   l'instance et réversible. Fond sombre à halos violet, sarcelle et ambre ; cartes, sections, fenêtres, tiroirs et listes

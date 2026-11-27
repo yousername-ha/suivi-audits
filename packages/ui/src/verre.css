@@ -138,6 +138,35 @@ html[data-style='verre'][data-mantine-color-scheme='dark'] {
   --fiche-bord: var(--verre-bord);
 }
 
+/* ---------------------------------------------------------------- Essai : fond bleu nuit (mode sombre)
+   Demande du RSSI du 27/11/2026 (branche refonte-verre) : bouton de l'en-tête (apps/web/src/fond-verre.ts) pour comparer
+   le fond actuel et un fond bleu nuit sur toute la plateforme ; halos bleus, verre teinté de bleu, creux bleu profond. */
+html[data-style='verre'][data-fond='bleu']:not([data-mantine-color-scheme='light']) {
+  --verre-fond-page: #0b1222;
+  --verre-halos:
+    radial-gradient(38% 46% at 8% 6%, rgba(37, 99, 235, 0.3), transparent 70%),
+    radial-gradient(34% 44% at 92% 12%, rgba(56, 189, 248, 0.16), transparent 70%),
+    radial-gradient(40% 50% at 60% 108%, rgba(29, 78, 216, 0.22), transparent 70%);
+  --verre-bord: rgba(147, 197, 253, 0.16);
+  --verre-surface: linear-gradient(
+    150deg,
+    rgba(96, 140, 230, 0.16),
+    rgba(40, 70, 140, 0.1) 45%,
+    rgba(60, 100, 190, 0.12)
+  );
+  --verre-surface-flottante:
+    linear-gradient(150deg, rgba(96, 140, 230, 0.16), rgba(40, 70, 140, 0.1) 45%, rgba(60, 100, 190, 0.12)),
+    rgba(14, 22, 42, 0.92);
+  --verre-surface-opaque: #121c33;
+  --verre-creux-fond: rgba(5, 12, 30, 0.4);
+  --verre-rail-fond: rgba(5, 12, 30, 0.45);
+  --verre-entete: rgba(11, 18, 34, 0.55);
+}
+html[data-style='verre'][data-fond='bleu'] .fond-bascule[aria-pressed='true'] {
+  border-color: rgba(147, 197, 253, 0.55);
+  color: #bfdbfe;
+}
+
 /* ---------------------------------------------------------------- Jetons : mode clair (verre blanc, texte foncé) */
 html[data-style='verre'][data-mantine-color-scheme='light'] {
   --verre-fond-page: #eef0f6;

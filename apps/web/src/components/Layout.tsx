@@ -51,6 +51,7 @@ import { RappelAlertesCritiques } from '../vulnerabilites/Alertes';
 import { RechercheVulnerabilites } from '../vulnerabilites/RechercheVulnerabilites';
 import { appliquerStyleFenetres } from '../fenetres';
 import { appliquerPolice } from '../police';
+import { useFondVerre } from '../fond-verre';
 
 /** Identité d'une famille pour sa teinte et son pictogramme : la même quel que soit son rang dans le menu. */
 const IDENTITE_FAMILLE: Record<FamilleId, IdentiteMenu> = {
@@ -132,6 +133,8 @@ export function Layout({ children }: { children: ReactNode }) {
   const { save } = usePreferences();
   const theme = useAffichage();
   const schema = useComputedColorScheme('light');
+  const [fond, basculerFond] = useFondVerre();
+  const essaiFond = me.appearance.style === 'verre' && schema === 'dark';
   const tablette = useMediaQuery('(min-width: 36em) and (max-width: 63.99em)');
   // Style « Verre » sur ordinateur : « Compte et administration » devient une rangée de boutons ronds à icône seule
   // (verre.css) ; le libellé reste lu par les lecteurs d'écran et s'affiche en info-bulle au survol ou au focus.
@@ -397,6 +400,27 @@ export function Layout({ children }: { children: ReactNode }) {
                   <IconeTheme />
                 </ActionIcon>
               </Tooltip>
+              {essaiFond && (
+                <Tooltip
+                  label={
+                    fond === 'bleu' ? 'Fond bleu nuit (essai) · revenir au fond actuel' : 'Essayer le fond bleu nuit'
+                  }
+                  events={{ hover: true, focus: true, touch: false }}
+                >
+                  <ActionIcon
+                    variant="default"
+                    className="theme-bascule fond-bascule"
+                    aria-label={fond === 'bleu' ? 'Revenir au fond actuel' : 'Essayer le fond bleu nuit'}
+                    aria-pressed={fond === 'bleu'}
+                    onClick={basculerFond}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                      <path d="M12 3.5c3 3.6 5.5 6.7 5.5 10a5.5 5.5 0 01-11 0c0-3.3 2.5-6.4 5.5-10z" />
+                      <path d="M9.5 14.5a2.6 2.6 0 002.5 2.4" />
+                    </svg>
+                  </ActionIcon>
+                </Tooltip>
+              )}
               {can('pilotage', 'lire') && <ClocheRappels />}
               <Text size="sm" fw={600} visibleFrom="sm" className="header-user">
                 {me.user?.displayName || me.user?.username}
