@@ -50,28 +50,50 @@ services:
 
   api:
     <<: *node
-    command: >
-      sh -c "rm -f node_modules/.installation-verre-terminee && npm i -g pnpm@10.34.6 >/dev/null 2>&1 &&
-             echo 'Copie du code dans le volume de la pile…' &&
-             find /work -mindepth 1 -name node_modules -prune -o -type f -exec rm -f {} + &&
-             cd /source && find . \( -name node_modules -o -name .git -o -name .donnees-verre \) -prune -o -type f -print |
-             tar -cf - -T - | tar -C /work -xf - && cd /work &&
-             pnpm install --frozen-lockfile && touch node_modules/.installation-verre-terminee &&
-             node -e \"const f='/dev-secrets/doc_master_key',fs=require('fs');fs.mkdirSync('/dev-secrets',{recursive:true});fs.existsSync(f)||fs.writeFileSync(f,require('crypto').randomBytes(32).toString('base64'))\" &&
-             pnpm --filter @suivi/api dev"
+    # Commandes en liste : Docker Compose les passe telles quelles au shell, sans les redécouper.
+    command:
+      - sh
+      - -c
+      - |
+        rm -f node_modules/.installation-verre-terminee
+        npm i -g pnpm@10.34.6 > /dev/null 2>&1 || exit 1
+        echo 'Copie du code dans le volume de la pile…'
+        find /work -mindepth 1 -name node_modules -prune -o -type f -exec rm -f {} + || exit 1
+        cd /source || exit 1
+        find . -name node_modules -prune -o -name .git -prune -o -name .donnees-verre -prune -o -type f -print \
+          | tar -cf - -T - | tar -C /work -xf - || exit 1
+        cd /work || exit 1
+        pnpm install --frozen-lockfile || exit 1
+        touch node_modules/.installation-verre-terminee
+        node -e "const f='/dev-secrets/doc_master_key',fs=require('fs');fs.mkdirSync('/dev-secrets',{recursive:true});fs.existsSync(f)||fs.writeFileSync(f,require('crypto').randomBytes(32).toString('base64'))" || exit 1
+        exec pnpm --filter @suivi/api dev
     depends_on:
       db: { condition: service_healthy }
 
   web:
     <<: *node
-    command: sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && until [ -f node_modules/.installation-verre-terminee ]; do sleep 2; done && pnpm --filter @suivi/web dev --host 0.0.0.0"
+    command:
+      - sh
+      - -c
+      - |
+        npm i -g pnpm@10.34.6 > /dev/null 2>&1 || exit 1
+        sleep 5
+        until [ -f node_modules/.installation-verre-terminee ] && [ -f apps/web/package.json ]; do sleep 2; done
+        exec pnpm --filter @suivi/web dev --host 0.0.0.0
     environment:
       API_URL: http://api:8080
     depends_on: [api]
 
   porte:
     <<: *node
-    command: sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && echo 'Porte en attente de l’API (premier démarrage, installation des dépendances, quelques minutes)…' && until wget -q -O /dev/null http://api:8080/healthz 2>/dev/null; do sleep 3; done && pnpm --filter @suivi/api exec tsx --conditions=source ../../scripts/evaluation-verre/porte.ts"
+    command:
+      - sh
+      - -c
+      - |
+        npm i -g pnpm@10.34.6 > /dev/null 2>&1 || exit 1
+        echo 'Porte en attente de l’API (premier démarrage, installation des dépendances, quelques minutes)…'
+        until wget -q -O /dev/null http://api:8080/healthz 2> /dev/null; do sleep 3; done
+        exec pnpm --filter @suivi/api exec tsx --conditions=source ../../scripts/evaluation-verre/porte.ts
     ports:
       - '127.0.0.1:5173:5173'
     depends_on: [api, web]
