@@ -4,12 +4,21 @@
    serveur ; une carte sans donnée lisible n'est pas proposée, et une donnée en cours de chargement le dit, sans valeur
    inventée. La carte « Sauvegardes & résilience » de la référence, alimentée par le module CRRC retiré (ADR 0084), n'est
    pas reprise. RETEX exclu. */
-import type { Incident, Synthese } from '@suivi/shared';
+import type { IdDalle, Incident, Synthese } from '@suivi/shared';
 import { Dalle, NeonAnneau, NeonColonnes, NeonCourbes, NeonEcheances, NeonMotif, NeonRadar } from '@suivi/ui';
 import type { ReactNode } from 'react';
 import { ADRESSE_REGISTRE_INCIDENTS } from '../incidents/anciennes-adresses';
 import { compterMois, journalNeon, type EvenementNeon } from './neon-donnees';
 import type { DalleTableauDeBord, RenduDalle } from './tdb-types';
+import {
+  ApplicabiliteVerre,
+  ConformiteVerre,
+  ConstatsVerre,
+  IncidentsVerreDalle,
+  MaturiteVerre,
+  PlanActionVerre,
+  RisquesVerre,
+} from './tdb-verre';
 
 export function Stats({ valeurs }: { valeurs: readonly [string, number | string][] }) {
   return (
@@ -67,6 +76,9 @@ export interface IncidentsAgreges {
   enCours: number;
   clos: number;
   parMois: { libelle: string; valeur: number }[];
+  /** Incidents eux-mêmes, quand la personne lit le registre (pas pour les chiffres ouverts d'un auteur) : points de la
+      courbe du style « Verre » menant aux incidents du mois. */
+  liste?: readonly Incident[];
 }
 /** Agrégats de la carte « Incidents » à partir du registre lisible par la personne. */
 export function agregerIncidents(i: readonly Incident[]): IncidentsAgreges {
@@ -75,6 +87,7 @@ export function agregerIncidents(i: readonly Incident[]): IncidentsAgreges {
     enCours: i.filter((x) => x.status === 'En cours').length,
     clos: i.filter((x) => ['Clos', 'Résolu'].includes(x.status)).length,
     parMois: compterMois(i.map((x) => ({ date: x.detectedAt }))),
+    liste: i,
   };
 }
 
@@ -85,6 +98,9 @@ export interface DonneesNeon {
   journal: { lisible: boolean; data?: EvenementNeon[]; pending: boolean; error: unknown };
   /** Référentiels affichés par les cartes de conformité : tous, ISO seuls ou HDS seul. */
   portee: string;
+  /** Style d'instance « Verre » (décision du RSSI du 27/11/2026) : sept cartes prennent le dessin validé (tdb-verre.tsx) ;
+      sans lui, rendu inchangé. */
+  verre?: boolean;
 }
 
 /** Cartes Neon disponibles pour cette synthèse et ces droits, dans l'ordre de la vue analytique. */
@@ -502,5 +518,26 @@ export function dallesNeon(
         ),
     },
   ];
-  return dalles.filter((x): x is DalleTableauDeBord => !!x);
+  // Style « Verre » : sept cartes au dessin validé (27/11/2026), mêmes identifiants, catalogue et droits.
+  const verre: Partial<Record<IdDalle, (p: RenduDalle) => ReactNode>> = donnees.verre
+    ? {
+        conformite: (p) => <ConformiteVerre p={p} refs={refs} moyenne={global?.pourcent ?? null} />,
+        applicabilite: (p) => <ApplicabiliteVerre p={p} refs={refs} />,
+        'niveau-risque': (p) => <RisquesVerre p={p} s={s} />,
+        incidents: (p) => (
+          <IncidentsVerreDalle
+            p={p}
+            s={s}
+            i={i}
+            etat={<Etat pending={donnees.incidents.pending} erreur={donnees.incidents.error} />}
+          />
+        ),
+        constats: (p) => <ConstatsVerre p={p} s={s} />,
+        'plan-action': (p) => <PlanActionVerre p={p} s={s} />,
+        maturite: (p) => <MaturiteVerre p={p} s={s} refs={refs} />,
+      }
+    : {};
+  return dalles
+    .filter((x): x is DalleTableauDeBord => !!x)
+    .map((x) => (verre[x.id] ? { ...x, rendu: verre[x.id]! } : x));
 }

@@ -1254,6 +1254,615 @@ html[data-style='verre'] .app-main .acces-icone {
 }
 
 /* ========================================================================
+   TABLEAU DE BORD AU DESSIN VALIDÉ (décision du RSSI du 27/11/2026, apps/web/src/components/tdb-verre.tsx)
+   Sept dalles (conformité, applicabilité, risques, incidents, constats, plan d'action, maturité) : titre et flèche en
+   haut ; chiffre clé et graphique centrés ; rangée de chiffres du bas de même hauteur partout, donc alignée d'une dalle
+   à l'autre. Éléments des graphiques cliquables, bulle d'intitulé au survol et au focus (au-dessus du graphique, jamais
+   hors de la dalle en largeur). Textes de 13 px au moins, graisses 500 à 700 ; grands chiffres en graisse 500.
+   ======================================================================== */
+html[data-style='verre'] {
+  /* Remplissages des graphiques : teintes 400 du dessin en sombre. */
+  --tdbv-f-violet: #a78bfa;
+  --tdbv-f-sarcelle: #5eead4;
+  --tdbv-f-jaune: #fcd34d;
+  --tdbv-f-vert: #34d399;
+  --tdbv-f-ambre: #fbbf24;
+  --tdbv-f-rouge: #fb7185;
+  --tdbv-f-rose: #f472b6;
+  --tdbv-f-bleu: #60a5fa;
+  --tdbv-f-orange: #fdba74;
+  --tdbv-f-gris: rgba(255, 255, 255, 0.22);
+  --tdbv-piste: rgba(0, 0, 0, 0.32);
+  --tdbv-trame: rgba(255, 255, 255, 0.16);
+  --tdbv-courbe: #f9a8d4;
+  --tdbv-radar-fond: rgba(124, 58, 237, 0.32);
+  --tdbv-chaleur-0: rgba(52, 211, 153, 0.4);
+  --tdbv-chaleur-1: rgba(251, 191, 36, 0.48);
+  --tdbv-chaleur-2: rgba(251, 113, 133, 0.5);
+  --tdbv-chaleur-3: rgba(244, 63, 94, 0.82);
+  --tdbv-chaleur-neutre: rgba(255, 255, 255, 0.08);
+  --tdbv-chaleur-texte: #ffffff;
+  --tdbv-chaleur-ombre: 0 1px 2px rgba(0, 0, 0, 0.55);
+  --tdbv-case-reflet: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  --tdbv-halo: 0 0 0 2px #ffffff, 0 0 14px rgba(255, 255, 255, 0.35);
+  --tdbv-bulle-fond: rgba(20, 22, 30, 0.97);
+  --tdbv-bulle-bord: rgba(255, 255, 255, 0.22);
+  --tdbv-bulle-ombre: 0 12px 30px rgba(0, 0, 0, 0.55);
+  --tdbv-bulle-detail: #cdd0de;
+  --tdbv-bulle-invite: #c4b5fd;
+  /* 14 px, jamais sous le minimum de lisibilité quand la taille de base de la page diminue. */
+  --tdbv-texte-14: max(var(--verre-texte-min), 0.875rem);
+}
+html[data-style='verre'][data-mantine-color-scheme='light'] {
+  /* Mode clair : teintes 500 et 600, chaleur plus claire et encre foncée (case la plus forte : texte blanc). */
+  --tdbv-f-violet: #8b5cf6;
+  --tdbv-f-sarcelle: #14b8a6;
+  --tdbv-f-jaune: #eab308;
+  --tdbv-f-vert: #10b981;
+  --tdbv-f-ambre: #f59e0b;
+  --tdbv-f-rouge: #f43f5e;
+  --tdbv-f-rose: #ec4899;
+  --tdbv-f-bleu: #3b82f6;
+  --tdbv-f-orange: #f97316;
+  --tdbv-f-gris: rgba(30, 34, 70, 0.18);
+  --tdbv-piste: rgba(30, 34, 70, 0.1);
+  --tdbv-trame: rgba(30, 34, 70, 0.18);
+  --tdbv-courbe: #db2777;
+  --tdbv-radar-fond: rgba(124, 58, 237, 0.18);
+  --tdbv-chaleur-0: rgba(16, 185, 129, 0.32);
+  --tdbv-chaleur-1: rgba(245, 158, 11, 0.4);
+  --tdbv-chaleur-2: rgba(244, 63, 94, 0.34);
+  --tdbv-chaleur-3: #be123c;
+  --tdbv-chaleur-neutre: rgba(30, 34, 70, 0.06);
+  --tdbv-chaleur-texte: #1c2033;
+  --tdbv-chaleur-ombre: none;
+  --tdbv-case-reflet: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --tdbv-halo: 0 0 0 2px #5b21b6, 0 0 12px rgba(91, 33, 182, 0.3);
+  --tdbv-bulle-fond: rgba(255, 255, 255, 0.98);
+  --tdbv-bulle-bord: rgba(30, 34, 70, 0.16);
+  --tdbv-bulle-ombre: 0 12px 30px rgba(30, 34, 70, 0.18);
+  --tdbv-bulle-detail: #4a5070;
+  --tdbv-bulle-invite: #5b21b6;
+}
+
+/* Cadre : la bulle déborde de la dalle, qui passe au premier plan quand on la survole. */
+html[data-style='verre'] .tdb .tdb-dalle.tdbv {
+  overflow: visible;
+}
+html[data-style='verre'] .tdb .tdb-dalle.tdbv:is(:hover, :focus-within) {
+  z-index: 3;
+}
+html[data-style='verre'] .tdb .tdbv > .tdb-dalle-tete {
+  align-items: center;
+  min-height: 1.875rem;
+}
+html[data-style='verre'] .tdb .tdbv .tdb-dalle-titre {
+  line-height: 1.25;
+}
+html[data-style='verre'] .tdb .tdbv > .tdb-dalle-corps {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  padding-top: 0;
+}
+html[data-style='verre'] .tdb .tdbv-centre {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.875rem;
+  min-height: 0;
+  padding: 0.625rem 0;
+}
+html[data-style='verre'] .tdb .tdbv-cle {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0;
+  white-space: nowrap;
+}
+html[data-style='verre'] .tdb .tdbv-gros {
+  color: var(--verre-texte);
+  font-size: 2.75rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+html[data-style='verre'] .tdb .tdbv-etiq {
+  color: var(--verre-secondaire-2);
+  font-size: var(--tdbv-texte-14);
+  font-weight: 600;
+}
+html[data-style='verre'] .tdb .tdbv-vide {
+  margin: 0;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+  text-align: center;
+}
+html[data-style='verre'] .tdb .tdbv-graphe {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+html[data-style='verre'] .tdb :is(.tdbv-anneau, .tdbv-courbe, .tdbv-histo, .tdbv-radar) {
+  position: relative;
+  align-self: center;
+  max-width: 100%;
+}
+html[data-style='verre'] .tdb .tdbv-graphe svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* Rangée du bas : même hauteur dans toutes les dalles (libellés sur deux lignes au plus, chiffres sans retour), donc
+   alignée d'une dalle à l'autre ; dans une dalle trop étroite pour ses chiffres, le dernier passe à la ligne plutôt que
+   de sortir de la dalle. */
+html[data-style='verre'] .tdb .tdbv-pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+  min-height: 5rem;
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--verre-ligne-trait);
+}
+html[data-style='verre'] .tdb .tdbv-pied > div {
+  flex: 1 1 0;
+}
+html[data-style='verre'] .tdb .tdbv-pied dt {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+  line-height: 1.3;
+}
+html[data-style='verre'] .tdb .tdbv-pied dd {
+  margin: 0.125rem 0 0;
+  font-size: 1.625rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+html[data-style='verre'] .tdb .tdbv-pied--legende {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 6.5rem), 1fr));
+  align-content: end;
+  row-gap: 0.375rem;
+}
+html[data-style='verre'] .tdb .tdbv-pied--legende > div {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 0.4375rem;
+  min-width: 0;
+  white-space: nowrap;
+}
+html[data-style='verre'] .tdb .tdbv-pied--legende dt {
+  color: var(--verre-texte-menu);
+}
+html[data-style='verre'] .tdb .tdbv-pied--legende dd {
+  min-width: 0.875rem;
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+/* Couleurs de sens : chiffres (--verre-*), remplissages et traits des graphiques (--tdbv-f-*). */
+html[data-style='verre'] .tdb .tdbv-t-violet {
+  color: var(--verre-violet);
+}
+html[data-style='verre'] .tdb .tdbv-t-sarcelle {
+  color: var(--verre-sarcelle);
+}
+html[data-style='verre'] .tdb .tdbv-t-jaune {
+  color: var(--verre-jaune);
+}
+html[data-style='verre'] .tdb .tdbv-t-vert {
+  color: var(--verre-vert);
+}
+html[data-style='verre'] .tdb .tdbv-t-ambre {
+  color: var(--verre-ambre);
+}
+html[data-style='verre'] .tdb .tdbv-t-rouge {
+  color: var(--verre-rouge);
+}
+html[data-style='verre'] .tdb .tdbv-t-rose {
+  color: var(--verre-rose);
+}
+html[data-style='verre'] .tdb .tdbv-t-bleu {
+  color: var(--verre-bleu);
+}
+html[data-style='verre'] .tdb .tdbv-t-orange {
+  color: var(--verre-orange);
+}
+html[data-style='verre'] .tdb .tdbv-t-gris {
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] .tdb .tdbv-s-violet {
+  color: var(--tdbv-f-violet);
+}
+html[data-style='verre'] .tdb .tdbv-s-sarcelle {
+  color: var(--tdbv-f-sarcelle);
+}
+html[data-style='verre'] .tdb .tdbv-s-jaune {
+  color: var(--tdbv-f-jaune);
+}
+html[data-style='verre'] .tdb .tdbv-s-vert {
+  color: var(--tdbv-f-vert);
+}
+html[data-style='verre'] .tdb .tdbv-s-ambre {
+  color: var(--tdbv-f-ambre);
+}
+html[data-style='verre'] .tdb .tdbv-s-rouge {
+  color: var(--tdbv-f-rouge);
+}
+html[data-style='verre'] .tdb .tdbv-s-rose {
+  color: var(--tdbv-f-rose);
+}
+html[data-style='verre'] .tdb .tdbv-s-bleu {
+  color: var(--tdbv-f-bleu);
+}
+html[data-style='verre'] .tdb .tdbv-s-orange {
+  color: var(--tdbv-f-orange);
+}
+html[data-style='verre'] .tdb .tdbv-s-gris {
+  color: var(--tdbv-f-gris);
+}
+
+/* Anneaux (conformité, applicabilité) : piste creuse, arcs de couleur, valeur au centre. */
+html[data-style='verre'] .tdb .tdbv-piste {
+  fill: none;
+  stroke: var(--tdbv-piste);
+}
+html[data-style='verre'] .tdb .tdbv-arc {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  transition: stroke-width var(--suivi-motion, 0.12s);
+}
+html[data-style='verre'] .tdb .tdbv-arc--plat {
+  stroke-linecap: butt;
+}
+html[data-style='verre'] .tdb .tdbv-cible-svg {
+  cursor: pointer;
+}
+html[data-style='verre'] .tdb .tdbv-cible-svg:is(:hover, :focus-visible, .actif) :is(.tdbv-arc, .tdbv-barre) {
+  filter: drop-shadow(0 0 6px currentColor);
+}
+html[data-style='verre'] .tdb .tdbv-cible-svg:is(:hover, :focus-visible, .actif) .tdbv-piste {
+  stroke: var(--verre-bord-fort);
+}
+html[data-style='verre'] .tdb .tdbv-anneau-centre {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  pointer-events: none;
+}
+html[data-style='verre'] .tdb .tdbv-anneau-valeur {
+  color: var(--verre-texte-fort);
+  font-size: 1.875rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+html[data-style='verre'] .tdb .tdbv-anneau-valeur--grand {
+  font-size: 2.25rem;
+}
+html[data-style='verre'] .tdb .tdbv-anneau-libelle {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+
+/* Éléments HTML cliquables : sans habillage de bouton ni de lien, halo au survol et au focus. */
+html[data-style='verre'] .tdb .tdbv-cible {
+  padding: 0;
+  border: 0;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.12s,
+    box-shadow 0.12s;
+}
+html[data-style='verre'] .tdb .tdbv-cible:is(:hover, :focus-visible) {
+  position: relative;
+  z-index: 1;
+  box-shadow: var(--tdbv-halo);
+  transform: translateY(-1px);
+}
+
+/* Grille des risques : taille de la matrice de la méthode, nombre de risques dans chaque case occupée. */
+html[data-style='verre'] .tdb .tdbv-grille {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+html[data-style='verre'] .tdb .tdbv-grille-rangee {
+  display: flex;
+  gap: 0.375rem;
+}
+html[data-style='verre'] .tdb .tdbv-grille-rangee > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+html[data-style='verre'] .tdb :is(.tdbv-case-boite, .tdbv-colonne-boite) {
+  display: flex;
+  min-width: 0;
+}
+html[data-style='verre'] .tdb .tdbv-case {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 2.125rem;
+  border-radius: 0.5rem;
+  background: var(--tdbv-chaleur-neutre);
+  box-shadow: var(--tdbv-case-reflet);
+  color: var(--tdbv-chaleur-texte);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  text-shadow: var(--tdbv-chaleur-ombre);
+}
+html[data-style='verre'] .tdb .tdbv-grille--dense .tdbv-case {
+  height: 1.625rem;
+}
+html[data-style='verre'] .tdb .tdbv-chaleur-0 {
+  background: var(--tdbv-chaleur-0);
+}
+html[data-style='verre'] .tdb .tdbv-chaleur-1 {
+  background: var(--tdbv-chaleur-1);
+}
+html[data-style='verre'] .tdb .tdbv-chaleur-2 {
+  background: var(--tdbv-chaleur-2);
+}
+html[data-style='verre'] .tdb .tdbv-chaleur-3 {
+  background: var(--tdbv-chaleur-3);
+  color: #ffffff;
+}
+html[data-style='verre'] .tdb .tdbv-axes {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* Incidents : courbe, repères de mois, colonnes cliquables posées sur le tracé. */
+html[data-style='verre'] .tdb .tdbv-courbe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+html[data-style='verre'] .tdb .tdbv-axes--mois {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  justify-items: center;
+  white-space: nowrap;
+}
+html[data-style='verre'] .tdb .tdbv-repere,
+html[data-style='verre'] .tdb .tdbv-socle {
+  stroke: var(--verre-ligne-trait);
+}
+html[data-style='verre'] .tdb .tdbv-courbe-trait {
+  fill: none;
+  stroke: var(--tdbv-courbe);
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+html[data-style='verre'] .tdb .tdbv-courbe-point {
+  fill: var(--tdbv-courbe);
+}
+html[data-style='verre'] .tdb .tdbv-courbe-point:is(.fin, .actif) {
+  fill: var(--verre-texte-fort);
+}
+html[data-style='verre'] .tdb .tdbv-degrade-haut {
+  stop-color: var(--tdbv-f-rose);
+  stop-opacity: 0.45;
+}
+html[data-style='verre'] .tdb .tdbv-degrade-bas {
+  stop-color: var(--tdbv-f-rose);
+  stop-opacity: 0;
+}
+html[data-style='verre'] .tdb .tdbv-colonnes {
+  position: absolute;
+  inset: 0;
+  display: grid;
+}
+html[data-style='verre'] .tdb .tdbv-colonnes--12 {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+html[data-style='verre'] .tdb .tdbv-colonnes--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 1rem;
+  padding: 0 0.375rem;
+}
+html[data-style='verre'] .tdb .tdbv-colonne {
+  display: block;
+  flex: 1;
+  border-radius: 0.5rem;
+  background: transparent;
+}
+html[data-style='verre'] .tdb .tdbv-colonne.tdbv-cible:is(:hover, :focus-visible) {
+  background: var(--verre-survol);
+  box-shadow: none;
+  transform: none;
+}
+
+/* Constats : barres par nature, socle. */
+html[data-style='verre'] .tdb .tdbv-barre {
+  fill: currentColor;
+}
+html[data-style='verre'] .tdb .tdbv-barre.actif {
+  filter: drop-shadow(0 0 8px currentColor);
+  stroke: var(--verre-texte-fort);
+  stroke-width: 2;
+}
+
+/* Plan d'action : une case par action, les plus urgentes d'abord. */
+html[data-style='verre'] .tdb .tdbv-cases {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(1.25rem, 1fr));
+  gap: 0.375rem;
+}
+html[data-style='verre'] .tdb .tdbv-carre {
+  display: block;
+  flex: 1;
+  aspect-ratio: 1;
+  border-radius: 0.375rem;
+  box-shadow: var(--tdbv-case-reflet);
+}
+html[data-style='verre'] .tdb .tdbv-fond-rouge {
+  background: var(--tdbv-f-rouge);
+}
+html[data-style='verre'] .tdb .tdbv-fond-ambre {
+  background: var(--tdbv-f-ambre);
+}
+html[data-style='verre'] .tdb .tdbv-fond-violet {
+  background: var(--tdbv-f-violet);
+}
+html[data-style='verre'] .tdb .tdbv-fond-vert {
+  background: var(--tdbv-f-vert);
+}
+html[data-style='verre'] .tdb .tdbv-case-boite--reste {
+  grid-column: span 2;
+}
+html[data-style='verre'] .tdb .tdbv-carre--reste {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: auto;
+  border: 1px dashed var(--verre-bord-fort);
+  background: var(--verre-survol);
+  color: var(--verre-texte-fort);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+
+/* Maturité : triangle (polygone) des référentiels, sommets cliquables. */
+html[data-style='verre'] .tdb .tdbv-radar-trame {
+  fill: none;
+  stroke: var(--tdbv-trame);
+}
+html[data-style='verre'] .tdb .tdbv-radar-valeur {
+  fill: var(--tdbv-radar-fond);
+  stroke: var(--verre-violet);
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+html[data-style='verre'] .tdb .tdbv-radar-point {
+  fill: var(--verre-violet);
+}
+html[data-style='verre'] .tdb .tdbv-sommet-zone {
+  fill: transparent;
+}
+html[data-style='verre'] .tdb .tdbv-sommet-point {
+  fill: var(--verre-texte-menu);
+}
+html[data-style='verre'] .tdb .tdbv-sommet:is(:hover, :focus-visible, .actif) .tdbv-sommet-point {
+  fill: var(--verre-violet);
+  r: 6px;
+}
+html[data-style='verre'] .tdb .tdbv-radar-libelle {
+  fill: var(--verre-texte-menu);
+  font-size: var(--tdbv-texte-14);
+  font-weight: 600;
+}
+
+/* Bulle d'intitulé : au-dessus du graphique, dans la largeur de la dalle. */
+html[data-style='verre'] .tdb .tdbv-bulle {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  width: max-content;
+  max-width: min(17rem, calc(100% + 1.5rem));
+  padding: 0.5625rem 0.75rem;
+  border: 1px solid var(--tdbv-bulle-bord);
+  border-radius: 0.75rem;
+  background: var(--tdbv-bulle-fond);
+  box-shadow: var(--tdbv-bulle-ombre);
+  color: var(--verre-texte);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  text-align: left;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+html[data-style='verre'] .tdb .tdbv-bulle[hidden] {
+  display: none;
+}
+html[data-style='verre'] .tdb .tdbv-bulle b {
+  color: var(--verre-texte-fort);
+  font-size: var(--tdbv-texte-14);
+  font-weight: 700;
+}
+html[data-style='verre'] .tdb .tdbv-bulle > span {
+  color: var(--tdbv-bulle-detail);
+  font-weight: 500;
+}
+html[data-style='verre'] .tdb .tdbv-bulle ul {
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .tdb .tdbv-bulle > .tdbv-bulle-invite {
+  margin-top: 0.3125rem;
+  color: var(--tdbv-bulle-invite);
+  font-weight: 700;
+}
+
+/* Choix entre plusieurs fiches (fenêtre accrochée à l'élément, hors de la grille). */
+html[data-style='verre'] .tdbv-choix {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  max-width: 18rem;
+}
+html[data-style='verre'] .tdbv-choix-titre {
+  margin: 0;
+  color: var(--verre-texte-fort);
+  font-size: var(--tdbv-texte-14);
+  font-weight: 700;
+}
+html[data-style='verre'] .tdbv-choix ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .tdbv-choix a {
+  color: var(--verre-violet);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+  text-decoration: none;
+}
+html[data-style='verre'] .tdbv-choix a:is(:hover, :focus-visible) {
+  text-decoration: underline;
+}
+
+/* ========================================================================
    ACRYLIQUE LUMINEUX (demande du RSSI du 26/11/2026) : dalle phare du tableau de bord (essai A) et connexion
    Bloc d'acrylique vert acide translucide qui éclaire de l'intérieur, prisme de verre clair posé en biais, encre verte
    très foncée (contraste élevé, plus de chiffres blancs). Repris en touche sur la connexion (maquette 1 du canevas).

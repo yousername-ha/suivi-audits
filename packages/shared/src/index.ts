@@ -18,6 +18,7 @@ export * from './cle-secours.js';
 export * from './adresse-site.js';
 export * from './disposition-tableau-de-bord.js';
 export * from './tableaux-de-bord.js';
+export * from './tableau-de-bord-verre.js';
 export * from './webauthn.js';
 
 export * from './business-policy.js';

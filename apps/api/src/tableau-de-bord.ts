@@ -3,7 +3,18 @@
    restreints qu'elle ne peut pas lire (un écran mural n'a aucun droit par registre : seuls le périmètre commun et les
    registres non restreints sont comptés). Chaque élément n'est compté qu'une fois, même s'il apparaît dans plusieurs
    périmètres par un registre partagé. Chaque bloc exige la lecture de son module et vaut `null` sans ce droit. */
-import { jourParis, type Rights, type Synthese } from '@suivi/shared';
+import {
+  ACTIONS_DETAILLEES,
+  etatActionTdb,
+  jourParis,
+  repartirGrilleRisques,
+  risquesCritiques,
+  type DetailRisques,
+  type MethodeGrille,
+  type PlanActions,
+  type Rights,
+  type Synthese,
+} from '@suivi/shared';
 import { FINDING_TYPE_LABELS } from '@suivi/shared/audit';
 import type { SessionUser } from './auth.js';
 import { DEFAULT_SMSI, type Grc } from './grc/core.js';
@@ -21,6 +32,8 @@ type Natif = Pick<
   | 'continuite'
   | 'incidents'
   | 'pilotage'
+  | 'detailRisques'
+  | 'planActions'
 >;
 
 const LIBELLE_STATUT: Record<string, string> = {
@@ -118,6 +131,8 @@ async function tableauDeBordNatifBase(
     continuite: null,
     incidents: null,
     pilotage: null,
+    detailRisques: null,
+    planActions: null,
   };
   const ecarts = rights.can('ecarts', 'lire');
   const pilotage = rights.can('pilotage', 'lire');
@@ -244,6 +259,9 @@ async function tableauDeBordNatifBase(
     );
     sortie.risques = r ?? { total: 0, sansDecision: 0, revueEchue: 0 };
   }
+  // Détail des dalles du style « Verre » (27/11/2026) : pour une personne connectée seulement, jamais pour un écran mural.
+  if (user && ecarts && l) sortie.planActions = await planActions(g, ids, masques, jour);
+  if (user && pilotage && l) sortie.detailRisques = await detailRisques(g, ids, masques);
   // Compteurs repris par les alertes du menu.
   sortie.pilotage = {
     constatsOuverts: sortie.ecarts?.ouverts ?? null,
@@ -252,4 +270,107 @@ async function tableauDeBordNatifBase(
     actionsEnRetard: sortie.actions?.enRetard ?? null,
   };
   return sortie;
+}
+
+/** Actions autonomes du tableau de bord (hors occurrences de tâches récurrentes) : décompte par état au jour civil `jour`
+    (Paris) et les `ACTIONS_DETAILLEES` plus urgentes. Un statut terminal vient de la politique métier du périmètre de
+    l'action ; `data` n'est décodé qu'une fois par ligne (PERF-15). Même portée que les autres compteurs. */
+async function planActions(g: Grc, ids: string[], masques: string[], jour: string): Promise<PlanActions> {
+  const finMois = `${jour.slice(0, 7)}-31`;
+  // Rang : 0 en retard, 1 à échéance ce mois-ci, 2 autre ouverte, 3 close (même règle que `etatActionTdb`).
+  const actions = `WITH a AS (
+      SELECT o.id, o.smsi_id, o.name,
+             CASE WHEN left(d."dueAt",10) ~ '^\\d{4}-\\d{2}-\\d{2}$' THEN left(d."dueAt",10) END due,
+             COALESCE(d.status,'')=ANY(t.ids) fin
+        FROM grc_objects o
+        CROSS JOIN LATERAL jsonb_to_record(CASE WHEN jsonb_typeof(o.data)='object' THEN o.data END)
+             AS d("dueAt" text, status text, "seriesId" text)
+        JOIN grc_smsis s ON s.id=o.smsi_id
+        JOIN business_policy_versions v ON v.version=s.business_version
+        CROSS JOIN LATERAL (
+          SELECT COALESCE(array_agg(st->>'id') FILTER (WHERE st->>'terminal'='true'),'{}'::text[]) AS ids
+            FROM jsonb_array_elements(v.definition->'statuses') st) t
+       WHERE ${DANS_LA_PORTEE} AND o.kind='action' AND d."seriesId" IS NULL),
+    r AS (SELECT a.*, CASE WHEN fin THEN 3 WHEN due IS NULL THEN 2 WHEN due < $3 THEN 0 WHEN due <= $4 THEN 1 ELSE 2 END rang
+            FROM a)`;
+  const [compte, lignes] = await Promise.all([
+    g.db.q<{ rang: number; n: number }>(`${actions} SELECT rang, count(*)::int n FROM r GROUP BY rang`, [
+      ids,
+      masques,
+      jour,
+      finMois,
+    ]),
+    g.db.q<{ id: string; smsi_id: string; name: string; due: string | null; fin: boolean }>(
+      `${actions} SELECT id, smsi_id, name, due, fin FROM r ORDER BY rang, due NULLS LAST, name, id LIMIT $5`,
+      [ids, masques, jour, finMois, ACTIONS_DETAILLEES],
+    ),
+  ]);
+  const parRang = new Map(compte.rows.map((x) => [x.rang, x.n]));
+  const nb = (rang: number) => parRang.get(rang) ?? 0;
+  return {
+    total: nb(0) + nb(1) + nb(2) + nb(3),
+    enRetard: nb(0),
+    ceMois: nb(1),
+    autresOuvertes: nb(2),
+    closes: nb(3),
+    items: lignes.rows.map((x) => ({
+      id: x.id,
+      perimetre: x.smsi_id,
+      nom: x.name,
+      echeance: x.due,
+      etat: etatActionTdb(x.due, x.fin, jour),
+    })),
+  };
+}
+
+/** Grille des risques du tableau de bord : méthode à calcul matriciel la plus utilisée par les dernières appréciations
+    des risques lisibles (validée d'abord, puis la plus récente, comme le registre), dans sa version publiée la plus
+    récente ; risques sans appréciation ; risques au niveau le plus fort de la méthode. */
+async function detailRisques(g: Grc, ids: string[], masques: string[]): Promise<DetailRisques> {
+  const lignes = (
+    await g.db.q<{
+      id: string;
+      smsi_id: string;
+      name: string;
+      code: string;
+      methode: string | null;
+      ratings: unknown;
+    }>(
+      `SELECT o.id, o.smsi_id, o.name, COALESCE(o.data->>'code','') code, ev.methode, ev.ratings
+         FROM grc_objects o
+         LEFT JOIN LATERAL (
+           SELECT mv.method_id::text methode, e.ratings
+             FROM grc_risk_evaluations e JOIN grc_method_versions mv ON mv.id=e.method_version_id
+            WHERE e.risk_id=o.id ORDER BY (e.decision='approved') DESC, e.revision DESC LIMIT 1) ev ON true
+        WHERE o.kind='risk' AND ${DANS_LA_PORTEE}`,
+      [ids, masques],
+    )
+  ).rows;
+  const aApprecier = lignes.filter((x) => !x.methode).length;
+  const parMethode = new Map<string, number>();
+  for (const x of lignes) if (x.methode) parMethode.set(x.methode, (parMethode.get(x.methode) ?? 0) + 1);
+  const choisie = [...parMethode].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0];
+  if (!choisie) return { aApprecier, critiques: null, grille: null };
+  const version = await g.db.k
+    .selectFrom('grc_method_versions')
+    .select('definition')
+    .where('method_id', '=', choisie)
+    .orderBy('version', 'desc')
+    .limit(1)
+    .executeTakeFirst();
+  const grille = version
+    ? repartirGrilleRisques(
+        version.definition as unknown as MethodeGrille,
+        lignes
+          .filter((x) => x.methode === choisie)
+          .map((x) => ({ id: x.id, perimetre: x.smsi_id, nom: x.name, code: x.code, ratings: x.ratings })),
+      )
+    : null;
+  if (!grille) return { aApprecier, critiques: null, grille: null };
+  const autres = lignes.length - aApprecier - (parMethode.get(choisie) ?? 0);
+  return {
+    aApprecier,
+    critiques: risquesCritiques(grille),
+    grille: { ...grille, horsGrille: grille.horsGrille + autres },
+  };
 }

@@ -31,6 +31,20 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   enjeux PESTEL externes et ceux du facteur « Légal ». Puis le rappel de la clause 4 de l'ISO 27001. Chiffres calculés dans
   le navigateur à partir des API existantes du périmètre affiché, sans nouvelle route. (session « Projet audit_suivi
   Coeur »)
+- **Tableau de bord au dessin validé, cliquable, dans le style « Verre »** (décision du RSSI du 27/11/2026) : sept dalles
+  reprennent la structure du dessin (titre et flèche en haut, chiffre clé et graphique centrés, rangée de chiffres du bas
+  alignée d'une dalle à l'autre) : Conformité en arcs concentriques par référentiel autour de leur moyenne ; Applicabilité
+  et mesures en anneau (conforme, partiel, insuffisant) ; Niveau de risque en grille vraisemblance × gravité de la méthode
+  d'appréciation paramétrée (taille de sa matrice, ses niveaux), avec le nombre de risques de chaque case, et critiques, à
+  apprécier, revues échues ; Incidents en courbe sur douze mois ; Audits et constats en histogramme par nature ; Plan
+  d'action en une case par action (en retard, ce mois-ci, ouvertes, closes ; au-delà de 45, les plus urgentes et « + N ») ;
+  Indicateurs et maturité en triangle des référentiels. Chaque élément montre son intitulé dans une bulle au survol et au
+  focus clavier (Échap la ferme) et mène à sa fiche : case d'action vers l'action, case de risques vers le risque ou, à
+  plusieurs, vers le choix de l'un d'eux, point de la courbe vers l'incident du mois ou le choix parmi eux, barre vers les
+  constats de cette nature, arcs, segments et sommets vers la déclaration d'applicabilité du référentiel ou
+  l'applicabilité. La synthèse `GET /api/mur/synthese` porte deux champs facultatifs, calculés pour une personne connectée
+  seulement, dans son périmètre de lecture : `detailRisques` et `planActions`. Le registre des constats gagne le filtre
+  d'adresse `nature`. Les styles « Sauge » et « Clair bleuté » restent inchangés. (session « Projet audit_suivi Coeur »)
 
 ## [7.8.0] — 2026-11-26
 

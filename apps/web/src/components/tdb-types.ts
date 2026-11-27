@@ -17,6 +17,9 @@ export interface RenduDalle {
   hauteur?: number;
   reglages?: ReglagesDalle;
   action?: ReactNode;
+  /** Éléments des graphiques cliquables, avec bulle d'intitulé (style « Verre ») ; absent : simple aperçu (mode
+      modification de la disposition). */
+  interactif?: boolean;
 }
 
 /** Une dalle du catalogue : n'existe que si les données lisibles par la personne la permettent. */

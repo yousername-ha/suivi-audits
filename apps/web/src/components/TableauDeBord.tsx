@@ -44,7 +44,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Fragment, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { get } from '../api';
-import { useCan } from '../session';
+import { useCan, useMe } from '../session';
 import type { EvenementNeon } from './neon-donnees';
 import { fmtJour, TEINTE_ECART } from './Synthese';
 import { agregerIncidents, dallesNeon, type DonneesNeon } from './tdb-neon';
@@ -842,6 +842,8 @@ export function useDallesTableauDeBord(
   ouverts: ChiffresPublics | null = null,
 ): DalleTableauDeBord[] {
   const can = useCan();
+  // Style d'instance de la session (Paramètres > Apparence) : le style « Verre » a ses propres cartes (tdb-verre.tsx).
+  const verre = useMe().appearance.style === 'verre';
   const lireIncidents = can('incidents', 'lire') && !ouverts;
   const lireJournal = can('administration', 'lire');
   const incidents = useQuery({
@@ -873,6 +875,7 @@ export function useDallesTableauDeBord(
     },
     journal: { lisible: lireJournal, data: journal.data, pending: journal.isPending, error: journal.error },
     portee,
+    verre,
   });
 }
 
@@ -1091,6 +1094,7 @@ export function TableauDeBordConformite({
               hauteur: x.hauteur,
               reglages: x.reglages,
               action: <BoutonDetail titre={x.dalle.titre} onClick={() => setDetail(x.cle)} />,
+              interactif: true,
             })}
           </Fragment>
         ))}
@@ -1105,7 +1109,7 @@ export function TableauDeBordConformite({
       >
         {selection && (
           <div className="na-detail-contenu">
-            {selection.dalle.rendu({ largeur: 12, reglages: selection.reglages })}
+            {selection.dalle.rendu({ largeur: 12, reglages: selection.reglages, interactif: true })}
             <Button
               component={Link}
               to={selection.dalle.route}

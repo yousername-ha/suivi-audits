@@ -5,6 +5,10 @@ import {
   GRC_LABELS,
   GRC_MODULES,
   classificationEcart,
+  LIBELLES_NATURE_CONSTAT,
+  NATURES_CONSTAT,
+  natureConstat,
+  type NatureConstat,
   type GrcKind,
   type GrcObject,
   type PilotageRecord,
@@ -103,7 +107,9 @@ export function BusinessRegistry({
     [fResp, setFResp] = useFiltreUrl('resp', 'all'),
     [fEcheance, setFEcheance] = useFiltreUrl('ech', 'all'),
     [fOrigine, setFOrigine] = useFiltreUrl('orig', 'all'),
-    [fClassif, setFClassif] = useFiltreUrl('classif', 'all');
+    [fClassif, setFClassif] = useFiltreUrl('classif', 'all'),
+    // Nature d'un constat (lien d'une barre « Audits et constats » du tableau de bord, style « Verre », 27/11/2026).
+    [fNature, setFNature] = useFiltreUrl('nature', 'all');
   const native = useInfiniteQuery({
     queryKey: ['grc', smsi, 'business-register', kind, search],
     initialPageParam: 0,
@@ -174,12 +180,13 @@ export function BusinessRegistry({
       (fResp === 'all' || owner(o) === fResp) &&
       (fOrigine === 'all' || (fOrigine === 'existant') === o.id.startsWith('legacy:')) &&
       (fClassif === 'all' || (classificationEcart(o.data) ?? 'non_classe') === fClassif) &&
+      (fNature === 'all' || kind !== 'nonconformity' || natureConstat(o.data) === fNature) &&
       (fEcheance === 'all' ||
         (fEcheance === 'sans' && !echeanceDe(o)) ||
         (fEcheance === 'retard' && !!echeanceDe(o) && echeanceDe(o) < aujourdhui && o.data.status !== 'closed') ||
         (fEcheance === 'avenir' && !!echeanceDe(o) && echeanceDe(o) >= aujourdhui)),
   );
-  const filtresActifs = [fEtat, fResp, fEcheance, fOrigine, fClassif].filter((f) => f !== 'all').length;
+  const filtresActifs = [fEtat, fResp, fEcheance, fOrigine, fClassif, fNature].filter((f) => f !== 'all').length;
   // Boîte d'outils commune (7.3.0) : la recherche (raccourci « / ») et les filtres avancés ; État, Responsable et Échéance
   // se filtrent aussi sur le titre de leur colonne, avec le même état d'adresse. Pastilles des critères actifs dessous.
   const reinitialiserFiltres = () => {
@@ -188,6 +195,7 @@ export function BusinessRegistry({
     setFEcheance('all');
     setFOrigine('all');
     setFClassif('all');
+    setFNature('all');
   };
   const ECHEANCES: Record<string, string> = { retard: 'Dépassée', avenir: 'À venir', sans: 'Sans échéance' };
   const ORIGINES: Record<string, string> = { existant: 'Existant (outil de suivi)', natif: 'Créé dans le Pilotage' };
@@ -216,6 +224,16 @@ export function BusinessRegistry({
                 ? 'Non classé'
                 : (ECART_CLASSIFICATION_LABELS[fClassif as keyof typeof ECART_CLASSIFICATION_LABELS] ?? fClassif),
             retirer: () => setFClassif('all'),
+          },
+        ]
+      : []),
+    ...(fNature !== 'all'
+      ? [
+          {
+            cle: 'nature',
+            libelle: 'Nature',
+            valeur: LIBELLES_NATURE_CONSTAT[fNature as NatureConstat] ?? fNature,
+            retirer: () => setFNature('all'),
           },
         ]
       : []),
@@ -468,6 +486,19 @@ export function BusinessRegistry({
                   ]}
                   value={fClassif}
                   onChange={(v) => setFClassif(v ?? 'all')}
+                  comboboxProps={{ withinPortal: false }}
+                />
+              )}
+              {kind === 'nonconformity' && (
+                <Select
+                  label="Nature"
+                  allowDeselect={false}
+                  data={[
+                    { value: 'all', label: 'Toutes' },
+                    ...NATURES_CONSTAT.map((value) => ({ value, label: LIBELLES_NATURE_CONSTAT[value] })),
+                  ]}
+                  value={fNature}
+                  onChange={(v) => setFNature(v ?? 'all')}
                   comboboxProps={{ withinPortal: false }}
                 />
               )}

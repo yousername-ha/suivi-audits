@@ -2,6 +2,7 @@
    (calculée à partir de l'état de l'outil historique, déjà filtré selon les droits). */
 import { z } from 'zod';
 import { jourParis } from './heure-paris.js';
+import { DetailRisques, PlanActions } from './tableau-de-bord-verre.js';
 import { conformiteParReferentiel, indicateursSynthese, plansAnnee } from './tableau-de-bord.js';
 import { ECHELLES_PARC, VUES_MACHINES } from './parc-machines.js';
 import { BUSINESS_MODULES } from './permissions.js';
@@ -211,6 +212,10 @@ export const Synthese = z.object({
       actionsEnRetard: z.number().nullable(),
     })
     .nullable(),
+  /** Tableau de bord du style « Verre » (décision du RSSI du 27/11/2026) : grille des risques selon la méthode paramétrée
+      et actions une par une. Calculés pour une personne connectée seulement (ni écran mural, ni chiffres ouverts). */
+  detailRisques: DetailRisques.nullable().optional(),
+  planActions: PlanActions.nullable().optional(),
 });
 export type Synthese = z.infer<typeof Synthese>;
 
