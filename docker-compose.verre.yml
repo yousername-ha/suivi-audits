@@ -56,7 +56,7 @@ services:
 
   porte:
     <<: *node
-    command: sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && until wget -q -O /dev/null http://api:8080/api/health/ready; do sleep 3; done && pnpm --filter @suivi/api exec tsx --conditions=source ../../scripts/evaluation-verre/porte.ts"
+    command: sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && echo 'Porte en attente de l’API (premier démarrage, installation des dépendances, quelques minutes)…' && until wget -q -O /dev/null http://api:8080/api/health/ready 2>/dev/null; do sleep 3; done && pnpm --filter @suivi/api exec tsx --conditions=source ../../scripts/evaluation-verre/porte.ts"
     ports:
       - '127.0.0.1:5173:5173'
     depends_on: [api, web]
