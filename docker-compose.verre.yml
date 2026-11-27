@@ -23,7 +23,14 @@ x-node: &node
   volumes:
     - .:/work
     - ./.donnees-verre/secrets:/dev-secrets
+    # Dépendances dans des volumes Docker (système de fichiers Linux), jamais sur le disque de l'hôte : sous Windows, les
+    # liens symboliques de pnpm dans le dossier partagé ne sont pas fiables.
     - verrenodemodules:/work/node_modules
+    - verre-nm-api:/work/apps/api/node_modules
+    - verre-nm-web:/work/apps/web/node_modules
+    - verre-nm-shared:/work/packages/shared/node_modules
+    - verre-nm-ui:/work/packages/ui/node_modules
+    - verre-nm-e2e:/work/tests/e2e/node_modules
 
 services:
   db:
@@ -41,7 +48,8 @@ services:
   api:
     <<: *node
     command: >
-      sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && pnpm install --frozen-lockfile &&
+      sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && rm -f node_modules/.installation-verre-terminee &&
+             pnpm install --frozen-lockfile && touch node_modules/.installation-verre-terminee &&
              node -e \"const f='/dev-secrets/doc_master_key',fs=require('fs');fs.mkdirSync('/dev-secrets',{recursive:true});fs.existsSync(f)||fs.writeFileSync(f,require('crypto').randomBytes(32).toString('base64'))\" &&
              pnpm --filter @suivi/api dev"
     depends_on:
@@ -49,7 +57,7 @@ services:
 
   web:
     <<: *node
-    command: sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && until [ -d node_modules/.pnpm ]; do sleep 2; done && pnpm --filter @suivi/web dev --host 0.0.0.0"
+    command: sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && until [ -f node_modules/.installation-verre-terminee ]; do sleep 2; done && pnpm --filter @suivi/web dev --host 0.0.0.0"
     environment:
       API_URL: http://api:8080
     depends_on: [api]
@@ -61,5 +69,10 @@ services:
       - '127.0.0.1:5173:5173'
     depends_on: [api, web]
 
-volumes:
-  verrenodemodules: # dépendances (pas des données)
+volumes: # dépendances (pas des données)
+  verrenodemodules:
+  verre-nm-api:
+  verre-nm-web:
+  verre-nm-shared:
+  verre-nm-ui:
+  verre-nm-e2e:
