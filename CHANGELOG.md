@@ -51,6 +51,23 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Modifié
 
+- **Gestion des risques aux dessins validés** (Registre des risques, Études EBIOS RM, Cartographie des risques ; décisions
+  du RSSI du 27/11/2026), dans tous les styles, en verre dans le style « Verre » (surtitre « Risques », titre, description,
+  onglets). Toute échelle affichée (niveaux, couleurs, libellés, plages de score, seuil d'acceptation) vient de la méthode
+  d'appréciation du périmètre (version choisie, à défaut la seule méthode publiée), jamais d'une échelle codée en dur.
+  Registre : quatre tuiles sur le registre complet (risques et répartition des résiduels, sans appréciation validée,
+  revues échues, résiduels inacceptables avec le nombre de bruts inacceptables) ; ligne en deux niveaux (intitulé, puis
+  code, démarche et étude), niveaux brut et résiduel en gélules à la couleur du niveau, propriétaire, traitement (option et
+  état d'acceptation), revue échue avec son retard en jours ; légende de l'échelle sous la liste ; mêmes filtres, commandes
+  et fenêtres. Études : compteurs (études, en cours dont au cadrage, terminées, risques reportés), une carte par étude
+  (objet, dates, avancement, cinq ateliers reliés, événements redoutés, couples SR / OV, scénarios stratégiques et
+  opérationnels, dernière validation) avec « Reprendre l'atelier » (l'étude s'ouvre sur son premier atelier non validé)
+  et un menu « Autres actions » (fiche, suivi, chemins). Une étude terminée (cinq ateliers validés) disparaît de la liste ;
+  la case « Afficher les études terminées », décochée par défaut, permet de la revoir. Cartographie : niveau brut ou
+  résiduel en bascule visible, représentation (matrice ou liens) en pictogrammes ; à côté de chaque matrice, répartition
+  du brut au résiduel, risques non placés et légende ; score de la case quand la matrice en porte un, cases d'un niveau
+  inacceptable cerclées. Dans le style « Verre », la matrice est la représentation par défaut ; les autres styles gardent
+  la carte des liens. Aucune route d'API ni migration. (session « Projet audit_suivi Coeur »)
 - **Périmètre et contexte en dossier** (dessin « Périmètre et contexte, en dossier », décision du RSSI du 27/11/2026) : un
   périmètre n'ayant en pratique qu'une fiche de contexte, le tableau d'une ligne laisse place à un dossier, dans tous les
   styles (panneau de verre dans le style « Verre »), toujours accompagné de l'encadré « Le contexte en bref ». En tête :

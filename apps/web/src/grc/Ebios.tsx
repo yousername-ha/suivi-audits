@@ -1,7 +1,22 @@
 /* Études EBIOS RM (lot U3, ADR 0027) : liste des études, puis une étude par atelier. Chaque élément est un objet
    typé rattaché à l'étude ; la validation d'un atelier est une décision tracée ; un scénario opérationnel donne un
    risque du registre avec sa filiation. Démarche inspirée du guide de l'ANSSI, sans conformité revendiquée. */
-import { Alert, Badge, Button, Card, Group, Modal, Select, Stack, Table, Tabs, Text } from '@mantine/core';
+import {
+  ActionIcon,
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Group,
+  Menu,
+  Modal,
+  Select,
+  Stack,
+  Table,
+  Tabs,
+  Text,
+} from '@mantine/core';
 import {
   ECHELLE_GRAVITE,
   ECHELLE_VRAISEMBLANCE,
@@ -12,16 +27,19 @@ import {
   type PilotageRecord,
 } from '@suivi/shared';
 import { DataTable, StatusChip } from '@suivi/ui';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, type ReactNode } from 'react';
 import { api, get } from '../api';
+import { BoiteOutils } from '../components/BarreOutils';
 import { ErrorAlert } from '../components/common';
+import { correspond } from '../components/recherche-liste';
 import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
 import { Chemins } from './ebios-visuel/Chemins';
 import { familleSource } from './ebios-visuel/modele';
 import { libelleFamille, PictoSource } from './ebios-visuel/Pictos';
 import { Synthese } from './ebios-visuel/Synthese';
+import { etatEtude, etudesAffichees, libelleAvancement, syntheseEtudes, type EtatEtude } from './gestion-risques';
 
 interface ObjetEtude {
   id: string;
@@ -267,38 +285,18 @@ export function EtudesEbios({
   const modifier = can('pilotage', 'modifier');
   if (!choisie)
     return (
-      <Stack>
-        <Alert>
-          Démarche inspirée de la méthode EBIOS Risk Manager (guide de l’ANSSI) : cinq ateliers, des éléments reliés et
-          des décisions tracées. L’outil ne délivre aucune attestation de conformité.
-        </Alert>
-        <ErrorAlert error={etudes.error} />
-        {modifier && (
-          <Group>
-            <Button onClick={() => onCreate('risk_study')}>Nouvelle étude</Button>
-          </Group>
-        )}
-        {etudes.data && !etudes.data.items.length && <Text>Aucune étude pour ce périmètre.</Text>}
-        <BibliothequeSources smsi={smsi} onOpen={onOpen} onCreate={onCreate} />
-        <div className="grc-dashboard-grid">
-          {etudes.data?.items.map((e) => (
-            <Card key={e.id} withBorder>
-              <Stack gap="xs">
-                <Text fw={600}>{e.name}</Text>
-                <Text size="sm">{String(e.data.objective ?? '') || 'Objet de l’étude à préciser.'}</Text>
-                <Group>
-                  <Button size="xs" onClick={() => setChoisie(e.id)}>
-                    Ouvrir l’étude
-                  </Button>
-                  <Button size="xs" variant="default" onClick={() => onOpen(e)}>
-                    Fiche
-                  </Button>
-                </Group>
-              </Stack>
-            </Card>
-          ))}
-        </div>
-      </Stack>
+      <ListeEtudes
+        smsi={smsi}
+        etudes={etudes.data?.items}
+        erreur={etudes.error}
+        modifier={modifier}
+        onCreate={onCreate}
+        onOpen={onOpen}
+        onOuvrir={(id, atelier) => {
+          setOnglet(atelier);
+          setChoisie(id);
+        }}
+      />
     );
   const v = vue.data;
   const noms = new Map((v?.ateliers ?? []).flatMap((a) => a.objets.map((o) => ['object:' + o.id, o.name] as const)));
@@ -565,5 +563,300 @@ export function EtudesEbios({
         </>
       )}
     </Stack>
+  );
+}
+
+const jourFr = (d: string) => new Date(d.length === 10 ? `${d}T12:00:00` : d).toLocaleDateString('fr-FR');
+const texte = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+const pluriel = (n: number, un: string, plusieurs: string) => `${n} ${n > 1 ? plusieurs : un}`;
+
+/** Liste des études EBIOS RM (dessin validé par le RSSI le 27/11/2026) : compteurs, une carte par étude avec ses cinq
+    ateliers, ses chiffres et « Reprendre l'atelier ». Décision 1 du RSSI : une étude terminée (cinq ateliers validés)
+    disparaît de la liste ; « Afficher les études terminées » (décochée par défaut) permet de les revoir. L'avancement est lu
+    dans la vue de chaque étude (validations tracées par le serveur), rien n'est calculé ici sans elles. */
+function ListeEtudes({
+  smsi,
+  etudes,
+  erreur,
+  modifier,
+  onCreate,
+  onOpen,
+  onOuvrir,
+}: {
+  smsi: string;
+  etudes: GrcObject[] | undefined;
+  erreur: unknown;
+  modifier: boolean;
+  onCreate: (kind: GrcKind, initial?: Record<string, unknown>) => void;
+  onOpen: (o: GrcObject) => void;
+  /** Ouvre l'étude sur l'onglet donné (« a1 » à « a5 »). */
+  onOuvrir: (id: string, atelier: string) => void;
+}) {
+  const [terminees, setTerminees] = useState(false);
+  const [recherche, setRecherche] = useState('');
+  const liste = etudes ?? [];
+  // Même clé que la vue d'une étude ouverte : la vue lue pour la carte sert aussi à l'ouverture.
+  const vues = useQueries({
+    queries: liste.map((e) => ({
+      queryKey: ['grc', smsi, 'risk-study', e.id],
+      queryFn: () => get<VueEtude>(`/api/grc/${smsi}/risk-studies/${e.id}`),
+    })),
+  });
+  const etats = new Map<string, EtatEtude | undefined>(
+    liste.map((e, i) => {
+      const d = vues[i]?.data;
+      return [e.id, d ? etatEtude(d) : undefined] as const;
+    }),
+  );
+  return (
+    <Stack className="ris-etudes">
+      <ErrorAlert error={erreur} />
+      <ListeEtudesVue
+        etudes={etudes}
+        etats={etats}
+        terminees={terminees}
+        onTerminees={setTerminees}
+        recherche={recherche}
+        onRecherche={setRecherche}
+        ajout={modifier && <Button onClick={() => onCreate('risk_study')}>Nouvelle étude</Button>}
+        onOpen={onOpen}
+        onOuvrir={onOuvrir}
+      />
+      <BibliothequeSources smsi={smsi} onOpen={onOpen} onCreate={onCreate} />
+    </Stack>
+  );
+}
+
+/** Présentation de la liste des études (sans appel serveur) : outils, case « Afficher les études terminées », compteurs
+    et cartes. `etats` : avancement de chaque étude, absent tant que sa vue n'est pas lue. */
+export function ListeEtudesVue({
+  etudes,
+  etats,
+  terminees,
+  onTerminees,
+  recherche,
+  onRecherche,
+  ajout,
+  onOpen,
+  onOuvrir,
+}: {
+  etudes: GrcObject[] | undefined;
+  etats: ReadonlyMap<string, EtatEtude | undefined>;
+  terminees: boolean;
+  onTerminees: (v: boolean) => void;
+  recherche: string;
+  onRecherche: (v: string) => void;
+  ajout?: ReactNode;
+  onOpen: (o: GrcObject) => void;
+  onOuvrir: (id: string, atelier: string) => void;
+}) {
+  const liste = etudes ?? [];
+  const chiffres = syntheseEtudes(liste, etats);
+  const { visibles, masquees } = etudesAffichees(liste, etats, terminees);
+  const trouvees = visibles.filter((e) => correspond([e.name, e.data.objective, e.data.scope], recherche));
+  return (
+    <>
+      <BoiteOutils
+        label="Outils des études EBIOS RM"
+        total={etudes ? liste.length : undefined}
+        affiches={trouvees.length}
+        recherche={{ label: 'Rechercher dans les études', value: recherche, onChange: onRecherche }}
+        onToutEffacer={() => onRecherche('')}
+        ajout={ajout}
+      >
+        <Group gap="sm" className="ris-etudes__terminees">
+          <Checkbox
+            label="Afficher les études terminées"
+            checked={terminees}
+            onChange={(e) => onTerminees(e.currentTarget.checked)}
+            aria-describedby={masquees ? 'ris-etudes-masquees' : undefined}
+          />
+          {masquees > 0 && (
+            <Text component="span" id="ris-etudes-masquees" className="ris-etudes__masquees">
+              {pluriel(masquees, 'étude terminée masquée', 'études terminées masquées')}
+            </Text>
+          )}
+        </Group>
+      </BoiteOutils>
+      {liste.length > 0 && (
+        <ul className="ris-compteurs" aria-label="Études du périmètre">
+          <li>
+            <b className="chiffres">{chiffres.total}</b> {chiffres.total > 1 ? 'études EBIOS RM' : 'étude EBIOS RM'}
+          </li>
+          <li data-ton="avance">
+            <b className="chiffres">{chiffres.enCours}</b> en cours
+            {chiffres.auCadrage ? `, dont ${chiffres.auCadrage} au cadrage` : ''}
+          </li>
+          <li data-ton="succes">
+            <b className="chiffres">{chiffres.terminees}</b>{' '}
+            {chiffres.terminees > 1 ? 'terminées et validées' : 'terminée et validée'}
+          </li>
+          <li>
+            <b className="chiffres">{chiffres.risques}</b>{' '}
+            {chiffres.risques > 1 ? 'risques reportés au registre' : 'risque reporté au registre'}
+          </li>
+        </ul>
+      )}
+      {etudes && !liste.length && <Text>Aucune étude pour ce périmètre.</Text>}
+      {liste.length > 0 && !trouvees.length && (
+        <Text>{recherche ? 'Aucune étude ne correspond.' : 'Toutes les études du périmètre sont terminées.'}</Text>
+      )}
+      <div className="ris-etudes__grille">
+        {trouvees.map((e) => (
+          <CarteEtude
+            key={e.id}
+            etude={e}
+            etat={etats.get(e.id)}
+            onOpen={() => onOpen(e)}
+            onOuvrir={(atelier) => onOuvrir(e.id, atelier)}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
+/** Carte d'une étude : intitulé, objet, dates, avancement, les cinq ateliers, chiffres et commandes. */
+function CarteEtude({
+  etude,
+  etat,
+  onOpen,
+  onOuvrir,
+}: {
+  etude: GrcObject;
+  etat: EtatEtude | undefined;
+  onOpen: () => void;
+  onOuvrir: (atelier: string) => void;
+}) {
+  const idTitre = `ris-etude-${etude.id}`;
+  const objet = [texte(etude.data.scope), texte(etude.data.objective)].filter(Boolean).join(' · ');
+  const debut = texte(etude.data.startAt),
+    fin = texte(etude.data.endAt);
+  const modifie = etat?.ateliers.find((a) => a.modifie);
+  const reprendre = !!etat && etat.courant !== null;
+  return (
+    <article className="ris-etude" aria-labelledby={idTitre} data-etat={etat?.terminee ? 'terminee' : undefined}>
+      <div className="ris-etude__tete">
+        <div className="ris-etude__identite">
+          <h2 id={idTitre} className="ris-etude__titre">
+            {etude.name}
+          </h2>
+          <p className="ris-etude__objet">{objet || 'Objet de l’étude à préciser.'}</p>
+          <p className="ris-etude__dates">
+            {debut ? (
+              <>
+                Lancée le <b>{jourFr(debut)}</b>
+              </>
+            ) : (
+              <>
+                Créée le <b>{jourFr(etude.createdAt)}</b>
+              </>
+            )}
+            {fin && (
+              <>
+                {' '}
+                · échéance <b>{jourFr(fin)}</b>
+              </>
+            )}
+          </p>
+        </div>
+        {etat && (
+          <span
+            className="ris-etude__avancement"
+            data-etat={etat.terminee ? 'terminee' : etat.courant === 1 ? 'cadrage' : 'en-cours'}
+          >
+            {libelleAvancement(etat)}
+          </span>
+        )}
+      </div>
+      {etat && (
+        <ol className="ris-etapes" aria-label={`Ateliers de l’étude ${etude.name}`}>
+          {etat.ateliers.map((a) => (
+            <li
+              key={a.id}
+              data-etat={a.etat}
+              aria-label={`Atelier ${a.numero}, ${a.libelle} : ${
+                a.etat === 'valide' ? 'validé' : a.etat === 'courant' ? 'en cours' : 'à faire'
+              }${a.modifie ? ', modifié depuis sa validation' : ''}`}
+            >
+              <span className="ris-etapes__rond" aria-hidden="true">
+                {a.etat === 'valide' ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
+                    <path d="m5 12.5 4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : (
+                  a.numero
+                )}
+              </span>
+              <span className="ris-etapes__libelle" aria-hidden="true">
+                {a.libelle}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+      {etat && (
+        <ul className="ris-etude__chiffres" aria-label={`Chiffres de l’étude ${etude.name}`}>
+          <li>
+            <b className="chiffres">{etat.evenements}</b>
+            {etat.evenements > 1 ? 'événements redoutés' : 'événement redouté'}
+          </li>
+          <li>
+            <b className="chiffres">{etat.couples}</b>
+            {'couples SR / OV'}
+          </li>
+          <li>
+            <b className="chiffres">{etat.scenariosStrategiques}</b>
+            {etat.scenariosStrategiques > 1 ? 'scénarios stratégiques' : 'scénario stratégique'}
+          </li>
+          <li>
+            <b className="chiffres">{etat.scenariosOperationnels}</b>
+            {etat.scenariosOperationnels > 1 ? 'scénarios opérationnels' : 'scénario opérationnel'}
+          </li>
+        </ul>
+      )}
+      <div className="ris-etude__pied">
+        <p className="ris-etude__suivi" data-ton={modifie ? 'alerte' : undefined}>
+          {modifie
+            ? `Atelier ${modifie.numero} modifié depuis sa validation`
+            : etat?.derniereValidation
+              ? `Atelier ${etat.derniereValidation.numero} validé le ${jourFr(etat.derniereValidation.date)}`
+              : etat
+                ? 'Aucun atelier validé pour l’instant'
+                : ''}
+          {etat && etat.risques > 0
+            ? ` · ${pluriel(etat.risques, 'risque reporté au registre', 'risques reportés au registre')}`
+            : ''}
+        </p>
+        <Button
+          size="sm"
+          variant="default"
+          aria-label={
+            reprendre
+              ? `Reprendre l’atelier ${etat.courant} : ouvrir l’étude ${etude.name}`
+              : `Ouvrir l’étude ${etude.name}`
+          }
+          onClick={() => onOuvrir(reprendre ? `a${etat.courant}` : 'a1')}
+        >
+          {reprendre ? 'Reprendre l’atelier' : 'Ouvrir l’étude'}
+        </Button>
+        <Menu position="bottom-end">
+          <Menu.Target>
+            <ActionIcon variant="default" size="lg" radius="xl" aria-label={`Autres actions pour ${etude.name}`}>
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="ris-etude__plus">
+                <circle cx="5" cy="12" r="1.8" />
+                <circle cx="12" cy="12" r="1.8" />
+                <circle cx="19" cy="12" r="1.8" />
+              </svg>
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item onClick={onOpen}>Fiche de l’étude</Menu.Item>
+            <Menu.Item onClick={() => onOuvrir('synthese')}>Suivi, matrice et cercle</Menu.Item>
+            <Menu.Item onClick={() => onOuvrir('chemins')}>Chemins</Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </div>
+    </article>
   );
 }

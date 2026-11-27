@@ -84,6 +84,13 @@ const RUBRIQUES_COMMUNES = new Set([
   'fournisseurs',
   'criteres-fournisseurs',
 ]);
+/** Description des rubriques de la gestion des risques (dessins validés par le RSSI le 27/11/2026), sous le titre. */
+const DESCRIPTIONS_RISQUES: Record<string, string> = {
+  risques: 'Risques du périmètre, appréciation, traitement et revues périodiques.',
+  etudes:
+    'Démarche inspirée de la méthode EBIOS Risk Manager (guide de l’ANSSI), atelier par atelier : des éléments reliés et des décisions tracées. L’outil ne délivre aucune attestation de conformité.',
+  carte: 'Position des risques selon les échelles de la méthode d’appréciation du périmètre.',
+};
 const REGISTERS: Record<string, { kind: GrcKind; legacy?: string; description: string }> = {
   contexte: {
     kind: 'context',
@@ -293,7 +300,7 @@ export function PilotagePage() {
     <Page>
       <PageHeader
         title={PILOTAGE_LABELS[section] ?? 'Pilotage'}
-        description={config?.description}
+        description={config?.description ?? DESCRIPTIONS_RISQUES[section]}
         actions={
           (scopes.data?.length ?? 0) > 1 && (
             <Select

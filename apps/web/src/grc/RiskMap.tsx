@@ -1,6 +1,11 @@
-import { Alert, Button, Card, Group, Select, Stack, Text, TextInput } from '@mantine/core';
+/* Cartographie des risques. Dessin validé par le RSSI le 27/11/2026 : niveau affiché (brut ou résiduel) en bascule visible,
+   représentation (matrice par méthode ou carte des liens) en pictogrammes ; en matrice, à côté de la grille, la
+   répartition du brut au résiduel, les risques non placés et la légende de l'échelle de la méthode. Toute échelle vient
+   de la méthode publiée (décision 2) ; dans le style « Verre », la matrice est la représentation par défaut. */
+import { Alert, Anchor, Button, Card, Group, Select, Stack, Text, TextInput } from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router';
 import { libelleAcceptabilite, libelleModeCalcul, type GrcObject, type RiskMethod } from '@suivi/shared';
 import { computeScene, emptyLayout, type CartoObject, type MapLayout, type ObjectLookup } from '@suivi/shared/carto';
 import { get } from '../api';
@@ -10,7 +15,9 @@ import { Canevas, fitViewport, type Viewport, type Selection } from '../carto/Ca
 import { exporter } from '../carto/exports';
 import type { MethodVersion } from './Risks';
 import { MatriceRisques } from './MatriceRisques';
-import { useCan } from '../session';
+import { useCan, useMe } from '../session';
+import { BarreRepartition, LegendeEchelle, Pastille } from './EchelleRisques';
+import { repartitionBrutResiduel, risquesNonPlaces } from './gestion-risques';
 export interface Projection {
   items: (GrcObject & {
     method: RiskMethod | null;
@@ -46,6 +53,7 @@ const STRATEGIES = [
 const jourFr = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString('fr-FR');
 export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject) => void }) {
   const can = useCan(),
+    verre = useMe().appearance.style === 'verre',
     [basis, setBasis] = useState<'gross' | 'residual'>('residual'),
     [methodId, setMethodId] = useState<string | null>(null),
     [domain, setDomain] = useState(''),
@@ -57,7 +65,7 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
     [compareAt, setCompareAt] = useState(''),
     [strategy, setStrategy] = useState<string | null>(null),
     [grouping, setGrouping] = useState('method'),
-    [mode, setMode] = useState('graph'),
+    [mode, setMode] = useState(verre ? 'matrix' : 'graph'),
     [selected, setSelected] = useState<Selection>(null),
     [vp, setVp] = useState<Viewport>({ x: 20, y: 20, k: 0.8 }),
     [error, setError] = useState<unknown>(null);
@@ -226,6 +234,13 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
           de filtres », les critères actifs en puces retirables. */}
       <BoiteOutils
         label="Outils de la cartographie des risques"
+        vues={[
+          { value: 'matrix', label: 'Matrices et niveaux par méthode', icone: <IconeMatrice /> },
+          { value: 'graph', label: 'Cartographie des liens', icone: <IconeLiens /> },
+        ]}
+        nomVues="Représentation"
+        vue={mode}
+        onVue={setMode}
         recherche={{ label: 'Rechercher dans les risques', value: search, onChange: setSearch }}
         criteres={criteres}
         onToutEffacer={() => {
@@ -237,17 +252,6 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
           onReinitialiser: reinitialiser,
           contenu: (
             <>
-              <Select
-                allowDeselect={false}
-                label="Base d’appréciation"
-                value={basis}
-                onChange={(v) => setBasis(v === 'gross' ? 'gross' : 'residual')}
-                data={[
-                  { value: 'gross', label: 'Risque brut' },
-                  { value: 'residual', label: 'Risque résiduel' },
-                ]}
-                comboboxProps={{ withinPortal: false }}
-              />
               <Select
                 label="Méthode"
                 clearable
@@ -309,21 +313,32 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
                 ]}
                 comboboxProps={{ withinPortal: false }}
               />
-              <Select
-                allowDeselect={false}
-                label="Représentation"
-                value={mode}
-                onChange={(v) => setMode(v ?? 'graph')}
-                data={[
-                  { value: 'graph', label: 'Cartographie des liens' },
-                  { value: 'matrix', label: 'Matrices et niveaux par méthode' },
-                ]}
-                comboboxProps={{ withinPortal: false }}
-              />
             </>
           ),
         }}
-      />
+      >
+        <div className="ris-bascule" role="group" aria-label="Afficher le niveau">
+          <span className="ris-bascule__titre" aria-hidden="true">
+            Afficher le niveau
+          </span>
+          {(
+            [
+              ['gross', 'Brut'],
+              ['residual', 'Résiduel'],
+            ] as const
+          ).map(([b, libelle]) => (
+            <Button
+              key={b}
+              size="sm"
+              variant={basis === b ? 'filled' : 'subtle'}
+              aria-pressed={basis === b}
+              onClick={() => setBasis(b)}
+            >
+              {libelle}
+            </Button>
+          ))}
+        </div>
+      </BoiteOutils>
       <ErrorAlert error={error ?? data.error ?? methods.error} />
       {data.data?.graphTruncated && (
         <Alert>
@@ -342,35 +357,37 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
           registre.
         </Alert>
       )}
-      <Group>
-        {[
-          ...new Map(
-            data.data?.items
-              .filter((i) => i.method)
-              .map((i) => [
-                i.assessment!.method_version_id,
-                { ...i.method!, publicationId: i.assessment!.method_version_id },
-              ]),
-          ).values(),
-        ].map((m) => (
-          <Card key={m.publicationId} withBorder>
-            <Text fw={600}>
-              {m.name} · publication {m.publicationId.slice(0, 8)}
-            </Text>
-            {m.levels.map((l) => (
-              <Group key={l.id}>
-                <svg width="14" height="14" aria-hidden="true">
-                  <rect width="14" height="14" rx="3" fill={l.color} />
-                </svg>
-                <Text size="sm">
-                  {l.label}
-                  {m.display.showAcceptability ? ' · ' + libelleAcceptabilite(l.acceptability) : ''}
-                </Text>
-              </Group>
-            ))}
-          </Card>
-        ))}
-      </Group>
+      {mode === 'graph' && (
+        <Group>
+          {[
+            ...new Map(
+              data.data?.items
+                .filter((i) => i.method)
+                .map((i) => [
+                  i.assessment!.method_version_id,
+                  { ...i.method!, publicationId: i.assessment!.method_version_id },
+                ]),
+            ).values(),
+          ].map((m) => (
+            <Card key={m.publicationId} withBorder>
+              <Text fw={600}>
+                {m.name} · publication {m.publicationId.slice(0, 8)}
+              </Text>
+              {m.levels.map((l) => (
+                <Group key={l.id}>
+                  <svg width="14" height="14" aria-hidden="true">
+                    <rect width="14" height="14" rx="3" fill={l.color} />
+                  </svg>
+                  <Text size="sm">
+                    {l.label}
+                    {m.display.showAcceptability ? ' · ' + libelleAcceptabilite(l.acceptability) : ''}
+                  </Text>
+                </Group>
+              ))}
+            </Card>
+          ))}
+        </Group>
+      )}
       {mode === 'graph' ? (
         <>
           <Group>
@@ -463,37 +480,157 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
                 { ...i.method!, publicationId: i.assessment!.method_version_id },
               ]),
           ).values(),
-        ].map((m) => (
-          <Card withBorder key={m.publicationId}>
-            <Text fw={600}>
-              {m.name} · publication {m.publicationId.slice(0, 8)}
-            </Text>
-            {m.calculation.kind === 'matrix' ? (
-              <MatriceRisques
-                methode={m}
-                publicationId={m.publicationId}
-                items={data.data?.items ?? []}
-                basis={basis}
-                onOpen={onOpen}
-              />
-            ) : (
-              <Text>
-                Cette méthode utilise{' '}
-                {m.calculation.kind === 'judgement' ? `un ${libelleModeCalcul('judgement')}` : 'des règles spécifiques'}{' '}
-                : aucune matrice artificielle.
-              </Text>
-            )}
-            {m.calculation.kind !== 'matrix' &&
-              data.data?.items
-                .filter((i) => i.assessment?.method_version_id === m.publicationId)
-                .map((i) => (
-                  <Button key={i.id} variant="subtle" onClick={() => onOpen(i)}>
-                    {i.name} · {i.assessment?.result[basis].label}
-                  </Button>
-                ))}
-          </Card>
-        ))
+        ].map((m, rang) => {
+          const placement = repartitionBrutResiduel(data.data?.items ?? [], m.publicationId, m);
+          const dimension =
+            m.calculation.kind === 'matrix'
+              ? m.dimensions.find((d) => m.calculation.kind === 'matrix' && d.id === m.calculation.dimension)
+              : undefined;
+          const nonPlaces = rang === 0 ? risquesNonPlaces(data.data?.items ?? []) : 0;
+          const max = Math.max(1, ...placement.niveaux.flatMap((n) => [n.brut, n.residuel]));
+          return (
+            <div className="ris-carte" key={m.publicationId}>
+              <section className="ris-carte__matrice" aria-labelledby={`ris-carte-${m.publicationId}`}>
+                <div className="ris-carte__tete">
+                  {dimension && (
+                    <p className="ris-carte__surtitre">
+                      Matrice {dimension.levels.length} × {m.likelihood.length}
+                    </p>
+                  )}
+                  <h2 className="ris-carte__titre" id={`ris-carte-${m.publicationId}`}>
+                    {basis === 'gross' ? 'Risques bruts placés' : 'Risques résiduels placés'}
+                  </h2>
+                  <Text className="ris-carte__methode">
+                    {m.name} · publication {m.publicationId.slice(0, 8)}
+                  </Text>
+                </div>
+                {m.calculation.kind === 'matrix' ? (
+                  <MatriceRisques
+                    methode={m}
+                    publicationId={m.publicationId}
+                    items={data.data?.items ?? []}
+                    basis={basis}
+                    onOpen={onOpen}
+                  />
+                ) : (
+                  <Text>
+                    Cette méthode utilise{' '}
+                    {m.calculation.kind === 'judgement'
+                      ? `un ${libelleModeCalcul('judgement')}`
+                      : 'des règles spécifiques'}{' '}
+                    : aucune matrice artificielle.
+                  </Text>
+                )}
+                {m.calculation.kind !== 'matrix' &&
+                  data.data?.items
+                    .filter((i) => i.assessment?.method_version_id === m.publicationId)
+                    .map((i) => (
+                      <Button key={i.id} variant="subtle" onClick={() => onOpen(i)}>
+                        {i.name} · {i.assessment?.result[basis].label}
+                      </Button>
+                    ))}
+              </section>
+              <aside className="ris-carte__cote" aria-label={`Synthèse de la méthode ${m.name}`}>
+                <section className="ris-panneau" aria-labelledby={`ris-repartition-${m.publicationId}`}>
+                  <p className="ris-carte__surtitre">Répartition</p>
+                  <h3 className="ris-panneau__titre" id={`ris-repartition-${m.publicationId}`}>
+                    Du brut au résiduel
+                  </h3>
+                  <ul className="ris-repartition">
+                    {placement.niveaux.map((n) => (
+                      <li key={n.id} aria-label={`${n.label} : ${n.brut} en brut, ${n.residuel} en résiduel`}>
+                        <span className="ris-repartition__niveau" aria-hidden="true">
+                          <Pastille couleur={n.color} />
+                          {n.label}
+                        </span>
+                        <span className="ris-repartition__barres" aria-hidden="true">
+                          <BarreRepartition
+                            className="ris-barre ris-barre--brut"
+                            parts={[
+                              { id: 'n', color: n.color, nombre: n.brut },
+                              { id: 'reste', color: 'transparent', nombre: max - n.brut },
+                            ]}
+                          />
+                          <BarreRepartition
+                            parts={[
+                              { id: 'n', color: n.color, nombre: n.residuel },
+                              { id: 'reste', color: 'transparent', nombre: max - n.residuel },
+                            ]}
+                          />
+                        </span>
+                        <span className="ris-repartition__nombres chiffres" aria-hidden="true">
+                          {n.brut} → {n.residuel}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="ris-repartition__pied">
+                    Barre du haut : brut ; du bas : résiduel ·{' '}
+                    {placement.places > 1 ? `${placement.places} risques placés` : `${placement.places} risque placé`}
+                  </p>
+                </section>
+                {nonPlaces > 0 && (
+                  <section className="ris-panneau ris-panneau--ligne">
+                    <span className="ris-panneau__nombre chiffres">{nonPlaces}</span>
+                    <span>
+                      <span className="ris-panneau__titre">
+                        {nonPlaces > 1 ? 'Risques non placés' : 'Risque non placé'}
+                      </span>
+                      <span className="ris-panneau__detail">Aucune appréciation enregistrée</span>
+                    </span>
+                    <Anchor component={Link} to="/pilotage/risques" className="ris-panneau__lien">
+                      Voir le registre
+                    </Anchor>
+                  </section>
+                )}
+                <section className="ris-panneau" aria-labelledby={`ris-legende-${m.publicationId}`}>
+                  <p className="ris-carte__surtitre">Légende</p>
+                  <h3 className="ris-panneau__titre" id={`ris-legende-${m.publicationId}`}>
+                    Échelle de la méthode
+                  </h3>
+                  <LegendeEchelle methode={m} compacte />
+                </section>
+              </aside>
+            </div>
+          );
+        })
       )}
     </Stack>
+  );
+}
+
+/** Pictogrammes des représentations : grille (matrice) et nœuds reliés (carte des liens). */
+function IconeMatrice() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      aria-hidden="true"
+      className="nav-icone"
+    >
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+    </svg>
+  );
+}
+function IconeLiens() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      aria-hidden="true"
+      className="nav-icone"
+    >
+      <circle cx="6" cy="6" r="2.5" />
+      <circle cx="18" cy="8" r="2.5" />
+      <circle cx="10" cy="18" r="2.5" />
+      <path d="m8.3 7 7.4.6M7 8.3l2.2 7.4M16.4 10l-4.6 6" />
+    </svg>
   );
 }

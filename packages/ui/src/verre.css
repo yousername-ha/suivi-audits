@@ -2586,6 +2586,451 @@ html[data-style='verre'][data-mantine-color-scheme='light'] .surligne {
 }
 
 /* ========================================================================
+   RISQUES : GESTION DES RISQUES (dessins RisRegistre, RisEtudes et RisCarte validés par le RSSI le 27/11/2026)
+   En-tête comme les lots 2 et 3 (surtitre ambré de la famille, grand titre, description, onglets) ; tuiles et panneaux
+   en verre liquide ; niveaux en gélules teintées selon l'acceptabilité du niveau (la pastille garde la couleur publiée
+   par la méthode) ; cartes d'études à cinq ateliers reliés ; matrice à cases translucides teintées de la couleur du
+   niveau, cases au-dessus du seuil cerclées de rose en pointillé, références en bulles. Teintes : jetons du verre
+   (redéfinis par le fond bleu nuit et le mode clair), jamais de fond codé en dur.
+   ======================================================================== */
+html[data-style='verre'] .app-main[data-famille='risques']:has(> .page > .page-header) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-lg);
+}
+html[data-style='verre'] .app-main[data-famille='risques'] > .page:has(> .page-header) {
+  display: contents;
+}
+html[data-style='verre'] .app-main[data-famille='risques']:has(> .page > .page-header)::before {
+  order: -30;
+  margin-bottom: calc(var(--mantine-spacing-lg) * -1 + 0.2rem);
+  content: attr(data-famille-libelle);
+  color: var(--verre-ambre);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+html[data-style='verre'] .app-main[data-famille='risques'] > .page > .page-header {
+  order: -20;
+}
+html[data-style='verre'] .app-main[data-famille='risques']:has(> .page > .page-header) > .entete-module {
+  order: -10;
+}
+html[data-style='verre'] .app-main[data-famille='risques']:has(> .page > .page-header) > :not(.entete-module, .page) {
+  order: -40;
+}
+html[data-style='verre'] .app-main[data-famille='risques'] .page-header h1 {
+  color: var(--verre-texte-fort);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Surfaces liquides : tuiles, liste du registre, cartes d'études, matrice et panneaux de la cartographie. */
+html[data-style='verre']
+  :is(.ris-tuile, .ris-registre__liste, .ris-compteurs > li, .ris-etude, .ris-carte__matrice, .ris-panneau) {
+  border: 1px solid var(--verre-bord);
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre-douce);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] :is(.ris-tuile, .ris-panneau) {
+  border-radius: 1.5rem;
+}
+html[data-style='verre'] :is(.ris-registre__liste, .ris-etude, .ris-carte__matrice) {
+  border-radius: var(--verre-rayon);
+}
+html[data-style='verre'] .ris-registre__liste {
+  padding: 0.875rem 1.125rem;
+}
+
+/* Tuiles du registre : titre, grand chiffre lumineux, ligne secondaire ; pictogramme dans un rond teinté. */
+html[data-style='verre'] .ris-tuile {
+  padding: 0.875rem 1.125rem;
+}
+html[data-style='verre'] .ris-tuile__titre {
+  color: var(--verre-texte-menu);
+  font-size: 0.875rem;
+}
+html[data-style='verre'] .ris-tuile__nombre {
+  color: var(--verre-texte-fort);
+  font-size: 2.625rem;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+}
+html[data-style='verre'] .ris-tuile[data-ton] .ris-tuile__nombre {
+  font-weight: 700;
+}
+html[data-style='verre'] .ris-tuile__sur {
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] :is(.ris-tuile__detail, .ris-tuile__bornes) {
+  color: var(--verre-secondaire);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .ris-tuile__icone {
+  border-color: color-mix(in srgb, currentColor 35%, transparent);
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  box-shadow: var(--verre-gelule-reflet);
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] .ris-tuile[data-ton='alerte'] {
+  background:
+    linear-gradient(150deg, color-mix(in srgb, var(--verre-ambre) 14%, transparent), transparent 60%),
+    var(--verre-surface);
+}
+html[data-style='verre'] .ris-tuile[data-ton='alerte'] :is(.ris-tuile__nombre, .ris-tuile__sur, .ris-tuile__icone) {
+  color: var(--verre-ambre);
+}
+html[data-style='verre'] .ris-tuile[data-ton='danger'] {
+  background:
+    linear-gradient(150deg, color-mix(in srgb, var(--verre-rouge) 14%, transparent), transparent 60%),
+    var(--verre-surface);
+}
+html[data-style='verre'] .ris-tuile[data-ton='danger'] :is(.ris-tuile__nombre, .ris-tuile__sur, .ris-tuile__icone) {
+  color: var(--verre-rouge);
+}
+html[data-style='verre'] .ris-tuile[data-ton='seuil'] {
+  background:
+    linear-gradient(150deg, color-mix(in srgb, var(--verre-orange) 14%, transparent), transparent 60%),
+    var(--verre-surface);
+}
+html[data-style='verre'] .ris-tuile[data-ton='seuil'] :is(.ris-tuile__nombre, .ris-tuile__sur, .ris-tuile__icone) {
+  color: var(--verre-orange);
+}
+html[data-style='verre'] .ris-barre__fond {
+  fill: var(--verre-creux-fond);
+  opacity: 1;
+}
+
+/* Liste du registre : la liste est déjà dans son panneau, le tableau n'a pas de second cadre. */
+html[data-style='verre'] .ris-registre__liste > .data-table {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html[data-style='verre'] .ris-risque__nom {
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre'] :is(.ris-risque__sous, .ris-legende__plage, .ris-legende__seuil, .ris-legende__formule) {
+  color: var(--verre-secondaire);
+}
+
+/* Niveaux en gélules : teinte selon l'acceptabilité du niveau dans la méthode. */
+html[data-style='verre'] .ris-niveau {
+  min-height: 2rem;
+  border-color: var(--verre-gelule-bord);
+  background: var(--verre-gelule-fond);
+  box-shadow: var(--verre-gelule-reflet);
+  color: var(--verre-texte-fort);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .ris-niveau[data-acceptabilite='unacceptable'] {
+  border-color: color-mix(in srgb, var(--verre-rouge) 60%, transparent);
+  background: color-mix(in srgb, var(--verre-rouge) 20%, transparent);
+  color: var(--verre-rouge);
+}
+html[data-style='verre'] .ris-niveau[data-acceptabilite='conditional'] {
+  border-color: color-mix(in srgb, var(--verre-orange) 55%, transparent);
+  background: color-mix(in srgb, var(--verre-orange) 18%, transparent);
+  color: var(--verre-orange);
+}
+html[data-style='verre'] .ris-niveau[data-acceptabilite='acceptable'] {
+  border-color: color-mix(in srgb, var(--verre-vert) 50%, transparent);
+  background: color-mix(in srgb, var(--verre-vert) 14%, transparent);
+  color: var(--verre-vert);
+}
+html[data-style='verre'] .ris-niveau--vide {
+  border-color: var(--verre-creux-bord);
+  background: transparent;
+  box-shadow: none;
+  color: var(--verre-secondaire);
+}
+
+/* Option de traitement en pastille : Réduire violet, Transférer sarcelle, Accepter vert, Éviter orange. */
+html[data-style='verre'] .ris-option {
+  border-color: var(--verre-gelule-bord);
+  background: var(--verre-gelule-fond);
+  color: var(--verre-texte-fort);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .ris-option[data-option='reduce'] {
+  border-color: color-mix(in srgb, var(--verre-violet) 55%, transparent);
+  background: color-mix(in srgb, var(--verre-violet) 14%, transparent);
+  color: color-mix(in srgb, var(--verre-violet) 65%, var(--verre-texte-fort));
+}
+html[data-style='verre'] .ris-option[data-option='transfer'] {
+  border-color: color-mix(in srgb, var(--verre-sarcelle) 55%, transparent);
+  background: color-mix(in srgb, var(--verre-sarcelle) 16%, transparent);
+  color: var(--verre-sarcelle);
+}
+html[data-style='verre'] .ris-option[data-option='accept'] {
+  border-color: color-mix(in srgb, var(--verre-vert) 50%, transparent);
+  background: color-mix(in srgb, var(--verre-vert) 14%, transparent);
+  color: var(--verre-vert);
+}
+html[data-style='verre'] .ris-option[data-option='avoid'] {
+  border-color: color-mix(in srgb, var(--verre-orange) 55%, transparent);
+  background: color-mix(in srgb, var(--verre-orange) 16%, transparent);
+  color: var(--verre-orange);
+}
+html[data-style='verre'] .ris-option[data-option='aucune'] {
+  border-color: var(--verre-creux-bord);
+  background: transparent;
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] .ris-revue {
+  color: var(--verre-texte-menu);
+}
+html[data-style='verre'] :is(.ris-revue[data-echue='oui'], .ris-revue__retard) {
+  color: var(--verre-rouge);
+}
+html[data-style='verre'] .ris-legende {
+  padding-top: 0.25rem;
+  color: var(--verre-texte-menu);
+  font-size: var(--verre-texte-min);
+}
+
+/* Études EBIOS RM : case « Afficher les études terminées » en gélule, compteurs, cartes, ateliers reliés. */
+html[data-style='verre'] .ris-etudes__terminees .mantine-Checkbox-root {
+  padding: 0.5rem 1rem 0.5rem 0.75rem;
+  border: 1px solid var(--verre-creux-bord);
+  border-radius: 999px;
+  background: var(--verre-survol);
+}
+html[data-style='verre'] .ris-etudes__terminees .mantine-Checkbox-label {
+  color: var(--verre-texte);
+  font-weight: 600;
+}
+html[data-style='verre'] .ris-etudes__masquees {
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] .ris-compteurs > li {
+  border-radius: 1.375rem;
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] .ris-compteurs b {
+  color: var(--verre-texte-fort);
+  font-size: 2.125rem;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+}
+html[data-style='verre'] .ris-compteurs > li[data-ton='avance'] b {
+  color: var(--verre-violet);
+  font-weight: 700;
+}
+html[data-style='verre'] .ris-compteurs > li[data-ton='succes'] b {
+  color: var(--verre-vert);
+  font-weight: 700;
+}
+html[data-style='verre'] .ris-etude {
+  padding: 0.875rem 1.125rem;
+}
+html[data-style='verre'] .ris-etude__titre {
+  color: var(--verre-texte-fort);
+  font-size: 1.0625rem;
+}
+html[data-style='verre'] :is(.ris-etude__objet, .ris-etude__dates) {
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] .ris-etude__dates b {
+  color: var(--verre-texte);
+}
+html[data-style='verre'] .ris-etude__avancement {
+  border-color: color-mix(in srgb, var(--verre-violet) 55%, transparent);
+  background: color-mix(in srgb, var(--verre-violet) 18%, transparent);
+  color: var(--verre-violet);
+}
+html[data-style='verre'] .ris-etude__avancement[data-etat='cadrage'] {
+  border-color: color-mix(in srgb, var(--verre-ambre) 55%, transparent);
+  background: color-mix(in srgb, var(--verre-ambre) 16%, transparent);
+  color: var(--verre-ambre);
+}
+html[data-style='verre'] .ris-etude__avancement[data-etat='terminee'] {
+  border-color: color-mix(in srgb, var(--verre-vert) 50%, transparent);
+  background: color-mix(in srgb, var(--verre-vert) 14%, transparent);
+  color: var(--verre-vert);
+}
+html[data-style='verre'] .ris-etapes li + li::before {
+  background: var(--verre-ligne-trait);
+}
+html[data-style='verre']
+  .ris-etapes
+  li[data-etat='valide']
+  + li:is([data-etat='valide'], [data-etat='courant'])::before {
+  background: linear-gradient(90deg, var(--verre-vert), color-mix(in srgb, var(--verre-vert) 70%, transparent));
+}
+html[data-style='verre'] .ris-etapes__rond {
+  border-color: var(--verre-gelule-bord);
+  background: var(--verre-creux-fond);
+  box-shadow: var(--verre-creux-ombre);
+  color: var(--verre-secondaire-2);
+  font-size: 0.9375rem;
+}
+html[data-style='verre'] .ris-etapes li[data-etat='valide'] .ris-etapes__rond {
+  border-color: color-mix(in srgb, var(--verre-vert) 70%, transparent);
+  background: color-mix(in srgb, var(--verre-vert) 70%, transparent);
+  box-shadow: var(--verre-gelule-reflet);
+  color: var(--verre-fond-page);
+}
+html[data-style='verre'] .ris-etapes li[data-etat='courant'] .ris-etapes__rond {
+  border: 2px solid var(--verre-violet);
+  background: color-mix(in srgb, var(--verre-violet) 25%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--verre-violet) 16%, transparent);
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre'] .ris-etapes__libelle {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .ris-etapes li[data-etat='valide'] .ris-etapes__libelle {
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] .ris-etapes li[data-etat='courant'] .ris-etapes__libelle {
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre'] .ris-etude__chiffres {
+  border-top-color: var(--verre-ligne-trait);
+}
+html[data-style='verre'] .ris-etude__chiffres li {
+  color: var(--verre-secondaire);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .ris-etude__chiffres li + li {
+  border-inline-start-color: var(--verre-ligne-trait);
+}
+html[data-style='verre'] .ris-etude__chiffres b {
+  color: var(--verre-texte-fort);
+  font-weight: 300;
+}
+html[data-style='verre'] .ris-etude__suivi {
+  color: var(--verre-texte-menu);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .ris-etude__suivi[data-ton='alerte'] {
+  color: var(--verre-ambre);
+}
+
+/* Cartographie : bascule « Afficher le niveau » en rail, matrice et panneaux de synthèse en verre. */
+html[data-style='verre'] .ris-bascule {
+  padding: 0.25rem 0.25rem 0.25rem 0.875rem;
+  border-radius: 999px;
+  background: var(--verre-rail-fond);
+  box-shadow: var(--verre-rail-ombre);
+}
+html[data-style='verre'] .ris-bascule__titre {
+  color: var(--verre-secondaire);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .ris-bascule .mantine-Button-root {
+  border-radius: 999px;
+}
+html[data-style='verre'] .ris-bascule .mantine-Button-root[aria-pressed='true'] {
+  border: 1px solid var(--verre-relief-bord);
+  background: var(--verre-relief-fond);
+  box-shadow: var(--verre-relief-ombre);
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre'] .ris-bascule .mantine-Button-root[aria-pressed='false'] {
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] .ris-carte__matrice {
+  padding: 1rem 1.25rem;
+}
+html[data-style='verre'] :is(.ris-carte__surtitre, .ris-carte__methode, .ris-repartition__pied, .ris-panneau__detail) {
+  color: var(--verre-secondaire);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] :is(.ris-carte__titre, .ris-panneau__titre, .ris-panneau__nombre) {
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre'] .ris-panneau__nombre {
+  color: var(--verre-ambre);
+}
+html[data-style='verre'] .ris-panneau__lien {
+  color: var(--verre-violet);
+}
+html[data-style='verre'] .ris-repartition li {
+  color: var(--verre-texte-menu);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .ris-repartition__nombres {
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre'] .ris-carte .matrice-risques th {
+  color: var(--verre-texte-menu);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .ris-carte .matrice-risques {
+  width: 100%;
+  table-layout: fixed;
+  border-spacing: 0.5rem;
+}
+html[data-style='verre'] .ris-carte .matrice-risques thead th:first-child {
+  width: 8.5rem;
+}
+html[data-style='verre'] .ris-carte .matrice-cellule {
+  min-height: 7rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: 1.125rem;
+  box-shadow: var(--verre-reflet);
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre'] .ris-carte .matrice-fond {
+  border-radius: 1.125rem;
+  opacity: 0.32;
+}
+html[data-style='verre'] .ris-carte .matrice-fond rect {
+  rx: 1.125rem;
+}
+html[data-style='verre'] .ris-carte .matrice-score {
+  color: var(--verre-texte-fort);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .ris-carte .matrice-choix:has(.matrice-score) .matrice-niveau,
+html[data-style='verre'] .ris-carte .matrice-nombre {
+  display: none;
+}
+html[data-style='verre'] .ris-carte .matrice-niveau {
+  color: var(--verre-texte-menu);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .ris-carte .matrice-refs {
+  justify-content: flex-end;
+  margin-top: auto;
+  gap: 0.375rem;
+}
+html[data-style='verre'] .ris-carte .matrice-ref {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--verre-gelule-bord);
+  border-radius: 999px;
+  background: var(--verre-rail-fond);
+  box-shadow: var(--verre-gelule-reflet);
+  color: var(--verre-texte-fort);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  text-decoration: none;
+}
+html[data-style='verre'] .ris-carte .matrice-cellule[data-seuil='au-dessus'] {
+  outline: 2px dashed color-mix(in srgb, var(--verre-rose) 80%, transparent);
+  outline-offset: 0.2rem;
+}
+html[data-style='verre'] .ris-carte .matrice-cellule:has(.matrice-choix[aria-pressed='true']) {
+  outline: 2px solid var(--verre-focus);
+  outline-offset: 0.2rem;
+}
+
+/* ========================================================================
    REPLIS : transparence réduite, contraste renforcé, navigateur sans backdrop-filter, couleurs forcées
    ======================================================================== */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

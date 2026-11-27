@@ -3610,3 +3610,574 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
     display: none;
   }
 }
+
+/* ---------------------------------------------------------------- Gestion des risques (dessins validés le 27/11/2026)
+   Registre (tuiles chiffrées, niveaux en gélules, légende de l'échelle), études EBIOS RM (cartes et ateliers) et
+   cartographie (matrice et panneaux de synthèse). Couleurs des niveaux : attributs SVG issus de la méthode publiée ; ici
+   seulement la géométrie et des teintes de la charte. Présentation sobre ; l'aspect « Verre » est dans verre.css. */
+.ris-registre {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+  min-width: 0;
+}
+.ris-registre__liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  min-width: 0;
+}
+.ris-tuiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: var(--mantine-spacing-sm);
+}
+.ris-tuile {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  min-width: 0;
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--mantine-color-body);
+}
+.ris-tuile__corps {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ris-tuile__titre {
+  margin: 0;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+}
+.ris-tuile__valeur {
+  margin: var(--mantine-spacing-xs) 0 0;
+  line-height: 1;
+}
+.ris-tuile__nombre {
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.ris-tuile__sur {
+  font-size: var(--mantine-font-size-lg);
+  font-weight: 600;
+  color: var(--mantine-color-dimmed);
+}
+.ris-tuile__detail {
+  display: -webkit-box;
+  margin: var(--mantine-spacing-xs) 0 0;
+  overflow: hidden;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.ris-tuile__icone {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border: var(--suivi-trait-l) solid currentColor;
+  border-radius: 50%;
+}
+.ris-tuile__icone svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+.ris-tuile[data-ton='alerte'] .ris-tuile__nombre,
+.ris-tuile[data-ton='alerte'] .ris-tuile__icone {
+  color: var(--mantine-color-orange-text);
+}
+.ris-tuile[data-ton='danger'] .ris-tuile__nombre,
+.ris-tuile[data-ton='danger'] .ris-tuile__icone,
+.ris-tuile[data-ton='seuil'] .ris-tuile__nombre,
+.ris-tuile[data-ton='seuil'] .ris-tuile__icone {
+  color: var(--mantine-color-red-text);
+}
+.ris-tuile__repartition {
+  display: flex;
+  flex: 0 0 7rem;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.ris-tuile__bornes {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+  margin: 0;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.ris-barre {
+  display: block;
+  width: 100%;
+  height: 0.625rem;
+}
+.ris-barre__fond {
+  fill: var(--mantine-color-default-border);
+  opacity: 0.5;
+}
+.ris-pastille {
+  flex: none;
+  width: 0.875rem;
+  height: 0.875rem;
+}
+.ris-niveau {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.875rem;
+  padding: 0 0.75rem 0 0.375rem;
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: 999px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ris-niveau .ris-pastille {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.ris-niveau--vide {
+  padding-inline: 0.75rem;
+  border-style: dashed;
+  color: var(--mantine-color-dimmed);
+  font-weight: 600;
+}
+.ris-niveau[data-acceptabilite='unacceptable'] {
+  border-color: var(--mantine-color-red-outline);
+}
+.ris-niveau[data-acceptabilite='conditional'] {
+  border-color: var(--mantine-color-orange-outline);
+}
+.ris-niveau[data-acceptabilite='acceptable'] {
+  border-color: var(--mantine-color-green-outline);
+}
+.ris-risque__nom {
+  display: block;
+  font-weight: 700;
+}
+.ris-risque__sous {
+  display: block;
+  margin-top: 0.125rem;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.ris-option {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  padding: 0 0.625rem;
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: 999px;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ris-option[data-option='aucune'] {
+  border-style: dashed;
+}
+.ris-traitement__etat {
+  display: block;
+  margin-top: 0.25rem;
+}
+.ris-revue {
+  display: block;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ris-revue[data-echue='oui'],
+.ris-revue__retard {
+  color: var(--mantine-color-red-text);
+}
+.ris-revue__retard {
+  display: block;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ris-legende {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.ris-legende p {
+  margin: 0;
+}
+.ris-legende__niveaux {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ris-legende__niveaux li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.ris-legende__plage,
+.ris-legende__seuil {
+  color: var(--mantine-color-dimmed);
+}
+.ris-legende__seuil {
+  margin-inline-start: auto;
+}
+.ris-legende[data-compacte='oui'] {
+  flex-direction: column;
+  align-items: stretch;
+}
+.ris-legende[data-compacte='oui'] .ris-legende__niveaux {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.ris-legende[data-compacte='oui'] .ris-legende__seuil {
+  margin-inline-start: 0;
+}
+
+/* Études EBIOS RM : compteurs, cartes sur deux colonnes, cinq ateliers reliés. */
+.ris-etudes__terminees {
+  flex-wrap: nowrap;
+}
+.ris-etudes__masquees {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ris-compteurs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--mantine-spacing-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ris-compteurs li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.ris-compteurs b {
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.ris-etudes__grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 28rem), 1fr));
+  gap: var(--mantine-spacing-md);
+}
+.ris-etude {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  min-width: 0;
+  padding: var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+}
+.ris-etude__tete {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mantine-spacing-sm);
+}
+.ris-etude__identite {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ris-etude__titre {
+  margin: 0;
+  font-size: var(--mantine-font-size-lg);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.ris-etude__objet,
+.ris-etude__dates {
+  margin: 0.25rem 0 0;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.ris-etude__objet {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.ris-etude__dates b {
+  color: var(--mantine-color-text);
+}
+.ris-etude__avancement {
+  flex: none;
+  padding: 0.125rem 0.625rem;
+  border: var(--suivi-trait-l) solid var(--mantine-color-violet-outline);
+  border-radius: 999px;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ris-etude__avancement[data-etat='cadrage'] {
+  border-color: var(--mantine-color-orange-outline);
+}
+.ris-etude__avancement[data-etat='terminee'] {
+  border-color: var(--mantine-color-green-outline);
+}
+.ris-etapes {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ris-etapes li {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+}
+/* Trait qui relie un atelier au précédent : plein quand l'atelier est validé. */
+.ris-etapes li + li::before {
+  position: absolute;
+  top: 1.0625rem;
+  right: 50%;
+  left: -50%;
+  height: 0.1875rem;
+  border-radius: 0.1875rem;
+  background: var(--mantine-color-default-border);
+  content: '';
+}
+.ris-etapes li[data-etat='valide'] + li[data-etat='valide']::before,
+.ris-etapes li[data-etat='valide'] + li[data-etat='courant']::before {
+  background: var(--mantine-color-green-filled);
+}
+.ris-etapes__rond {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.125rem;
+  height: 2.125rem;
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: 50%;
+  background: var(--mantine-color-body);
+  font-weight: 700;
+}
+.ris-etapes__rond svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.ris-etapes li[data-etat='valide'] .ris-etapes__rond {
+  border-color: var(--mantine-color-green-filled);
+  background: var(--mantine-color-green-filled);
+  color: var(--mantine-color-white);
+}
+.ris-etapes li[data-etat='courant'] .ris-etapes__rond {
+  border: var(--suivi-trait-focus) solid var(--mantine-color-violet-filled);
+}
+.ris-etapes__libelle {
+  padding-inline: 0.25rem;
+  overflow-wrap: anywhere;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+}
+.ris-etapes li[data-etat='courant'] .ris-etapes__libelle {
+  color: var(--mantine-color-text);
+  font-weight: 700;
+}
+.ris-etude__chiffres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.5rem), 1fr));
+  margin: 0;
+  padding: var(--mantine-spacing-xs) 0 0;
+  border-top: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  list-style: none;
+}
+.ris-etude__chiffres li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  padding-inline: var(--mantine-spacing-sm);
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.ris-etude__chiffres li + li {
+  border-inline-start: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+}
+.ris-etude__chiffres b {
+  color: var(--mantine-color-text);
+  font-size: 1.625rem;
+  font-weight: 500;
+  line-height: 1;
+}
+.ris-etude__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  margin-top: auto;
+}
+.ris-etude__suivi {
+  flex: 1 1 12rem;
+  margin: 0;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.ris-etude__suivi[data-ton='alerte'] {
+  color: var(--mantine-color-orange-text);
+}
+.ris-etude__plus {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/* Cartographie : matrice à gauche, panneaux de synthèse à droite (dessous quand la place manque). */
+.ris-bascule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.ris-bascule__titre {
+  margin-inline-end: 0.375rem;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.ris-carte {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem);
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+@media (max-width: 62em) {
+  .ris-carte {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.ris-carte__matrice,
+.ris-panneau {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  min-width: 0;
+  padding: var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+}
+.ris-carte__cote {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-sm);
+  min-width: 0;
+}
+.ris-carte__surtitre {
+  margin: 0;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ris-carte__titre,
+.ris-panneau__titre {
+  display: block;
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 700;
+}
+.ris-carte__methode {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.ris-repartition {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ris-repartition li {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, auto) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.ris-repartition__niveau {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.ris-repartition__barres {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+}
+.ris-repartition__barres .ris-barre {
+  height: 0.375rem;
+}
+.ris-barre--brut {
+  opacity: 0.45;
+}
+.ris-repartition__pied,
+.ris-panneau__detail {
+  margin: 0;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.ris-panneau--ligne {
+  flex-direction: row;
+  align-items: center;
+}
+.ris-panneau--ligne > span:nth-child(2) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ris-panneau__detail {
+  display: block;
+}
+.ris-panneau__nombre {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.ris-panneau__lien {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+}
+.matrice-score {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.matrice-cellule[data-seuil='au-dessus'] {
+  outline: var(--suivi-trait-focus) dashed currentColor;
+  outline-offset: -0.3rem;
+}

@@ -1,7 +1,9 @@
 /* Matrice des risques d'une méthode à calcul matriciel : cases entièrement colorées (couleur du niveau publié dans la
    méthode, jamais recalculée ici), libellé du niveau, nombre de risques, références cliquables. Impact décroissant de haut
    en bas, probabilité croissante de gauche à droite. Les couleurs viennent des données : la CSP interdit les styles en
-   ligne, le fond de case est donc un SVG. Une méthode sans matrice (jugement, règles) n'en reçoit pas. */
+   ligne, le fond de case est donc un SVG. Une méthode sans matrice (jugement, règles) n'en reçoit pas. Dessin du
+   27/11/2026 : score de la case quand la matrice publiée en porte un, cases d'un niveau inacceptable marquées (seuil
+   d'acceptation de la méthode). */
 import { Button, Group, Stack, Table, Text } from '@mantine/core';
 import { useState } from 'react';
 import type { RiskMethod } from '@suivi/shared';
@@ -77,7 +79,10 @@ export function MatriceRisques({
                   const fond = niveau?.color ?? MATRICE.neutre;
                   return (
                     <Table.Td key={l.id} className="matrice-cellule-td">
-                      <div className={`matrice-cellule ${texteSur(fond)}`}>
+                      <div
+                        data-seuil={niveau?.acceptability === 'unacceptable' ? 'au-dessus' : undefined}
+                        className={`matrice-cellule ${texteSur(fond)}`}
+                      >
                         <svg className="matrice-fond" aria-hidden="true" focusable="false" preserveAspectRatio="none">
                           <rect width="100%" height="100%" rx="6" fill={fond} />
                         </svg>
@@ -88,6 +93,7 @@ export function MatriceRisques({
                           aria-label={`${dimension.label} ${impact.label}, probabilité ${l.label}, niveau ${niveau?.label ?? 'non défini'}, ${ici.length} risque(s)`}
                           onClick={() => setSel(actif ? null : { impact: impact.id, likelihood: l.id })}
                         >
+                          {cell?.score != null && <span className="matrice-score chiffres">{cell.score}</span>}
                           <span className="matrice-niveau">{niveau?.label ?? '—'}</span>
                           <span className="matrice-nombre chiffres">{ici.length || '—'}</span>
                         </button>

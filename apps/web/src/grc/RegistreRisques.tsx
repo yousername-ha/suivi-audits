@@ -1,9 +1,12 @@
 /* Registre des risques (lot U3, ADR 0027) : niveaux brut et résiduel de la dernière appréciation, option de
    traitement, état d'acceptation (décision formelle), prochaine revue ; filtres appliqués par le serveur. Recherche et
    filtres des listes (refonte Verre, 27/11/2026) : recherche par intitulé ou code, puces Démarche, Option, Acceptation,
-   Étude, Revue dépassée et Écart avec la matrice, comptées sur le registre complet ; l'ajout au bout de la ligne. */
+   Étude, Revue dépassée et Écart avec la matrice, comptées sur le registre complet ; l'ajout au bout de la ligne.
+   Dessin validé par le RSSI le 27/11/2026 : quatre tuiles chiffrées sur le registre complet, ligne en deux niveaux
+   (intitulé, puis code, démarche et étude), niveaux en gélules aux couleurs de la méthode du périmètre, propriétaire,
+   traitement, revue échue avec son retard, légende de l'échelle de la méthode sous la liste. */
 import { Table, Text } from '@mantine/core';
-import { ETATS_ACCEPTATION, type EcartMatrice, type EtatAcceptation, type GrcObject } from '@suivi/shared';
+import { ETATS_ACCEPTATION, jourParis, type EcartMatrice, type EtatAcceptation, type GrcObject } from '@suivi/shared';
 import { DataTable, StatusChip, type Etat } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
@@ -11,30 +14,15 @@ import { get } from '../api';
 import { BoiteOutils, Surligne, type CriterePuces } from '../components/BarreOutils';
 import { compterPuces } from '../components/recherche-liste';
 import { ErrorAlert } from '../components/common';
+import { useResponsables } from '../components/selecteurs';
 import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
 import { CommandesRisque } from './CommandesRisque';
+import { BarreRepartition, LegendeEchelle, NiveauRisque, TuileChiffre, useMethodePerimetre } from './EchelleRisques';
+import { joursEcoules, niveauParLibelle, syntheseRegistre, type LigneRegistre } from './gestion-risques';
 import { PlanTraitementRisque } from './PlanTraitementRisque';
 
-interface Ligne {
-  id: string;
-  name: string;
-  code: string;
-  demarche: string | null;
-  strategie: string;
-  brut: string | null;
-  residuel: string | null;
-  acceptabilite: string | null;
-  appreciationValidee: boolean;
-  acceptation: EtatAcceptation;
-  decisionAcceptation: { result: string; until: string | null; date: string; by: string } | null;
-  prochaineRevue: string | null;
-  enRetard: boolean;
-  /** Référence « object:<id> » de l'étude dont le risque est issu. */
-  etude: string | null;
-  /** Écart entre le niveau enregistré et la matrice courante : signalé, jamais recalculé (le registre fait foi). */
-  ecartMatrice: EcartMatrice | null;
-}
+type Ligne = LigneRegistre;
 
 const DEMARCHES: Record<string, string> = {
   ebios_rm: 'EBIOS RM',
@@ -78,6 +66,8 @@ export function RegistreRisques({
   ajout?: ReactNode;
 }) {
   const can = useCan();
+  const { methode } = useMethodePerimetre(smsi);
+  const responsables = useResponsables(smsi);
   const [demarche, setDemarche] = useState<string | null>(null),
     [strategie, setStrategie] = useState<string | null>(null),
     [acceptation, setAcceptation] = useState<string | null>(null),
@@ -174,96 +164,176 @@ export function RegistreRisques({
       onChange: (v) => setEcart(v === 'oui'),
     },
   ];
+  const synthese = syntheseRegistre(tous, methode);
+  const aujourdhui = jourParis();
+  const nomResponsable = (id: string | null | undefined) => {
+    if (!id) return '—';
+    const r = responsables.data?.find((u) => u.id === id);
+    if (r) return r.displayName || r.username;
+    return responsables.data ? 'Responsable non disponible' : responsables.isError ? '—' : '…';
+  };
   return (
-    <>
-      <BoiteOutils
-        label="Outils du registre des risques"
-        titre={complet.data ? `${tous.length} risque${tous.length > 1 ? 's' : ''}` : undefined}
-        total={complet.isPending ? 0 : complet.data ? tous.length : undefined}
-        affiches={q.data?.items.length}
-        recherche={{
-          label: 'Rechercher dans les risques',
-          value: recherche,
-          onChange: setRecherche,
-          placeholder: 'Intitulé ou code…',
-        }}
-        puces={puces}
-        libelleTout="Tous"
-        onToutEffacer={() => {
-          setRecherche('');
-          reinitialiser();
-        }}
-        ajout={ajout}
-      />
-      <ErrorAlert error={q.error} />
-      {q.data?.tronque && <Text size="sm">Seuls les 500 premiers risques sont affichés : précisez les filtres.</Text>}
-      {q.data && !q.data.items.length && <Text>Aucun risque ne correspond.</Text>}
-      {!!q.data?.items.length && (
-        <DataTable label="Registre des risques">
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Risque</Table.Th>
-                <Table.Th className="col-p2">Démarche</Table.Th>
-                <Table.Th className="col-p3">Étude</Table.Th>
-                <Table.Th>Brut</Table.Th>
-                <Table.Th>Résiduel</Table.Th>
-                <Table.Th className="col-p2">Option</Table.Th>
-                <Table.Th>Acceptation</Table.Th>
-                <Table.Th className="col-p3">Prochaine revue</Table.Th>
-                <Table.Th>Actions</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {q.data.items.map((r) => (
-                <Table.Tr key={r.id} {...ficheCliquable(() => void objet(r.id).then(onOpen), `Afficher ${r.name}`)}>
-                  <Table.Td>
-                    <Surligne texte={`${r.code ? `${r.code} · ` : ''}${r.name}`} recherche={recherche} />
-                  </Table.Td>
-                  <Table.Td className="col-p2">{r.demarche ? (DEMARCHES[r.demarche] ?? r.demarche) : '—'}</Table.Td>
-                  <Table.Td className="col-p3">{r.etude ? (nomEtude.get(r.etude) ?? 'Étude liée') : '—'}</Table.Td>
-                  <Table.Td>{r.brut ?? 'Non apprécié'}</Table.Td>
-                  <Table.Td>
-                    {r.residuel ?? '—'}
-                    {r.residuel && !r.appreciationValidee ? ' (brouillon)' : ''}
-                    {r.ecartMatrice && <EcartMatriceNote ecart={r.ecartMatrice} />}
-                  </Table.Td>
-                  <Table.Td className="col-p2">{OPTIONS[r.strategie] ?? r.strategie}</Table.Td>
-                  <Table.Td>
-                    <StatusChip etat={ETAT_CHIP[r.acceptation]}>{ETATS_ACCEPTATION[r.acceptation]}</StatusChip>
-                    {r.decisionAcceptation?.until && (
-                      <Text size="xs" c="dimmed">
-                        jusqu’au {jour(r.decisionAcceptation.until)}
-                      </Text>
-                    )}
-                  </Table.Td>
-                  <Table.Td className="col-p3">
-                    {r.enRetard ? (
-                      <StatusChip etat="erreur">{jour(r.prochaineRevue)}</StatusChip>
-                    ) : (
-                      jour(r.prochaineRevue)
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    <CommandesRisque
-                      nom={r.name}
-                      onOpen={() => void objet(r.id).then(onOpen)}
-                      onPlan={() => setPlan({ id: r.id, name: r.name })}
-                      onRelation={() => onRelation('object:' + r.id)}
-                      onEvaluation={() => void objet(r.id).then(onEvaluation)}
-                      onAcceptation={
-                        can('pilotage', 'administrer') && r.strategie === 'accept'
-                          ? () => void objet(r.id).then(onAcceptation)
-                          : undefined
-                      }
-                    />
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </DataTable>
+    <div className="ris-registre">
+      {complet.data && tous.length > 0 && (
+        <div className="ris-tuiles">
+          <TuileChiffre
+            titre="Risques"
+            valeur={synthese.total}
+            detail={synthese.aApprecier ? `dont ${synthese.aApprecier} à apprécier` : 'tous appréciés'}
+            illustration={
+              synthese.repartition.some((n) => n.nombre > 0) && (
+                <div className="ris-tuile__repartition">
+                  <BarreRepartition parts={synthese.repartition} />
+                  <p className="ris-tuile__bornes" aria-hidden="true">
+                    <span>{synthese.repartition[0]?.label}</span>
+                    <span>{synthese.repartition.at(-1)?.label}</span>
+                  </p>
+                </div>
+              )
+            }
+          />
+          <TuileChiffre
+            titre="Sans appréciation validée"
+            valeur={synthese.sansValidation}
+            sur={synthese.total}
+            ton={synthese.sansValidation ? 'alerte' : undefined}
+            detail="À apprécier ou à valider"
+            illustration={<IconeTuile forme="cible" />}
+          />
+          <TuileChiffre
+            titre="Revues échues"
+            valeur={synthese.revuesEchues.nombre}
+            ton={synthese.revuesEchues.nombre ? 'danger' : undefined}
+            detail={synthese.revuesEchues.nombre ? synthese.revuesEchues.noms.join(' · ') : 'Aucune revue en retard'}
+            illustration={<IconeTuile forme="horloge" />}
+          />
+          <TuileChiffre
+            titre="Au-dessus du seuil"
+            valeur={synthese.auDessusSeuil.nombre}
+            sur={synthese.auDessusSeuil.apprecies}
+            ton={synthese.auDessusSeuil.nombre ? 'seuil' : undefined}
+            detail={`Résiduel inacceptable${
+              synthese.auDessusSeuil.brut !== null ? ` · ${synthese.auDessusSeuil.brut} en brut` : ''
+            }`}
+            illustration={<IconeTuile forme="alerte" />}
+          />
+        </div>
       )}
+      <section className="ris-registre__liste" aria-label="Risques du registre">
+        <BoiteOutils
+          label="Outils du registre des risques"
+          titre={complet.data ? `${tous.length} risque${tous.length > 1 ? 's' : ''}` : undefined}
+          total={complet.isPending ? 0 : complet.data ? tous.length : undefined}
+          affiches={q.data?.items.length}
+          recherche={{
+            label: 'Rechercher dans les risques',
+            value: recherche,
+            onChange: setRecherche,
+            placeholder: 'Intitulé ou code…',
+          }}
+          puces={puces}
+          libelleTout="Tous"
+          onToutEffacer={() => {
+            setRecherche('');
+            reinitialiser();
+          }}
+          ajout={ajout}
+        />
+        <ErrorAlert error={q.error} />
+        {q.data?.tronque && <Text size="sm">Seuls les 500 premiers risques sont affichés : précisez les filtres.</Text>}
+        {q.data && !q.data.items.length && <Text>Aucun risque ne correspond.</Text>}
+        {!!q.data?.items.length && (
+          <DataTable label="Registre des risques">
+            <Table className="ris-table">
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Risque</Table.Th>
+                  <Table.Th>Niveau brut</Table.Th>
+                  <Table.Th>Niveau résiduel</Table.Th>
+                  <Table.Th className="col-p2">Propriétaire</Table.Th>
+                  <Table.Th className="col-p2">Traitement</Table.Th>
+                  <Table.Th className="col-p2">Prochaine revue</Table.Th>
+                  <Table.Th>Actions</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {q.data.items.map((r) => {
+                  const sous = [
+                    r.code,
+                    r.demarche ? (DEMARCHES[r.demarche] ?? r.demarche) : null,
+                    r.etude ? (nomEtude.get(r.etude) ?? 'Étude liée') : null,
+                  ].filter(Boolean);
+                  const brut = niveauParLibelle(methode, r.brut),
+                    residuel = niveauParLibelle(methode, r.residuel);
+                  return (
+                    <Table.Tr key={r.id} {...ficheCliquable(() => void objet(r.id).then(onOpen), `Afficher ${r.name}`)}>
+                      <Table.Td>
+                        <span className="ris-risque__nom">
+                          <Surligne texte={r.name} recherche={recherche} />
+                        </span>
+                        {sous.length > 0 && (
+                          <span className="ris-risque__sous">
+                            <Surligne texte={sous.join(' · ')} recherche={recherche} />
+                          </span>
+                        )}
+                      </Table.Td>
+                      <Table.Td>
+                        <NiveauRisque libelle={r.brut} niveau={brut} vide="Non apprécié" />
+                      </Table.Td>
+                      <Table.Td>
+                        <NiveauRisque libelle={r.residuel} niveau={residuel} />
+                        {r.residuel && !r.appreciationValidee && <span className="ris-risque__sous"> (brouillon)</span>}
+                        {r.ecartMatrice && <EcartMatriceNote ecart={r.ecartMatrice} />}
+                      </Table.Td>
+                      <Table.Td className="col-p2">{nomResponsable(r.ownerId)}</Table.Td>
+                      <Table.Td className="col-p2">
+                        <span className="ris-option" data-option={r.strategie || 'aucune'}>
+                          {r.strategie ? (OPTIONS[r.strategie] ?? r.strategie) : 'À définir'}
+                        </span>
+                        {r.acceptation !== 'sans_objet' && (
+                          <span className="ris-traitement__etat">
+                            <StatusChip etat={ETAT_CHIP[r.acceptation]}>{ETATS_ACCEPTATION[r.acceptation]}</StatusChip>
+                          </span>
+                        )}
+                        {r.decisionAcceptation?.until && (
+                          <Text size="xs" c="dimmed">
+                            jusqu’au {jour(r.decisionAcceptation.until)}
+                          </Text>
+                        )}
+                      </Table.Td>
+                      <Table.Td className="col-p2">
+                        <span className="ris-revue" data-echue={r.enRetard ? 'oui' : undefined}>
+                          {jour(r.prochaineRevue)}
+                        </span>
+                        {r.enRetard && (
+                          <span className="ris-revue__retard">
+                            échue depuis {joursEcoules(r.prochaineRevue, aujourdhui)} j
+                          </span>
+                        )}
+                      </Table.Td>
+                      <Table.Td>
+                        <CommandesRisque
+                          nom={r.name}
+                          onOpen={() => void objet(r.id).then(onOpen)}
+                          onPlan={() => setPlan({ id: r.id, name: r.name })}
+                          onRelation={() => onRelation('object:' + r.id)}
+                          onEvaluation={() => void objet(r.id).then(onEvaluation)}
+                          onAcceptation={
+                            can('pilotage', 'administrer') && r.strategie === 'accept'
+                              ? () => void objet(r.id).then(onAcceptation)
+                              : undefined
+                          }
+                        />
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                })}
+              </Table.Tbody>
+            </Table>
+          </DataTable>
+        )}
+        {methode && <LegendeEchelle methode={methode} />}
+      </section>
       <PlanTraitementRisque
         smsi={smsi}
         risque={plan}
@@ -271,7 +341,7 @@ export function RegistreRisques({
         onAjouter={onAjouterTraitement}
         onOpen={onOpen}
       />
-    </>
+    </div>
   );
 }
 
@@ -289,5 +359,40 @@ export function EcartMatriceNote({ ecart }: { ecart: EcartMatrice }) {
         Le niveau enregistré fait foi ; réévaluez le risque pour l’aligner.
       </Text>
     </div>
+  );
+}
+
+/** Pictogramme décoratif d'une tuile (cible, horloge, alerte). */
+function IconeTuile({ forme }: { forme: 'cible' | 'horloge' | 'alerte' }) {
+  return (
+    <span className="ris-tuile__icone" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {forme === 'cible' && (
+          <>
+            <circle cx="12" cy="12" r="8" />
+            <circle cx="12" cy="12" r="3.5" />
+          </>
+        )}
+        {forme === 'horloge' && (
+          <>
+            <circle cx="12" cy="12" r="8.5" />
+            <path d="M12 7.5V12l3 2" />
+          </>
+        )}
+        {forme === 'alerte' && (
+          <>
+            <path d="M12 4 2.8 19.5h18.4Z" />
+            <path d="M12 10v4.2M12 17h.01" />
+          </>
+        )}
+      </svg>
+    </span>
   );
 }
