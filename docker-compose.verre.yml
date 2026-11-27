@@ -21,7 +21,10 @@ x-node: &node
     MFA_REQUIRED: 'false'
     LOG_LEVEL: info
   volumes:
-    - .:/work
+    # Le code de l'hôte est lu (lecture seule) puis copié dans un volume Linux à chaque démarrage de l'API : sous Windows,
+    # le dossier partagé ignore la casse et « Alertes.ts » y désigne « alertes.ts » (mauvais module chargé, écran noir).
+    - .:/source:ro
+    - verre-code:/work
     - ./.donnees-verre/secrets:/dev-secrets
     # Dépendances dans des volumes Docker (système de fichiers Linux), jamais sur le disque de l'hôte : sous Windows, les
     # liens symboliques de pnpm dans le dossier partagé ne sont pas fiables.
@@ -48,7 +51,11 @@ services:
   api:
     <<: *node
     command: >
-      sh -c "npm i -g pnpm@10.34.6 >/dev/null 2>&1 && rm -f node_modules/.installation-verre-terminee &&
+      sh -c "rm -f node_modules/.installation-verre-terminee && npm i -g pnpm@10.34.6 >/dev/null 2>&1 &&
+             echo 'Copie du code dans le volume de la pile…' &&
+             find /work -mindepth 1 -name node_modules -prune -o -type f -exec rm -f {} + &&
+             cd /source && find . \( -name node_modules -o -name .git -o -name .donnees-verre \) -prune -o -type f -print |
+             tar -cf - -T - | tar -C /work -xf - && cd /work &&
              pnpm install --frozen-lockfile && touch node_modules/.installation-verre-terminee &&
              node -e \"const f='/dev-secrets/doc_master_key',fs=require('fs');fs.mkdirSync('/dev-secrets',{recursive:true});fs.existsSync(f)||fs.writeFileSync(f,require('crypto').randomBytes(32).toString('base64'))\" &&
              pnpm --filter @suivi/api dev"
@@ -69,7 +76,8 @@ services:
       - '127.0.0.1:5173:5173'
     depends_on: [api, web]
 
-volumes: # dépendances (pas des données)
+volumes: # copie du code et dépendances (pas des données)
+  verre-code:
   verrenodemodules:
   verre-nm-api:
   verre-nm-web:

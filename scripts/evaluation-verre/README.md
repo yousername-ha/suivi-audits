@@ -15,6 +15,10 @@ démarrages suivants reprennent les mêmes données (dossier `.donnees-verre`). 
 
 ## Fonctionnement
 
+- Le code du poste est copié, à chaque démarrage, dans un volume Linux de la pile (`verre-code`), et les dépendances sont
+  installées dans des volumes Docker : sous Windows, le dossier partagé ignore la casse (`Alertes.ts` y désigne
+  `alertes.ts`) et les liens de pnpm n'y sont pas fiables. Après un `git pull`, relancer la pile pour reprendre le code.
+
 - L'application n'est pas modifiée. La « porte » (`porte.ts`) ouvre une session ordinaire (table `sessions`) pour le
   compte fictif et relaie l'interface en ajoutant son témoin à chaque requête ; la déconnexion est neutralisée.
 - Garde-fous : adresse du site `localhost` et témoins non sécurisés exigés, refus si un autre administrateur existe,
