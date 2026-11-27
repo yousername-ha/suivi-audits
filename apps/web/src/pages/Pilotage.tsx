@@ -58,6 +58,7 @@ import { RegistreRisques } from '../grc/RegistreRisques';
 import { ObjectifsProcessus } from '../pilotage/ObjectifsProcessus';
 import { CartesProcessus } from '../processus/CartesProcessus';
 import { Pestel, SynthesePartiesBandeau } from '../pilotage/Pestel';
+import { DispositionContexte } from '../pilotage/ContexteEnBref';
 import { PreparationRevue } from '../pilotage/PreparationRevue';
 import { SeriesProposees } from '../pilotage/SeriesProposees';
 import { PlansSmsi } from '../pilotage/Plans';
@@ -337,16 +338,18 @@ export function PilotagePage() {
                 {section === 'audits' && can('pilotage', 'lire') && <PlansSmsi vue="audit" smsi={smsi} />}
                 {section === 'exercices' && <PlansSmsi vue="exo" smsi={smsi} />}
                 {!['processus', 'objectifs', 'indicateurs', 'boites'].includes(section) && (
-                  <BusinessRegistry
-                    key={smsi + section}
-                    smsi={smsi}
-                    kind={config.kind}
-                    legacyKey={config.legacy}
-                    onOpen={open}
-                    onCreate={create}
-                    onDecision={decide}
-                    onSchedule={setSchedule}
-                  />
+                  <DispositionContexte actif={section === 'contexte'} smsi={smsi}>
+                    <BusinessRegistry
+                      key={smsi + section}
+                      smsi={smsi}
+                      kind={config.kind}
+                      legacyKey={config.legacy}
+                      onOpen={open}
+                      onCreate={create}
+                      onDecision={decide}
+                      onSchedule={setSchedule}
+                    />
+                  </DispositionContexte>
                 )}
                 {['continuite', 'exercices', 'preuves', 'controles', 'amelioration', 'revues'].includes(section) &&
                   can('import_export', 'exporter') && <ExportRegister smsi={smsi} kind={config.kind} />}

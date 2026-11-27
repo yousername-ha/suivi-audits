@@ -1628,6 +1628,58 @@ html[data-style='verre'] .app-main[data-famille='pilotage'] .revue-temps {
   backdrop-filter: var(--verre-flou-leger);
 }
 
+/* Périmètre et contexte : encadré « Le contexte en bref » en panneau de verre (maquette « Organisation · Contexte de
+   l'organisation », décision du RSSI du 27/11/2026) ; tuiles en lignes de verre à grand chiffre fin, rappel de la
+   clause 4 teinté du vert d'Organisation. La disposition (liste puis encadré) vient de styles.css. */
+html[data-style='verre'] .contexte-bref {
+  padding: 1.25rem;
+}
+html[data-style='verre'] .contexte-bref .contexte-bref__titre {
+  color: var(--verre-texte-fort);
+  font-size: 1rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .contexte-bref__tuile {
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: var(--verre-rayon-ligne);
+  background: var(--verre-ligne-fond);
+  color: var(--verre-texte);
+  box-shadow: var(--verre-reflet);
+}
+html[data-style='verre'] .contexte-bref__tuile:hover {
+  border-color: var(--verre-bord-fort);
+  background: var(--verre-ligne-survol);
+}
+html[data-style='verre'] .contexte-bref__chiffre {
+  color: var(--verre-texte-fort);
+  font-size: 2rem;
+  font-weight: 300;
+}
+html[data-style='verre'] .contexte-bref__libelle {
+  color: var(--verre-texte-fort);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .contexte-bref__detail {
+  color: var(--verre-secondaire);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .contexte-bref__rappel {
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--verre-vert) 45%, transparent);
+  border-radius: var(--verre-rayon-ligne);
+  background: color-mix(in srgb, var(--verre-vert) 10%, transparent);
+  color: var(--verre-texte);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+html[data-style='verre'] .contexte-bref__rappel-titre {
+  color: var(--verre-vert);
+  font-weight: 700;
+}
+
 /* ========================================================================
    REPLIS : transparence réduite, contraste renforcé, navigateur sans backdrop-filter, couleurs forcées
    ======================================================================== */

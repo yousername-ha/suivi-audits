@@ -58,6 +58,8 @@
   --suivi-entete-h: 3.75rem;
   --suivi-nav-l: 15.5rem;
   --suivi-largeur-formulaire: 45rem; /* formulaires simples : 720 px */
+  --contexte-liste-min: 40rem; /* Périmètre et contexte : largeur sous laquelle l’encadré passe sous la liste */
+  --contexte-bref-l: 18rem; /* encadré « Le contexte en bref » : 288 px */
   --suivi-largeur-connexion: 36rem; /* panneau de connexion : 576 px */
   --suivi-ecart-onde: 3rem; /* connexion : espace entre le titre et la première carte */
   --suivi-largeur-lecture: 75ch; /* textes : environ 75 caractères par ligne */
@@ -3125,4 +3127,84 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
   )
   :is(.mantine-Anchor-root:not(.mantine-Button-root), a:not([class], nav a, [role='tab'])):is(:hover, :focus-visible) {
   text-decoration-color: currentColor;
+}
+
+/* Périmètre et contexte (décision du RSSI du 27/11/2026) : la liste des fiches et, à sa droite, l'encadré « Le contexte
+   en bref ». Sans point de rupture : l'encadré passe sous la liste dès qu'elle aurait moins de --contexte-liste-min, menu
+   compris ; il prend alors toute la largeur et ses tuiles se rangent côte à côte. */
+.contexte-disposition {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--mantine-spacing-lg);
+}
+.contexte-disposition__liste {
+  flex: 999 1 var(--contexte-liste-min);
+  min-width: 0;
+}
+.contexte-bref {
+  display: flex;
+  flex: 1 1 var(--contexte-bref-l);
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+  min-width: 0;
+}
+.contexte-bref__tuiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--contexte-bref-l)), 1fr));
+  gap: var(--mantine-spacing-sm);
+}
+.contexte-bref__tuile {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface-douce);
+  color: var(--mantine-color-text);
+  text-decoration: none;
+  transition: border-color var(--suivi-motion) var(--suivi-ease);
+}
+.contexte-bref__tuile:hover {
+  border-color: var(--suivi-famille-organisation);
+}
+.contexte-bref__chiffre {
+  min-width: 2ch;
+  font-size: calc(var(--mantine-font-size-xl) * 1.4);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.contexte-bref__texte {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.contexte-bref__libelle {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 700;
+}
+.contexte-bref__detail {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+}
+.contexte-bref__rappel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  padding: var(--mantine-spacing-sm) var(--mantine-spacing-md);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface-douce);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+}
+.contexte-bref__rappel-titre {
+  font-weight: 700;
+}
+@media (prefers-reduced-motion: reduce) {
+  .contexte-bref__tuile {
+    transition: none;
+  }
 }

@@ -24,6 +24,13 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   données. Variante claire en verre blanc ; repli opaque pour la transparence réduite, le contraste renforcé et les
   navigateurs sans `backdrop-filter`. Feuille `packages/ui/src/verre.css`, dont chaque règle est limitée à
   `html[data-style='verre']` (test de charte). (session « Projet audit_suivi Coeur »)
+- **« Le contexte en bref »** (Périmètre et contexte, décision du RSSI du 27/11/2026, maquette « Organisation · Contexte de
+  l'organisation ») : encadré à droite de la liste des fiches (dessous quand la place manque), dans tous les styles, en
+  panneau de verre dans le style « Verre ». Trois tuiles, chacune vers son onglet : parties intéressées et celles dont la
+  dernière revue est absente ou date de plus d'un an ; analyses SWOT et processus du périmètre sans analyse rattachée ;
+  enjeux PESTEL externes et ceux du facteur « Légal ». Puis le rappel de la clause 4 de l'ISO 27001. Chiffres calculés dans
+  le navigateur à partir des API existantes du périmètre affiché, sans nouvelle route. (session « Projet audit_suivi
+  Coeur »)
 
 ## [7.8.0] — 2026-11-26
 
