@@ -237,17 +237,20 @@ export function ElementLegende({
   forme,
   ton,
   icone,
+  verre = false,
   children,
 }: {
   forme?: string;
   ton?: string;
   icone?: EtatCarre;
+  /** Icône du style « Verre » (dessin TachesTimeline du 27/11/2026). */
+  verre?: boolean;
   children: ReactNode;
 }) {
   return (
     <span className="frise-legende__item">
       {icone ? (
-        <IconeLegende etat={icone} />
+        <IconeLegende etat={icone} verre={verre} />
       ) : (
         <span className={`frise-pastille frise-pastille--${forme}`} data-ton={ton} aria-hidden="true" />
       )}
@@ -321,6 +324,8 @@ export interface ColonneTemps {
 /** Taille (rem) des libellés de la règle et des repères, et des étiquettes : celle des classes de neon-taches.css. */
 export const TAILLE_LIBELLE = 0.72;
 export const TAILLE_ETIQUETTE = 0.625;
+/** Style « Verre » : taille minimale lisible (13 pixels à la taille de police par défaut), celle de --verre-texte-min. */
+export const TAILLE_LISIBLE = 0.8125;
 
 /** Règle des colonnes : libellé de chaque période en haut à gauche de sa colonne, traits verticaux, ligne et étiquette
     « Aujourd'hui » en bas de la règle (le libellé de la période reste lisible). Décorative : la période est écrite dans la
@@ -331,12 +336,16 @@ export function RegleTemps({
   largeur,
   hauteur,
   aujourdhui,
+  verre = false,
 }: {
   colonnes: readonly ColonneTemps[];
   x: (n: number) => number;
   largeur: number;
   hauteur: number;
   aujourdhui: number;
+  /** Style « Verre » : libellés centrés, période courante en gélule, trait d'aujourd'hui sur toute la hauteur, sans
+      étiquette (la barre d'outils dit « trait violet : aujourd'hui »). */
+  verre?: boolean;
 }) {
   const xa = x(aujourdhui);
   const visible = Number.isFinite(xa) && xa >= 0 && xa <= largeur;
@@ -345,8 +354,11 @@ export function RegleTemps({
     he = 16;
   const ex = Math.max(1, Math.min(largeur - le - 1, xa - le / 2));
   // Même forme de libellé pour toutes les colonnes : complète si elle tient partout, sinon courte, sinon aucune.
+  // Style « Verre » : libellés de 13 pixels au moins, en graisse 700 (règle de lisibilité du RSSI).
+  const taille = verre ? TAILLE_LISIBLE : TAILLE_LIBELLE,
+    graisse = verre ? 700 : 500;
   const tient = (cle: 'libelle' | 'court') =>
-    colonnes.every((c) => largeurTexte(c[cle], TAILLE_LIBELLE, 500) <= x(c.fin) - x(c.debut) - 12);
+    colonnes.every((c) => largeurTexte(c[cle], taille, graisse) <= x(c.fin) - x(c.debut) - (verre ? 16 : 12));
   const forme = tient('libelle') ? 'libelle' : tient('court') ? 'court' : null;
   return (
     <svg className="frise-regle" width={largeur} height={hauteur} aria-hidden="true">
@@ -356,8 +368,35 @@ export function RegleTemps({
         const debutAnnee =
           i === 0 || new Date(c.debut).getUTCFullYear() !== new Date(colonnes[i - 1]!.debut).getUTCFullYear();
         const complet =
-          forme === 'court' && debutAnnee && largeurTexte(c.libelle, TAILLE_LIBELLE, 500) <= x(c.fin) - gauche - 12;
+          forme === 'court' &&
+          debutAnnee &&
+          largeurTexte(c.libelle, taille, graisse) <= x(c.fin) - gauche - (verre ? 16 : 12);
         const texte = complet ? c.libelle : forme ? c[forme] : '';
+        if (verre) {
+          const milieu = (gauche + x(c.fin)) / 2,
+            courant = aujourdhui >= c.debut && aujourdhui < c.fin,
+            lp = largeurTexte(texte, taille, graisse) + 16;
+          return (
+            <g key={c.debut} className={courant ? 'frise-regle__colonne--courante' : undefined}>
+              <line className="frise-trait" x1={gauche} x2={gauche} y1="0" y2={hauteur} />
+              {texte && courant && (
+                <rect
+                  className="frise-regle__gelule"
+                  x={milieu - lp / 2}
+                  y={hauteur / 2 - 12}
+                  width={lp}
+                  height="24"
+                  rx="12"
+                />
+              )}
+              {texte && (
+                <text className="frise-regle__libelle" x={milieu} y={hauteur / 2 + 4.5} textAnchor="middle">
+                  {texte}
+                </text>
+              )}
+            </g>
+          );
+        }
         return (
           <g key={c.debut}>
             <line className="frise-trait" x1={gauche} x2={gauche} y1="0" y2={hauteur} />
@@ -369,7 +408,10 @@ export function RegleTemps({
           </g>
         );
       })}
-      {visible && (
+      {visible && verre && (
+        <line className="grc-timeline__aujourdhui" x1={xa} x2={xa} y1={hauteur / 2 + 12} y2={hauteur} />
+      )}
+      {visible && !verre && (
         <>
           <line className="grc-timeline__aujourdhui" x1={xa} x2={xa} y1={hauteur - he - 6} y2={hauteur} />
           <g className="frise-aujourdhui">
@@ -392,6 +434,8 @@ export function PiedTemps({
   x,
   largeur,
   hauteur,
+  courante = -1,
+  verre = false,
 }: {
   titre: string;
   colonnes: readonly ColonneTemps[];
@@ -399,7 +443,13 @@ export function PiedTemps({
   x: (n: number) => number;
   largeur: number;
   hauteur: number;
+  /** Colonne de la période courante, mise en évidence (style « Verre ») ; -1 : aucune. */
+  courante?: number;
+  /** Style « Verre » : pastilles plus grandes, nombres de 13 pixels au moins. */
+  verre?: boolean;
 }) {
+  const taille = verre ? TAILLE_LISIBLE : TAILLE_ETIQUETTE,
+    hp = verre ? 26 : 16;
   return (
     <svg
       className="frise-pied-temps"
@@ -413,14 +463,23 @@ export function PiedTemps({
         const n = comptes[i] ?? 0,
           cx = (x(c.debut) + x(c.fin)) / 2,
           texte = String(n),
-          l = Math.max(22, largeurTexte(texte, TAILLE_ETIQUETTE, 700) + 12),
+          l = Math.max(verre ? 30 : 22, largeurTexte(texte, taille, 700) + (verre ? 16 : 12)),
           // Colonne plus étroite que la pastille (téléphone) : le nombre seul, sans fond.
           pastille = n > 0 && x(c.fin) - x(c.debut) >= l + 2;
         return (
-          <g key={c.debut} className={pastille ? 'frise-nb' : n ? 'frise-nb frise-nb--nu' : 'frise-nb frise-nb--zero'}>
+          <g
+            key={c.debut}
+            className={[
+              'frise-nb',
+              pastille ? '' : n ? 'frise-nb--nu' : 'frise-nb--zero',
+              i === courante ? 'frise-nb--courant' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          >
             <line className="frise-trait" x1={x(c.debut)} x2={x(c.debut)} y1="0" y2={hauteur} />
-            {pastille && <rect x={cx - l / 2} y={hauteur / 2 - 8} width={l} height="16" rx="8" />}
-            <text x={cx} y={hauteur / 2 + 3.5} textAnchor="middle">
+            {pastille && <rect x={cx - l / 2} y={hauteur / 2 - hp / 2} width={l} height={hp} rx={hp / 2} />}
+            <text x={cx} y={hauteur / 2 + (verre ? 4.5 : 3.5)} textAnchor="middle">
               {texte}
             </text>
           </g>
@@ -555,30 +614,91 @@ export function DessinOccurrence({ etat }: { etat: EtatCarre }) {
   );
 }
 
+/** Icônes du style « Verre » (dessin TachesTimeline validé par le RSSI le 27/11/2026) : carrés arrondis de même forme,
+    OK vert à coche, KO rose à croix, NA gris à tiret, résultat attendu en anneau orange, retard rose lumineux « ! » (la
+    lueur animée des repères en retard), à venir en pointillés. Couleurs par les classes de verre.css. */
+export function DessinOccurrenceVerre({ etat }: { etat: EtatCarre }) {
+  const corps = <rect className="frise-v__corps" x="1" y="1" width="18" height="18" rx="6" />;
+  const glyphe = (d: string, epaisseur = 2.6) => (
+    <path className="frise-v__glyphe" d={d} strokeWidth={epaisseur} strokeLinecap="round" strokeLinejoin="round" />
+  );
+  const dessin =
+    etat === 'ok' ? (
+      <>
+        {corps}
+        {glyphe('M5.6 10.4l3 3L14.4 7.2')}
+      </>
+    ) : etat === 'ko' ? (
+      <>
+        {corps}
+        {glyphe('M6.8 6.8l6.4 6.4M13.2 6.8l-6.4 6.4')}
+      </>
+    ) : etat === 'na' ? (
+      <>
+        {corps}
+        {glyphe('M6.4 10h7.2', 2.2)}
+      </>
+    ) : etat === 'attendu' ? (
+      <>
+        <rect className="frise-v__corps" x="1.75" y="1.75" width="16.5" height="16.5" rx="5.5" strokeWidth="2" />
+        <circle className="frise-v__point" cx="10" cy="10" r="3.4" />
+      </>
+    ) : etat === 'retard' ? (
+      <g className="frise-lueur">
+        <rect className="frise-v__corps" x="1.75" y="1.75" width="16.5" height="16.5" rx="5.5" strokeWidth="2" />
+        {glyphe('M10 5.6v5.4', 2.4)}
+        <circle className="frise-v__point" cx="10" cy="14.2" r="1.35" />
+      </g>
+    ) : (
+      <rect
+        className="frise-v__corps"
+        x="1.5"
+        y="1.5"
+        width="17"
+        height="17"
+        rx="5.5"
+        strokeWidth="1.5"
+        strokeDasharray="3 2.5"
+      />
+    );
+  return <g className={`frise-v frise-v--${etat}`}>{dessin}</g>;
+}
+
 /** Le corps des carrés mesure 18 unités : à cette échelle, 15 pixels, la taille des carrés précédents. Le triangle du
     retard est un peu plus grand, comme dans le modèle. */
 const ECHELLE_ICONE = 15 / 18;
 /** Icône d'une occurrence centrée sur son échéance (position par l'attribut `transform`, jamais par un style). */
-export function CarreOccurrence({ cx, cy, etat }: { cx: number; cy: number; etat: EtatCarre }) {
-  const e = etat === 'retard' ? ECHELLE_ICONE * 1.08 : ECHELLE_ICONE;
+export function CarreOccurrence({
+  cx,
+  cy,
+  etat,
+  verre = false,
+}: {
+  cx: number;
+  cy: number;
+  etat: EtatCarre;
+  verre?: boolean;
+}) {
+  // Style « Verre » : carrés de 22 pixels, comme le dessin.
+  const e = verre ? 22 / 20 : etat === 'retard' ? ECHELLE_ICONE * 1.08 : ECHELLE_ICONE;
   return (
     <g className="grc-timeline__occurrence" transform={`translate(${cx} ${cy}) scale(${e}) translate(-10 -10)`}>
-      <DessinOccurrence etat={etat} />
+      {verre ? <DessinOccurrenceVerre etat={etat} /> : <DessinOccurrence etat={etat} />}
     </g>
   );
 }
 /** Icône d'occurrence pour la légende (même dessin, décoratif). */
-export function IconeLegende({ etat }: { etat: EtatCarre }) {
+export function IconeLegende({ etat, verre = false }: { etat: EtatCarre; verre?: boolean }) {
   return (
     <svg
       className="frise-icone-legende"
-      width="15"
-      height="15"
+      width={verre ? 20 : 15}
+      height={verre ? 20 : 15}
       viewBox="0 0 20 20"
       aria-hidden="true"
       focusable="false"
     >
-      <DessinOccurrence etat={etat} />
+      {verre ? <DessinOccurrenceVerre etat={etat} /> : <DessinOccurrence etat={etat} />}
     </svg>
   );
 }

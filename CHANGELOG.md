@@ -51,6 +51,26 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Modifié
 
+- **Veille réglementaire, tâches récurrentes et plan d'actions aux dessins validés, dans le style « Verre »** (décisions
+  du RSSI du 27/11/2026 ; les styles « Sauge » et « Clair bleuté » restent inchangés). Veille réglementaire : surtitre
+  « Conformité · dernière collecte », sources en rail dans l'en-tête, quatre tuiles par statut (à qualifier, à suivre, sans
+  objet, impactant) qui filtrent la liste, liste compacte des publications à gauche et publication choisie à droite
+  (résumé, qualification en un clic pour le rôle du domaine, lien vers la source) ; activation, sources et mots-clés
+  inchangés dessous ; la présentation passe dans « À propos ». Les blocs « Ce que ça change pour nous » et les boutons de
+  création du dessin ne sont pas affichés : les suites d'une publication ne sont pas servies par l'API. Tâches récurrentes
+  et plan d'actions : ouverture sur la Timeline (l'adresse « tvue » reste prioritaire), quatre tuiles calculées sur les
+  fiches chargées (séries actives dont mensuelles, résultat attendu, en retard avec la série la plus en retard, tenue des
+  échéances OK / (OK + KO) sur l'année affichée ; actions ouvertes, en retard, à échéance ce mois, terminées dans l'année
+  d'après la dernière mise à jour de la fiche). Planning des séries : repères en carrés arrondis (OK coche verte, KO croix
+  rose, NA tiret gris, résultat attendu en anneau orange, retard rose lumineux « ! », à venir en pointillés), ligne d'une
+  série en retard teintée de rose, mois courant en gélule, trait violet d'aujourd'hui, pied « Total » avec le
+  récapitulatif de l'année, ligne discrète « Résultats du mois · OK · KO » (filet vert et rose, nombres en petit), lien
+  « Séries proposées par la norme » qui déplie le bloc des séries proposées. Plan d'actions : une ligne par action triée par
+  échéance (point d'état aux couleurs de la politique, registre de l'action, responsable), barre fine du début (à défaut,
+  création de la fiche) à l'échéance, partie écoulée pleine, rond d'échéance rose et pointillé jusqu'à aujourd'hui en
+  retard, flèche pour une priorité haute, actions sans échéance en fin de liste, actions terminées repliées, échelle
+  Semaines / Mois / Trimestres, pied « Total » des échéances et des retards ; aucun carré. Aucune route d'API ni
+  migration. (session « Projet audit_suivi Coeur »)
 - **Fournisseurs et fenêtre d'un indicateur aux dessins validés, dans le style « Verre »** (décisions du RSSI du
   27/11/2026 ; les styles « Sauge » et « Clair bleuté » restent inchangés). Liste des fournisseurs compacte qui se déplie :
   colonnes Fournisseur (pastille aux initiales, nom, type et rattachement), Accès au format « SSO ✓ · MFA ✕ » (coche

@@ -5,13 +5,19 @@
    un étage. Le rendu ne crée aucune occurrence : il ne montre que les fiches chargées, et celles qui ne se placent pas
    (hors période, sans échéance, dates incohérentes, actions hors série) restent listées et ouvrables.
    - Ligne (intitulé, fond) : fiche complète de la série (planning, iCalendar, réglages).
-   - Repère : petite fenêtre de résultat (OK, KO, NA) de l'occurrence. */
+   - Repère : petite fenêtre de résultat (OK, KO, NA) de l'occurrence.
+   Style « Verre » (dessin TachesTimeline validé par le RSSI le 27/11/2026) : repères en carrés arrondis (OK, KO, NA,
+   résultat attendu, en retard, à venir), ligne d'une série en retard teintée, période courante en évidence dans la règle,
+   pied « Total » avec le récapitulatif de la période, ligne discrète « Résultats du mois · OK · KO », lien vers les séries
+   proposées par la norme. Les autres styles gardent la frise du 20/11/2026. */
 import { ActionIcon, Anchor, Button, Group, Select, Text } from '@mantine/core';
 import { useElementSize } from '@mantine/hooks';
 import type { BusinessPolicy, GrcObject } from '@suivi/shared';
 import { useState } from 'react';
+import { SERIES_PROPOSEES } from '@suivi/shared';
 import { Link } from 'react-router';
 import { useFiltreUrl } from '../components/filtre-url';
+import { useCan } from '../session';
 import { ficheCliquable } from '../fiche-cliquable';
 import {
   commandeRepere,
@@ -61,6 +67,7 @@ import {
   type ColonneTemps,
   type OuvrirResultat,
 } from './TimelineCommun';
+import { colonneCourante, filetResultats, libelleRecap, recapPeriode, resultatsParColonne } from './taches-recurrentes';
 
 /** Géométrie du dessin (pixels du SVG) : ligne, étage supplémentaire, règle, pied, écart minimal sur un étage. */
 const LIGNE = 40;
@@ -84,6 +91,85 @@ const SEGMENTS: Record<ChoixEchelle, string> = {
   year: 'Années',
 };
 const moisCourt = (n: number) => dateFrise(n, { month: 'short' });
+/** Style « Verre » : lignes plus hautes et repères de 22 pixels (dessin), écart minimal sur un étage en conséquence. */
+const LIGNE_VERRE = 46;
+const DEMI_VERRE = 11;
+const ECART_VERRE = 25;
+const RESULTATS = 34;
+const PIED_VERRE = 50;
+const FILET = 30;
+/** Adresse du bloc des séries proposées par la norme, replié derrière son lien en style « Verre » (paramètre « tnorme »). */
+export const ID_SERIES_PROPOSEES = 'series-proposees';
+
+/** Ligne discrète « Résultats du mois · OK · KO » (style « Verre », décision du RSSI du 27/11/2026 : « discret ») : par
+    période, un filet fin (vert proportionnel aux OK, rose aux KO) et les nombres en petit ; « · » grisé sans résultat.
+    Nom accessible complet ; dessin par attributs SVG (CSP stricte). */
+export function LigneResultats({
+  colonnes,
+  resultats,
+  x,
+  largeur,
+  hauteur = RESULTATS,
+  unite = 'month',
+}: {
+  colonnes: readonly ColonneTemps[];
+  resultats: readonly { ok: number; ko: number }[];
+  x: (n: number) => number;
+  largeur: number;
+  hauteur?: number;
+  unite?: Echelle;
+}) {
+  return (
+    <svg
+      className="frise-resultats"
+      width={largeur}
+      height={hauteur}
+      role="img"
+      aria-label={`Résultats ${PIED_TITRE[unite].replace('Occurrences ', '')} : ${colonnes
+        .map((c, i) => {
+          const r = resultats[i] ?? { ok: 0, ko: 0 };
+          return r.ok + r.ko ? `${c.libelle}, ${r.ok} OK, ${r.ko} KO` : `${c.libelle}, aucun résultat`;
+        })
+        .join(' · ')}`}
+    >
+      {colonnes.map((c, i) => {
+        const r = resultats[i] ?? { ok: 0, ko: 0 },
+          cx = (x(c.debut) + x(c.fin)) / 2,
+          l = Math.min(FILET, Math.max(8, x(c.fin) - x(c.debut) - 8)),
+          f = filetResultats(r, l),
+          y = 7;
+        return (
+          <g key={c.debut} className="frise-resultats__colonne">
+            {r.ok + r.ko > 0 ? (
+              <>
+                <rect className="frise-resultats__fond" x={cx - l / 2} y={y} width={l} height="4" rx="2" />
+                {f.ok > 0 && (
+                  <rect className="frise-resultats__ok" x={cx - l / 2} y={y} width={f.ok} height="4" rx="2" />
+                )}
+                {f.ko > 0 && (
+                  <rect className="frise-resultats__ko" x={cx - l / 2 + f.ok} y={y} width={f.ko} height="4" rx="2" />
+                )}
+                <text x={cx} y={hauteur - 6} textAnchor="middle" className="frise-resultats__nombres">
+                  <tspan className="frise-resultats__nb-ok">{r.ok}</tspan>
+                  {r.ko > 0 && (
+                    <>
+                      <tspan className="frise-resultats__sep"> · </tspan>
+                      <tspan className="frise-resultats__nb-ko">{r.ko}</tspan>
+                    </>
+                  )}
+                </text>
+              </>
+            ) : (
+              <text x={cx} y={hauteur - 6} textAnchor="middle" className="frise-resultats__sep">
+                ·
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
 
 /** Colonnes de la règle : libellés courts des mois (« nov. 26 ») ; les autres échelles gardent ceux du calendrier. */
 function colonnesTemps(p: Periode): ColonneTemps[] {
@@ -156,6 +242,7 @@ export function FriseOccurrences({
   fond,
   fondActif,
   onFond,
+  verre = false,
 }: {
   items: GrcObject[];
   series: GrcObject[];
@@ -166,12 +253,19 @@ export function FriseOccurrences({
   fond: readonly JourFond[];
   fondActif: Readonly<Record<FamilleFond, boolean>>;
   onFond: (famille: FamilleFond, actif: boolean) => void;
+  /** Style « Verre » : dessin TachesTimeline du 27/11/2026. */
+  verre?: boolean;
 }) {
   // Réglages conservés dans l'adresse, comme les autres filtres des tâches.
   const [echelle, setEchelle] = useFiltreUrl('techelle', 'auto'),
     [focus, setFocus] = useFiltreUrl('tserie', ''),
     [depart, setDepart] = useFiltreUrl('tdebut', ''),
-    [tout, setTout] = useFiltreUrl('ttout', '0');
+    [tout, setTout] = useFiltreUrl('ttout', '0'),
+    [norme, setNorme] = useFiltreUrl('tnorme', '0');
+  const can = useCan();
+  const ligne = verre ? LIGNE_VERRE : LIGNE,
+    demi = verre ? DEMI_VERRE : DEMI,
+    ecart = verre ? ECART_VERRE : ECART;
   usePolicesChargees();
   const bulle = useInfobulle();
   const [horsOuvert, setHorsOuvert] = useState(false);
@@ -196,7 +290,7 @@ export function FriseOccurrences({
   const colonnes = colonnesTemps(p);
   const { visibles, horsPeriode, sansDate, incoherentes } = classerDates(suivies, p, true);
   const x = (n: number) => ((n - p.debut) / (p.fin - p.debut)) * largeur;
-  const borne = (n: number) => Math.max(DEMI + 6, Math.min(largeur - DEMI - 6, x(n)));
+  const borne = (n: number) => Math.max(demi + 6, Math.min(largeur - demi - 6, x(n)));
   const date = (iso: string) => dateFrise(jour(iso), { dateStyle: 'short' });
   const reinitialiser = () => {
     setDepart('');
@@ -227,8 +321,41 @@ export function FriseOccurrences({
     visibles.map((e) => e.fin),
   );
   const jours = (p.fin - p.debut) / JOUR;
+  // Récapitulatif du pied (style « Verre ») : « sur l'année » quand la période est une année civile entière.
+  const recap = recapPeriode(visibles, policy, maintenant);
+  const debutPeriode = new Date(p.debut);
+  const surAnnee =
+    debutPeriode.getUTCMonth() === 0 &&
+    debutPeriode.getUTCDate() === 1 &&
+    p.fin === Date.UTC(debutPeriode.getUTCFullYear() + 1, 0, 1);
+  const voirNorme = verre && can('ecarts', 'modifier');
   const parEcheance = (a: GrcObject, b: GrcObject) => jour(a.data.dueAt) - jour(b.data.dueAt);
   const datee = (o: GrcObject) => Number.isFinite(jour(o.data.dueAt));
+  // Pied : nombre d'occurrences par période ; en style « Verre », « Total » et récapitulatif de la période.
+  const pied = (
+    <div className="timeline-occurrences__pied">
+      {verre ? (
+        <div className="frise-pied frise-pied--total">
+          <span className="frise-pied__titre">Total · {PIED_TITRE[unite].toLowerCase()}</span>
+          <span className="frise-pied__recap">{libelleRecap(recap, surAnnee)}</span>
+        </div>
+      ) : (
+        <div className="frise-pied">{PIED_TITRE[unite]}</div>
+      )}
+      <div className="timeline-occurrences__regle">
+        <PiedTemps
+          titre={PIED_TITRE[unite]}
+          colonnes={colonnes}
+          comptes={comptes}
+          x={x}
+          largeur={largeur}
+          hauteur={verre ? PIED_VERRE : PIED}
+          courante={verre ? colonneCourante(colonnes, aujourdhui) : -1}
+          verre={verre}
+        />
+      </div>
+    </div>
+  );
   return (
     <section className="timeline-studio frise" data-mode="occurrences">
       <DefsVerre />
@@ -238,7 +365,12 @@ export function FriseOccurrences({
         <PeriodeAffichee
           debut={dateFrise(p.debut, { dateStyle: 'short' })}
           fin={dateFrise(p.fin - JOUR, { dateStyle: 'short' })}
-          suite={choisie === 'auto' ? ' · adapté au rythme affiché' : undefined}
+          suite={
+            [
+              choisie === 'auto' ? ' · adapté au rythme affiché' : '',
+              verre ? ' · trait violet : aujourd’hui' : '',
+            ].join('') || undefined
+          }
           souple
         />
         <Select
@@ -290,12 +422,24 @@ export function FriseOccurrences({
           role="group"
           aria-label="Légende : résultat et échéance des occurrences"
         >
-          <ElementLegende icone="ok">OK</ElementLegende>
-          <ElementLegende icone="ko">KO</ElementLegende>
-          <ElementLegende icone="na">NA</ElementLegende>
-          <ElementLegende icone="attendu">Résultat attendu</ElementLegende>
-          <ElementLegende icone="retard">En retard</ElementLegende>
-          <ElementLegende icone="avenir">À venir</ElementLegende>
+          <ElementLegende verre={verre} icone="ok">
+            OK
+          </ElementLegende>
+          <ElementLegende verre={verre} icone="ko">
+            KO
+          </ElementLegende>
+          <ElementLegende verre={verre} icone="na">
+            NA
+          </ElementLegende>
+          <ElementLegende verre={verre} icone="attendu">
+            Résultat attendu
+          </ElementLegende>
+          <ElementLegende verre={verre} icone="retard">
+            En retard
+          </ElementLegende>
+          <ElementLegende verre={verre} icone="avenir">
+            À venir
+          </ElementLegende>
         </div>
         <div className="frise-legende__droite">
           <div className="frise-bascules" role="group" aria-label="Affichage de la frise">
@@ -325,11 +469,23 @@ export function FriseOccurrences({
             <span>Série</span>
             <span className="frise-col-rythme">Rythme</span>
             <span className="frise-col-resp">Resp.</span>
-            <span className="frise-col-prochaine">Prochaine</span>
-            <span className="frise-col-dernier">Dernier</span>
+            {/* Style « Verre » : libellés courts du dessin, le libellé complet en infobulle. */}
+            <span className="frise-col-prochaine" title={verre ? 'Prochaine échéance' : undefined}>
+              {verre ? 'Proch.' : 'Prochaine'}
+            </span>
+            <span className="frise-col-dernier" title={verre ? 'Dernier résultat' : undefined}>
+              {verre ? 'Dern.' : 'Dernier'}
+            </span>
           </div>
           <div ref={regle.ref} className="timeline-occurrences__regle">
-            <RegleTemps colonnes={colonnes} x={x} largeur={largeur} hauteur={ENTETE} aujourdhui={aujourdhui} />
+            <RegleTemps
+              colonnes={colonnes}
+              x={x}
+              largeur={largeur}
+              hauteur={ENTETE}
+              aujourdhui={aujourdhui}
+              verre={verre}
+            />
           </div>
         </div>
         {[...groupes.entries()].map(([cle, brutes]) => {
@@ -341,8 +497,8 @@ export function FriseOccurrences({
           const nom = serie?.name ?? premier?.name ?? '';
           const rythme = serie ? rythmeSerie(serie) : 'Tâche récurrente historique';
           const positions = entrees.map((e) => borne(e.fin + JOUR / 2));
-          const etages = etagerReperes(positions, ECART);
-          const hauteur = LIGNE + Math.max(0, ...etages) * ETAGE;
+          const etages = etagerReperes(positions, ecart);
+          const hauteur = ligne + Math.max(0, ...etages) * ETAGE;
           const enAttente = entrees.filter((e) => !validationDe(e.objet)).length;
           const retard = entrees.some((e) => enRetard(e.objet, policy, maintenant));
           const ton = !entrees.length ? 'muted' : enAttente ? 'amber' : 'teal';
@@ -357,7 +513,12 @@ export function FriseOccurrences({
           const responsable = ownerOf(cible);
           const xs = positions.filter((_, i) => etages[i] === 0);
           return (
-            <div key={cle} className="timeline-occurrences__rang" data-ton={ton}>
+            <div
+              key={cle}
+              className="timeline-occurrences__rang"
+              data-ton={ton}
+              data-retard={verre && retard ? '' : undefined}
+            >
               <div
                 {...ficheCliquable(() => onOpen(cible), `Afficher ${nom}`)}
                 role="button"
@@ -418,15 +579,15 @@ export function FriseOccurrences({
                       className="grc-timeline__guide frise-fil"
                       x1={xs[0]}
                       x2={xs[xs.length - 1]}
-                      y1={LIGNE / 2}
-                      y2={LIGNE / 2}
+                      y1={ligne / 2}
+                      y2={ligne / 2}
                       aria-hidden="true"
                     />
                   )}
                   {entrees.map((e, i) => {
                     const o = e.objet,
                       cx = positions[i]!,
-                      cy = LIGNE / 2 + etages[i]! * ETAGE,
+                      cy = ligne / 2 + etages[i]! * ETAGE,
                       ouvrir = (el: SVGElement) => {
                         bulle.fermer();
                         onResultat(o, el);
@@ -449,6 +610,7 @@ export function FriseOccurrences({
                           cx={cx}
                           cy={cy}
                           etat={etatCarre(o, maintenant, enRetard(o, policy, maintenant))}
+                          verre={verre}
                         />
                       </g>
                     );
@@ -470,19 +632,30 @@ export function FriseOccurrences({
               : 'Aucune occurrence de cette série dans cette période.'}
           </Text>
         )}
-        <div className="timeline-occurrences__pied">
-          <div className="frise-pied">{PIED_TITRE[unite]}</div>
-          <div className="timeline-occurrences__regle">
-            <PiedTemps
-              titre={PIED_TITRE[unite]}
-              colonnes={colonnes}
-              comptes={comptes}
-              x={x}
-              largeur={largeur}
-              hauteur={PIED}
-            />
+        {verre ? (
+          // Bas de la frise (style « Verre ») : le total et la ligne discrète des résultats restent ensemble au bas de la
+          // région qui défile.
+          <div className="timeline-occurrences__bas">
+            {pied}
+            <div className="timeline-occurrences__resultats">
+              <div className="frise-resultats__titre">
+                Résultats {PIED_TITRE[unite].replace('Occurrences ', '')} ·{' '}
+                <span className="frise-resultats__nb-ok">OK</span> · <span className="frise-resultats__nb-ko">KO</span>
+              </div>
+              <div className="timeline-occurrences__regle">
+                <LigneResultats
+                  colonnes={colonnes}
+                  resultats={resultatsParColonne(colonnes, visibles)}
+                  x={x}
+                  largeur={largeur}
+                  unite={unite}
+                />
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          pied
+        )}
       </div>
       <div className="frise-notes">
         <ListeHors
@@ -516,21 +689,37 @@ export function FriseOccurrences({
           </Text>
         )}
       </div>
-      {horsSerie.length > 0 && (
+      {(horsSerie.length > 0 || voirNorme) && (
         <div className="frise-plus">
-          <button
-            type="button"
-            className="frise-plus__bouton"
-            aria-expanded={horsOuvert}
-            onClick={() => setHorsOuvert((v) => !v)}
-          >
-            <span aria-hidden="true">{horsOuvert ? '▾' : '▸'}</span> Actions hors série ({horsSerie.length})
-          </button>{' '}
-          · elles se suivent dans le{' '}
-          <Anchor component={Link} to="/pilotage/actions?tvue=timeline" inherit>
-            plan d’actions
-          </Anchor>
-          .
+          {horsSerie.length > 0 && (
+            <>
+              <button
+                type="button"
+                className="frise-plus__bouton"
+                aria-expanded={horsOuvert}
+                onClick={() => setHorsOuvert((v) => !v)}
+              >
+                <span aria-hidden="true">{horsOuvert ? '▾' : '▸'}</span> Actions hors série ({horsSerie.length})
+              </button>{' '}
+              · elles se suivent dans le{' '}
+              <Anchor component={Link} to="/pilotage/actions?tvue=timeline" inherit>
+                plan d’actions
+              </Anchor>
+              .
+            </>
+          )}
+          {voirNorme && (
+            <button
+              type="button"
+              className="frise-plus__norme"
+              aria-expanded={norme === '1'}
+              aria-controls={ID_SERIES_PROPOSEES}
+              onClick={() => setNorme(norme === '1' ? '0' : '1')}
+            >
+              Séries proposées par la norme ({SERIES_PROPOSEES.length}){' '}
+              <span aria-hidden="true">{norme === '1' ? '▾' : '›'}</span>
+            </button>
+          )}
           {horsOuvert && (
             <Group gap="xs" className="frise-plus__liste">
               {horsSerie.map((o) => (

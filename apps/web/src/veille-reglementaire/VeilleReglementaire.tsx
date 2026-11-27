@@ -9,7 +9,9 @@ import { BarreFiltres } from '../components/BarreFiltres';
    Charte de packages/ui, CSP stricte (ADR 0006) : aucun style en ligne, `lockScroll={false}`, aucune prop Mantine de style
    responsive. Les textes des sources s'affichent tels quels, comme texte simple (rendu échappé par React) ; un lien s'ouvre
    dans un nouvel onglet sans transmettre de référent. Les boutons suivent les droits pour l'affichage seulement : le serveur
-   reste seul juge. */
+   reste seul juge.
+   Style « Verre » (dessin Veille validé par le RSSI le 27/11/2026, VeilleVerre.tsx) : sources en rail dans l'en-tête,
+   tuiles par statut, liste compacte et publication choisie côte à côte ; activation, sources et mots-clés restent dessous. */
 import {
   Alert,
   Badge,
@@ -47,7 +49,7 @@ import {
   type StatutQualifie,
   type SyntheseVeilleReglementaireDto,
 } from '@suivi/shared';
-import { ConfirmButton, DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
+import { APropos, ConfirmButton, DataTable, ErrorAlert, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { api, errorMessage, get } from '../api';
@@ -55,7 +57,8 @@ import { ChampFrequence } from '../components/ChampFrequence';
 import { fmtDate } from '../components/common';
 import { CLE_FLUX_EXTERNES } from '../components/FluxExternes';
 import { Destinations, useValidationFlux } from '../components/ValidationFlux';
-import { useCan, usePermission } from '../session';
+import { useCan, useMe, usePermission } from '../session';
+import { DetailPublicationVerre, ListeTextesVerre, RailSources, RailStatut, TuilesVeilleVerre } from './VeilleVerre';
 import { TeteCase } from '../vulnerabilites/Instruments';
 import { TRACES_FORMES } from '../vulnerabilites/pictos-sources';
 import { deuxChiffres } from '../vulnerabilites/vue-ensemble';
@@ -548,6 +551,9 @@ export function VeilleReglementairePage() {
   const [reglage, setReglage] = useState<string | null>(null);
   const [motsClesEnCours, setMotsClesEnCours] = useState(false);
   const [erreur, setErreur] = useState<unknown>(null);
+  const verre = useMe().appearance.style === 'verre';
+  // Publication montrée à droite (style « Verre ») : la première de la page tant qu'aucune n'est choisie.
+  const [choisie, setChoisie] = useState<string | null>(null);
 
   const synthese = useQuery({
     queryKey: [...CLE, 'synthese'],
@@ -666,23 +672,154 @@ export function VeilleReglementairePage() {
       </Page>
     );
   const pages = publications.data ? Math.max(1, Math.ceil(publications.data.total / publications.data.parPage)) : 1;
+  const description =
+    'Publications de la CNIL, du CEPD, d’EUR-Lex et du Journal officiel (actes filtrés par mots-clés), de l’ANSSI et du CERT Santé, lues par l’exécutant d’exploitation du serveur à la fréquence choisie pour chaque source. Chaque publication arrive « à qualifier » : le rôle RSSI qualifie la sécurité, le droit DPO les données personnelles. Les textes des sources sont repris tels quels ; pour l’ANSSI, le CERT Santé et le Journal officiel, seuls le titre, la date et le lien sont gardés.';
+  const collecteBouton = administrer && etat.data?.flux.ouvert && (
+    <Button loading={collecte} onClick={() => void collecter()}>
+      Collecter maintenant
+    </Button>
+  );
+  const pagination = pages > 1 && (
+    <Group justify="center">
+      <Pagination
+        {...NOMS_PAGINATION}
+        total={pages}
+        value={page}
+        onChange={setPage}
+        aria-label="Pages des publications"
+      />
+    </Group>
+  );
+  const fonctionnement = (
+    <>
+      <ErrorAlert error={etat.error} />
+      {etat.data && (
+        <>
+          <ActivationVeilleReglementaire
+            etat={etat.data}
+            peutActiver={admin}
+            envoi={envoi}
+            onActiver={() => void basculer(true)}
+            onDesactiver={() => void basculer(false)}
+          />
+          {flux.fenetre}
+          <Title order={2} size="h4">
+            Sources
+          </Title>
+          <SourcesReglementaires
+            sources={etat.data.sources}
+            fluxOuvert={etat.data.flux.ouvert}
+            peutRegler={administrer}
+            enCours={reglage}
+            onRegler={(s, r) => void regler(s, r)}
+          />
+          {etat.data.sources
+            .filter((x) => x.motsCles)
+            .map((filtree) => (
+              <MotsClesEurLex
+                // Clé : la saisie repart de la liste enregistrée après chaque réglage.
+                key={`${filtree.source}-${filtree.version}`}
+                source={filtree}
+                peutRegler={administrer}
+                enCours={motsClesEnCours}
+                onEnregistrer={(m) => void reglerMotsCles(filtree, m)}
+              />
+            ))}
+        </>
+      )}
+    </>
+  );
+  if (verre) {
+    const elements = publications.data?.elements ?? [];
+    const montree = elements.find((p) => p.id === choisie) ?? elements[0];
+    const s = synthese.data;
+    return (
+      <Page>
+        <p className="vr-verre__surtitre">
+          Conformité · dernière collecte{' '}
+          {s?.derniereCollecteLe ? (
+            <>
+              le <span className="horodatage">{fmtDate(s.derniereCollecteLe)}</span>
+            </>
+          ) : (
+            ': jamais'
+          )}
+          {!!s?.sourcesEnErreur && ` · ${s.sourcesEnErreur} source${s.sourcesEnErreur > 1 ? 's' : ''} en erreur`}
+        </p>
+        <PageHeader
+          title="Veille réglementaire"
+          actions={
+            <>
+              <RailSources source={filtres.source} onSource={(source) => filtrer({ source })} />
+              {collecteBouton}
+            </>
+          }
+        />
+        <APropos label="À propos de la veille réglementaire">{description}</APropos>
+        <Stack>
+          <ErrorAlert error={synthese.error || erreur} />
+          {s && <TuilesVeilleVerre s={s} statut={filtres.statut} onStatut={(statut) => filtrer({ statut })} />}
+          <div className="vr-verre">
+            <section className="vr-verre__liste" aria-labelledby="vr-verre-liste">
+              <div className="vr-verre__liste-tete">
+                <h2 id="vr-verre-liste">Publications</h2>
+                <RailStatut statut={filtres.statut} onStatut={(statut) => filtrer({ statut })} />
+              </div>
+              <form onSubmit={chercher} role="search">
+                <BarreFiltres label="Veille réglementaire">
+                  <Select
+                    label="Domaine"
+                    placeholder="Tous"
+                    data={optionsDomaine}
+                    value={filtres.domaine || null}
+                    onChange={(v) => filtrer({ domaine: (v as FiltresPublications['domaine']) ?? '' })}
+                    clearable
+                    comboboxProps={{ withinPortal: true }}
+                  />
+                  <TextInput
+                    label="Rechercher"
+                    description="Texte du titre ou du résumé."
+                    maxLength={100}
+                    value={saisie}
+                    onChange={(e) => setSaisie(e.currentTarget.value)}
+                  />
+                  <Button type="submit" variant="default">
+                    Rechercher
+                  </Button>
+                </BarreFiltres>
+              </form>
+              <ErrorAlert error={publications.error} />
+              {publications.data && (
+                <ListeTextesVerre publications={elements} choisie={montree?.id ?? null} onChoisir={setChoisie} />
+              )}
+              {pagination}
+            </section>
+            <section className="vr-verre__droite" aria-label="Publication choisie">
+              {montree ? (
+                <DetailPublicationVerre
+                  p={montree}
+                  droits={droits.data}
+                  enCours={qualification === montree.id}
+                  onQualifier={(p, st) => void qualifier(p, st)}
+                />
+              ) : (
+                <Text size="sm" c="dimmed">
+                  Choisissez une publication dans la liste pour la lire et la qualifier.
+                </Text>
+              )}
+            </section>
+          </div>
+          {fonctionnement}
+        </Stack>
+      </Page>
+    );
+  }
   return (
     <Page>
       <p className="vu-surtitre" aria-hidden="true">
         Veille réglementaire · Sécurité et données personnelles
       </p>
-      <PageHeader
-        title="Veille réglementaire"
-        description="Publications de la CNIL, du CEPD, d’EUR-Lex et du Journal officiel (actes filtrés par mots-clés), de l’ANSSI et du CERT Santé, lues par l’exécutant d’exploitation du serveur à la fréquence choisie pour chaque source. Chaque publication arrive « à qualifier » : le rôle RSSI qualifie la sécurité, le droit DPO les données personnelles. Les textes des sources sont repris tels quels ; pour l’ANSSI, le CERT Santé et le Journal officiel, seuls le titre, la date et le lien sont gardés."
-        actions={
-          administrer &&
-          etat.data?.flux.ouvert && (
-            <Button loading={collecte} onClick={() => void collecter()}>
-              Collecter maintenant
-            </Button>
-          )
-        }
-      />
+      <PageHeader title="Veille réglementaire" description={description} actions={collecteBouton} />
       <Stack>
         <ErrorAlert error={synthese.error || erreur} />
         {synthese.data && <SyntheseReglementaire s={synthese.data} />}
@@ -739,52 +876,8 @@ export function VeilleReglementairePage() {
             onQualifier={(p, s) => void qualifier(p, s)}
           />
         )}
-        {pages > 1 && (
-          <Group justify="center">
-            <Pagination
-              {...NOMS_PAGINATION}
-              total={pages}
-              value={page}
-              onChange={setPage}
-              aria-label="Pages des publications"
-            />
-          </Group>
-        )}
-        <ErrorAlert error={etat.error} />
-        {etat.data && (
-          <>
-            <ActivationVeilleReglementaire
-              etat={etat.data}
-              peutActiver={admin}
-              envoi={envoi}
-              onActiver={() => void basculer(true)}
-              onDesactiver={() => void basculer(false)}
-            />
-            {flux.fenetre}
-            <Title order={2} size="h4">
-              Sources
-            </Title>
-            <SourcesReglementaires
-              sources={etat.data.sources}
-              fluxOuvert={etat.data.flux.ouvert}
-              peutRegler={administrer}
-              enCours={reglage}
-              onRegler={(s, r) => void regler(s, r)}
-            />
-            {etat.data.sources
-              .filter((x) => x.motsCles)
-              .map((filtree) => (
-                <MotsClesEurLex
-                  // Clé : la saisie repart de la liste enregistrée après chaque réglage.
-                  key={`${filtree.source}-${filtree.version}`}
-                  source={filtree}
-                  peutRegler={administrer}
-                  enCours={motsClesEnCours}
-                  onEnregistrer={(m) => void reglerMotsCles(filtree, m)}
-                />
-              ))}
-          </>
-        )}
+        {pagination}
+        {fonctionnement}
       </Stack>
     </Page>
   );

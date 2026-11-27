@@ -1,6 +1,8 @@
 /* Plan d'actions et tâches récurrentes (refonte Neon, lot 6, ADR 0093) : vues synchronisées (Timeline Studio, liste
    compacte, Kanban, calendrier, Gantt, tableau de bord) sur les mêmes données, filtres et commandes que la version
-   précédente. La vue par défaut reste celle de la politique métier du périmètre (« Vue des actions par défaut »). */
+   précédente. La vue par défaut reste celle de la politique métier du périmètre (« Vue des actions par défaut ») ; en style
+   « Verre », les deux pages s'ouvrent sur la Timeline, sous quatre tuiles de synthèse (dessins TachesTimeline et
+   PlanTimeline validés par le RSSI le 27/11/2026) ; la Timeline du plan d'actions y suit le dessin PlanTimeline. */
 import { Alert, Badge, Button, Card, Checkbox, Group, Select, Stack, Table, Text, TextInput } from '@mantine/core';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -13,11 +15,22 @@ import { BoiteOutils, Surligne, type CritereActif, type CriterePuces } from '../
 import { libelleDesignation, SelecteurResponsable, useProposables, useResponsables } from '../components/selecteurs';
 import { ficheCliquable } from '../fiche-cliquable';
 import { useOngletVisible } from '../parcours-iso/mouvement';
+import { useMe } from '../session';
 import { definirListeCourante } from '../registres/liste-courante';
 import { enRetard, estOccurrence, tonStatut, tonTache, validationDe } from './etat-action';
 import { BasculesFond, useJoursDeFond, type FamilleFond } from './jours-de-fond';
 import { EtatTache, ResultatTache, type OuvrirResultat } from './TimelineCommun';
 import { TimelineStudio } from './TimelineStudio';
+import {
+  anneeAffichee,
+  syntheseOccurrences,
+  syntheseSeries,
+  tuilesRecurrences,
+  vueParDefaut,
+} from './taches-recurrentes';
+import { TuilesRecurrences } from './TuilesRecurrences';
+import { tuilesPlan } from './plan-actions';
+import { PlanActionsVerre } from './PlanActionsVerre';
 import { ValidationRapide } from './ValidationRapide';
 
 const views = [
@@ -73,8 +86,12 @@ export function Tasks({
   /** Page Tâches récurrentes : Timeline adaptée à la périodicité, regroupée par série. */
   occurrences?: boolean;
 }) {
+  const style = useMe().appearance.style,
+    verre = style === 'verre',
+    // Tuiles du style « Verre » (tâches récurrentes) : calculées sur les fiches chargées, quelle que soit la vue.
+    tuilesVerre = verre;
   // Filtres conservés dans l'adresse (retour depuis une fiche, lien partagé) : vue, mois, recherche, responsable, état, registre.
-  const [vue, setVue] = useFiltreUrl('tvue', policy.display.defaultTaskView),
+  const [vue, setVue] = useFiltreUrl('tvue', vueParDefaut(style, policy.display.defaultTaskView)),
     [month, setMonth] = useFiltreUrl('tmois', jourParis().slice(0, 7)),
     [search, setSearch] = useFiltreUrl('tq', ''),
     [responsable, setResponsable] = useFiltreUrl('tresp', ''),
@@ -153,7 +170,7 @@ export function Tasks({
         `/api/grc/${smsi}/tasks?${new URLSearchParams({ search, offset: String(pageParam), ...(status ? { status } : {}), ...(owner ? { ownerId: owner } : {}) })}`,
       ),
     getNextPageParam: (p) => p.nextOffset ?? undefined,
-    enabled: view === 'list' || view === 'kanban' || view === 'timeline',
+    enabled: view === 'list' || view === 'kanban' || view === 'timeline' || tuilesVerre,
   });
   // Séries de la Timeline des récurrences (nom, rythme, échelle Auto) : même requête que le registre des séries de la page.
   const series = useInfiniteQuery({
@@ -161,7 +178,7 @@ export function Tasks({
     initialPageParam: 0,
     queryFn: ({ pageParam }) => get<Page>(`/api/grc/${smsi}/objects?kind=task_series&search=&offset=${pageParam}`),
     getNextPageParam: (p) => p.nextOffset ?? undefined,
-    enabled: occurrences && view === 'timeline',
+    enabled: occurrences && (view === 'timeline' || verre),
   });
   const seriesItems = series.data?.pages.flatMap((p) => p.items) ?? [];
   const summary = useQuery({
@@ -174,25 +191,25 @@ export function Tasks({
   });
   const proposables = useProposables(smsi);
   const ownerOf = (o: GrcObject) => libelleDesignation(o.data, proposables.data);
-  const filtrees = (
-    view === 'list' || view === 'kanban' || view === 'timeline'
-      ? (all.data?.pages.flatMap((p) => p.items) ?? [])
-      : (list.data?.items ?? [])
-  ).filter(
-    (o) =>
-      o.name.toLowerCase().includes(search.toLowerCase()) &&
-      (!owner || o.data.ownerId === owner) &&
-      (!registre || o.registreId === registre) &&
-      (!status || o.data.status === status),
+  const filtrer = (liste: GrcObject[]) =>
+    liste.filter(
+      (o) =>
+        o.name.toLowerCase().includes(search.toLowerCase()) &&
+        (!owner || o.data.ownerId === owner) &&
+        (!registre || o.registreId === registre) &&
+        (!status || o.data.status === status),
+    );
+  const chargees = all.data?.pages.flatMap((p) => p.items) ?? [];
+  const filtrees = filtrer(
+    view === 'list' || view === 'kanban' || view === 'timeline' ? chargees : (list.data?.items ?? []),
   );
   // Un état terminal choisi en puce montre ses actions, même quand les actions closes sont masquées.
   const etatTerminal = !!status && !!policy.statuses.find((s) => s.id === status)?.terminal;
-  const items = filtrees.filter(
-    (o) =>
-      showClosed ||
-      etatTerminal ||
-      (!(o.data.legacy && o.data.status === 'done') && !policy.statuses.find((s) => s.id === o.data.status)?.terminal),
-  );
+  const ouvertesOuVoulues = (o: GrcObject) =>
+    showClosed ||
+    etatTerminal ||
+    (!(o.data.legacy && o.data.status === 'done') && !policy.statuses.find((s) => s.id === o.data.status)?.terminal);
+  const items = filtrees.filter(ouvertesOuVoulues);
   // Frise du plan d'actions : elle reçoit aussi les actions closes, qu'elle masque par ses bascules « Terminées » et
   // « Annulées » (par défaut, le filtre « Afficher les actions closes »).
   const itemsFrise = view === 'timeline' && !occurrences ? filtrees : items;
@@ -253,6 +270,25 @@ export function Tasks({
           ton: 'teal',
         },
       ];
+  // Tuiles du style « Verre » : occurrences chargées (toutes vues), mêmes filtres que la Timeline (actions closes selon la
+  // case de la page) ; année : celle de la période affichée par la Timeline.
+  const [debutFrise] = useFiltreUrl('tdebut', '');
+  const maintenant = Date.now();
+  // Plan d'actions : toutes les actions chargées et filtrées, closes comprises (tuile « Terminées »).
+  const tuiles = !tuilesVerre
+    ? []
+    : !occurrences
+      ? tuilesPlan(filtrer(chargees), policy, maintenant)
+      : tuilesRecurrences(
+          syntheseSeries(seriesItems),
+          syntheseOccurrences(
+            filtrer(chargees).filter(ouvertesOuVoulues),
+            seriesItems,
+            policy,
+            maintenant,
+            anneeAffichee(debutFrise, maintenant),
+          ),
+        );
   const card = (o: GrcObject) => (
     <Card
       withBorder
@@ -316,21 +352,29 @@ export function Tasks({
           onOpen={onOpen}
         />
       )}
-      <div className="taches-entete">
-        <div
-          className="taches-metriques"
-          role="group"
-          aria-label={occurrences ? 'Synthèse des occurrences affichées' : 'Synthèse des actions affichées'}
-        >
-          {metriques.map((m) => (
-            <div className="taches-metrique" data-ton={m.ton} key={m.label}>
-              <span className="taches-metrique__libelle">{m.label}</span>
-              <span className="taches-metrique__valeur">{m.valeur}</span>
-              <span className="taches-metrique__note">{m.note}</span>
-            </div>
-          ))}
+      {tuilesVerre ? (
+        <TuilesRecurrences
+          tuiles={tuiles}
+          partiel={all.hasNextPage || (occurrences && series.hasNextPage)}
+          label={occurrences ? 'Synthèse des tâches récurrentes' : 'Synthèse du plan d’actions'}
+        />
+      ) : (
+        <div className="taches-entete">
+          <div
+            className="taches-metriques"
+            role="group"
+            aria-label={occurrences ? 'Synthèse des occurrences affichées' : 'Synthèse des actions affichées'}
+          >
+            {metriques.map((m) => (
+              <div className="taches-metrique" data-ton={m.ton} key={m.label}>
+                <span className="taches-metrique__libelle">{m.label}</span>
+                <span className="taches-metrique__valeur">{m.valeur}</span>
+                <span className="taches-metrique__note">{m.note}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
       <BoiteOutils
         label={occurrences ? 'Outils des occurrences' : 'Outils des actions'}
         vues={views.map((v) => ({ value: v.value, label: v.label, icone: <IconeVue vue={v.value} /> }))}
@@ -400,12 +444,12 @@ export function Tasks({
       {(view === 'calendar' || view === 'timeline') && <ErrorAlert error={fond.erreur} />}
       <ErrorAlert error={list.error ?? all.error} />
       {occurrences && view === 'timeline' && <ErrorAlert error={series.error} />}
-      {(view === 'list' || view === 'kanban' || view === 'timeline') && all.hasNextPage && (
+      {(view === 'list' || view === 'kanban' || view === 'timeline' || tuilesVerre) && all.hasNextPage && (
         <Button variant="light" onClick={() => void all.fetchNextPage()}>
           Charger les 50 actions suivantes
         </Button>
       )}
-      {occurrences && view === 'timeline' && series.hasNextPage && (
+      {occurrences && (view === 'timeline' || verre) && series.hasNextPage && (
         <Button variant="light" onClick={() => void series.fetchNextPage()}>
           Charger les 50 séries suivantes
         </Button>
@@ -521,7 +565,17 @@ export function Tasks({
           {items.filter((o) => !o.data.dueAt).map(card)}
         </>
       )}
-      {view === 'timeline' && (
+      {view === 'timeline' && verre && !occurrences && (
+        <PlanActionsVerre
+          items={itemsFrise}
+          policy={policy}
+          onOpen={onOpen}
+          ownerOf={ownerOf}
+          closes={showClosed}
+          origineDe={(o) => (registres.data?.items ?? []).find((r) => r.id === o.registreId)?.name ?? null}
+        />
+      )}
+      {view === 'timeline' && !(verre && !occurrences) && (
         <TimelineStudio
           items={itemsFrise}
           series={seriesItems}
@@ -534,6 +588,7 @@ export function Tasks({
           fondActif={fondActif}
           onFond={basculerFond}
           closes={showClosed}
+          verre={verre}
         />
       )}
       {view === 'gantt' && (

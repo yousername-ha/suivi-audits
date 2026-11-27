@@ -3870,3 +3870,1123 @@ html[data-style='verre'] .indv-dernieres strong {
     backdrop-filter: none;
   }
 }
+
+/* ========================================================================
+   ACTIONS : TÂCHES RÉCURRENTES (dessin TachesTimeline validé par le RSSI le 27/11/2026)
+   Quatre tuiles en verre liquide ; « Planning des séries » en panneau liquide : rail d'échelle, lignes de série en verre
+   (ligne d'une série en retard teintée de rose), repères en carrés arrondis (OK vert à coche, KO rose à croix, NA gris à
+   tiret, résultat attendu en anneau orange, retard rose lumineux, à venir en pointillés), trait violet d'aujourd'hui,
+   période courante en gélule, pied « Total » et ligne discrète des résultats. Textes de 13 px au moins.
+   ======================================================================== */
+html[data-style='verre'] .taches-studio {
+  --verre-frise-ok: #34d399;
+  --verre-frise-ko: #fb7185;
+  --verre-frise-retard: #f43f5e;
+  --verre-frise-na: #a5a9c0;
+  --verre-frise-encre: #10131b;
+}
+
+/* Tuiles : titre, grand chiffre coloré selon son sens, précision. */
+html[data-style='verre'] .taches-tuiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.875rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .taches-tuile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.625rem 1.125rem 0.75rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: 1.375rem;
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre-douce);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] .taches-tuile__titre {
+  color: var(--verre-texte);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .taches-tuile__valeur {
+  color: var(--verre-texte-fort);
+  font-size: 1.875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+html[data-style='verre'] .taches-tuile[data-sens='orange'] .taches-tuile__valeur {
+  color: var(--verre-orange);
+}
+html[data-style='verre'] .taches-tuile[data-sens='rouge'] .taches-tuile__valeur {
+  color: var(--verre-rouge);
+}
+html[data-style='verre'] .taches-tuile[data-sens='vert'] .taches-tuile__valeur {
+  color: var(--verre-vert);
+}
+html[data-style='verre'] .taches-tuile__detail {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+html[data-style='verre'] .taches-tuiles__partiel {
+  margin: 0.5rem 0 0;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+
+/* Panneau « Planning des séries ». */
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) {
+  padding: 0.375rem 0.625rem 0.25rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: 1.625rem;
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+  font-size: 0.875rem;
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  :is(.frise-barre, .frise-legende) {
+  border-block-end: 0;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-barre__titre {
+  color: var(--verre-texte-fort);
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-barre__periode {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .frise-barre__periode--souple {
+  flex: 1 1 18rem;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-barre__suite {
+  white-space: normal;
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .frise-barre
+  .mantine-Button-root {
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-segments {
+  gap: 0.125rem;
+  padding: 0.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--verre-rail-fond);
+  box-shadow: var(--verre-rail-ombre);
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-segment {
+  padding: 0.375rem 0.875rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--verre-secondaire-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .frise-segment[aria-pressed='true'] {
+  border-color: var(--verre-relief-bord);
+  background: var(--verre-relief-fond);
+  box-shadow: var(--verre-relief-ombre);
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-legende {
+  color: var(--verre-texte-menu);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-legende__items {
+  gap: 0.375rem 1.125rem;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-legende__item {
+  gap: 0.4375rem;
+}
+
+/* Frise : en-tête de colonnes, lignes de série en verre. */
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .timeline-occurrences {
+  background: transparent;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .timeline-occurrences__axe {
+  background: var(--verre-surface-opaque);
+  box-shadow: none;
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .timeline-occurrences__coin {
+  border-inline-end: 0;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-regle__libelle {
+  fill: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-regle__gelule {
+  fill: color-mix(in srgb, var(--verre-violet) 30%, transparent);
+  stroke: color-mix(in srgb, var(--verre-violet) 75%, transparent);
+  stroke-width: 1;
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .frise-regle__colonne--courante
+  .frise-regle__libelle {
+  fill: var(--verre-texte-fort);
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-trait {
+  stroke: var(--verre-ligne-trait);
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .grc-timeline__aujourdhui {
+  stroke: var(--verre-violet);
+  stroke-width: 2;
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .timeline-occurrences__rang {
+  margin-block: 0.375rem;
+  overflow: hidden;
+  border: 1px solid var(--verre-ligne-trait);
+  border-radius: var(--verre-rayon-ligne);
+  background: var(--verre-ligne-fond);
+  box-shadow: none;
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .timeline-occurrences__rang[data-retard] {
+  border-color: color-mix(in srgb, var(--verre-frise-ko) 55%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--verre-frise-ko) 20%, transparent),
+    color-mix(in srgb, var(--verre-frise-ko) 7%, transparent)
+  );
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .timeline-occurrences__rang:is(:hover, :focus-within)
+  > :is(.timeline-occurrences__serie, .timeline-occurrences__piste) {
+  background: var(--verre-ligne-survol);
+}
+/* Colonnes de gauche un peu plus larges (textes de 13 px) ; le fil entre repères n'est pas dans le dessin. */
+@media (min-width: 75.0625em) {
+  html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-cols-series {
+    grid-template-columns: minmax(0, 1fr) 5.5rem 2.25rem 4.75rem 3.25rem;
+  }
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-fil {
+  display: none;
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .timeline-occurrences__serie {
+  min-block-size: 2.875rem;
+  border-inline-end: 0;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .timeline-occurrences__nom {
+  color: var(--verre-texte-fort);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .timeline-occurrences__rythme {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-resp {
+  inline-size: 1.875rem;
+  block-size: 1.875rem;
+  background: var(--verre-gelule-fond);
+  box-shadow:
+    inset 0 0 0 1px var(--verre-gelule-bord),
+    var(--verre-gelule-reflet);
+  color: var(--verre-texte-fort);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-resp--vide {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--verre-creux-bord);
+  color: var(--verre-secondaire-2);
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-date {
+  color: var(--verre-texte-fort);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-date--retard {
+  color: var(--verre-rouge);
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-resultat {
+  min-inline-size: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--verre-vert);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .frise-resultat[data-resultat='ko'] {
+  color: var(--verre-rouge);
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .frise-resultat[data-resultat='na'] {
+  color: var(--verre-secondaire-2);
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .timeline-occurrences__vide {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+}
+
+/* Repères (dessin du 27/11/2026) : couleurs de sens ; la lueur du retard reste la seule animation. */
+html[data-style='verre'] .frise-v__corps {
+  stroke: none;
+}
+html[data-style='verre'] .frise-v__glyphe {
+  fill: none;
+  stroke: var(--verre-frise-encre);
+}
+html[data-style='verre'] .frise-v--ok .frise-v__corps {
+  fill: var(--verre-frise-ok);
+}
+html[data-style='verre'] .frise-v--ko .frise-v__corps {
+  fill: var(--verre-frise-ko);
+}
+html[data-style='verre'] .frise-v--na .frise-v__corps {
+  fill: color-mix(in srgb, var(--verre-frise-na) 38%, transparent);
+  stroke: var(--verre-frise-na);
+  stroke-width: 1;
+}
+html[data-style='verre'] .frise-v--na .frise-v__glyphe {
+  stroke: var(--verre-texte-fort);
+}
+html[data-style='verre'] .frise-v--attendu .frise-v__corps {
+  fill: color-mix(in srgb, var(--verre-orange) 18%, transparent);
+  stroke: var(--verre-orange);
+}
+html[data-style='verre'] .frise-v--attendu .frise-v__point {
+  fill: var(--verre-orange);
+}
+html[data-style='verre'] .frise-v--retard {
+  --frise-lueur: var(--verre-frise-retard);
+}
+html[data-style='verre'] .frise-v--retard .frise-v__corps {
+  fill: color-mix(in srgb, var(--verre-frise-retard) 28%, transparent);
+  stroke: var(--verre-frise-retard);
+}
+html[data-style='verre'] .frise-v--retard .frise-v__glyphe {
+  stroke: var(--verre-texte-fort);
+}
+html[data-style='verre'] .frise-v--retard .frise-v__point {
+  fill: var(--verre-texte-fort);
+}
+html[data-style='verre'] .frise-v--avenir .frise-v__corps {
+  fill: none;
+  stroke: color-mix(in srgb, var(--verre-violet) 70%, transparent);
+}
+html[data-style='verre'] .grc-timeline__repere:is(:hover, :focus-visible) .frise-v__corps {
+  stroke: var(--verre-focus);
+  stroke-width: 2.5;
+  stroke-dasharray: none;
+}
+
+/* Bas de la frise : total et résultats, collés au bas de la région qui défile. */
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .timeline-occurrences__bas {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 2;
+  padding-block: 0.5rem 0.125rem;
+  background: var(--verre-surface-opaque);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .timeline-occurrences__bas
+  > .timeline-occurrences__pied {
+  position: static;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--verre-violet) 45%, transparent);
+  border-radius: var(--verre-rayon-ligne);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--verre-violet) 16%, transparent), transparent 70%);
+  box-shadow: var(--verre-reflet);
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-pied--total {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.125rem;
+  block-size: auto;
+  padding: 0.375rem 1rem;
+  border-inline-end: 0;
+  background: transparent;
+  white-space: normal;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-pied__titre {
+  color: var(--verre-texte-fort);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-pied__recap {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-nb rect {
+  fill: var(--verre-gelule-fond);
+  stroke: var(--verre-gelule-bord);
+  stroke-width: 1;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-nb text {
+  fill: var(--verre-texte-fort);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-nb--zero text {
+  fill: var(--verre-secondaire-2);
+  font-weight: 500;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-nb--courant rect {
+  fill: color-mix(in srgb, var(--verre-violet) 32%, transparent);
+  stroke: color-mix(in srgb, var(--verre-violet) 75%, transparent);
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .timeline-occurrences__resultats {
+  display: grid;
+  grid-template-columns: var(--occ-gauche) minmax(0, 1fr);
+  align-items: center;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-resultats__titre {
+  padding-inline: 1rem;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .frise-resultats {
+  display: block;
+}
+html[data-style='verre'] .frise-resultats__fond {
+  fill: var(--verre-gelule-fond);
+}
+html[data-style='verre'] .frise-resultats__ok {
+  fill: var(--verre-frise-ok);
+}
+html[data-style='verre'] .frise-resultats__ko {
+  fill: var(--verre-frise-ko);
+}
+html[data-style='verre'] .frise-resultats text {
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .frise-resultats .frise-resultats__nb-ok {
+  fill: var(--verre-vert);
+}
+html[data-style='verre'] .frise-resultats .frise-resultats__nb-ko {
+  fill: var(--verre-rouge);
+}
+html[data-style='verre'] .frise-resultats .frise-resultats__sep {
+  fill: color-mix(in srgb, var(--verre-secondaire-2) 50%, transparent);
+}
+html[data-style='verre'] .frise-resultats__titre .frise-resultats__nb-ok {
+  color: var(--verre-vert);
+}
+html[data-style='verre'] .frise-resultats__titre .frise-resultats__nb-ko {
+  color: var(--verre-rouge);
+}
+
+/* Pied du panneau : actions hors série, lien vers les séries proposées par la norme. */
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-plus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+  border-block-start: 0;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  :is(.frise-plus__bouton, .frise-plus__norme) {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--verre-violet);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-plus__norme {
+  margin-inline-start: auto;
+}
+html[data-style='verre']
+  .timeline-studio:is([data-mode='occurrences'], [data-mode='plan'])
+  .frise-plus__norme:focus-visible {
+  outline: 2px solid var(--verre-focus);
+  outline-offset: 2px;
+}
+html[data-style='verre'] .timeline-studio:is([data-mode='occurrences'], [data-mode='plan']) .frise-plus__liste {
+  flex-basis: 100%;
+}
+@media (max-width: 62em) {
+  html[data-style='verre'] .taches-tuiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (forced-colors: active) {
+  html[data-style='verre']
+    :is(.taches-tuile, .timeline-occurrences__rang, .timeline-occurrences__bas > .timeline-occurrences__pied) {
+    border: 1px solid CanvasText;
+  }
+  html[data-style='verre'] .frise-v__corps {
+    stroke: CanvasText;
+    stroke-width: 1.5;
+  }
+  html[data-style='verre'] .frise-v__glyphe {
+    stroke: CanvasText;
+  }
+}
+
+/* ========================================================================
+   CONFORMITÉ : VEILLE RÉGLEMENTAIRE (dessin Veille validé par le RSSI le 27/11/2026)
+   Surtitre, titre et rail des sources ; quatre tuiles à grand chiffre (une par statut, bouton de filtre) ; liste compacte
+   des publications et publication choisie côte à côte, en panneaux liquides ; blocs « Résumé » et « Qualification ».
+   Teintes de statut : à qualifier ambre, à suivre sarcelle, sans objet lavande, impactant rose.
+   ======================================================================== */
+html[data-style='verre'] .vr-verre__surtitre {
+  margin: 0 0 -0.5rem;
+  color: var(--verre-secondaire-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+html[data-style='verre'] .vr-verre__rail {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.125rem;
+  padding: 0.25rem;
+  border-radius: 1.375rem;
+  background: var(--verre-rail-fond);
+  box-shadow: var(--verre-rail-ombre);
+}
+html[data-style='verre'] .vr-verre__rail > button {
+  min-block-size: 2.125rem;
+  padding: 0 0.875rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--verre-secondaire-2);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+html[data-style='verre'] .vr-verre__rail > button:hover:not([aria-pressed='true'], :disabled) {
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre'] .vr-verre__rail > button[aria-pressed='true'] {
+  border-color: var(--verre-relief-bord);
+  background: var(--verre-relief-fond);
+  box-shadow: var(--verre-relief-ombre);
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre'] .vr-verre__rail > button:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+html[data-style='verre'] .vr-verre__rail--petit > button {
+  min-block-size: 2rem;
+  font-size: var(--verre-texte-min);
+}
+
+/* Tuiles : grand chiffre et libellé sur une ligne ; la tuile du filtre actif est enfoncée. */
+html[data-style='verre'] .vr-verre__tuiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.875rem;
+}
+html[data-style='verre'] .vr-verre__tuile {
+  --vr-teinte: var(--verre-texte-fort);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.75rem 1.125rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: 1.5rem;
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre-douce);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+  color: var(--verre-texte);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+html[data-style='verre'] .vr-verre__tuile[data-statut='a-qualifier'] {
+  --vr-teinte: var(--verre-ambre);
+  border-color: color-mix(in srgb, var(--verre-ambre) 45%, transparent);
+}
+html[data-style='verre'] .vr-verre__tuile[data-statut='a-suivre'] {
+  --vr-teinte: var(--verre-sarcelle);
+}
+html[data-style='verre'] .vr-verre__tuile[data-statut='sans-objet'] {
+  --vr-teinte: var(--verre-violet);
+}
+html[data-style='verre'] .vr-verre__tuile[data-statut='impactant'] {
+  --vr-teinte: var(--verre-rouge);
+  border-color: color-mix(in srgb, var(--verre-rouge) 45%, transparent);
+}
+html[data-style='verre'] .vr-verre__tuile:hover {
+  background:
+    linear-gradient(150deg, color-mix(in srgb, var(--vr-teinte) 10%, transparent), transparent 70%),
+    var(--verre-surface);
+}
+html[data-style='verre'] .vr-verre__tuile[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--vr-teinte) 75%, transparent);
+  background:
+    linear-gradient(150deg, color-mix(in srgb, var(--vr-teinte) 20%, transparent), transparent 75%),
+    var(--verre-surface);
+  box-shadow:
+    var(--verre-reflet),
+    0 0 0 1px color-mix(in srgb, var(--vr-teinte) 45%, transparent),
+    var(--verre-ombre-douce);
+}
+html[data-style='verre'] .vr-verre__nombre {
+  color: var(--vr-teinte);
+  font-size: 2.375rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+html[data-style='verre'] .vr-verre__libelle {
+  color: var(--verre-texte);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Deux panneaux : liste à gauche, publication choisie à droite. */
+html[data-style='verre'] .vr-verre {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+  align-items: start;
+  gap: 1rem;
+}
+html[data-style='verre'] :is(.vr-verre__liste, .vr-verre__droite) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: var(--verre-rayon);
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] .vr-verre__droite {
+  position: sticky;
+  inset-block-start: var(--mantine-spacing-md);
+  padding: 1.25rem;
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--verre-violet) 22%, transparent), transparent 60%),
+    var(--verre-surface);
+}
+html[data-style='verre'] .vr-verre__liste-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+html[data-style='verre'] .vr-verre__liste-tete h2 {
+  margin: 0;
+  color: var(--verre-texte-fort);
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .vr-verre__textes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .vr-verre__texte {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  inline-size: 100%;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--verre-ligne-trait);
+  border-radius: var(--verre-rayon-ligne);
+  background: var(--verre-ligne-fond);
+  color: var(--verre-texte);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+html[data-style='verre'] .vr-verre__texte:hover {
+  border-color: color-mix(in srgb, var(--verre-violet) 45%, transparent);
+  background: color-mix(in srgb, var(--verre-violet) 12%, transparent);
+}
+html[data-style='verre'] .vr-verre__texte[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--verre-violet) 60%, transparent);
+  background: color-mix(in srgb, var(--verre-violet) 18%, transparent);
+}
+html[data-style='verre'] .vr-verre__texte-corps {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+html[data-style='verre'] .vr-verre__texte-titre {
+  color: var(--verre-texte-fort);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+html[data-style='verre'] :is(.vr-verre__texte-meta, .vr-verre__detail-meta, .vr-verre__vide) {
+  margin: 0;
+  color: var(--verre-secondaire);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+html[data-style='verre'] .vr-verre__puce {
+  --vr-teinte: var(--verre-secondaire-2);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-block-size: 1.5rem;
+  padding: 0 0.625rem;
+  border: 1px solid color-mix(in srgb, var(--vr-teinte) 55%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--vr-teinte) 18%, transparent);
+  color: var(--vr-teinte);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  white-space: nowrap;
+}
+html[data-style='verre'] .vr-verre__puce[data-statut='a-qualifier'] {
+  --vr-teinte: var(--verre-ambre);
+}
+html[data-style='verre'] .vr-verre__puce[data-statut='a-suivre'] {
+  --vr-teinte: var(--verre-sarcelle);
+}
+html[data-style='verre'] .vr-verre__puce[data-statut='sans-objet'] {
+  --vr-teinte: var(--verre-violet);
+}
+html[data-style='verre'] .vr-verre__puce[data-statut='impactant'] {
+  --vr-teinte: var(--verre-rouge);
+}
+
+/* Publication choisie. */
+html[data-style='verre'] .vr-verre__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+html[data-style='verre'] .vr-verre__detail-tete {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+html[data-style='verre'] .vr-verre__detail-titres {
+  flex: 1;
+  min-width: 0;
+}
+html[data-style='verre'] .vr-verre__detail-titre {
+  margin: 0;
+  color: var(--verre-texte-fort);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+html[data-style='verre'] .vr-verre__detail-meta {
+  margin-block-start: 0.25rem;
+}
+html[data-style='verre'] .vr-verre__ouvrir {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border: 1px solid var(--verre-gelule-bord);
+  border-radius: 50%;
+  background: var(--verre-gelule-fond);
+  box-shadow: var(--verre-gelule-reflet), var(--verre-ombre-douce);
+  color: var(--verre-texte-fort);
+}
+html[data-style='verre'] .vr-verre__ouvrir:hover {
+  background: var(--verre-relief-fond);
+}
+html[data-style='verre'] .vr-verre__bloc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--verre-ligne-trait);
+  border-radius: 1.25rem;
+  background: var(--verre-creux-fond);
+}
+html[data-style='verre'] .vr-verre__bloc h3 {
+  margin: 0;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+html[data-style='verre'] .vr-verre__resume {
+  margin: 0;
+  color: var(--verre-texte);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+html[data-style='verre'] .vr-verre__bloc > .vr-verre__rail {
+  align-self: flex-start;
+}
+html[data-style='verre'] .vr-verre__qualif {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--verre-secondaire);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+@media (max-width: 62em) {
+  html[data-style='verre'] .vr-verre__tuiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  html[data-style='verre'] .vr-verre {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html[data-style='verre'] .vr-verre__droite {
+    position: static;
+  }
+}
+@media (forced-colors: active) {
+  html[data-style='verre']
+    :is(.vr-verre__tuile, .vr-verre__texte, .vr-verre__liste, .vr-verre__droite, .vr-verre__bloc) {
+    border: 1px solid CanvasText;
+  }
+  html[data-style='verre'] :is(.vr-verre__tuile, .vr-verre__texte, .vr-verre__rail > button)[aria-pressed='true'] {
+    border: 2px solid Highlight;
+  }
+}
+
+/* ========================================================================
+   ACTIONS : PLAN D'ACTIONS EN TIMELINE (dessin PlanTimeline validé par le RSSI le 27/11/2026, « pas de carré, logique,
+   épuré, propre ») : lignes en verre, point d'état de la couleur de la politique, barres fines (partie écoulée pleine et
+   lumineuse, reste en filet), anneau du début, rond de l'échéance, retard en rose avec pointillé jusqu'à aujourd'hui,
+   pied « Total ». La couleur d'état arrive par l'attribut SVG color : elle est éclaircie en mode sombre.
+   ======================================================================== */
+html[data-style='verre'] .pa {
+  --pa-gauche: min(26rem, 40%);
+  --pa-retard: #fb7185;
+  --pa-fond-rond: var(--verre-fond-page);
+}
+html[data-style='verre'] .pa-grille {
+  max-block-size: var(--grc-zone-hauteur, none);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+html[data-style='verre'] .pa-grille:focus-visible {
+  outline: 2px solid var(--verre-focus);
+  outline-offset: -2px;
+}
+html[data-style='verre'] :is(.pa-axe, .pa-rang, .pa-total) {
+  display: grid;
+  grid-template-columns: var(--pa-gauche) minmax(0, 1fr);
+  align-items: center;
+}
+html[data-style='verre'] .pa-axe {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  background: var(--verre-surface-opaque);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] .pa-coin {
+  padding-inline: 1.5rem 0.75rem;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+html[data-style='verre'] :is(.pa-regle, .pa-piste) {
+  min-width: 0;
+  overflow: hidden;
+}
+html[data-style='verre'] :is(.pa-regle, .pa-piste) > svg {
+  display: block;
+}
+html[data-style='verre'] .pa-rang {
+  border-block-end: 1px solid var(--verre-ligne-trait);
+  cursor: pointer;
+}
+html[data-style='verre'] .pa-rang:is(:hover, :focus-visible) {
+  background: var(--verre-ligne-survol);
+}
+html[data-style='verre'] .pa-rang:focus-visible {
+  outline: 2px solid var(--verre-focus);
+  outline-offset: -2px;
+}
+html[data-style='verre'] .pa-gauche {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.25rem 0.75rem 0.25rem 0.5rem;
+}
+html[data-style='verre'] .pa-etat {
+  flex: none;
+  overflow: visible;
+}
+html[data-style='verre'] .pa-etat circle {
+  filter: drop-shadow(0 0 3px currentColor);
+}
+html[data-style='verre'][data-mantine-color-scheme='dark'] .pa-etat circle {
+  fill: color-mix(in srgb, currentColor 72%, #ffffff);
+}
+html[data-style='verre'] .pa-textes {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+html[data-style='verre'] .pa-nom {
+  overflow: hidden;
+  color: var(--verre-texte-fort);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-style='verre'] .pa-sous {
+  overflow: hidden;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-style='verre'] .pa-origine {
+  color: var(--verre-orange);
+}
+html[data-style='verre'] .pa-origine--vide {
+  color: var(--verre-secondaire-2);
+  font-weight: 500;
+}
+html[data-style='verre'] .pa-quand--retard {
+  color: var(--verre-rouge);
+}
+html[data-style='verre'] .pa .frise-resp {
+  inline-size: 1.875rem;
+  block-size: 1.875rem;
+  background: var(--verre-gelule-fond);
+  box-shadow:
+    inset 0 0 0 1px var(--verre-gelule-bord),
+    var(--verre-gelule-reflet);
+  color: var(--verre-texte-fort);
+  font-size: var(--verre-texte-min);
+}
+html[data-style='verre'] .pa .frise-resp--vide {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--verre-creux-bord);
+  color: var(--verre-secondaire-2);
+}
+
+/* Barres : couleur d'état (attribut color), éclaircie en mode sombre. */
+html[data-style='verre'] .pa-action {
+  --pa-teinte: currentColor;
+}
+html[data-style='verre'][data-mantine-color-scheme='dark'] .pa-action {
+  --pa-teinte: color-mix(in srgb, currentColor 72%, #ffffff);
+}
+html[data-style='verre'] .pa-filet {
+  stroke: color-mix(in srgb, var(--pa-teinte, var(--verre-violet)) 50%, transparent);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+}
+html[data-style='verre'] .pa-ecoule {
+  stroke: var(--pa-teinte, var(--verre-violet));
+  stroke-width: 5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px var(--pa-teinte, var(--verre-violet)));
+}
+html[data-style='verre'] .pa-depassement {
+  stroke: var(--pa-retard);
+  stroke-width: 4;
+  stroke-dasharray: 5 3;
+}
+html[data-style='verre'] .pa-debut {
+  fill: var(--pa-fond-rond);
+  stroke: var(--pa-teinte);
+  stroke-width: 2;
+}
+html[data-style='verre'] .pa-echeance {
+  fill: var(--pa-fond-rond);
+  stroke: var(--pa-teinte, var(--verre-violet));
+  stroke-width: 2.5;
+}
+html[data-style='verre'] .pa-echeance--retard {
+  fill: var(--pa-retard);
+  stroke: var(--pa-retard);
+  filter: drop-shadow(0 0 6px var(--pa-retard));
+}
+html[data-style='verre'] .pa-priorite {
+  fill: var(--verre-texte-fort);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .pa-legende {
+  flex: none;
+  overflow: visible;
+}
+html[data-style='verre'] .pa-legende .pa-echeance {
+  stroke: var(--verre-violet);
+  stroke-width: 2;
+}
+html[data-style='verre'] .pa-legende--retard {
+  color: var(--verre-rouge);
+}
+html[data-style='verre'] .pa-legende__sep {
+  inline-size: 1px;
+  block-size: 1.125rem;
+  background: var(--verre-bord-fort);
+}
+html[data-style='verre'] .pa .frise-trait {
+  stroke: var(--verre-ligne-trait);
+}
+html[data-style='verre'] .pa-vide,
+html[data-style='verre'] .pa-note {
+  padding: 0.5rem 1rem;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+}
+
+/* Actions terminées repliées, pied « Total ». */
+html[data-style='verre'] .pa-plus {
+  padding: 0.625rem 1rem;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+html[data-style='verre'] .pa-plus__bouton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--verre-violet);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+html[data-style='verre'] .pa-plus__bouton:focus-visible {
+  outline: 2px solid var(--verre-focus);
+  outline-offset: 2px;
+}
+html[data-style='verre'] .pa-rang[data-terminee] .pa-nom {
+  color: var(--verre-secondaire);
+}
+html[data-style='verre'] .pa-total {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 2;
+  margin-block-start: 0.5rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--verre-violet) 45%, transparent);
+  border-radius: var(--verre-rayon-ligne);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--verre-violet) 16%, transparent), transparent 70%),
+    var(--verre-surface-opaque);
+  box-shadow: var(--verre-reflet);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] .pa-total__titre {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.375rem 1rem;
+}
+html[data-style='verre'] .pa-total__nom {
+  color: var(--verre-texte-fort);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .pa-total__recap {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .pa-total__nb {
+  fill: var(--verre-texte-fort);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .pa-total__nb--zero {
+  fill: var(--verre-secondaire-2);
+  font-weight: 500;
+}
+html[data-style='verre'] .pa-total__nb--courant {
+  fill: var(--verre-violet);
+}
+html[data-style='verre'] .pa-total__retard {
+  fill: var(--verre-rouge);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+@media (max-width: 48em) {
+  html[data-style='verre'] .pa {
+    --pa-gauche: 14rem;
+  }
+}
+@media (forced-colors: active) {
+  html[data-style='verre'] :is(.pa-ecoule, .pa-filet, .pa-depassement, .pa-debut, .pa-echeance) {
+    stroke: CanvasText;
+    filter: none;
+  }
+  html[data-style='verre'] .pa-total {
+    border: 1px solid CanvasText;
+  }
+}

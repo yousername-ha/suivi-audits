@@ -1023,6 +1023,7 @@ export function TimelineStudio({
   fondActif = { feries: false, autres: false },
   onFond = () => undefined,
   closes = false,
+  verre = false,
 }: {
   items: GrcObject[];
   /** Séries récurrentes lisibles (Timeline des occurrences). */
@@ -1040,6 +1041,8 @@ export function TimelineStudio({
   onFond?: (famille: FamilleFond, actif: boolean) => void;
   /** Filtre « Afficher les actions closes » de la page : valeur par défaut des bascules Terminées et Annulées. */
   closes?: boolean;
+  /** Style « Verre » : Timeline des tâches récurrentes au dessin TachesTimeline (27/11/2026). */
+  verre?: boolean;
 }) {
   return occurrences ? (
     <FriseOccurrences
@@ -1052,6 +1055,7 @@ export function TimelineStudio({
       fond={fond}
       fondActif={fondActif}
       onFond={onFond}
+      verre={verre}
     />
   ) : (
     <FriseActions

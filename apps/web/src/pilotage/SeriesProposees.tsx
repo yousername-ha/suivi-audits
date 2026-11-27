@@ -1,11 +1,24 @@
 /* Séries récurrentes proposées (ISO 9001:2015) : modèles tirés du texte de la norme, sans fréquence. Rien n'est planifié
-   d'office : la série est préparée inactive, l'organisme choisit la fréquence, puis l'active. */
+   d'office : la série est préparée inactive, l'organisme choisit la fréquence, puis l'active. En style « Verre » (dessin
+   TachesTimeline du 27/11/2026), le bloc est replié derrière le lien « Séries proposées par la norme » du pied de la
+   Timeline (paramètre d'adresse « tnorme ») ; les autres styles le montrent toujours. */
 import { Button, Card, Group, Stack, Text } from '@mantine/core';
 import { jourParis, SERIES_PROPOSEES, type SerieProposee } from '@suivi/shared';
-import { useCan } from '../session';
+import { useEffect, useRef } from 'react';
+import { useFiltreUrl } from '../components/filtre-url';
+import { ID_SERIES_PROPOSEES } from '../grc/TimelineOccurrences';
+import { useCan, useMe } from '../session';
 
 export function SeriesProposees({ onPreparer }: { onPreparer: (name: string, data: Record<string, unknown>) => void }) {
   const can = useCan();
+  const verre = useMe().appearance.style === 'verre';
+  const [norme, setNorme] = useFiltreUrl('tnorme', '0');
+  const bloc = useRef<HTMLDivElement>(null);
+  const ouvert = !verre || norme === '1';
+  // Ouvert depuis son lien : le bloc vient sous les yeux.
+  useEffect(() => {
+    if (verre && ouvert) bloc.current?.scrollIntoView?.({ block: 'start' });
+  }, [verre, ouvert]);
   const preparer = (s: SerieProposee) =>
     onPreparer(s.titre, {
       description: `${s.description} (ISO 9001:2015, article ${s.article})`,
@@ -22,10 +35,18 @@ export function SeriesProposees({ onPreparer }: { onPreparer: (name: string, dat
         active: false,
       },
     });
+  if (!ouvert) return null;
   return (
-    <Card withBorder aria-label="Séries proposées">
+    <Card withBorder aria-label="Séries proposées" id={ID_SERIES_PROPOSEES} ref={bloc}>
       <Stack gap="xs">
-        <Text fw={600}>Séries proposées (ISO 9001:2015)</Text>
+        <Group justify="space-between" wrap="nowrap">
+          <Text fw={600}>Séries proposées (ISO 9001:2015)</Text>
+          {verre && (
+            <Button size="xs" variant="default" onClick={() => setNorme('0')}>
+              Replier
+            </Button>
+          )}
+        </Group>
         <Text size="sm">
           Ces séries sont tirées du texte de la norme, qui fixe des « intervalles planifiés ou spécifiés » sans en
           donner la valeur. Aucune n’est créée d’office et aucune fréquence n’est imposée : la série est préparée
