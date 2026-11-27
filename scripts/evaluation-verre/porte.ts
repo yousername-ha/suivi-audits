@@ -34,11 +34,12 @@ if (cfg.cookieSecure !== 'false') {
 const svc = createServices(cfg, createLogger('warn'));
 const attendre = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** L'API a fini ses migrations et répond. */
+/** L'API répond : elle n'écoute qu'une fois ses migrations appliquées. Sonde publique « /healthz » : « /api/health/ready »
+    ne répond qu'aux appels du conteneur lui-même (404 depuis la porte, qui tourne dans un autre conteneur). */
 async function attendreApi() {
   for (let i = 0; ; i++) {
     try {
-      const r = await fetch(`${API}/api/health/ready`);
+      const r = await fetch(`${API}/healthz`);
       if (r.ok) return;
     } catch {
       /* API pas encore démarrée */
