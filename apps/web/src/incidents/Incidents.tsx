@@ -1,4 +1,6 @@
 import { BarreFiltres } from '../components/BarreFiltres';
+import { Surligne } from '../components/BarreOutils';
+import { compterPuces, correspond } from '../components/recherche-liste';
 /* Registre des incidents (reprise des pages « Incidents » de l'outil de suivi) et fiche d'un incident à onglets
    (ADR 0091) : « Fiche », « Qualification guidée » (questionnaire oui / non / je ne sais pas, qualification proposée,
    obligations) et « Chronologie et RETEX ». Priorité ITIL impact × urgence, action du registre des écarts. Bloc
@@ -9,7 +11,7 @@ import {
   Button,
   Checkbox,
   Group,
-  Select,
+  TextInput,
   SegmentedControl,
   Stack,
   Table,
@@ -62,12 +64,26 @@ export function RegistreIncidents({ smsi }: { smsi?: string }) {
       smsi ? `/api/incidents?smsi=${smsi}` : '/api/incidents',
     ),
     [filtre, setFiltre] = useState<FiltreIncidents>('open'),
-    [filtreRetex, setFiltreRetex] = useState<'tous' | CleEtatRetex>('tous');
+    [filtreRetex, setFiltreRetex] = useState<'tous' | CleEtatRetex>('tous'),
+    [recherche, setRecherche] = useState('');
   const ouverte = d?.incidents.find((i) => i.id === params.get('incident')) ?? null;
   const ouvrir = (id: string | null) => setParams(id ? { incident: id } : {});
-  const liste = (d ? filtrerIncidents(d.incidents, filtre) : []).filter(
-    (i) => filtreRetex === 'tous' || etatRetexIncident(i).cle === filtreRetex,
+  // Recherche et filtres des listes (refonte Verre, 27/11/2026) : recherche dans la référence, l'intitulé et le texte de
+  // la fiche ; RETEX en puces comptées sur les éléments du filtre choisi (Ouverts, Tous…), qui reste visible.
+  const vue = d ? filtrerIncidents(d.incidents, filtre) : [];
+  const liste = vue.filter(
+    (i) =>
+      (filtreRetex === 'tous' || etatRetexIncident(i).cle === filtreRetex) &&
+      correspond(
+        [i.id, i.title, i.desc, i.kind, i.cat, i.status, i.owner, i.reporter, i.actions, i.cause, i.retex],
+        recherche,
+      ),
   );
+  const libellesRetex = new Map(FILTRES_RETEX.map((f) => [f.value as string, f.label]));
+  const optionsRetex = compterPuces(vue, (i) => etatRetexIncident(i).cle, {
+    ordre: FILTRES_RETEX.filter((f) => f.value !== 'tous').map((f) => f.value),
+    libelle: (v) => libellesRetex.get(v) ?? v,
+  }).filter((o) => o.value === filtreRetex || o.compte < vue.length);
   const s = d ? syntheseIncidents(d.incidents) : null;
   if (ouverte && d)
     return (
@@ -117,7 +133,20 @@ export function RegistreIncidents({ smsi }: { smsi?: string }) {
           ]}
         />
       )}
-      <BarreFiltres label="Incidents">
+      <BarreFiltres
+        label="Incidents"
+        total={d?.incidents.length ?? 0}
+        affiches={liste.length}
+        puces={[
+          {
+            cle: 'retex',
+            libelle: 'RETEX',
+            valeur: filtreRetex === 'tous' ? null : filtreRetex,
+            options: optionsRetex,
+            onChange: (v) => setFiltreRetex((v as CleEtatRetex | null) ?? 'tous'),
+          },
+        ]}
+      >
         <SegmentedControl
           aria-label="Filtre du registre"
           value={filtre}
@@ -131,12 +160,11 @@ export function RegistreIncidents({ smsi }: { smsi?: string }) {
             { value: 'all', label: 'Tous' },
           ]}
         />
-        <Select
-          label="RETEX"
-          allowDeselect={false}
-          data={FILTRES_RETEX}
-          value={filtreRetex}
-          onChange={(v) => setFiltreRetex((v as 'tous' | CleEtatRetex | null) ?? 'tous')}
+        <TextInput
+          label="Rechercher dans les incidents"
+          placeholder="Référence, intitulé, description…"
+          value={recherche}
+          onChange={(e) => setRecherche(e.currentTarget.value)}
         />
       </BarreFiltres>
       <DataTable label="Registre des incidents">
@@ -168,7 +196,7 @@ export function RegistreIncidents({ smsi }: { smsi?: string }) {
                     <Qualification k={i.kind} />
                   </Table.Td>
                   <Table.Td>
-                    {i.title || '(sans titre)'}
+                    {i.title ? <Surligne texte={i.title} recherche={recherche} /> : '(sans titre)'}
                     <Text size="xs" c="dimmed">
                       {i.cat}
                     </Text>

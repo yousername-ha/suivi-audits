@@ -57,7 +57,7 @@ export function LegacyFrameworks({ smsi }: { smsi: string }) {
           <BoiteOutils
             label="Outils des exigences historiques"
             recherche={{
-              label: 'Rechercher une exigence historique',
+              label: 'Rechercher dans les exigences historiques',
               value: search,
               onChange: (v) => {
                 setSearch(v);

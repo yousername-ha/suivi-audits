@@ -36,16 +36,17 @@ import {
 } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMediaQuery } from '@mantine/hooks';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import {
   BoiteOutils,
-  FiltreColonne,
-  FiltreColonneMultiple,
-  PastillesCriteres,
+  ListeFiltreMultiple,
+  Surligne,
   type CritereActif,
+  type CriterePuces,
 } from '../components/BarreOutils';
+import { compterPuces } from '../components/recherche-liste';
 import { ConfirmButton, ErrorAlert, fmtDate, fmtSize, PresenceBar } from '../components/common';
 import { useColonnes, type Colonne } from '../components/Colonnes';
 import { usePresence } from '../realtime';
@@ -111,22 +112,20 @@ interface OrdreTri {
 }
 const TRI_DEFAUT: OrdreTri = { tri: 'modifie', ordre: 'desc' };
 
-/** En-tête de colonne triable : un second clic inverse le sens ; l'état est annoncé par aria-sort. Un filtre de colonne
-    compact (entonnoir) peut se placer à côté du libellé, qui garde le tri. */
+/** En-tête de colonne triable : un second clic inverse le sens ; l'état est annoncé par aria-sort. Plus d'entonnoir
+    (refonte Verre, 27/11/2026) : les filtres sont dans la barre de la liste. */
 function EnteteTri({
   cle,
   libelle,
   courant,
   onChange,
   className,
-  filtre,
 }: {
   cle: CleTri;
   libelle: string;
   courant: OrdreTri;
   onChange: (o: OrdreTri) => void;
   className?: string;
-  filtre?: ReactNode;
 }) {
   const actif = courant.tri === cle;
   const suivant = actif
@@ -144,14 +143,7 @@ function EnteteTri({
   );
   return (
     <Table.Th className={className} aria-sort={actif ? (courant.ordre === 'asc' ? 'ascending' : 'descending') : 'none'}>
-      {filtre ? (
-        <span className="entete-filtrable">
-          {tri}
-          {filtre}
-        </span>
-      ) : (
-        tri
-      )}
+      {tri}
     </Table.Th>
   );
 }
@@ -290,7 +282,12 @@ function DocumentList({
     queryKey: ['documents', params.toString()],
     queryFn: () => get<DocumentOut[]>(`/api/documents?${params}`),
   });
-  const cats = useQuery({ queryKey: ['categories'], queryFn: () => get<string[]>('/api/documents/categories') });
+  // Liste sans recherche ni filtre (même requête que la liste quand rien n'est filtré) : nombres des puces et seuil.
+  const paramsBase = new URLSearchParams({ tri: ordre.tri, ordre: ordre.ordre, trash });
+  const base = useQuery({
+    queryKey: ['documents', paramsBase.toString()],
+    queryFn: () => get<DocumentOut[]>(`/api/documents?${paramsBase}`),
+  });
   const [uploading, setUploading] = useState(false);
 
   const upload = async (files: File[]) => {
@@ -324,44 +321,46 @@ function DocumentList({
     setTags([]);
     setTrash('0');
   };
-  const criteres: CritereActif[] = [
-    ...(q ? [{ cle: 'q', libelle: 'Recherche', valeur: q, retirer: () => setQ('') }] : []),
-    ...(category
-      ? [{ cle: 'categorie', libelle: 'Catégorie', valeur: category, retirer: () => setCategory(null) }]
-      : []),
-    ...criteresEtiquettes(tags, setTags),
-    ...(trash === '1'
-      ? [{ cle: 'corbeille', libelle: 'Afficher', valeur: 'Corbeille', retirer: () => setTrash('0') }]
-      : []),
+  const puces: CriterePuces[] = [
+    {
+      cle: 'categorie',
+      libelle: 'Catégorie',
+      valeur: category,
+      options: compterPuces(base.data ?? [], (d) => d.category),
+      onChange: setCategory,
+    },
   ];
-
   return (
     <Stack>
-      {/* Boîte d'outils commune (7.3.0) : recherche et, selon les droits, la corbeille dans les filtres avancés. La
-          catégorie (entonnoir à côté du titre triable) et les étiquettes (cases à cocher) se filtrent sur le titre de leur
-          colonne (décision du RSSI du 18/11/2026) ; le choix des colonnes et le dépôt se placent au bout de la ligne. */}
+      {/* Recherche et filtres des listes (refonte Verre, 27/11/2026) : recherche, catégorie en puces avec leur nombre,
+          étiquettes (cases à cocher, toutes exigées) dans « Plus de filtres » ; la corbeille, le choix des colonnes et le
+          dépôt restent toujours visibles. */}
       <BoiteOutils
         label="Outils des documents"
-        recherche={{ label: 'Rechercher', placeholder: 'Titre, fichier, rattachement…', value: q, onChange: setQ }}
-        filtres={
-          canDelete
-            ? {
-                actifs: trash === '1' ? 1 : 0,
-                onReinitialiser: () => setTrash('0'),
-                contenu: (
-                  <SegmentedControl
-                    value={trash}
-                    onChange={setTrash}
-                    data={[
-                      { value: '0', label: 'Documents' },
-                      { value: '1', label: 'Corbeille' },
-                    ]}
-                    aria-label="Afficher"
-                  />
-                ),
-              }
-            : undefined
-        }
+        total={base.isPending ? 0 : base.data?.length}
+        affiches={list.data?.length}
+        recherche={{
+          label: 'Rechercher dans les documents',
+          placeholder: 'Titre, fichier, rattachement…',
+          value: q,
+          onChange: setQ,
+        }}
+        puces={puces}
+        criteres={criteresEtiquettes(tags, setTags)}
+        onToutEffacer={toutEffacer}
+        filtres={{
+          actifs: tags.length ? 1 : 0,
+          onReinitialiser: () => setTags([]),
+          contenu: (
+            <ListeFiltreMultiple
+              libelle="Étiquettes"
+              description="Toutes les étiquettes cochées sont exigées."
+              valeurs={tags}
+              options={optionsEtiquettes(etiquettes.data)}
+              onChange={setTags}
+            />
+          ),
+        }}
         ajout={
           <Group gap="xs">
             {selecteur}
@@ -376,8 +375,19 @@ function DocumentList({
             )}
           </Group>
         }
-      />
-      <PastillesCriteres criteres={criteres} onToutEffacer={toutEffacer} />
+      >
+        {canDelete && (
+          <SegmentedControl
+            value={trash}
+            onChange={setTrash}
+            data={[
+              { value: '0', label: 'Documents' },
+              { value: '1', label: 'Corbeille' },
+            ]}
+            aria-label="Afficher"
+          />
+        )}
+      </BoiteOutils>
       <ErrorAlert error={list.error} />
       <DataTable label="Documents">
         <Table highlightOnHover>
@@ -385,15 +395,7 @@ function DocumentList({
             <Table.Tr>
               <EnteteTri cle="titre" libelle="Titre" courant={ordre} onChange={setOrdre} />
               <Table.Th className={cls('rattachements')}>Rattachements</Table.Th>
-              <Table.Th className={cls('etiquettes')}>
-                <FiltreColonneMultiple
-                  libelle="Étiquettes"
-                  description="Toutes les étiquettes cochées sont exigées."
-                  valeurs={tags}
-                  options={optionsEtiquettes(etiquettes.data)}
-                  onChange={setTags}
-                />
-              </Table.Th>
+              <Table.Th className={cls('etiquettes')}>Étiquettes</Table.Th>
               <EnteteTri
                 cle="classification"
                 libelle="Classification"
@@ -407,15 +409,6 @@ function DocumentList({
                 courant={ordre}
                 onChange={setOrdre}
                 className={cls('categorie')}
-                filtre={
-                  <FiltreColonne
-                    compact
-                    libelle="Catégorie"
-                    valeur={category}
-                    options={(cats.data ?? []).map((c) => ({ value: c, label: c }))}
-                    onChange={setCategory}
-                  />
-                }
               />
               <EnteteTri cle="taille" libelle="Taille" courant={ordre} onChange={setOrdre} className={cls('taille')} />
               <EnteteTri
@@ -437,7 +430,7 @@ function DocumentList({
               >
                 <Table.Td>
                   <Anchor component="button" type="button" onClick={() => onOpen(d.id)} fw={600}>
-                    {d.title}
+                    <Surligne texte={d.title} recherche={q} />
                   </Anchor>
                   <Text size="xs" c="dimmed">
                     {d.filename} · {fmtSize(d.size)} · v{d.current_version}
@@ -844,6 +837,12 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
     queryKey: ['links', params.toString()],
     queryFn: () => get<LinkOut[]>(`/api/links?${params}`),
   });
+  // Liste sans recherche ni étiquette (même requête que la liste quand rien n'est filtré) : seuil de la recherche.
+  const paramsBase = new URLSearchParams({ tri });
+  const base = useQuery({
+    queryKey: ['links', paramsBase.toString()],
+    queryFn: () => get<LinkOut[]>(`/api/links?${paramsBase}`),
+  });
   const [edit, setEdit] = useState<(Partial<LinkOut> & { refs: string[]; tags: string[] }) | null>(null);
   const [err, setErr] = useState<string | null>(null);
   usePresence(edit ? `documents/links${edit.id ? '/' + edit.id : ''}` : null, 'edit');
@@ -876,55 +875,51 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
 
   return (
     <Stack>
-      {/* Boîte d'outils commune (7.3.0) : recherche et filtres avancés (étiquettes, tri), libellés inchangés ; la liste des
-          liens n'a pas de titres de colonnes. L'ajout d'un lien se place au bout de la ligne. */}
+      {/* Recherche et filtres des listes (refonte Verre, 27/11/2026) : recherche, étiquettes (toutes exigées) dans « Plus de
+          filtres », tri toujours visible ; la liste des liens n'a pas de titres de colonnes. L'ajout au bout de la ligne. */}
       <BoiteOutils
         label="Outils des liens"
-        recherche={{ label: 'Rechercher', value: q, onChange: setQ }}
-        filtres={{
-          actifs: tags.length ? 1 : 0,
-          onReinitialiser: () => setTags([]),
-          contenu: (
-            <>
-              <MultiSelect
-                label="Étiquettes"
-                description="Toutes les étiquettes choisies"
-                placeholder={tags.length ? undefined : 'Toutes'}
-                data={optionsEtiquettes(etiquettes.data)}
-                value={tags}
-                onChange={setTags}
-                searchable
-                clearable
-                nothingFoundMessage="Aucune étiquette"
-                comboboxProps={{ withinPortal: false }}
-              />
-              <Select
-                label="Trier par"
-                data={[
-                  { value: 'modifie', label: 'Dernière modification' },
-                  { value: 'titre', label: 'Titre' },
-                  { value: 'categorie', label: 'Catégorie' },
-                ]}
-                value={tri}
-                onChange={(v) => setTri((v as typeof tri) ?? 'modifie')}
-                allowDeselect={false}
-                comboboxProps={{ withinPortal: false }}
-              />
-            </>
-          ),
-        }}
-        ajout={canWrite && <Button onClick={() => setEdit({ refs: [], tags: [] })}>Ajouter un lien</Button>}
-      />
-      <PastillesCriteres
-        criteres={[
-          ...(q ? [{ cle: 'q', libelle: 'Recherche', valeur: q, retirer: () => setQ('') }] : []),
-          ...criteresEtiquettes(tags, setTags),
-        ]}
+        total={base.isPending ? 0 : base.data?.length}
+        affiches={list.data?.length}
+        recherche={{ label: 'Rechercher dans les liens', value: q, onChange: setQ }}
+        criteres={criteresEtiquettes(tags, setTags)}
         onToutEffacer={() => {
           setQ('');
           setTags([]);
         }}
-      />
+        filtres={{
+          actifs: tags.length ? 1 : 0,
+          onReinitialiser: () => setTags([]),
+          contenu: (
+            <MultiSelect
+              label="Étiquettes"
+              description="Toutes les étiquettes choisies"
+              placeholder={tags.length ? undefined : 'Toutes'}
+              data={optionsEtiquettes(etiquettes.data)}
+              value={tags}
+              onChange={setTags}
+              searchable
+              clearable
+              nothingFoundMessage="Aucune étiquette"
+              comboboxProps={{ withinPortal: false }}
+            />
+          ),
+        }}
+        ajout={canWrite && <Button onClick={() => setEdit({ refs: [], tags: [] })}>Ajouter un lien</Button>}
+      >
+        <Select
+          label="Trier par"
+          className="liste-outils__tri"
+          data={[
+            { value: 'modifie', label: 'Dernière modification' },
+            { value: 'titre', label: 'Titre' },
+            { value: 'categorie', label: 'Catégorie' },
+          ]}
+          value={tri}
+          onChange={(v) => setTri((v as typeof tri) ?? 'modifie')}
+          allowDeselect={false}
+        />
+      </BoiteOutils>
       <ErrorAlert error={list.error} />
       <Card withBorder p={0}>
         <div className="table-wrap" role="region" aria-label="Liens du document" tabIndex={0}>
@@ -934,7 +929,7 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
                 <Table.Tr key={l.id}>
                   <Table.Td>
                     <Anchor href={l.url} target="_blank" rel="noopener noreferrer" fw={600}>
-                      {l.title}
+                      <Surligne texte={l.title} recherche={q} />
                     </Anchor>
                     <Text size="xs" c="dimmed" className="mono">
                       {l.url}

@@ -46,6 +46,28 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   seulement, dans son périmètre de lecture : `detailRisques` et `planActions`. Le registre des constats gagne le filtre
   d'adresse `nature`. Les styles « Sauge » et « Clair bleuté » restent inchangés. (session « Projet audit_suivi Coeur »)
 
+### Modifié
+
+- **Recherche et filtres des listes, au dessin validé « Recherche et filtres, style Verre »** (décision du RSSI du
+  27/11/2026, pour toute la plateforme) : la boîte d'outils de la refonte Neon (loupe ronde, entonnoir des filtres avancés)
+  et les entonnoirs posés sur le titre des colonnes sont retirés. À partir de 8 éléments (nombre total, avant filtrage),
+  le champ de recherche apparaît dans l'en-tête de la liste, à droite du titre : loupe, texte saisi, « N sur M » quand un
+  critère est actif, bouton « Effacer la recherche » ; en dessous de 8, ni recherche ni puces, sauf critère déjà actif
+  (adresse). La recherche porte sur l'intitulé et le texte des fiches, sans casse ni accents, et surligne ce qu'elle
+  trouve. Les filtres deviennent des puces tirées des valeurs présentes, avec leur nombre (« Externes 9 », « À revoir 2 ») ;
+  une puce qui ne trierait rien n'est pas affichée ; puces d'un même critère exclusives, critères combinés ; « Tout
+  effacer » dès qu'un critère est actif. Les critères qui ne s'y prêtent pas (dates, texte libre, plus de huit valeurs)
+  passent dans « Plus de filtres », petit panneau qui garde les champs existants ; aucun filtre n'est retiré, le tri au
+  clic sur un titre de colonne reste, le raccourci « / » aussi, Ctrl K ne change pas. Registres du Pilotage et de
+  l'Organisation (parties intéressées, SWOT, PESTEL, constats, audits…) : recherche étendue à la description, au
+  responsable et à l'état, la recherche du serveur par intitulé complétant les pages non chargées. Fournisseurs :
+  recherche étendue à l'identifiant, au rattachement, au contact et aux notes. Incidents : nouvelle recherche (référence,
+  intitulé, description, responsable…) et RETEX en puces. Plan d'actions : vues en pictogrammes (le choix « Vue
+  synchronisée » du panneau, qui les doublait, est retiré), mois et actions closes toujours visibles ; un état terminal
+  choisi montre ses actions. Aspect « Verre » dans `verre.css` (gélule creuse à lueur violette, puces translucides, puce
+  active en relief, surlignage violet) ; présentation sobre dans les autres styles. Aucune migration, aucun changement
+  d'API. (session « Projet audit_suivi Coeur »)
+
 ## [7.8.0] — 2026-11-26
 
 ### Notes de mise à jour

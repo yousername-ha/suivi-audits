@@ -92,6 +92,16 @@ describe('filtres du registre', () => {
     expect(ids(filtrerFournisseurs(liste, 'all', 'all', 'hébergeur'))).toEqual(['SUP-002']);
     expect(ids(filtrerFournisseurs(liste, 'all', 'all', ' EDITEUR '))).toEqual(['SUP-001']);
   });
+  it('cherche aussi dans l’identifiant, le rattachement, le contact et les notes (refonte Verre, 27/11/2026)', () => {
+    const fiches = [
+      fournisseur({ notes: 'Contrat de maintenance fictif' }),
+      fournisseur({ id: 'SUP-002', name: 'Hebergeur fictif', rattachement: 'Direction fictive', contact: 'Équipe B' }),
+    ];
+    expect(ids(filtrerFournisseurs(fiches, 'all', 'all', 'MAINTENANCE'))).toEqual(['SUP-001']);
+    expect(ids(filtrerFournisseurs(fiches, 'all', 'all', 'direction'))).toEqual(['SUP-002']);
+    expect(ids(filtrerFournisseurs(fiches, 'all', 'all', 'equipe b'))).toEqual(['SUP-002']);
+    expect(ids(filtrerFournisseurs(fiches, 'all', 'all', 'sup-002'))).toEqual(['SUP-002']);
+  });
   it('signale une ligne à examiner (contrôle, certificat, réévaluation)', () => {
     expect(attentionFournisseur(liste[0]!)).toBe(false);
     expect(attentionFournisseur(liste[2]!)).toBe(true);

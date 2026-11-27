@@ -53,74 +53,8 @@
   line-height: 1.55;
 }
 
-/* Boîte d'outils (choix du RSSI du 16/11/2026) : une seule forme de barre, une petite boîte bleu nuit aux couleurs du
-   menu avec les vues, la recherche et les filtres avancés ; plus de bande de champs pleine largeur. Les autres filtres se
-   posent sur le titre des colonnes. Action principale (ajouter, créer) en bleu du menu, au bout de la ligne. */
-.barre-boite-ligne {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--mantine-spacing-sm);
-}
-.barre-boite {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--mantine-spacing-2xs);
-  padding: var(--mantine-spacing-2xs);
-  border: 1px solid var(--menu-trait);
-  border-radius: var(--menu-rayon);
-  background: var(--menu-fond);
-  color: var(--menu-texte);
-}
-.barre-boite__vues {
-  display: inline-flex;
-  gap: var(--mantine-spacing-2xs);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-}
-.barre-boite__sep {
-  align-self: stretch;
-  inline-size: 1px;
-  margin-inline: var(--mantine-spacing-2xs);
-  background: var(--menu-trait);
-}
-.barre-boite__recherche .mantine-Input-input {
-  inline-size: calc(var(--mantine-spacing-xl) * 8);
-  border-color: var(--menu-commande-trait);
-  background: var(--menu-famille-fond);
-  color: var(--menu-texte);
-}
-.barre-boite__recherche .mantine-Input-input::placeholder,
-.barre-boite__recherche .mantine-Input-section {
-  color: var(--menu-secondaire);
-}
-.barre-boite :is(.mantine-ActionIcon-root, .barre-boite__outil) {
-  --ai-bg: transparent;
-  position: relative;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--menu-commande);
-}
-.barre-boite :is(.mantine-ActionIcon-root, .barre-boite__outil):hover {
-  background: var(--menu-survol);
-}
-.barre-boite [aria-pressed='true'] {
-  border-color: var(--menu-teinte-pilotage);
-  background: var(--menu-destination-fond);
-  color: var(--menu-selection);
-}
-.barre-boite .barre-filtre {
-  inline-size: 1.15em;
-  block-size: 1.15em;
-}
-.barre-boite__compte {
-  position: absolute;
-  inset-block-start: calc(var(--mantine-spacing-2xs) * -1);
-  inset-inline-end: calc(var(--mantine-spacing-2xs) * -1);
-}
+/* La boîte d'outils bleu nuit (16/11/2026) est remplacée par la barre de recherche et de filtres des listes (refonte
+   Verre, 27/11/2026, styles.css). */
 
 /* Registres en studio (Fournisseurs, Processus, Parties, Bibliothèque) et registre commun : la bande s'efface, les groupes
    d'icônes prennent la forme de la boîte. */
@@ -130,16 +64,7 @@
   box-shadow: none;
 }
 .app-main
-  :is(
-    .barre-boite,
-    .fs-views,
-    .pr-views,
-    .pi-views,
-    .fs-toolbar-end,
-    .pr-toolbar-end,
-    .pi-toolbar-end,
-    .bb-toolbar .bb-search
-  ) {
+  :is(.fs-views, .pr-views, .pi-views, .fs-toolbar-end, .pr-toolbar-end, .pi-toolbar-end, .bb-toolbar .bb-search) {
   border: 1px solid var(--menu-trait);
   border-radius: var(--menu-rayon);
   background: var(--menu-fond);
@@ -183,132 +108,21 @@
   display: flex;
   gap: var(--mantine-spacing-xs);
 }
-/* Verre « maintenance » (choix du RSSI du 20/11/2026) : liseré épais à gauche de la boîte d'outils, liseré intérieur et
-   ombre portée des boutons d'ajout. Classe doublée : même poids que la règle commune des boîtes (:is), placée après elle. */
-.barre-boite.barre-boite {
-  border-inline-start: 3px solid var(--menu-teinte-pilotage);
-}
+/* Verre « maintenance » (choix du RSSI du 20/11/2026) : liseré intérieur et ombre portée des boutons d'ajout. */
 .barre-outils__ajout .mantine-Button-root {
   box-shadow:
     inset 3px 0 0 color-mix(in srgb, var(--menu-fond-haut) 35%, transparent),
     0 1em 2em -1.2em color-mix(in srgb, var(--menu-fond-haut) 45%, transparent);
 }
 
-/* Filtre sur le titre d'une colonne : le mot ouvre les valeurs ; la colonne filtrée est marquée. */
-.filtre-colonne {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35em;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-.filtre-colonne .barre-filtre {
-  inline-size: 0.95em;
-  block-size: 0.95em;
-  opacity: 0.45;
-}
-.filtre-colonne:is(:hover, :focus-visible) .barre-filtre,
-.filtre-colonne[data-actif='true'] .barre-filtre {
-  opacity: 1;
-}
-.filtre-colonne[data-actif='true'] {
-  color: var(--mantine-color-anchor);
-}
-.filtre-colonne__valeur {
-  font-weight: 500;
-}
-
-/* Champ de recherche de la boîte d'outils (demandes du RSSI du 16/11/2026) : une lueur violette, comme une comète,
-   fait le tour du rectangle ; le contour reste fin et discret ; intérieur en fondu violet transparent de gauche à
-   droite. Seule la rotation (transform) est animée, en continu (ADR 0099) ; arrêtée par le mouvement réduit,
-   l'impression, les couleurs forcées et l'onglet masqué. */
-.barre-boite__recherche {
-  position: relative;
-  isolation: isolate;
-}
-/* Couloir de la lueur : quelques pixels autour du champ, découpés au rectangle arrondi. */
-.barre-boite__recherche .mantine-Input-wrapper {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  padding: 3px;
-  border-radius: calc(var(--mantine-radius-md) + 3px);
-}
-/* Lueur : un seul éclat violet à tête claire, avec sa traîne, adouci par un flou fixe ; seule la rotation est animée. */
-.barre-boite__recherche .mantine-Input-wrapper::before {
-  position: absolute;
-  z-index: -1;
-  top: 50%;
-  left: 50%;
-  inline-size: 300%;
-  aspect-ratio: 1;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0turn 0.74turn,
-    color-mix(in srgb, var(--mantine-color-violet-5) 30%, transparent) 0.84turn,
-    var(--mantine-color-violet-4) 0.93turn,
-    var(--mantine-color-violet-1) 0.97turn,
-    transparent 0.995turn
-  );
-  content: '';
-  filter: blur(3px);
-  transform: translate(-50%, -50%) rotate(0turn);
-  animation: barre-lueur 4.5s linear infinite;
-}
-/* Intérieur : fondu violet transparent de gauche à droite, sans violet sur la droite ; le bleu nuit de la boîte reste
-   visible au travers. */
-.barre-boite__recherche .mantine-Input-input {
-  border-color: color-mix(in srgb, var(--mantine-color-violet-3) 38%, transparent);
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--mantine-color-violet-5) 26%, transparent) 0%,
-      color-mix(in srgb, var(--mantine-color-violet-5) 8%, transparent) 45%,
-      transparent 75%
-    ),
-    var(--menu-famille-fond);
-  color: var(--mantine-color-white);
-}
-.barre-boite__recherche .mantine-Input-input::placeholder {
-  color: color-mix(in srgb, var(--mantine-color-violet-1) 75%, transparent);
-}
-.barre-boite__recherche .mantine-Input-section {
-  color: var(--mantine-color-violet-2);
-}
+/* Lueur de la recherche du menu : un éclat violet qui fait le tour du champ ; seule la rotation est animée. */
 @keyframes barre-lueur {
   to {
     transform: translate(-50%, -50%) rotate(1turn);
   }
 }
-[data-mouvement='pause'] .barre-boite__recherche .mantine-Input-wrapper::before {
-  animation-play-state: paused;
-}
-@media (prefers-reduced-motion: reduce), print, (forced-colors: active) {
-  .barre-boite__recherche .mantine-Input-wrapper::before {
-    animation: none;
-  }
-}
 
-/* Téléphone : la boîte d'outils ne dépasse jamais la largeur de l'écran ; le champ de recherche se rétrécit. */
-@media (max-width: 36em) {
-  .barre-boite {
-    max-inline-size: 100%;
-  }
-  .barre-boite__recherche {
-    flex: 1 1 auto;
-    min-inline-size: 0;
-  }
-  .barre-boite__recherche .mantine-Input-input {
-    inline-size: 100%;
-  }
-}
-
-/* 21/11/2026 : le modèle de boîte d'outils fourni devient commun aux deux thèmes.
-   L'ancienne variante « bloc clair » est retirée ; aucune préférence métier n'est modifiée. */
-
-/* Recherche de pages dans le menu, sous le logo (demande du RSSI du 18/11/2026) : même champ que la boîte d'outils,
-   aux couleurs du menu, avec sa lueur qui fait le tour ; la liste des pages trouvées s'ouvre dessous. */
+/* Recherche de pages dans le menu, sous le logo (demande du RSSI du 18/11/2026) : champ aux couleurs du menu, avec sa lueur qui fait le tour ; la liste des pages trouvées s'ouvre dessous. */
 .nav-recherche {
   margin-block: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
 }
@@ -536,7 +350,7 @@ body:has(.as-launcher) .shell-main {
   align-items: center;
   gap: var(--mantine-spacing-sm);
 }
-.app-main .barre-avec-perimetre > .barre-boite-ligne {
+.app-main .barre-avec-perimetre > .liste-outils {
   flex: 0 1 auto;
   min-inline-size: 0;
 }
@@ -551,35 +365,8 @@ body:has(.as-launcher) .shell-main {
   }
 }
 
-/* Titre de colonne triable avec son filtre (Documents, catégorie) : le libellé trie, l'entonnoir compact filtre. */
-.entete-filtrable {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--mantine-spacing-2xs);
-}
-.filtre-colonne--icone {
-  justify-content: center;
-  min-inline-size: var(--mantine-spacing-lg);
-  min-block-size: var(--mantine-spacing-lg);
-  border-radius: var(--mantine-radius-sm);
-}
-.filtre-colonne--icone:hover {
-  background: var(--mantine-color-default-hover);
-}
-
-/* Filtre de colonne à choix multiple (Documents, étiquettes) : résumé des valeurs coupé s'il est long (le nom
-   accessible et les pastilles les donnent toutes) ; liste à cases à cocher bornée en hauteur, qui défile. */
-.filtre-colonne__resume {
-  min-inline-size: 0;
-  max-inline-size: calc(var(--mantine-spacing-xl) * 6);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.filtre-colonne-multiple {
-  min-inline-size: calc(var(--mantine-spacing-xl) * 7);
-  max-inline-size: calc(var(--mantine-spacing-xl) * 14);
-}
+/* Liste à cases à cocher d'un filtre à choix multiple (« Plus de filtres », Documents, étiquettes) : bornée en hauteur,
+   elle défile. */
 .filtre-colonne-multiple__liste {
   display: flex;
   flex-direction: column;

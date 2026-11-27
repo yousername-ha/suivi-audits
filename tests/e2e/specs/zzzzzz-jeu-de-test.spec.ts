@@ -65,8 +65,8 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
     await expect(fiche.getByText('Surveillance et mesure (ISO 9001:2015, 9.1.1)')).toBeVisible();
     await capture(page, '06-fiche-indicateur');
     await fiche.getByRole('button', { name: 'Fermer', exact: true }).click();
-    // Filtre d'état des indicateurs.
-    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
+    // Filtre d'état des indicateurs (« Plus de filtres », refonte Verre du 27/11/2026).
+    await page.getByRole('button', { name: /^Plus de filtres/ }).click();
     await page.getByRole('tab', { name: 'Non atteints' }).click();
     await page.keyboard.press('Escape');
 
@@ -86,12 +86,17 @@ test('jeu de test : menu, objectifs, fournisseurs, PESTEL, boîtes, carte des ri
       await expect(page.locator('th').filter({ hasText: colonne }).first()).toBeVisible();
     await expect(page.getByText('SaaS avec MFA')).toBeVisible();
     await capture(page, '07-fournisseurs');
-    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
-    await page.getByRole('combobox', { name: 'Situation' }).click();
-    await page.getByRole('option', { name: 'Sans MFA', exact: true }).click();
+    // Situation en puces (refonte Verre, 27/11/2026) : elles n'apparaissent qu'à partir de 8 fournisseurs. Le jeu de test
+    // en compte 5 ; d'autres parcours de la recette peuvent en ajouter avant celui-ci.
+    const sansMfa = page
+      .getByRole('group', { name: 'Situation', exact: true })
+      .getByRole('button', { name: /^Sans MFA/ });
+    if (await sansMfa.count()) {
+      await sansMfa.click();
+      await expect(sansMfa).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.getByText('Hébergeur de données fictif')).toHaveCount(0);
+    } else await expect(page.getByRole('group', { name: 'Filtres', exact: true })).toHaveCount(0);
     await expect(page.getByText('Logiciel de dossiers fictif')).toBeVisible();
-    await expect(page.getByText('Hébergeur de données fictif')).toHaveCount(0);
-    await page.keyboard.press('Escape');
     await page.getByRole('button', { name: /^Fiche du fournisseur Logiciel de dossiers fictif/ }).click();
     await expect(page.getByRole('dialog').getByText('MFA non activée.')).toBeVisible();
     await capture(page, '08-fiche-fournisseur');

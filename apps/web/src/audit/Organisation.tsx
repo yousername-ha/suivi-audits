@@ -140,7 +140,7 @@ export function Organisation({ vue }: { vue: VueOrganisation }) {
       {vue === 'deroule' ? (
         <BoiteOutils
           label="Outils du déroulé"
-          recherche={{ label: 'Rechercher un créneau', value: recherche, onChange: setRecherche }}
+          recherche={{ label: 'Rechercher dans le déroulé', value: recherche, onChange: setRecherche }}
           ajout={ajouts}
         />
       ) : (

@@ -9,7 +9,6 @@ import { Table } from '@mantine/core';
 import type { ReactNode } from 'react';
 import { ETATS_EXIGENCE, LIBELLES_ETAT, type FrameworkDefinition } from '@suivi/shared';
 import { DataTable, ListeDefilante } from '@suivi/ui';
-import { PastillesCriteres } from '../components/BarreOutils';
 import { ficheCliquable } from '../fiche-cliquable';
 import {
   filtrerReferentiels,
@@ -126,8 +125,7 @@ export interface BibliothequeStudioProps {
   outils: ReactNode;
   /** Recherche par nom ou identifiant, tenue par la page. */
   recherche?: string;
-  onRecherche?: (valeur: string) => void;
-  /** Boîte d'outils du catalogue (recherche), placée en tête du catalogue. */
+  /** Barre de recherche du catalogue, placée en tête du catalogue. */
   barre?: ReactNode;
 }
 
@@ -145,7 +143,6 @@ export function BibliothequeStudio({
   onCouverture,
   outils,
   recherche = '',
-  onRecherche,
   barre,
 }: BibliothequeStudioProps) {
   const affiches = filtrerReferentiels(catalogue ?? [], recherche);
@@ -188,14 +185,6 @@ export function BibliothequeStudio({
               Les états ci-dessous concernent uniquement ce périmètre. Ils aident à piloter ; ils ne constituent ni un
               taux de conformité ni une preuve de conformité.
             </p>
-          </div>
-        )}
-        {onRecherche && !!recherche.trim() && (
-          <div className="bb-pastilles">
-            <PastillesCriteres
-              criteres={[{ cle: 'bq', libelle: 'Recherche', valeur: recherche.trim(), retirer: () => onRecherche('') }]}
-              onToutEffacer={() => onRecherche('')}
-            />
           </div>
         )}
         <ListeDefilante className="bb-scroll" label="Référentiels et états de couverture">

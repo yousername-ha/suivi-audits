@@ -9,7 +9,7 @@ import { Link } from 'react-router';
 import { REGISTRE_LABELS, type GrcObject, type RegistreDto } from '@suivi/shared';
 import { DataTable } from '@suivi/ui';
 import { get } from '../api';
-import { BoiteOutils, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
+import { BoiteOutils, type CritereActif } from '../components/BarreOutils';
 import { ErrorAlert, fmtDate } from '../components/common';
 
 const ELEMENT_LABELS: Record<string, string> = {
@@ -61,7 +61,13 @@ export function ElementsFiltres() {
         />
         <BoiteOutils
           label="Outils des éléments par périmètre"
-          recherche={{ label: 'Rechercher un élément', value: recherche, onChange: setRecherche }}
+          total={perimetre && !recherche && !choisis.length ? (liste.isPending ? 0 : liste.data?.total) : undefined}
+          recherche={{ label: 'Rechercher dans les éléments', value: recherche, onChange: setRecherche }}
+          criteres={criteres}
+          onToutEffacer={() => {
+            setRecherche('');
+            reinitialiser();
+          }}
           filtres={{
             actifs: choisis.length ? 1 : 0,
             onReinitialiser: reinitialiser,
@@ -83,7 +89,6 @@ export function ElementsFiltres() {
           }}
         />
       </div>
-      <PastillesCriteres criteres={criteres} onToutEffacer={reinitialiser} />
       <ErrorAlert error={liste.error} />
       {!perimetre && <Text size="sm">Choisissez un périmètre pour afficher ses éléments.</Text>}
       {perimetre && liste.data && (

@@ -45,7 +45,7 @@ export function ListeEtapes({
       <BoiteOutils
         label="Outils de la liste des étapes"
         recherche={{
-          label: 'Rechercher une étape ou une sous-action',
+          label: 'Rechercher dans les étapes et sous-actions',
           placeholder: 'par exemple : risques, périmètre, audit',
           value: recherche,
           onChange: setRecherche,

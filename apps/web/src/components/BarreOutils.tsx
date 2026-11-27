@@ -1,25 +1,34 @@
-/* Barre d'outils discrète des registres (refonte Neon, lot 8, ADR 0093 ; proposition « Vues en icônes et filtres à la
-   demande » de la référence, retenue par le RSSI le 14/11/2026). Les champs de recherche et de filtre existants restent
-   en place, avec leurs libellés : la barre ajoute une loupe dans le champ de recherche, le raccourci « / » qui y place le
-   curseur, et les pastilles des critères actifs, supprimables une à une ou ensemble. Aucun filtre réel n'est retiré. */
+/* Recherche et filtres des listes (refonte Verre, règle validée par le RSSI le 27/11/2026, pour toute la plateforme). Elle
+   remplace la boîte d'outils de la refonte Neon (loupe ronde, entonnoir des filtres avancés, entonnoirs sur le titre des
+   colonnes) :
+   - en-tête de la liste : titre et compteur à gauche, champ de recherche en gélule à droite (loupe, texte saisi, « N sur
+     M » quand un critère est actif, bouton « Effacer la recherche »), raccourci « / » ;
+   - dessous, les filtres en puces tirées des valeurs présentes, avec leur nombre ; puces d'un même critère exclusives,
+     critères combinés ; « Tout effacer » dès qu'un critère est actif ;
+   - un critère qui ne se prête pas aux puces (date, texte libre, plus de huit valeurs) va dans « Plus de filtres », petit
+     panneau qui garde les champs existants (leurs noms, contraintes et formulaires) ;
+   - moins de 8 éléments : ni recherche ni puces, sauf critère déjà actif (adresse), pour pouvoir l'effacer.
+   Aucun filtre réel n'est retiré. Ctrl K (recherche du menu) ne change pas. Aspect « Verre » dans packages/ui/src/verre.css,
+   présentation sobre des autres styles dans packages/ui/src/styles.css. */
 import {
   ActionIcon,
-  Badge,
+  Anchor,
   Button,
   Checkbox,
   Divider,
   Group,
-  Menu,
   Popover,
+  Select,
   Stack,
   Text,
   TextInput,
   Tooltip,
-  UnstyledButton,
 } from '@mantine/core';
 import { useMergedRef } from '@mantine/hooks';
 import {
+  Children,
   cloneElement,
+  Fragment,
   useEffect,
   useId,
   useRef,
@@ -30,7 +39,7 @@ import {
   type RefObject,
 } from 'react';
 import type { TextInputProps } from '@mantine/core';
-import { useOngletVisible } from '../parcours-iso/mouvement';
+import { pucesUtiles, rechercheVisible, segmentsSurlignes, SEUIL_PUCES, type OptionPuce } from './recherche-liste';
 
 /** Loupe du champ de recherche (décorative : le champ garde son libellé). */
 export function IconeLoupe() {
@@ -40,18 +49,18 @@ export function IconeLoupe() {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="2"
       strokeLinecap="round"
       aria-hidden="true"
     >
-      <circle cx="11" cy="11" r="6.5" />
-      <path d="m16 16 4.5 4.5" />
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5" />
     </svg>
   );
 }
 
-/** Flèche du bouton qui lance une recherche ou un filtrage (7.6.1) : distincte de la loupe du champ, réduit à une loupe
-    quand il est vide (décorative : le bouton garde son texte, masqué à l'écran). */
+/** Flèche du bouton qui lance une recherche ou un filtrage (7.6.1) : distincte de la loupe du champ (décorative : le
+    bouton garde son texte, masqué à l'écran). */
 export function IconeLancer() {
   return (
     <svg
@@ -70,6 +79,34 @@ export function IconeLancer() {
   );
 }
 
+/** Petite croix des puces actives et du bouton « Effacer la recherche » (décorative). */
+function IconeCroix() {
+  return (
+    <svg className="liste-croix" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  );
+}
+
+/** Curseurs de « Plus de filtres » (décoratifs). */
+function IconeReglages() {
+  return (
+    <svg
+      className="liste-plus__icone"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+      <circle cx="16" cy="7" r="2" />
+      <circle cx="10" cy="17" r="2" />
+    </svg>
+  );
+}
+
 /** Le raccourci « / » ne s'applique qu'en dehors d'une saisie, sans touche de modification ni fenêtre ouverte. */
 export function doitOuvrirRecherche(
   e: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'altKey' | 'defaultPrevented'>,
@@ -81,7 +118,7 @@ export function doitOuvrirRecherche(
   return !(balise === 'INPUT' || balise === 'TEXTAREA' || balise === 'SELECT' || cible?.isContentEditable);
 }
 
-/** « / » place le curseur dans le champ de recherche du registre affiché. */
+/** « / » place le curseur dans le champ de recherche de la liste affichée. */
 export function useRaccourciRecherche(champ: RefObject<HTMLInputElement | null>) {
   useEffect(() => {
     const surTouche = (e: KeyboardEvent) => {
@@ -100,6 +137,15 @@ export function useRaccourciRecherche(champ: RefObject<HTMLInputElement | null>)
   }, [champ]);
 }
 
+/** Vide un champ existant (contrôlé ou non) comme le ferait une saisie : la page reçoit son événement habituel. */
+function viderChamp(input: HTMLInputElement | null) {
+  if (!input) return;
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, '');
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.focus();
+}
+
+/** Critère actif d'un filtre qui n'est pas en puces (champ de « Plus de filtres ») : montré en puce active, retirable. */
 export interface CritereActif {
   cle: string;
   libelle: string;
@@ -107,63 +153,67 @@ export interface CritereActif {
   retirer: () => void;
 }
 
-/** Pastilles des critères actifs, sous la barre : chacune se retire seule ; « Effacer les critères » les retire toutes. */
-export function PastillesCriteres({
-  criteres,
-  onToutEffacer,
-}: {
-  criteres: CritereActif[];
-  onToutEffacer: () => void;
-}) {
-  if (!criteres.length) return null;
+/** Critère présenté en puces : ses valeurs, comptées sur la liste ; une seule valeur retenue à la fois. */
+export interface CriterePuces {
+  cle: string;
+  libelle: string;
+  /** Valeur retenue, ou null. */
+  valeur: string | null;
+  options: OptionPuce[];
+  onChange: (v: string | null) => void;
+}
+
+/** Texte dont les correspondances de la recherche sont surlignées (élément mark), casse et accents ignorés. */
+export function Surligne({ texte, recherche }: { texte: string; recherche: string }) {
+  const segments = segmentsSurlignes(texte, recherche);
+  if (!segments.some((s) => s.trouve)) return <>{texte}</>;
   return (
-    <div className="barre-criteres" role="group" aria-label="Critères actifs">
-      {criteres.map((c) => (
-        <span key={c.cle} className="barre-critere">
-          <span className="barre-critere__texte">
-            {c.libelle} : <strong>{c.valeur}</strong>
-          </span>
-          <button
-            type="button"
-            className="barre-critere__retirer"
-            aria-label={`Retirer le critère « ${c.libelle} : ${c.valeur} »`}
-            onClick={c.retirer}
-          >
-            <svg viewBox="0 0 16 16" aria-hidden="true">
-              <path d="m4.5 4.5 7 7m0-7-7 7" />
-            </svg>
-          </button>
-        </span>
-      ))}
-      {criteres.length > 1 && (
-        <Button size="compact-xs" variant="subtle" onClick={onToutEffacer}>
-          Effacer les critères
-        </Button>
+    <>
+      {segments.map((s, i) =>
+        s.trouve ? (
+          <mark key={i} className="surligne">
+            {s.texte}
+          </mark>
+        ) : (
+          <Fragment key={i}>{s.texte}</Fragment>
+        ),
       )}
-    </div>
+    </>
   );
 }
 
-/** Entonnoir des filtres avancés (décoratif : le bouton porte son nom). */
-export function IconeFiltre() {
+/** Puce de filtre : bouton à bascule, avec le nombre d'éléments ; active, elle porte une petite croix. */
+export function Puce({
+  label,
+  compte,
+  actif,
+  ton,
+  onClick,
+  titre,
+  sansCroix = false,
+}: {
+  label: ReactNode;
+  compte?: number;
+  actif: boolean;
+  ton?: string;
+  onClick: () => void;
+  titre?: string;
+  /** Puce « Toutes » : enfoncée sans critère, elle n'a rien à retirer, donc pas de croix. */
+  sansCroix?: boolean;
+}) {
   return (
-    <svg
-      className="barre-filtre"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M4 5h16l-6.2 7.4V18l-3.6 1.8v-7.4z" />
-    </svg>
+    <button type="button" className="liste-puce" aria-pressed={actif} data-ton={ton} title={titre} onClick={onClick}>
+      <span className="liste-puce__texte">{label}</span>
+      {compte !== undefined && <span className="liste-puce__nombre">{compte}</span>}
+      {actif && !sansCroix && <IconeCroix />}
+    </button>
   );
 }
 
-/** Filtres avancés, dans la boîte d'outils : un bouton à icône ouvre le panneau des critères (maquette 7.3.0). */
-export function FiltresAvances({
+/** « Plus de filtres » : gélule qui ouvre un petit panneau avec les champs qui ne se prêtent pas aux puces. Le panneau
+    reste dans le DOM (et dans son formulaire) quand il est fermé : valeurs, contraintes et propriétaires des champs sont
+    conservés. */
+export function PlusDeFiltres({
   actifs,
   onReinitialiser,
   children,
@@ -172,39 +222,29 @@ export function FiltresAvances({
   onReinitialiser?: () => void;
   children: ReactNode;
 }) {
-  const nom = actifs ? `Filtres avancés (${actifs} actif${actifs > 1 ? 's' : ''})` : 'Filtres avancés';
-  // Le panneau reste dans le formulaire et dans le DOM : valeurs, contraintes et propriétaires des champs sont
-  // conservés quand il est fermé. display-none évite de suspendre ses effets/références via React Activity.
+  const nom = actifs ? `Plus de filtres (${actifs} actif${actifs > 1 ? 's' : ''})` : 'Plus de filtres';
   return (
     <Popover
       position="bottom-start"
       shadow="md"
       trapFocus
       returnFocus
-      withArrow
       withinPortal={false}
       keepMounted
       keepMountedMode="display-none"
       // Fermeture immédiate : pendant un fondu de sortie, le panneau conservé dans la barre perd sa position et
-      // recouvre un instant les boutons voisins ; le relâchement du clic sur « Filtrer » tombait alors sur lui et le
-      // premier clic était perdu (recette du 22/11/2026, journal d'audit).
+      // recouvre un instant les boutons voisins (recette du 22/11/2026, journal d'audit).
       transitionProps={{ duration: 0 }}
     >
       <Popover.Target>
-        <ActionIcon size="lg" variant="subtle" aria-label={nom} title={nom} className="barre-boite__outil">
-          <IconeFiltre />
-          {actifs > 0 && (
-            <Badge size="xs" circle className="barre-boite__compte">
-              {actifs}
-            </Badge>
-          )}
-        </ActionIcon>
+        <button type="button" className="liste-plus" aria-label={nom} data-actif={actifs > 0 || undefined}>
+          <IconeReglages />
+          <span>Plus de filtres</span>
+          {actifs > 0 && <span className="liste-puce__nombre">{actifs}</span>}
+        </button>
       </Popover.Target>
-      <Popover.Dropdown className="filtres-avances" aria-label="Filtres avancés">
+      <Popover.Dropdown className="filtres-avances liste-plus__panneau" aria-label="Plus de filtres">
         <Stack gap="sm">
-          <Text size="sm" fw={500}>
-            Filtres
-          </Text>
           {children}
           {onReinitialiser && (
             <Group justify="flex-end">
@@ -219,72 +259,16 @@ export function FiltresAvances({
   );
 }
 
-/** Nom accessible d'un filtre de colonne : « Filtrer par X », suivi des valeurs retenues entre parenthèses. */
-export function nomFiltreColonne(libelle: string, choisies: readonly string[]): string {
-  return choisies.length ? `Filtrer par ${libelle} (filtre : ${choisies.join(', ')})` : `Filtrer par ${libelle}`;
-}
-
-/** Filtre posé sur le titre d'une colonne : un clic sur le mot ouvre les valeurs ; la colonne filtrée est marquée.
-    En variante compacte, le bouton se réduit à l'entonnoir, à côté d'un titre qui garde son propre rôle (le tri). */
-export function FiltreColonne({
-  libelle,
-  valeur,
-  options,
-  onChange,
-  compact = false,
-}: {
-  libelle: string;
-  valeur: string | null;
-  options: { value: string; label: string }[];
-  onChange: (v: string | null) => void;
-  /** Bouton réduit à l'entonnoir (le nom accessible reste « Filtrer par X »). */
-  compact?: boolean;
-}) {
-  const choisie = options.find((o) => o.value === valeur);
-  const nom = nomFiltreColonne(libelle, choisie ? [choisie.label] : []);
-  return (
-    <Menu position="bottom-start" withArrow shadow="md">
-      <Menu.Target>
-        <UnstyledButton
-          className={compact ? 'filtre-colonne filtre-colonne--icone' : 'filtre-colonne'}
-          data-actif={choisie ? 'true' : undefined}
-          aria-label={nom}
-          title={compact ? nom : undefined}
-        >
-          {!compact && libelle}
-          {!compact && choisie && <span className="filtre-colonne__valeur"> : {choisie.label}</span>}
-          <IconeFiltre />
-        </UnstyledButton>
-      </Menu.Target>
-      <Menu.Dropdown>
-        <Menu.Item onClick={() => onChange(null)} disabled={!choisie}>
-          Tous
-        </Menu.Item>
-        <Menu.Divider />
-        {options.map((o) => (
-          <Menu.Item
-            key={o.value}
-            onClick={() => onChange(o.value)}
-            data-choisi={o.value === valeur ? 'true' : undefined}
-          >
-            {o.label}
-          </Menu.Item>
-        ))}
-      </Menu.Dropdown>
-    </Menu>
-  );
-}
-
 const sansAccents = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('fr');
 
-/** Valeurs d'un filtre de colonne dont le libellé contient le texte cherché, sans tenir compte de la casse ni des
+/** Valeurs d'un filtre à choix multiple dont le libellé contient le texte cherché, sans tenir compte de la casse ni des
     accents ; un texte vide les garde toutes. */
 export function filtrerOptions<T extends { label: string }>(options: readonly T[], texte: string): T[] {
   const cherche = sansAccents(texte.trim());
   return cherche ? options.filter((o) => sansAccents(o.label).includes(cherche)) : [...options];
 }
 
-/** Au-delà de ce nombre de valeurs, un filtre de colonne à choix multiple propose un champ de recherche. */
+/** Au-delà de ce nombre de valeurs, un filtre à choix multiple propose un champ de recherche. */
 export const SEUIL_RECHERCHE_FILTRE = 8;
 
 type OptionFiltre = { value: string; label: string };
@@ -298,8 +282,8 @@ export function optionsAvecValeurs(options: readonly OptionFiltre[], valeurs: re
   ];
 }
 
-/** Liste d'un filtre de colonne à choix multiple : champ de recherche au-delà de huit valeurs, « Tous » qui vide le
-    filtre, puis une case à cocher par valeur. Le texte cherché disparaît avec la liste, à sa fermeture. */
+/** Liste d'un filtre à choix multiple (dans « Plus de filtres ») : champ de recherche au-delà de huit valeurs, « Tous »
+    qui vide le filtre, puis une case à cocher par valeur. Le texte cherché disparaît avec la liste, à sa fermeture. */
 export function ListeFiltreMultiple({
   libelle,
   valeurs,
@@ -325,7 +309,6 @@ export function ListeFiltreMultiple({
       {options.length > SEUIL_RECHERCHE_FILTRE && (
         <TextInput
           size="xs"
-          data-autofocus
           aria-label={`Chercher dans « ${libelle} »`}
           placeholder="Chercher…"
           leftSection={<IconeLoupe />}
@@ -377,56 +360,6 @@ export function ListeFiltreMultiple({
   );
 }
 
-/** Filtre à choix multiple posé sur le titre d'une colonne (décision du RSSI du 18/11/2026, Documents) : le même bouton
-    que FiltreColonne ouvre une liste à cases à cocher (ListeFiltreMultiple). « Tous » vide le filtre et referme la
-    liste ; Échap la referme et rend la main au titre ; le clavier circule dans la liste (Tab, Espace). */
-export function FiltreColonneMultiple({
-  libelle,
-  valeurs,
-  options,
-  onChange,
-  description,
-}: {
-  libelle: string;
-  valeurs: string[];
-  options: OptionFiltre[];
-  onChange: (v: string[]) => void;
-  /** Précision affichée en tête de la liste (par exemple, la façon dont les valeurs cochées se combinent). */
-  description?: string;
-}) {
-  const [ouvert, setOuvert] = useState(false);
-  const toutes = optionsAvecValeurs(options, valeurs);
-  const choisies = valeurs.map((v) => toutes.find((o) => o.value === v)?.label ?? v);
-  return (
-    <Popover opened={ouvert} onChange={setOuvert} position="bottom-start" withArrow shadow="md" trapFocus returnFocus>
-      <Popover.Target>
-        <UnstyledButton
-          className="filtre-colonne"
-          data-actif={valeurs.length ? 'true' : undefined}
-          aria-label={nomFiltreColonne(libelle, choisies)}
-          onClick={() => setOuvert((o) => !o)}
-        >
-          {libelle}
-          {choisies.length > 0 && (
-            <span className="filtre-colonne__valeur filtre-colonne__resume"> : {choisies.join(', ')}</span>
-          )}
-          <IconeFiltre />
-        </UnstyledButton>
-      </Popover.Target>
-      <Popover.Dropdown className="filtre-colonne-multiple">
-        <ListeFiltreMultiple
-          libelle={libelle}
-          valeurs={valeurs}
-          options={toutes}
-          onChange={onChange}
-          description={description}
-          onTous={() => setOuvert(false)}
-        />
-      </Popover.Dropdown>
-    </Popover>
-  );
-}
-
 export interface VueBoite {
   value: string;
   label: string;
@@ -434,9 +367,34 @@ export interface VueBoite {
   disabled?: boolean;
 }
 
-/** Boîte d'outils commune aux registres (version 7.3.0, modèle validé par le RSSI le 16/11/2026) : petite boîte bleu
-    nuit avec les vues, la recherche (raccourci « / ») et l'entonnoir des filtres avancés ; l'ajout se place au bout de
-    la ligne. Les autres filtres se posent sur le titre des colonnes (FiltreColonne, FiltreColonneMultiple). */
+const TOUS = '__tous__';
+
+/** « Tout effacer » par défaut : vide la recherche (ou le champ repris d'un formulaire, par `viderChamp`), retire les
+    puces actives et les critères de « Plus de filtres ». */
+export function toutEffacer(
+  {
+    recherche,
+    puces = [],
+    criteres = [],
+    filtres,
+  }: {
+    recherche?: { onChange: (v: string) => void };
+    puces?: readonly Pick<CriterePuces, 'valeur' | 'onChange'>[];
+    criteres?: readonly Pick<CritereActif, 'retirer'>[];
+    filtres?: { onReinitialiser?: () => void };
+  },
+  viderChamp?: () => void,
+) {
+  if (recherche) recherche.onChange('');
+  else viderChamp?.();
+  for (const p of puces) if (p.valeur !== null) p.onChange(null);
+  for (const c of criteres) c.retirer();
+  filtres?.onReinitialiser?.();
+}
+
+/** Rangées de recherche et de filtres d'une liste (refonte Verre, 27/11/2026). Les vues (pictogrammes), les outils
+    supplémentaires et l'ajout restent toujours visibles ; la recherche, les puces et « Plus de filtres » suivent le
+    seuil de 8 éléments quand `total` est connu. */
 export function BoiteOutils({
   label,
   vues,
@@ -448,32 +406,100 @@ export function BoiteOutils({
   filtres,
   ajout,
   children,
+  titre,
+  total,
+  affiches,
+  puces = [],
+  criteres = [],
+  onToutEffacer,
+  libelleTout = 'Toutes',
 }: {
-  /** Nom de la barre d'outils, lu par les lecteurs d'écran. */
+  /** Nom du groupe d'outils, lu par les lecteurs d'écran. */
   label: string;
   vues?: readonly VueBoite[];
   nomVues?: string;
   vue?: string;
   onVue?: (v: string) => void;
+  /** Recherche ; son libellé est de la forme « Rechercher dans … ». */
   recherche?: { label: string; value: string; onChange: (v: string) => void; placeholder?: string };
   /** Champ existant d'un formulaire : mêmes événements, nom, contraintes et soumission. */
   champRecherche?: ReactElement<TextInputProps & { ref?: Ref<HTMLInputElement> }>;
+  /** Champs de « Plus de filtres » (dates, texte libre, longues listes). */
   filtres?: { actifs: number; onReinitialiser?: () => void; contenu: ReactNode };
   ajout?: ReactNode;
-  /** Outils supplémentaires, placés dans la boîte avant l'entonnoir. */
+  /** Outils supplémentaires, placés après la recherche. */
   children?: ReactNode;
+  /** Titre et compteur de la liste, à gauche de la recherche. */
+  titre?: ReactNode;
+  /** Nombre total d'éléments de la liste, avant filtrage : seuil d'apparition et « N sur M ». Inconnu : toujours affiché. */
+  total?: number;
+  /** Nombre d'éléments affichés après recherche et filtres (« N sur M »). */
+  affiches?: number;
+  /** Critères en puces. Au-delà de huit valeurs utiles, un critère passe dans « Plus de filtres ». */
+  puces?: readonly CriterePuces[];
+  /** Critères actifs des champs de « Plus de filtres », montrés en puces actives retirables. */
+  criteres?: readonly CritereActif[];
+  /** « Tout effacer » ; par défaut, vide la recherche, les puces, les critères et « Plus de filtres ». */
+  onToutEffacer?: () => void;
+  /** Puce qui retire tous les critères en puces (« Toutes », « Tous »). */
+  libelleTout?: string;
 }) {
   const champ = useRef<HTMLInputElement>(null);
   const reference = useMergedRef(champ, champRecherche?.props.ref);
   useRaccourciRecherche(champ);
-  // Lueur du champ de recherche : arrêtée quand l'onglet est masqué (ADR 0099).
-  const ongletVisible = useOngletVisible();
+  const texteRecherche = recherche ? recherche.value : String(champRecherche?.props.value ?? '');
+  const base = total ?? Number.POSITIVE_INFINITY;
+  // Une valeur retenue absente de la liste (adresse ancienne, liste pas encore chargée) reste montrée, pour être retirée.
+  const criteresPuces = puces.map((p) => ({
+    ...p,
+    utiles: pucesUtiles(
+      p.valeur !== null && !p.options.some((o) => o.value === p.valeur)
+        ? [...p.options, { value: p.valeur, label: p.valeur, compte: 0 }]
+        : p.options,
+      base,
+      p.valeur,
+    ),
+  }));
+  const enPuces = criteresPuces.filter((p) => p.utiles.length > 0 && p.utiles.length <= SEUIL_PUCES);
+  const enListe = criteresPuces.filter((p) => p.utiles.length > SEUIL_PUCES);
+  const actifsListe = enListe.filter((p) => p.valeur !== null);
+  // Puces actives des critères qui ne sont pas en puces : ceux de « Plus de filtres » fournis par la page, et les critères
+  // en puces passés en liste faute de place.
+  const actifsHorsPuces: CritereActif[] = [
+    ...actifsListe.map((p) => ({
+      cle: p.cle,
+      libelle: p.libelle,
+      valeur: p.utiles.find((o) => o.value === p.valeur)?.label ?? String(p.valeur),
+      retirer: () => p.onChange(null),
+    })),
+    ...criteres,
+  ];
+  const nbFiltres = puces.filter((p) => p.valeur !== null).length + criteres.length + (filtres?.actifs ?? 0);
+  const actif = !!texteRecherche.trim() || nbFiltres > 0;
+  const visible = rechercheVisible(total, actif);
+  const plusActifs = actifsListe.length + (filtres?.actifs ?? 0);
+  const plus = enListe.length > 0 || !!filtres;
+  const effacerTout =
+    onToutEffacer ??
+    (() =>
+      toutEffacer({ recherche, puces, criteres, filtres }, () => {
+        if (champRecherche && texteRecherche) viderChamp(champ.current);
+      }));
+  const effacerRecherche = () => {
+    if (recherche) {
+      recherche.onChange('');
+      champ.current?.focus();
+    } else viderChamp(champ.current);
+  };
+  const champVisible = visible && (recherche || champRecherche);
+  // Rangée du haut seulement si elle a un contenu (une barre réduite à « Plus de filtres » n'a pas de ligne vide).
+  const ligne = !!vues?.length || !!titre || !!champVisible || Children.toArray(children).length > 0 || !!ajout;
   return (
-    <div className="barre-boite-ligne" data-mouvement={ongletVisible ? 'anime' : 'pause'}>
-      <div className="barre-boite" role="toolbar" aria-label={label}>
-        {vues && vues.length > 0 && (
-          <>
-            <div className="barre-boite__vues" role="group" aria-label={nomVues}>
+    <div className="liste-outils" role="toolbar" aria-label={label}>
+      {ligne && (
+        <div className="liste-outils__ligne">
+          {vues && vues.length > 0 && (
+            <div className="liste-outils__vues" role="group" aria-label={nomVues}>
               {vues.map((v) => (
                 <Tooltip
                   key={v.value}
@@ -495,47 +521,139 @@ export function BoiteOutils({
                 </Tooltip>
               ))}
             </div>
-            {(recherche || champRecherche || filtres || children) && (
-              <span className="barre-boite__sep" aria-hidden="true" />
-            )}
-          </>
-        )}
-        {recherche && (
-          <TextInput
-            ref={champ}
-            className="barre-recherche barre-boite__recherche"
-            aria-label={recherche.label}
-            placeholder={recherche.placeholder ?? 'Rechercher…'}
-            leftSection={<IconeLoupe />}
-            title="Raccourci : touche /"
-            value={recherche.value}
-            onChange={(e) => recherche.onChange(e.currentTarget.value)}
-          />
-        )}
-        {champRecherche &&
-          cloneElement(champRecherche, {
-            ref: reference,
-            className: [champRecherche.props.className, 'barre-recherche barre-boite__recherche']
-              .filter(Boolean)
-              .join(' '),
-            leftSection: champRecherche.props.leftSection ?? <IconeLoupe />,
-            title:
-              champRecherche.props.title ??
-              (typeof champRecherche.props.description === 'string'
-                ? champRecherche.props.description
-                : 'Raccourci : touche /'),
-            placeholder:
-              champRecherche.props.placeholder ??
-              (typeof champRecherche.props.label === 'string' ? `${champRecherche.props.label}…` : 'Rechercher…'),
-          })}
-        {children}
-        {filtres && (
-          <FiltresAvances actifs={filtres.actifs} onReinitialiser={filtres.onReinitialiser}>
-            {filtres.contenu}
-          </FiltresAvances>
-        )}
-      </div>
-      {ajout && <div className="barre-outils__ajout">{ajout}</div>}
+          )}
+          <div className="liste-outils__titre">{titre}</div>
+          {champVisible && (
+            <div className="liste-recherche" data-rempli={texteRecherche ? 'true' : undefined}>
+              {!champRecherche?.props.leftSection && <IconeLoupe />}
+              {recherche ? (
+                <TextInput
+                  ref={champ}
+                  variant="unstyled"
+                  className="liste-recherche__saisie"
+                  aria-label={recherche.label}
+                  placeholder={recherche.placeholder ?? 'Rechercher…'}
+                  title="Raccourci : touche /"
+                  value={recherche.value}
+                  onChange={(e) => recherche.onChange(e.currentTarget.value)}
+                />
+              ) : (
+                champRecherche &&
+                cloneElement(champRecherche, {
+                  ref: reference,
+                  variant: 'unstyled',
+                  className: [champRecherche.props.className, 'liste-recherche__saisie'].filter(Boolean).join(' '),
+                  title:
+                    champRecherche.props.title ??
+                    (typeof champRecherche.props.description === 'string'
+                      ? champRecherche.props.description
+                      : 'Raccourci : touche /'),
+                  placeholder:
+                    champRecherche.props.placeholder ??
+                    (typeof champRecherche.props.label === 'string' ? `${champRecherche.props.label}…` : 'Rechercher…'),
+                })
+              )}
+              {actif && affiches !== undefined && total !== undefined && (
+                <span className="liste-recherche__compte" aria-live="polite">
+                  {affiches} sur {total}
+                </span>
+              )}
+              {!!texteRecherche && (
+                <button
+                  type="button"
+                  className="liste-recherche__effacer"
+                  aria-label="Effacer la recherche"
+                  onClick={effacerRecherche}
+                >
+                  <IconeCroix />
+                </button>
+              )}
+            </div>
+          )}
+          {children}
+          {ajout && <div className="barre-outils__ajout">{ajout}</div>}
+        </div>
+      )}
+      {visible && (enPuces.length > 0 || actifsHorsPuces.length > 0 || plus) && (
+        <div className="liste-puces" role="group" aria-label="Filtres">
+          {enPuces.length > 0 && (
+            <Puce
+              label={libelleTout}
+              compte={total}
+              sansCroix
+              actif={!enPuces.some((p) => p.valeur !== null)}
+              onClick={() => {
+                for (const p of enPuces) if (p.valeur !== null) p.onChange(null);
+              }}
+            />
+          )}
+          {enPuces.map((p, i) => (
+            <Fragment key={p.cle}>
+              {i > 0 && <span className="liste-puces__sep" aria-hidden="true" />}
+              <div className="liste-puces__groupe" role="group" aria-label={p.libelle}>
+                {p.utiles.map((o) => (
+                  <Puce
+                    key={o.value}
+                    label={o.label}
+                    compte={o.compte}
+                    ton={o.ton}
+                    actif={p.valeur === o.value}
+                    onClick={() => p.onChange(p.valeur === o.value ? null : o.value)}
+                  />
+                ))}
+              </div>
+            </Fragment>
+          ))}
+          {actifsHorsPuces.map((c) => (
+            <Puce
+              key={c.cle}
+              label={
+                <>
+                  {c.libelle} : <strong>{c.valeur}</strong>
+                </>
+              }
+              actif
+              titre="Retirer ce critère"
+              onClick={c.retirer}
+            />
+          ))}
+          {plus && (
+            <PlusDeFiltres
+              actifs={plusActifs}
+              onReinitialiser={
+                enListe.length || filtres?.onReinitialiser
+                  ? () => {
+                      for (const p of actifsListe) p.onChange(null);
+                      filtres?.onReinitialiser?.();
+                    }
+                  : undefined
+              }
+            >
+              {enListe.map((p) => (
+                <Select
+                  key={p.cle}
+                  label={p.libelle}
+                  allowDeselect={false}
+                  searchable
+                  data={[
+                    { value: TOUS, label: 'Tous' },
+                    ...p.utiles.map((o) => ({ value: o.value, label: `${o.label} (${o.compte})` })),
+                  ]}
+                  value={p.valeur ?? TOUS}
+                  onChange={(v) => p.onChange(!v || v === TOUS ? null : v)}
+                  comboboxProps={{ withinPortal: false }}
+                />
+              ))}
+              {filtres?.contenu}
+            </PlusDeFiltres>
+          )}
+          {actif && (
+            <Anchor component="button" type="button" className="liste-puces__effacer" onClick={effacerTout}>
+              Tout effacer
+            </Anchor>
+          )}
+        </div>
+      )}
     </div>
   );
 }

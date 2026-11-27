@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { libelleAcceptabilite, libelleModeCalcul, type GrcObject, type RiskMethod } from '@suivi/shared';
 import { computeScene, emptyLayout, type CartoObject, type MapLayout, type ObjectLookup } from '@suivi/shared/carto';
 import { get } from '../api';
-import { BoiteOutils, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
+import { BoiteOutils, type CritereActif } from '../components/BarreOutils';
 import { ErrorAlert } from '../components/common';
 import { Canevas, fitViewport, type Viewport, type Selection } from '../carto/Canevas';
 import { exporter } from '../carto/exports';
@@ -195,7 +195,6 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
     { cle, libelle, valeur, retirer },
   ];
   const criteres: CritereActif[] = [
-    ...(search ? critere('q', 'Recherche', search, () => setSearch('')) : []),
     ...(methodId
       ? critere('methode', 'Méthode', optionsMethode.find((o) => o.value === methodId)?.label ?? 'sélectionnée', () =>
           setMethodId(null),
@@ -222,11 +221,17 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
   ];
   return (
     <Stack>
-      {/* Boîte d'outils commune (7.3.0) : recherche et filtres avancés, libellés inchangés. La carte n'a pas de colonnes :
-          tous les critères, la base, le regroupement et la représentation sont dans le panneau des filtres avancés. */}
+      {/* Recherche et filtres des listes (refonte Verre, 27/11/2026) : la carte n'a ni liste ni colonnes ; tous les
+          critères (texte libre, dates, longues listes), la base, le regroupement et la représentation restent dans « Plus
+          de filtres », les critères actifs en puces retirables. */}
       <BoiteOutils
         label="Outils de la cartographie des risques"
-        recherche={{ label: 'Rechercher un risque', value: search, onChange: setSearch }}
+        recherche={{ label: 'Rechercher dans les risques', value: search, onChange: setSearch }}
+        criteres={criteres}
+        onToutEffacer={() => {
+          setSearch('');
+          reinitialiser();
+        }}
         filtres={{
           actifs: [methodId, domain, scope, relatedRef, entity, strategy, at, compareAt].filter(Boolean).length,
           onReinitialiser: reinitialiser,
@@ -317,13 +322,6 @@ export function RiskMap({ smsi, onOpen }: { smsi: string; onOpen: (o: GrcObject)
               />
             </>
           ),
-        }}
-      />
-      <PastillesCriteres
-        criteres={criteres}
-        onToutEffacer={() => {
-          setSearch('');
-          reinitialiser();
         }}
       />
       <ErrorAlert error={error ?? data.error ?? methods.error} />

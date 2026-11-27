@@ -33,7 +33,8 @@ import {
 } from '@suivi/shared';
 import { ConfirmButton, DataTable, Page, PageHeader, StatusChip } from '@suivi/ui';
 import { api, get } from '../api';
-import { BoiteOutils, FiltreColonne, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
+import { BoiteOutils, Surligne, type CriterePuces } from '../components/BarreOutils';
+import { compterPuces } from '../components/recherche-liste';
 import { ErrorAlert, fmtDate } from '../components/common';
 import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
@@ -103,24 +104,23 @@ function ListeRegistres() {
     queryKey: ['registres', kind, archives],
     queryFn: () => get<{ items: RegistreDto[] }>(`/api/registres?archives=${archives}${kind ? `&kind=${kind}` : ''}`),
   });
-  const reinitialiser = () => {
-    setKind(null);
-    setArchives(false);
-  };
-  const criteres: CritereActif[] = [
-    ...(kind
-      ? [
-          {
-            cle: 'famille',
-            libelle: 'Famille',
-            valeur: KIND_OPTIONS.find((o) => o.value === kind)?.label ?? kind,
-            retirer: () => setKind(null),
-          },
-        ]
-      : []),
-    ...(archives
-      ? [{ cle: 'archives', libelle: 'Registres archivés', valeur: 'affichés', retirer: () => setArchives(false) }]
-      : []),
+  // Liste sans filtre de famille (même requête que la liste quand aucune famille n'est choisie) : nombres des puces.
+  const completes = useQuery({
+    queryKey: ['registres', null, archives],
+    queryFn: () => get<{ items: RegistreDto[] }>(`/api/registres?archives=${archives}`),
+  });
+  const tousRegistres = completes.data?.items ?? [];
+  const puces: CriterePuces[] = [
+    {
+      cle: 'famille',
+      libelle: 'Famille',
+      valeur: kind,
+      options: compterPuces(tousRegistres, (r) => r.kind, {
+        ordre: KIND_OPTIONS.map((o) => o.value),
+        libelle: (v) => KIND_OPTIONS.find((o) => o.value === v)?.label ?? v,
+      }),
+      onChange: setKind,
+    },
   ];
   return (
     <Page>
@@ -142,43 +142,30 @@ function ListeRegistres() {
         )}
         <Tabs.Panel value="registres" pt="md">
           <Stack>
-            {/* Boîte d'outils commune (7.3.0) : critères dans les filtres avancés ; la famille se filtre aussi sur le
-                titre de sa colonne. */}
+            {/* Recherche et filtres des listes (refonte Verre, 27/11/2026) : la famille en puces avec leur nombre ; les
+                registres archivés restent un réglage d'affichage toujours visible. */}
             <BoiteOutils
               label="Outils des registres"
-              filtres={{
-                actifs: [kind, archives ? '1' : ''].filter(Boolean).length,
-                onReinitialiser: reinitialiser,
-                contenu: (
-                  <>
-                    <Select
-                      label="Famille"
-                      clearable
-                      placeholder="Toutes les familles"
-                      data={KIND_OPTIONS}
-                      value={kind}
-                      onChange={setKind}
-                      comboboxProps={{ withinPortal: false }}
-                    />
-                    <Checkbox
-                      label="Afficher les registres archivés"
-                      checked={archives}
-                      onChange={(e) => setArchives(e.currentTarget.checked)}
-                    />
-                  </>
-                ),
-              }}
-            />
-            <PastillesCriteres criteres={criteres} onToutEffacer={reinitialiser} />
+              titre={`${tousRegistres.length} registre${tousRegistres.length > 1 ? 's' : ''}`}
+              total={completes.isPending ? 0 : completes.data ? tousRegistres.length : undefined}
+              affiches={liste.data?.items.length}
+              puces={puces}
+              libelleTout="Tous"
+              onToutEffacer={() => setKind(null)}
+            >
+              <Checkbox
+                label="Afficher les registres archivés"
+                checked={archives}
+                onChange={(e) => setArchives(e.currentTarget.checked)}
+              />
+            </BoiteOutils>
             <ErrorAlert error={liste.error} />
             <DataTable label="Registres accessibles, défilement horizontal possible">
               <Table>
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>Registre</Table.Th>
-                    <Table.Th>
-                      <FiltreColonne libelle="Famille" valeur={kind} options={KIND_OPTIONS} onChange={setKind} />
-                    </Table.Th>
+                    <Table.Th>Famille</Table.Th>
                     <Table.Th>Périmètres</Table.Th>
                     <Table.Th>Éléments</Table.Th>
                     <Table.Th>Votre accès</Table.Th>
@@ -419,7 +406,8 @@ function Elements({ r }: { r: RegistreDto }) {
     <Stack>
       <BoiteOutils
         label="Outils des éléments du registre"
-        recherche={{ label: 'Rechercher un élément', value: recherche, onChange: setRecherche }}
+        total={recherche ? undefined : liste.isPending ? 0 : liste.data?.total}
+        recherche={{ label: 'Rechercher dans les éléments du registre', value: recherche, onChange: setRecherche }}
       />
       <ErrorAlert error={liste.error} />
       <ErrorAlert error={erreurOrdre} />
@@ -437,7 +425,9 @@ function Elements({ r }: { r: RegistreDto }) {
           <Table.Tbody>
             {items.map((o, i) => (
               <Table.Tr key={o.id}>
-                <Table.Td>{o.name}</Table.Td>
+                <Table.Td>
+                  <Surligne texte={o.name} recherche={recherche} />
+                </Table.Td>
                 <Table.Td>{ELEMENT_LABELS[o.kind] ?? o.kind}</Table.Td>
                 <Table.Td>{typeof o.data.status === 'string' ? o.data.status : '—'}</Table.Td>
                 <Table.Td>{fmtDate(o.updatedAt)}</Table.Td>

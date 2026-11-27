@@ -85,7 +85,7 @@ export const FAMILLES: Famille[] = [
     id: 'organisation',
     label: 'Organisation',
     destinations: [
-      dest('contexte', 'Contexte de l’organisation', [p('contexte'), p('parties'), p('swot'), p('pestel')]),
+      dest('contexte', 'Contexte', [p('contexte'), p('parties'), p('swot'), p('pestel')]),
       dest('perimetres', 'Périmètres', [p('perimetres')]),
       dest('processus', 'Processus', [p('processus-cartes')]),
       dest('responsabilites', 'Rôles et responsabilités', [p('responsabilites')]),

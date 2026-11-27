@@ -1,4 +1,4 @@
-import { Badge, Box, Button, Card, Group, Menu, Modal, Select, Stack, Table, Text, Title } from '@mantine/core';
+import { Badge, Box, Button, Card, Group, Menu, Modal, Stack, Table, Text, Title } from '@mantine/core';
 import { DataTable, ListeDefilante } from '@suivi/ui';
 import {
   ECART_CLASSIFICATION_LABELS,
@@ -20,7 +20,8 @@ import { Link, useLocation } from 'react-router';
 import { download, get } from '../api';
 import { ErrorAlert } from '../components/common';
 import { ficheCliquable } from '../fiche-cliquable';
-import { BoiteOutils, FiltreColonne, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
+import { BoiteOutils, Surligne, type CriterePuces } from '../components/BarreOutils';
+import { compterPuces, correspond, textesFiche } from '../components/recherche-liste';
 import { useCan } from '../session';
 import { OPERATION_LABELS } from './Decision';
 import { useFiltreUrl } from '../components/filtre-url';
@@ -110,25 +111,44 @@ export function BusinessRegistry({
     [fClassif, setFClassif] = useFiltreUrl('classif', 'all'),
     // Nature d'un constat (lien d'une barre « Audits et constats » du tableau de bord, style « Verre », 27/11/2026).
     [fNature, setFNature] = useFiltreUrl('nature', 'all');
+  /* Recherche (refonte Verre, 27/11/2026) : dans l'intitulé et dans le texte des fiches (description, responsable,
+     état…), sur la liste chargée. Tant que toutes les pages ne sont pas chargées, la recherche par intitulé du serveur
+     complète le résultat, comme avant : aucune fiche trouvée jusqu'ici par son intitulé n'est perdue. */
+  const terme = search.trim();
+  const pageNative = (q: string) => (offset: number) =>
+    get<Page>(`/api/grc/${smsi}/objects?kind=${kind}&search=${encodeURIComponent(q)}&offset=${offset}`);
+  const pageHistorique = (q: string) => (offset: number) =>
+    get<Page>(`/api/grc/${smsi}/pilotage/legacy/${legacyKey}?search=${encodeURIComponent(q)}&offset=${offset}`);
+  const historiqueLisible =
+    !!legacyKey &&
+    smsi === '00000000-0000-4000-8000-000000000001' &&
+    (legacyKey !== 'evidences' || can('pilotage', 'lire'));
   const native = useInfiniteQuery({
-    queryKey: ['grc', smsi, 'business-register', kind, search],
+    queryKey: ['grc', smsi, 'business-register', kind, ''],
     initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
-      get<Page>(`/api/grc/${smsi}/objects?kind=${kind}&search=${encodeURIComponent(search)}&offset=${pageParam}`),
+    queryFn: ({ pageParam }) => pageNative('')(pageParam),
     getNextPageParam: (p) => p.nextOffset ?? undefined,
   });
   const historical = useInfiniteQuery({
-    queryKey: ['grc', smsi, 'legacy-register', legacyKey, search],
+    queryKey: ['grc', smsi, 'legacy-register', legacyKey, ''],
     initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
-      get<Page>(
-        `/api/grc/${smsi}/pilotage/legacy/${legacyKey}?search=${encodeURIComponent(search)}&offset=${pageParam}`,
-      ),
+    queryFn: ({ pageParam }) => pageHistorique('')(pageParam),
     getNextPageParam: (p) => p.nextOffset ?? undefined,
-    enabled:
-      !!legacyKey &&
-      smsi === '00000000-0000-4000-8000-000000000001' &&
-      (legacyKey !== 'evidences' || can('pilotage', 'lire')),
+    enabled: historiqueLisible,
+  });
+  const nativeCherche = useInfiniteQuery({
+    queryKey: ['grc', smsi, 'business-register', kind, terme],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => pageNative(terme)(pageParam),
+    getNextPageParam: (p) => p.nextOffset ?? undefined,
+    enabled: !!terme && !!native.hasNextPage,
+  });
+  const historicalCherche = useInfiniteQuery({
+    queryKey: ['grc', smsi, 'legacy-register', legacyKey, terme],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => pageHistorique(terme)(pageParam),
+    getNextPageParam: (p) => p.nextOffset ?? undefined,
+    enabled: historiqueLisible && !!terme && !!historical.hasNextPage,
   });
   const decisions = useInfiniteQuery({
     queryKey: ['grc', smsi, 'decision-history', history?.id],
@@ -161,6 +181,15 @@ export function BusinessRegistry({
     ...(native.data?.pages.flatMap((p) => p.items) ?? []),
     ...(historical.data?.pages.flatMap((p) => p.items) ?? []),
   ];
+  const chargees = new Set(toutes.map((o) => o.id));
+  // Fiches trouvées par le serveur (intitulé) dans les pages pas encore chargées.
+  const complement = terme
+    ? [
+        ...((native.hasNextPage && nativeCherche.data?.pages.flatMap((p) => p.items)) || []),
+        ...((historical.hasNextPage && historicalCherche.data?.pages.flatMap((p) => p.items)) || []),
+      ].filter((o) => !chargees.has(o.id))
+    : [];
+  const total = (native.data?.pages[0]?.total ?? 0) + (historical.data?.pages[0]?.total ?? 0);
   const writable = can(GRC_MODULES[kind], 'modifier');
   const date = (v: unknown) => (v ? String(v).slice(0, 10).split('-').reverse().join('/') : '—');
   const owner = (o: GrcObject) =>
@@ -172,10 +201,15 @@ export function BusinessRegistry({
   const echeanceDe = (o: GrcObject) =>
     String(o.data.dueAt ?? o.data.reviewAt ?? o.data.validUntil ?? o.data.plannedAt ?? '').slice(0, 10);
   const aujourdhui = jourParis();
-  const etats = [...new Set(toutes.map(state))].sort();
-  const responsables = [...new Set(toutes.map(owner))].sort();
-  const rows = toutes.filter(
+  const echeanceCle = (o: GrcObject) => {
+    const e = echeanceDe(o);
+    if (!e) return 'sans';
+    if (e < aujourdhui && o.data.status !== 'closed') return 'retard';
+    return e >= aujourdhui ? 'avenir' : null;
+  };
+  const rows = [...toutes, ...complement].filter(
     (o) =>
+      correspond(textesFiche(o, state(o), owner(o)), terme) &&
       (fEtat === 'all' || state(o) === fEtat) &&
       (fResp === 'all' || owner(o) === fResp) &&
       (fOrigine === 'all' || (fOrigine === 'existant') === o.id.startsWith('legacy:')) &&
@@ -187,8 +221,6 @@ export function BusinessRegistry({
         (fEcheance === 'avenir' && !!echeanceDe(o) && echeanceDe(o) >= aujourdhui)),
   );
   const filtresActifs = [fEtat, fResp, fEcheance, fOrigine, fClassif, fNature].filter((f) => f !== 'all').length;
-  // Boîte d'outils commune (7.3.0) : la recherche (raccourci « / ») et les filtres avancés ; État, Responsable et Échéance
-  // se filtrent aussi sur le titre de leur colonne, avec le même état d'adresse. Pastilles des critères actifs dessous.
   const reinitialiserFiltres = () => {
     setFEtat('all');
     setFResp('all');
@@ -199,55 +231,75 @@ export function BusinessRegistry({
   };
   const ECHEANCES: Record<string, string> = { retard: 'Dépassée', avenir: 'À venir', sans: 'Sans échéance' };
   const ORIGINES: Record<string, string> = { existant: 'Existant (outil de suivi)', natif: 'Créé dans le Pilotage' };
-  const criteres: CritereActif[] = [
-    ...(fEtat !== 'all' ? [{ cle: 'etat', libelle: 'État', valeur: fEtat, retirer: () => setFEtat('all') }] : []),
-    ...(fResp !== 'all'
-      ? [{ cle: 'resp', libelle: 'Responsable', valeur: fResp, retirer: () => setFResp('all') }]
-      : []),
-    ...(fEcheance !== 'all'
-      ? [
-          {
-            cle: 'ech',
-            libelle: 'Échéance',
-            valeur: ECHEANCES[fEcheance] ?? fEcheance,
-            retirer: () => setFEcheance('all'),
-          },
-        ]
-      : []),
-    ...(fClassif !== 'all'
+  const valeur = (v: string) => (v === 'all' ? null : v);
+  // Filtres en puces (refonte Verre, 27/11/2026) : valeurs présentes dans la liste chargée, avec leur nombre ; un critère
+  // de plus de huit valeurs (responsables, par exemple) passe dans « Plus de filtres ». Mêmes paramètres d'adresse.
+  const puces: CriterePuces[] = [
+    {
+      cle: 'etat',
+      libelle: 'État',
+      valeur: valeur(fEtat),
+      options: compterPuces(toutes, state),
+      onChange: (v) => setFEtat(v ?? 'all'),
+    },
+    {
+      cle: 'ech',
+      libelle: 'Échéance',
+      valeur: valeur(fEcheance),
+      options: compterPuces(toutes, echeanceCle, {
+        ordre: ['retard', 'avenir', 'sans'],
+        libelle: (v) => ECHEANCES[v] ?? v,
+        ton: (v) => (v === 'retard' ? 'alerte' : undefined),
+      }),
+      onChange: (v) => setFEcheance(v ?? 'all'),
+    },
+    ...(kind === 'nonconformity'
       ? [
           {
             cle: 'classif',
             libelle: 'Classification',
-            valeur:
-              fClassif === 'non_classe'
-                ? 'Non classé'
-                : (ECART_CLASSIFICATION_LABELS[fClassif as keyof typeof ECART_CLASSIFICATION_LABELS] ?? fClassif),
-            retirer: () => setFClassif('all'),
+            valeur: valeur(fClassif),
+            options: compterPuces(toutes, (o) => classificationEcart(o.data) ?? 'non_classe', {
+              ordre: [...(Object.keys(ECART_CLASSIFICATION_LABELS) as string[]), 'non_classe'],
+              libelle: (v) =>
+                v === 'non_classe'
+                  ? 'Non classé'
+                  : (ECART_CLASSIFICATION_LABELS[v as keyof typeof ECART_CLASSIFICATION_LABELS] ?? v),
+            }),
+            onChange: (v: string | null) => setFClassif(v ?? 'all'),
           },
-        ]
-      : []),
-    ...(fNature !== 'all'
-      ? [
           {
             cle: 'nature',
             libelle: 'Nature',
-            valeur: LIBELLES_NATURE_CONSTAT[fNature as NatureConstat] ?? fNature,
-            retirer: () => setFNature('all'),
+            valeur: valeur(fNature),
+            options: compterPuces(toutes, (o) => natureConstat(o.data), {
+              ordre: NATURES_CONSTAT,
+              libelle: (v) => LIBELLES_NATURE_CONSTAT[v as NatureConstat] ?? v,
+            }),
+            onChange: (v: string | null) => setFNature(v ?? 'all'),
           },
         ]
       : []),
-    ...(fOrigine !== 'all'
-      ? [
-          {
-            cle: 'orig',
-            libelle: 'Origine',
-            valeur: ORIGINES[fOrigine] ?? fOrigine,
-            retirer: () => setFOrigine('all'),
-          },
-        ]
-      : []),
+    {
+      cle: 'resp',
+      libelle: 'Responsable',
+      valeur: valeur(fResp),
+      options: compterPuces(toutes, owner),
+      onChange: (v) => setFResp(v ?? 'all'),
+    },
+    {
+      cle: 'orig',
+      libelle: 'Origine',
+      valeur: valeur(fOrigine),
+      options: compterPuces(toutes, (o) => (o.id.startsWith('legacy:') ? 'existant' : 'natif'), {
+        ordre: ['existant', 'natif'],
+        libelle: (v) => ORIGINES[v] ?? v,
+      }),
+      onChange: (v) => setFOrigine(v ?? 'all'),
+    },
   ];
+  const nomListe = kind === 'nonconformity' ? 'constats' : 'fiches';
+  const titreListe = `${total} ${total > 1 ? nomListe : nomListe.slice(0, -1)}`;
   /* Parties intéressées (refonte Neon, lot 5) : panorama Studio par défaut ; le registre détaillé ci-dessous (filtres
      d'URL, commandes, décisions et réalisations) s'ouvre à la demande, ou d'emblée quand une recherche ou un filtre
      d'URL est actif. Il est replié par la feuille de styles (neon-parties.css), sans être démonté. */
@@ -440,82 +492,19 @@ export function BusinessRegistry({
       )}
       <BoiteOutils
         label="Outils du registre"
-        recherche={{ label: 'Rechercher', value: search, onChange: setSearch }}
-        filtres={{
-          actifs: filtresActifs,
-          onReinitialiser: reinitialiserFiltres,
-          contenu: (
-            <>
-              <Select
-                label="État"
-                allowDeselect={false}
-                data={[{ value: 'all', label: 'Tous les états' }, ...etats.map((e) => ({ value: e, label: e }))]}
-                value={fEtat}
-                onChange={(v) => setFEtat(v ?? 'all')}
-                comboboxProps={{ withinPortal: false }}
-              />
-              <Select
-                label="Responsable"
-                allowDeselect={false}
-                data={[{ value: 'all', label: 'Tous' }, ...responsables.map((e) => ({ value: e, label: e }))]}
-                value={fResp}
-                onChange={(v) => setFResp(v ?? 'all')}
-                comboboxProps={{ withinPortal: false }}
-              />
-              <Select
-                label="Échéance"
-                allowDeselect={false}
-                data={[
-                  { value: 'all', label: 'Toutes' },
-                  { value: 'retard', label: 'Dépassée' },
-                  { value: 'avenir', label: 'À venir' },
-                  { value: 'sans', label: 'Sans échéance' },
-                ]}
-                value={fEcheance}
-                onChange={(v) => setFEcheance(v ?? 'all')}
-                comboboxProps={{ withinPortal: false }}
-              />
-              {kind === 'nonconformity' && (
-                <Select
-                  label="Classification"
-                  allowDeselect={false}
-                  data={[
-                    { value: 'all', label: 'Toutes' },
-                    ...Object.entries(ECART_CLASSIFICATION_LABELS).map(([value, label]) => ({ value, label })),
-                    { value: 'non_classe', label: 'Non classé' },
-                  ]}
-                  value={fClassif}
-                  onChange={(v) => setFClassif(v ?? 'all')}
-                  comboboxProps={{ withinPortal: false }}
-                />
-              )}
-              {kind === 'nonconformity' && (
-                <Select
-                  label="Nature"
-                  allowDeselect={false}
-                  data={[
-                    { value: 'all', label: 'Toutes' },
-                    ...NATURES_CONSTAT.map((value) => ({ value, label: LIBELLES_NATURE_CONSTAT[value] })),
-                  ]}
-                  value={fNature}
-                  onChange={(v) => setFNature(v ?? 'all')}
-                  comboboxProps={{ withinPortal: false }}
-                />
-              )}
-              <Select
-                label="Origine"
-                allowDeselect={false}
-                data={[
-                  { value: 'all', label: 'Toutes' },
-                  { value: 'existant', label: 'Existant (outil de suivi)' },
-                  { value: 'natif', label: 'Créé dans le Pilotage' },
-                ]}
-                value={fOrigine}
-                onChange={(v) => setFOrigine(v ?? 'all')}
-                comboboxProps={{ withinPortal: false }}
-              />
-            </>
-          ),
+        titre={titreListe}
+        total={total}
+        affiches={rows.length}
+        recherche={{
+          label: `Rechercher dans les ${nomListe}`,
+          value: search,
+          onChange: setSearch,
+          placeholder: 'Intitulé, description, responsable…',
+        }}
+        puces={puces}
+        onToutEffacer={() => {
+          setSearch('');
+          reinitialiserFiltres();
         }}
         ajout={
           writable && (
@@ -529,14 +518,7 @@ export function BusinessRegistry({
           )
         }
       />
-      <PastillesCriteres criteres={criteres} onToutEffacer={reinitialiserFiltres} />
-      <ErrorAlert error={native.error ?? historical.error} />
-      <Text size="sm">
-        {filtresActifs
-          ? `${rows.length} sur ${toutes.length} affichées`
-          : `${(native.data?.pages[0]?.total ?? 0) + (historical.data?.pages[0]?.total ?? 0)} `}
-        {filtresActifs ? '' : kind === 'nonconformity' ? 'constats' : 'fiches'}
-      </Text>
+      <ErrorAlert error={native.error ?? historical.error ?? nativeCherche.error ?? historicalCherche.error} />
       {kind === 'nonconformity' && (
         <Group gap="xs" role="group" aria-label="Légende des classifications d’écart">
           <Text size="xs">Classification :</Text>
@@ -550,7 +532,9 @@ export function BusinessRegistry({
       {!rows.length && !native.isPending && (
         <Card withBorder>
           <Text>
-            Aucune fiche pour le moment. Ajoutez votre premier élément ou recherchez dans les données existantes.
+            {terme || filtresActifs
+              ? 'Aucune fiche ne correspond à la recherche ou aux filtres.'
+              : 'Aucune fiche pour le moment. Ajoutez votre premier élément ou recherchez dans les données existantes.'}
           </Text>
         </Card>
       )}
@@ -560,30 +544,9 @@ export function BusinessRegistry({
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Intitulé</Table.Th>
-                <Table.Th>
-                  <FiltreColonne
-                    libelle="État"
-                    valeur={fEtat === 'all' ? null : fEtat}
-                    options={etats.map((e) => ({ value: e, label: e }))}
-                    onChange={(v) => setFEtat(v ?? 'all')}
-                  />
-                </Table.Th>
-                <Table.Th>
-                  <FiltreColonne
-                    libelle="Responsable"
-                    valeur={fResp === 'all' ? null : fResp}
-                    options={responsables.map((e) => ({ value: e, label: e }))}
-                    onChange={(v) => setFResp(v ?? 'all')}
-                  />
-                </Table.Th>
-                <Table.Th>
-                  <FiltreColonne
-                    libelle="Échéance"
-                    valeur={fEcheance === 'all' ? null : fEcheance}
-                    options={Object.entries(ECHEANCES).map(([value, label]) => ({ value, label }))}
-                    onChange={(v) => setFEcheance(v ?? 'all')}
-                  />
-                </Table.Th>
+                <Table.Th>État</Table.Th>
+                <Table.Th>Responsable</Table.Th>
+                <Table.Th>Échéance</Table.Th>
                 <Table.Th>Actions</Table.Th>
               </Table.Tr>
             </Table.Thead>
@@ -591,9 +554,11 @@ export function BusinessRegistry({
               {rows.map((o) => (
                 <Table.Tr key={o.id} {...ficheCliquable(() => onOpen(o), `Afficher ${o.name}`)}>
                   <Table.Td>
-                    <Text fw={600}>{o.name}</Text>
+                    <Text fw={600}>
+                      <Surligne texte={o.name} recherche={terme} />
+                    </Text>
                     <Text size="xs" c="dimmed" lineClamp={1}>
-                      {String(o.data.description ?? '').slice(0, 120)}
+                      <Surligne texte={String(o.data.description ?? '').slice(0, 120)} recherche={terme} />
                     </Text>
                     {o.id.startsWith('legacy:') && (
                       <Badge size="xs" variant="light">
@@ -633,8 +598,12 @@ export function BusinessRegistry({
           {rows.map((o) => (
             <Card key={o.id} withBorder {...ficheCliquable(() => onOpen(o), `Afficher ${o.name}`)}>
               <Stack gap="xs">
-                <Text fw={600}>{o.name}</Text>
-                <Text size="sm">{String(o.data.description ?? '').slice(0, 120)}</Text>
+                <Text fw={600}>
+                  <Surligne texte={o.name} recherche={terme} />
+                </Text>
+                <Text size="sm">
+                  <Surligne texte={String(o.data.description ?? '').slice(0, 120)} recherche={terme} />
+                </Text>
                 {o.id.startsWith('legacy:') && <Badge variant="light">Existant</Badge>}
                 {o.smsiId !== smsi && !o.id.startsWith('legacy:') && (
                   <Badge variant="light" color="encre">
@@ -659,13 +628,24 @@ export function BusinessRegistry({
       </Stack>
       <Group>
         {native.hasNextPage && (
-          <Button variant="light" onClick={() => void native.fetchNextPage()}>
+          <Button variant="light" loading={native.isFetchingNextPage} onClick={() => void native.fetchNextPage()}>
             Afficher les fiches suivantes
           </Button>
         )}
         {historical.hasNextPage && (
           <Button variant="light" onClick={() => void historical.fetchNextPage()}>
             Afficher les données existantes suivantes
+          </Button>
+        )}
+        {!!terme && (nativeCherche.hasNextPage || historicalCherche.hasNextPage) && (
+          <Button
+            variant="light"
+            onClick={() => {
+              if (nativeCherche.hasNextPage) void nativeCherche.fetchNextPage();
+              if (historicalCherche.hasNextPage) void historicalCherche.fetchNextPage();
+            }}
+          >
+            Afficher les autres fiches trouvées par leur intitulé
           </Button>
         )}
       </Group>

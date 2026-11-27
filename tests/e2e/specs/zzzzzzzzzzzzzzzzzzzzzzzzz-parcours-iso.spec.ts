@@ -170,9 +170,9 @@ test('Parcours ISO / HDS : arbre, carte, sous-actions, fiche, liste, HDS et anim
     await vue(page, 'Liste');
     await expect(page.locator('[data-etape]')).toHaveCount(16);
     await expect(page.locator('button[data-sousaction]')).toHaveCount(26);
-    await page.getByLabel('Rechercher une étape ou une sous-action').fill('audit');
+    await page.getByLabel('Rechercher dans les étapes et sous-actions').fill('audit');
     await expect(page.locator('[data-etape]')).not.toHaveCount(16);
-    await page.getByLabel('Rechercher une étape ou une sous-action').fill('');
+    await page.getByLabel('Rechercher dans les étapes et sous-actions').fill('');
     const premiere = page.locator('button[data-sousaction="context-1"]');
     await premiere.focus();
     await page.keyboard.press('Enter');

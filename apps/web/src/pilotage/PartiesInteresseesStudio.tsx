@@ -3,13 +3,15 @@
    supplémentaire : les filtres, la recherche et les compteurs portent sur les fiches chargées, la pagination existante
    reste visible. Les liaisons et les deux points lumineux sont décoratifs (transform et opacity seulement) ; ils
    tournent en continu, sans bouton de pause (ADR 0099), et s'arrêtent onglet masqué ou en mouvement réduit.
-   Boîte d'outils commune (7.3.0) : vues, recherche, filtres avancés et bascule du registre détaillé ; l'ajout au bout
-   de la ligne. Les en-têtes de la liste compacte restent décoratifs (aria-hidden), sans filtre de colonne. */
-import { ActionIcon, Button, Select } from '@mantine/core';
+   Recherche et filtres des listes (refonte Verre, 27/11/2026) : vues et bascule du registre détaillé, champ de recherche
+   (dans le nom et le texte des fiches) et puces Nature, Exigences, Revue, Catégorie, Responsable à partir de 8 parties ;
+   l'ajout au bout de la ligne. Les en-têtes de la liste compacte restent décoratifs (aria-hidden), sans filtre. */
+import { ActionIcon, Button } from '@mantine/core';
 import { useReducedMotion } from '@mantine/hooks';
 import { type GrcObject, jourParis } from '@suivi/shared';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { BoiteOutils, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
+import { BoiteOutils, Surligne, type CriterePuces } from '../components/BarreOutils';
+import { compterPuces } from '../components/recherche-liste';
 import { ficheCliquable } from '../fiche-cliquable';
 import { liaisonsParties, parcoursParties, cheminPartie, type CartePartie, type RoutePartie } from './parties-liaisons';
 
@@ -199,11 +201,13 @@ function Panorama({
   scopeName,
   moving,
   onOpen,
+  recherche,
 }: {
   items: GrcObject[];
   scopeName: string;
   moving: boolean;
   onOpen: (o: GrcObject) => void;
+  recherche: string;
 }) {
   const canvas = useRef<HTMLDivElement>(null);
   const [model, setModel] = useState<{ width: number; height: number; routes: RoutePartie[] }>({
@@ -280,10 +284,15 @@ function Panorama({
         </span>
         <span className="pi-card-type">{naturePartie(o)}</span>
       </span>
-      <strong>{o.name}</strong>
+      <strong>
+        <Surligne texte={o.name} recherche={recherche} />
+      </strong>
       <span className="pi-card-category">{textePartie(o.data.category) || 'Catégorie non renseignée'}</span>
       <span className="pi-card-expectation">
-        {textePartie(o.data.expectations) || 'Besoins et attentes non renseignés'}
+        <Surligne
+          texte={textePartie(o.data.expectations) || 'Besoins et attentes non renseignés'}
+          recherche={recherche}
+        />
       </span>
       <span className="pi-card-bottom">
         <EtatPartie object={o} />
@@ -360,23 +369,18 @@ function Panorama({
 
 const sansAccents = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase('fr');
 
-const OPTIONS_NATURE = [
-  { value: 'all', label: 'Toutes' },
-  ...['Interne', 'Externe', 'À préciser'].map((v) => ({ value: v, label: v })),
-];
-const OPTIONS_EXIGENCES = [
-  { value: 'all', label: 'Toutes' },
-  { value: 'Oui', label: 'Traitées' },
-  { value: 'Partiel', label: 'Partiellement' },
-  { value: 'Non', label: 'Non traitées' },
-  { value: 'unknown', label: 'Non renseigné' },
-];
-const OPTIONS_REVUE = [
-  { value: 'all', label: 'Toutes' },
-  { value: 'check', label: 'À vérifier (date absente ou > 365 jours)' },
-  { value: 'missing', label: 'Non renseignée' },
-  { value: 'recent', label: 'Depuis moins de 365 jours' },
-];
+const NATURES: Record<string, string> = { Interne: 'Internes', Externe: 'Externes', 'À préciser': 'Nature à préciser' };
+const EXIGENCES: Record<string, string> = {
+  Oui: 'Exigences traitées',
+  Partiel: 'Exigences partiellement traitées',
+  Non: 'Exigences non traitées',
+  unknown: 'Exigences non renseignées',
+};
+const REVUES: Record<string, string> = {
+  check: 'À revoir',
+  missing: 'Revue non renseignée',
+  recent: 'Revue de moins d’un an',
+};
 
 /** Présentation du registre déjà chargé : aucune requête ou écriture métier supplémentaire. */
 export function PartiesInteresseesStudio({
@@ -428,72 +432,68 @@ export function PartiesInteresseesStudio({
       (review === 'all' ||
         (review === 'check' ? revuePartie(o) : review === 'missing' ? !o.data.reviewedAt : !revuePartie(o))),
   );
-  // Filtres avancés : tous les critères sauf la recherche, qui reste dans son champ.
-  const avances = [nature, addressed, review, category, responsable].filter((v) => v !== 'all').length;
-  const reinitialiserFiltres = () => {
+  const reset = () => {
+    setQuery('');
     setNature('all');
     setAddressed('all');
     setReview('all');
     setCategory('all');
     setResponsable('all');
   };
-  const reset = () => {
-    setQuery('');
-    reinitialiserFiltres();
-  };
-  const select = (
-    label: string,
-    value: string,
-    onChange: (v: string) => void,
-    data: { value: string; label: string }[],
-  ) => (
-    <Select
-      label={label}
-      value={value}
-      onChange={(v) => onChange(v ?? 'all')}
-      allowDeselect={false}
-      data={data}
-      comboboxProps={{ withinPortal: false }}
-    />
-  );
-  const choices = (values: string[]) => [
-    { value: 'all', label: 'Tous' },
-    ...[...new Set(values.filter(Boolean))].sort().map((v) => ({ value: v, label: v })),
+  const valeur = (v: string) => (v === 'all' ? null : v);
+  // Puces (refonte Verre, 27/11/2026) : valeurs présentes parmi les fiches chargées, avec leur nombre. « À revoir »
+  // (date absente ou de plus de 365 jours) recoupe « Revue non renseignée » : une seule des deux est retenue à la fois.
+  const puces: CriterePuces[] = [
+    {
+      cle: 'pinat',
+      libelle: 'Nature',
+      valeur: valeur(nature),
+      options: compterPuces(objects, naturePartie, {
+        ordre: ['Externe', 'Interne', 'À préciser'],
+        libelle: (v) => NATURES[v] ?? v,
+      }),
+      onChange: (v) => setNature(v ?? 'all'),
+    },
+    {
+      cle: 'pirev',
+      libelle: 'Dernière revue',
+      valeur: valeur(review),
+      options: compterPuces(
+        objects,
+        (o) => (revuePartie(o) ? ['check', ...(o.data.reviewedAt ? [] : ['missing'])] : ['recent']),
+        {
+          ordre: ['check', 'missing', 'recent'],
+          libelle: (v) => REVUES[v] ?? v,
+          ton: (v) => (v === 'check' ? 'alerte' : undefined),
+        },
+      ),
+      onChange: (v) => setReview(v ?? 'all'),
+    },
+    {
+      cle: 'piexi',
+      libelle: 'Exigences traitées',
+      valeur: valeur(addressed),
+      options: compterPuces(objects, (o) => textePartie(o.data.addressed) || 'unknown', {
+        ordre: ['Non', 'Partiel', 'Oui', 'unknown'],
+        libelle: (v) => EXIGENCES[v] ?? v,
+      }),
+      onChange: (v) => setAddressed(v ?? 'all'),
+    },
+    {
+      cle: 'picat',
+      libelle: 'Catégorie',
+      valeur: valeur(category),
+      options: compterPuces(objects, (o) => textePartie(o.data.category)),
+      onChange: (v) => setCategory(v ?? 'all'),
+    },
+    {
+      cle: 'piresp',
+      libelle: 'Responsable',
+      valeur: valeur(responsable),
+      options: compterPuces(objects, owner),
+      onChange: (v) => setResponsable(v ?? 'all'),
+    },
   ];
-  const libelleDe = (options: { value: string; label: string }[], v: string) =>
-    options.find((o) => o.value === v)?.label ?? v;
-  const criteres = (
-    [
-      [!!query, { cle: 'piq', libelle: 'Recherche', valeur: query, retirer: () => setQuery('') }],
-      [
-        nature !== 'all',
-        { cle: 'pinat', libelle: 'Nature', valeur: libelleDe(OPTIONS_NATURE, nature), retirer: () => setNature('all') },
-      ],
-      [
-        addressed !== 'all',
-        {
-          cle: 'piexi',
-          libelle: 'Exigences traitées',
-          valeur: libelleDe(OPTIONS_EXIGENCES, addressed),
-          retirer: () => setAddressed('all'),
-        },
-      ],
-      [
-        review !== 'all',
-        {
-          cle: 'pirev',
-          libelle: 'Dernière revue',
-          valeur: libelleDe(OPTIONS_REVUE, review),
-          retirer: () => setReview('all'),
-        },
-      ],
-      [category !== 'all', { cle: 'picat', libelle: 'Catégorie', valeur: category, retirer: () => setCategory('all') }],
-      [
-        responsable !== 'all',
-        { cle: 'piresp', libelle: 'Responsable', valeur: responsable, retirer: () => setResponsable('all') },
-      ],
-    ] as [boolean, CritereActif][]
-  ).flatMap(([actif, c]) => (actif ? [c] : []));
   return (
     <section
       className="parties-studio"
@@ -520,10 +520,11 @@ export function PartiesInteresseesStudio({
         </div>
       </header>
       <div className="pi-surface">
-        {/* Boîte d'outils commune (7.3.0) : vues, recherche, bascule du registre détaillé et filtres avancés ; ajout
-            au bout de la ligne. */}
         <BoiteOutils
           label="Outils des parties intéressées"
+          titre={`${total} partie${total > 1 ? 's' : ''} intéressée${total > 1 ? 's' : ''}`}
+          total={Math.max(total, objects.length)}
+          affiches={items.length}
           vues={[
             { value: 'panorama', label: 'Vue panorama', icone: <IconePartie name="network" /> },
             { value: 'list', label: 'Vue liste compacte', icone: <IconePartie name="list" /> },
@@ -531,24 +532,13 @@ export function PartiesInteresseesStudio({
           vue={mode}
           onVue={(v) => setMode(v === 'list' ? 'list' : 'panorama')}
           recherche={{
-            label: 'Rechercher une partie',
+            label: 'Rechercher dans les parties intéressées',
             value: query,
             onChange: setQuery,
             placeholder: 'Nom, besoin, responsable…',
           }}
-          filtres={{
-            actifs: avances,
-            onReinitialiser: reinitialiserFiltres,
-            contenu: (
-              <>
-                {select('Nature', nature, setNature, OPTIONS_NATURE)}
-                {select('Exigences traitées', addressed, setAddressed, OPTIONS_EXIGENCES)}
-                {select('Dernière revue', review, setReview, OPTIONS_REVUE)}
-                {select('Catégorie', category, setCategory, choices(objects.map((o) => textePartie(o.data.category))))}
-                {select('Responsable', responsable, setResponsable, choices(objects.map(owner)))}
-              </>
-            ),
-          }}
+          puces={puces}
+          onToutEffacer={reset}
           ajout={
             writable && (
               <Button onClick={onCreate}>
@@ -569,7 +559,6 @@ export function PartiesInteresseesStudio({
             <IconePartie name="more" />
           </ActionIcon>
         </BoiteOutils>
-        <PastillesCriteres criteres={criteres} onToutEffacer={reset} />
         <div className="pi-content" tabIndex={0} role="region" aria-label="Acteurs affichés" aria-busy={loading}>
           {loading && <p role="status">Chargement des parties intéressées…</p>}
           {!items.length && !loading ? (
@@ -587,7 +576,7 @@ export function PartiesInteresseesStudio({
               )}
             </div>
           ) : mode === 'panorama' ? (
-            <Panorama items={items} scopeName={scopeName} moving={moving} onOpen={onOpen} />
+            <Panorama items={items} scopeName={scopeName} moving={moving} onOpen={onOpen} recherche={query} />
           ) : (
             <div className="pi-list">
               <div className="pi-list-header" aria-hidden="true">
@@ -608,12 +597,16 @@ export function PartiesInteresseesStudio({
                   aria-label={`Afficher ${o.name}`}
                 >
                   <span className="pi-row-title">
-                    <strong>{o.name}</strong>
+                    <strong>
+                      <Surligne texte={o.name} recherche={query} />
+                    </strong>
                     <small>
                       {naturePartie(o)} · {textePartie(o.data.category) || 'Catégorie non renseignée'}
                     </small>
                   </span>
-                  <span className="pi-row-expectation">{textePartie(o.data.expectations) || 'Non renseignés'}</span>
+                  <span className="pi-row-expectation">
+                    <Surligne texte={textePartie(o.data.expectations) || 'Non renseignés'} recherche={query} />
+                  </span>
                   <span>{owner(o)}</span>
                   <EtatPartie object={o} />
                   <Revue object={o} />

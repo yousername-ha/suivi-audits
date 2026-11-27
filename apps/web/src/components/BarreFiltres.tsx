@@ -1,5 +1,7 @@
-/* Adaptateur des recherches déjà contrôlées : il conserve les champs et leurs callbacks, et les compose dans la
-   boîte d'outils commune. Le formulaire reste propriétaire des champs, y compris ceux du panneau de filtres. */
+/* Adaptateur des recherches déjà contrôlées : il conserve les champs et leurs callbacks, et les compose dans la barre
+   commune de recherche et de filtres (refonte Verre, 27/11/2026) : le champ de recherche en gélule, la commande qui
+   lance la recherche à côté, les autres critères dans « Plus de filtres ». Le formulaire reste propriétaire des champs,
+   y compris ceux du panneau. */
 import {
   Anchor,
   Button,
@@ -11,7 +13,7 @@ import {
   type SegmentedControlProps,
 } from '@mantine/core';
 import { Children, cloneElement, Fragment, isValidElement, type ReactElement, type ReactNode, type Ref } from 'react';
-import { BoiteOutils, IconeLancer, type VueBoite } from './BarreOutils';
+import { BoiteOutils, IconeLancer, type CritereActif, type CriterePuces, type VueBoite } from './BarreOutils';
 
 type Champ = ReactElement<TextInputProps & { ref?: Ref<HTMLInputElement> }>;
 type Controle = ReactElement<{
@@ -115,6 +117,11 @@ export function BarreFiltres({
   vues,
   vue,
   onVue,
+  titre,
+  total,
+  affiches,
+  puces,
+  criteres,
 }: {
   label: string;
   children: ReactNode;
@@ -122,6 +129,15 @@ export function BarreFiltres({
   vues?: readonly VueBoite[];
   vue?: string;
   onVue?: (v: string) => void;
+  /** Titre et compteur de la liste, à gauche de la recherche. */
+  titre?: ReactNode;
+  /** Nombre total d'éléments (seuil de 8 et « N sur M ») ; inconnu pour une liste servie par une recherche serveur. */
+  total?: number;
+  affiches?: number;
+  /** Critères en puces, calculés par la page sur sa liste. */
+  puces?: readonly CriterePuces[];
+  /** Critères actifs des champs repliés, montrés en puces retirables. */
+  criteres?: readonly CritereActif[];
 }) {
   const controles = elements(children);
   const champ = controles.find(
@@ -181,6 +197,11 @@ export function BarreFiltres({
   return (
     <BoiteOutils
       label={nomBarre}
+      titre={titre}
+      total={total}
+      affiches={affiches}
+      puces={puces}
+      criteres={criteres}
       champRecherche={champ}
       vues={vues ?? presentations}
       nomVues={choixVue?.props['aria-label']}
@@ -204,7 +225,7 @@ export function BarreFiltres({
       {commandes.map((commande, i) =>
         cloneElement(commande, {
           key: commande.key ?? i,
-          className: [commande.props.className, 'barre-boite__soumettre'].filter(Boolean).join(' '),
+          className: [commande.props.className, 'liste-recherche__lancer'].filter(Boolean).join(' '),
           title: commande.props.title ?? String(commande.props.children).trim(),
           // Le nom du bouton reste son texte (masqué à l'écran), pas un attribut aria-label : un bouton « Rechercher »
           // à côté d'un champ « Rechercher » ne répond ainsi pas à la recherche d'un champ par son libellé.

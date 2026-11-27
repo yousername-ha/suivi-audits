@@ -41,6 +41,13 @@ test('Écart → audit d’origine → retour à la liste ; Timeline avec pério
       name: nomEcart,
       data: { cause: 'Cause de recette', auditRef: `object:${audit.id}` },
     });
+    // Huit constats au moins : en dessous, la liste n'a ni recherche ni filtres (règle du RSSI du 27/11/2026).
+    for (let i = 1; i <= 7; i++)
+      await post(page, `/api/grc/${p.id}/objects`, {
+        kind: 'nonconformity',
+        name: `Constat complémentaire ${i} ${suffixe}`,
+        data: { cause: 'Cause de recette' },
+      });
     await post(page, `/api/grc/${p.id}/objects`, {
       kind: 'action',
       name: `Action datée ${suffixe}`,
@@ -62,7 +69,7 @@ test('Écart → audit d’origine → retour à la liste ; Timeline avec pério
     await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
     await page.getByRole('option', { name: perimetre, exact: true }).click();
     // Un filtre saisi dans la liste fait partie du contexte : il est retrouvé au retour.
-    await page.getByRole('textbox', { name: 'Rechercher', exact: true }).fill('contextuel');
+    await page.getByRole('textbox', { name: 'Rechercher dans les constats', exact: true }).fill('contextuel');
     await expect(page).toHaveURL(/[?&]q=contextuel/);
     await page.getByRole('button', { name: `Autres actions pour ${nomEcart}` }).click();
     await page.getByRole('menuitem', { name: 'Voir l’audit d’origine' }).click();
@@ -73,17 +80,19 @@ test('Écart → audit d’origine → retour à la liste ; Timeline avec pério
     await expect(fiche).toBeHidden();
     await page.getByRole('link', { name: 'Retour à la page précédente' }).click();
     await expect(page).toHaveURL(/\/pilotage\/amelioration/);
-    await expect(page.getByRole('textbox', { name: 'Rechercher', exact: true })).toHaveValue('contextuel');
+    await expect(page.getByRole('textbox', { name: 'Rechercher dans les constats', exact: true })).toHaveValue(
+      'contextuel',
+    );
     // Le périmètre choisi est conservé : l'écart est toujours dans la liste.
     await expect(page.getByText(nomEcart, { exact: true }).first()).toBeVisible();
 
     // Timeline : la période affichée est annoncée.
     await page.goto('/pilotage/actions');
-    // Vue choisie dans les filtres avancés (boîte d'outils commune, 7.3.0).
-    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
-    await page.getByRole('combobox', { name: 'Vue synchronisée' }).click();
-    await page.getByRole('option', { name: 'Timeline', exact: true }).click();
-    await page.getByRole('button', { name: /^Filtres avancés/ }).click();
+    // Vue choisie par son pictogramme (barre de recherche et de filtres des listes, refonte Verre, 27/11/2026).
+    await page
+      .getByRole('group', { name: 'Vues', exact: true })
+      .getByRole('button', { name: 'Timeline', exact: true })
+      .click();
     await expect(page.getByText(/Période affichée : du /)).toBeVisible();
     expect(problems).toEqual([]);
   } finally {

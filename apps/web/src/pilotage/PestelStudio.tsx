@@ -2,6 +2,7 @@
    vue, la nomenclature et les classements viennent de l'API PESTEL existante, les écritures passent par `onClasser` (PUT
    existant, dans Pestel.tsx). Les enjeux internes restent à part et ne se classent pas. Aucun rattachement n'est fabriqué. */
 import { Select } from '@mantine/core';
+import { BoiteOutils, Surligne } from '../components/BarreOutils';
 import { useReducedMotion } from '@mantine/hooks';
 import type { EnjeuPestel, FacteurPestel, VuePestel } from '@suivi/shared';
 import { useId, useRef, useState, type ReactNode } from 'react';
@@ -181,10 +182,9 @@ export function PestelStudio({
     titreFocus: `${id}-titre-focus`,
     registre: `${id}-registre`,
     titreRegistre: `${id}-titre-registre`,
-    recherche: `${id}-recherche`,
   };
   const registreRef = useRef<HTMLElement>(null),
-    rechercheRef = useRef<HTMLInputElement>(null),
+    titreRegistreRef = useRef<HTMLHeadingElement>(null),
     commandeRegistre = useRef<HTMLButtonElement>(null),
     nonClassesRef = useRef<HTMLElement>(null);
   const noeuds = useRef(new Map<string, HTMLButtonElement>());
@@ -229,7 +229,9 @@ export function PestelStudio({
     setRegistre(true);
     requestAnimationFrame(() => {
       registreRef.current?.scrollIntoView({ block: 'start', behavior: defilement });
-      rechercheRef.current?.focus({ preventScroll: true });
+      // Le champ de recherche n'apparaît qu'à partir de 8 enjeux (refonte Verre, 27/11/2026) : sinon, le titre.
+      const champ = registreRef.current?.querySelector<HTMLInputElement>('.liste-recherche input');
+      (champ ?? titreRegistreRef.current)?.focus({ preventScroll: true });
     });
   };
   const replierRegistre = () => {
@@ -495,27 +497,29 @@ export function PestelStudio({
         <header>
           <div>
             <span className="pestel-eyebrow">Tous les enjeux externes</span>
-            <h2 id={ids.titreRegistre}>
+            <h2 id={ids.titreRegistre} ref={titreRegistreRef} tabIndex={-1}>
               Registre complet <span>{externes.length}</span>
             </h2>
           </div>
-          <label htmlFor={ids.recherche}>
-            Rechercher un enjeu
-            <input
-              id={ids.recherche}
-              type="search"
-              ref={rechercheRef}
-              value={recherche}
-              onChange={(e) => setRecherche(e.target.value)}
-              placeholder="Intitulé, facteur ou processus…"
-            />
-          </label>
+          <BoiteOutils
+            label="Outils du registre des enjeux externes"
+            total={externes.length}
+            affiches={visibles.length}
+            recherche={{
+              label: 'Rechercher dans les enjeux externes',
+              value: recherche,
+              onChange: setRecherche,
+              placeholder: 'Intitulé, facteur ou processus…',
+            }}
+          />
         </header>
         <div>
           {visibles.map((e) => (
             <article className="pestel-registry-row" key={e.ref}>
               <div>
-                <h3>{e.label}</h3>
+                <h3>
+                  <Surligne texte={e.label} recherche={recherche} />
+                </h3>
                 {e.description && <p className="pestel-issue-description">{e.description}</p>}
                 <Processus enjeu={e} noms={processus} />
               </div>

@@ -13,7 +13,7 @@ import { BoiteOutils } from '../components/BarreOutils';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { BibliothequeStudio, ExigencesEnLignes } from './BibliothequeStudio';
-import type { ReferentielBibliotheque as Referentiel } from './bibliotheque-types';
+import { filtrerReferentiels, type ReferentielBibliotheque as Referentiel } from './bibliotheque-types';
 import { DetailExigences, type CouvertureReferentiel } from './Couverture';
 import { KitIa } from './KitIa';
 
@@ -121,13 +121,14 @@ export function Bibliotheque({ smsi }: { smsi?: string }) {
           if (smsi) setOuvert({ couverture: c, smsi });
         }}
         recherche={recherche}
-        onRecherche={setRecherche}
         barre={
-          // Boîte d'outils commune (7.3.0) : la recherche du catalogue, toujours visible (raccourci « / »).
+          // Recherche du catalogue (refonte Verre, 27/11/2026) : à partir de 8 référentiels, ou recherche déjà saisie.
           <BoiteOutils
             label="Outils du catalogue"
+            total={liste.isPending ? 0 : liste.data?.length}
+            affiches={liste.data ? filtrerReferentiels(liste.data, recherche).length : undefined}
             recherche={{
-              label: 'Rechercher un référentiel',
+              label: 'Rechercher dans les référentiels',
               value: recherche,
               onChange: setRecherche,
               placeholder: 'Nom ou identifiant…',

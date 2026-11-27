@@ -94,9 +94,22 @@ export const sansAccents = (v: string) =>
     .replace(/\p{Diacritic}/gu, '')
     .toLocaleLowerCase('fr');
 
-/** Filtres du registre (situation, type, recherche par nom), mêmes règles que l'outil de suivi. */
+/** Filtres du registre (situation, type), mêmes règles que l'outil de suivi ; recherche dans le nom, l'identifiant, le
+    rattachement, le contact et les notes (refonte Verre, 27/11/2026). */
 export function filtrerFournisseurs<
-  T extends Pick<Fournisseur, 'name' | 'mfa' | 'saas' | 'critical' | 'controlSummary' | 'certificateState'>,
+  T extends Pick<
+    Fournisseur,
+    | 'id'
+    | 'name'
+    | 'rattachement'
+    | 'contact'
+    | 'notes'
+    | 'mfa'
+    | 'saas'
+    | 'critical'
+    | 'controlSummary'
+    | 'certificateState'
+  >,
 >(liste: readonly T[], filtre: string, type: string, recherche: string): T[] {
   const q = sansAccents(recherche.trim());
   return liste.filter(
@@ -108,7 +121,7 @@ export function filtrerFournisseurs<
         (filtre === 'cert' && ['bad', 'mid'].includes(f.certificateState[1])) ||
         (filtre === 'crit' && f.critical === 'Oui')) &&
       (type === 'all' || (type === 'saas' ? f.saas : !f.saas)) &&
-      (!q || sansAccents(f.name).includes(q)),
+      (!q || [f.name, f.id, f.rattachement, f.contact, f.notes].some((t) => !!t && sansAccents(t).includes(q))),
   );
 }
 

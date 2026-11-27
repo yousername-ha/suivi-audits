@@ -1,4 +1,6 @@
 import { BarreFiltres } from '../components/BarreFiltres';
+import { Surligne } from '../components/BarreOutils';
+import { compterPuces, correspond } from '../components/recherche-liste';
 /* Couverture d'un référentiel dans le périmètre (ADR 0031, 0041 et 0089) : l'état de chaque exigence — applicabilité, mise en
    œuvre, test d'efficacité, validation métier — et les mesures qui la portent. Les états décrivent ce qui est établi dans le
    périmètre ; ils ne constituent ni un taux de conformité ni une preuve de conformité. Affichée dans la page « Bibliothèque de
@@ -357,6 +359,7 @@ export function DetailExigences({
 }) {
   const can = useCan(),
     [filtre, setFiltre] = useState<string | null>(null),
+    [recherche, setRecherche] = useState(''),
     [ouverte, setOuverte] = useState<Detail | null>(null),
     [plan, setPlan] = useState(false);
   const q = useQuery({
@@ -366,7 +369,14 @@ export function DetailExigences({
         `/api/grc/${smsi}/couverture?frameworkId=${frameworkId}`,
       ),
   });
-  const lignes = (q.data?.detail ?? []).filter((r) => !filtre || r.etat === filtre);
+  // Recherche et filtres des listes (refonte Verre, 27/11/2026) : recherche dans le numéro, l'intitulé et les mesures
+  // reliées ; état en puces avec leur nombre.
+  const toutes = q.data?.detail ?? [];
+  const lignes = toutes.filter(
+    (r) =>
+      (!filtre || r.etat === filtre) &&
+      correspond([r.id, r.title, ...r.measures.flatMap((m) => [m.ref, m.name])], recherche),
+  );
   return (
     <Card withBorder id="couverture-detail">
       <Stack>
@@ -383,19 +393,33 @@ export function DetailExigences({
           constituent ni un taux de conformité ni une preuve de conformité à un référentiel.
         </Alert>
         <ErrorAlert error={q.error} />
-        <BarreFiltres label="Couverture des exigences">
+        <BarreFiltres
+          label="Couverture des exigences"
+          total={q.isPending ? 0 : toutes.length}
+          affiches={lignes.length}
+          puces={[
+            {
+              cle: 'etat',
+              libelle: 'État',
+              valeur: filtre,
+              options: compterPuces(toutes, (r) => r.etat, {
+                ordre: ETATS_EXIGENCE,
+                libelle: (v) => LIBELLES_ETAT[v as EtatExigence] ?? v,
+              }),
+              onChange: setFiltre,
+            },
+          ]}
+        >
           {can('ecarts', 'modifier') && (
             <Button variant="default" onClick={() => setPlan(true)}>
               Créer le plan d’action des écarts
             </Button>
           )}
-          <Select
-            label="Filtrer par état"
-            placeholder="Tous les états"
-            clearable
-            data={ETATS_EXIGENCE.map((e) => ({ value: e, label: LIBELLES_ETAT[e] }))}
-            value={filtre}
-            onChange={setFiltre}
+          <TextInput
+            label="Rechercher dans les exigences"
+            placeholder="Numéro, intitulé, mesure…"
+            value={recherche}
+            onChange={(e) => setRecherche(e.currentTarget.value)}
           />
         </BarreFiltres>
         {q.data?.detail && (
@@ -415,7 +439,7 @@ export function DetailExigences({
                 {lignes.map((r) => (
                   <Table.Tr key={r.id}>
                     <Table.Td>
-                      <b>{r.id}</b> · {r.title}
+                      <b>{r.id}</b> · <Surligne texte={r.title} recherche={recherche} />
                     </Table.Td>
                     <Table.Td>
                       {r.obligatoire ? (

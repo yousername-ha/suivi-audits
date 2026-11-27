@@ -968,23 +968,10 @@
   color: var(--pestel-blue);
   font-size: 0.8125rem;
 }
-.pestel-registry > header > label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3125rem;
+/* Recherche du registre (refonte Verre, 27/11/2026) : barre commune des listes, à droite du titre. */
+.pestel-registry > header > .liste-outils {
+  flex: 1 1 auto;
   min-width: 0;
-  color: var(--pestel-muted);
-  font-size: 0.8125rem;
-}
-.pestel-registry input[type='search'] {
-  width: 16.25rem;
-  min-width: 0;
-  padding: 0.5rem 0.625rem;
-  border: 1px solid var(--pestel-edge);
-  border-radius: var(--mantine-radius-sm);
-  background: var(--pestel-soft);
-  color: var(--pestel-ink);
-  font-size: 0.875rem;
 }
 .pestel-registry-row {
   display: flex;

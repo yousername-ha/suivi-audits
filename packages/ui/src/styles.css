@@ -3208,3 +3208,216 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
     transition: none;
   }
 }
+
+/* ---------------------------------------------------------------- Recherche et filtres des listes (27/11/2026)
+   Règle validée par le RSSI pour toute la plateforme (apps/web/src/components/BarreOutils.tsx) : en-tête de la liste
+   (titre et compteur à gauche, champ de recherche en gélule à droite), puis les puces de filtre avec leur nombre,
+   « Plus de filtres » et « Tout effacer ». Présentation sobre ici ; l'aspect « Verre » est dans verre.css. */
+.liste-outils {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-xs);
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.liste-outils__ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+  min-inline-size: 0;
+}
+.liste-outils__vues {
+  display: inline-flex;
+  flex: none;
+  gap: var(--mantine-spacing-2xs);
+}
+.liste-outils__titre {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  font-size: var(--mantine-font-size-lg);
+  font-weight: 700;
+}
+.liste-outils__titre:empty {
+  flex: 1 1 0;
+}
+.liste-recherche {
+  display: flex;
+  flex: 0 1 var(--suivi-champ-l);
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  min-inline-size: 0;
+  min-block-size: var(--suivi-controle-h);
+  padding-inline: var(--mantine-spacing-sm) var(--mantine-spacing-2xs);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: 999px;
+  background: var(--mantine-color-body);
+}
+.liste-recherche:focus-within {
+  border-color: var(--mantine-primary-color-filled);
+  outline: var(--suivi-trait-focus) solid var(--mantine-primary-color-filled);
+  outline-offset: 1px;
+}
+.liste-recherche > .barre-loupe {
+  flex: none;
+  color: var(--mantine-color-dimmed);
+}
+.liste-recherche__saisie {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+.liste-recherche__saisie .mantine-Input-input {
+  min-block-size: 0;
+  block-size: auto;
+  padding: 0;
+  font-weight: 500;
+}
+.liste-recherche__saisie .mantine-Input-input:focus,
+.liste-recherche__saisie .mantine-Input-input:focus-visible {
+  outline: none;
+}
+/* Les libellés et aides d'un champ repris d'un formulaire restent associés au champ, sans prendre de place. */
+.liste-recherche__saisie :is(.mantine-InputWrapper-label, .mantine-InputWrapper-description) {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.liste-recherche__compte {
+  flex: none;
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.liste-recherche__effacer,
+.liste-recherche__lancer.liste-recherche__lancer {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: calc(var(--suivi-controle-h) - 0.5rem);
+  block-size: calc(var(--suivi-controle-h) - 0.5rem);
+  min-inline-size: 0;
+  padding: 0;
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: 50%;
+  background: var(--mantine-color-default);
+  color: var(--mantine-color-text);
+  cursor: pointer;
+}
+.liste-recherche__lancer.liste-recherche__lancer {
+  inline-size: var(--suivi-controle-h);
+  block-size: var(--suivi-controle-h);
+}
+.liste-recherche__lancer .barre-lancer {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+.liste-croix {
+  inline-size: 0.6875rem;
+  block-size: 0.6875rem;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.liste-puces {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.liste-puces:has(.liste-plus[aria-expanded='true']) {
+  position: relative;
+  z-index: 10;
+}
+.liste-puces__groupe {
+  display: contents;
+}
+.liste-puces__sep {
+  inline-size: var(--suivi-trait-l);
+  block-size: 1.375rem;
+  margin-inline: var(--mantine-spacing-2xs);
+  background: var(--mantine-color-default-border);
+}
+.liste-puce,
+.liste-plus {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  min-block-size: 2rem;
+  padding: 0 var(--mantine-spacing-sm);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: 999px;
+  background: var(--mantine-color-default);
+  color: var(--mantine-color-text);
+  font: inherit;
+  font-size: max(13px, var(--mantine-font-size-sm));
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.liste-puce:hover,
+.liste-plus:hover {
+  background: var(--mantine-color-default-hover);
+}
+.liste-puce[aria-pressed='true'] {
+  border-color: var(--mantine-primary-color-filled);
+  background: var(--mantine-primary-color-light);
+  color: var(--mantine-primary-color-light-color);
+}
+.liste-puce[data-ton='alerte']:not([aria-pressed='true']) {
+  border-color: var(--carte-orange-trait);
+  background: var(--carte-orange-doux);
+  color: var(--carte-orange-accent);
+}
+.liste-puce__nombre {
+  font-size: max(13px, var(--mantine-font-size-xs));
+  font-weight: 700;
+  opacity: 0.85;
+}
+.liste-puce__texte strong {
+  font-weight: 700;
+}
+.liste-plus__icone {
+  inline-size: 0.9375rem;
+  block-size: 0.9375rem;
+}
+.liste-plus:not([aria-expanded='true']) + .filtres-avances {
+  pointer-events: none;
+}
+.liste-puces__effacer.liste-puces__effacer {
+  margin-inline-start: auto;
+  font-size: max(13px, var(--mantine-font-size-sm));
+  font-weight: 600;
+}
+.surligne {
+  padding: 0 0.125rem;
+  border-radius: 0.25rem;
+  background: var(--mantine-color-yellow-light);
+  color: inherit;
+}
+@media (max-width: 36em) {
+  .liste-recherche {
+    flex: 1 1 100%;
+  }
+}
+@media (forced-colors: active) {
+  .liste-puce[aria-pressed='true'] {
+    border-width: var(--suivi-trait-focus);
+    border-color: Highlight;
+  }
+  .surligne {
+    background: Mark;
+    color: MarkText;
+  }
+}
+@media print {
+  .liste-recherche__effacer,
+  .liste-plus,
+  .liste-puces__effacer {
+    display: none;
+  }
+}

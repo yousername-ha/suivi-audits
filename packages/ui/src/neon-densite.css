@@ -234,32 +234,8 @@ html:is([data-onglets='barre'], [data-onglets='pastilles'])
   padding-block: 0;
   font-weight: 500;
 }
-.app-main .barre-boite,
 .app-main :is(.fs-views, .pr-views, .pi-views) {
   padding: var(--mantine-spacing-2xs);
-}
-/* 7.6.1 (retour du RSSI du 23/11/2026) : la recherche de la boîte d'outils ne montre que sa loupe. Elle s'ouvre au clic ou
-   au clavier (Tab, raccourci « / ») et reste ouverte tant qu'elle porte un texte ; le champ et son nom ne changent pas. */
-.app-main .barre-boite .barre-boite__recherche .mantine-Input-input {
-  inline-size: var(--suivi-controle-h);
-  padding-inline-end: 0;
-  cursor: pointer;
-}
-.app-main .barre-boite__recherche .mantine-Input-section[data-position='left'] {
-  /* Le clic sur la loupe atteint le champ et l'ouvre. */
-  pointer-events: none;
-}
-.app-main .barre-boite__recherche .mantine-Input-input::placeholder {
-  color: transparent;
-}
-.app-main .barre-boite .barre-boite__recherche:focus-within .mantine-Input-input,
-.app-main .barre-boite .barre-boite__recherche:has(.mantine-Input-input:not(:placeholder-shown)) .mantine-Input-input {
-  inline-size: clamp(12rem, 16vw, 18rem);
-  padding-inline-end: var(--mantine-spacing-sm);
-  cursor: text;
-}
-.app-main .barre-boite__recherche:focus-within .mantine-Input-input::placeholder {
-  color: color-mix(in srgb, var(--mantine-color-violet-1) 75%, transparent);
 }
 .app-main :is(.fs-tool, .pr-tool, .pi-tool) {
   inline-size: var(--suivi-controle-h);

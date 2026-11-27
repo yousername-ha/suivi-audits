@@ -1,14 +1,15 @@
 /* Registre des risques (lot U3, ADR 0027) : niveaux brut et résiduel de la dernière appréciation, option de
-   traitement, état d'acceptation (décision formelle), prochaine revue ; filtres appliqués par le serveur. Boîte d'outils
-   commune (7.3.0) : recherche et filtres avancés ; Démarche, Étude, Option et Acceptation se filtrent aussi sur le titre
-   de leur colonne ; l'ajout d'un risque se place au bout de la ligne. */
-import { Checkbox, Select, Table, Text } from '@mantine/core';
+   traitement, état d'acceptation (décision formelle), prochaine revue ; filtres appliqués par le serveur. Recherche et
+   filtres des listes (refonte Verre, 27/11/2026) : recherche par intitulé ou code, puces Démarche, Option, Acceptation,
+   Étude, Revue dépassée et Écart avec la matrice, comptées sur le registre complet ; l'ajout au bout de la ligne. */
+import { Table, Text } from '@mantine/core';
 import { ETATS_ACCEPTATION, type EcartMatrice, type EtatAcceptation, type GrcObject } from '@suivi/shared';
 import { DataTable, StatusChip, type Etat } from '@suivi/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { get } from '../api';
-import { BoiteOutils, FiltreColonne, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
+import { BoiteOutils, Surligne, type CriterePuces } from '../components/BarreOutils';
+import { compterPuces } from '../components/recherche-liste';
 import { ErrorAlert } from '../components/common';
 import { ficheCliquable } from '../fiche-cliquable';
 import { useCan } from '../session';
@@ -97,19 +98,18 @@ export function RegistreRisques({
     queryKey: ['grc', smsi, 'risk-register', params.toString()],
     queryFn: () => get<{ items: Ligne[]; tronque: boolean }>(`/api/grc/${smsi}/risks/register?${params}`),
   });
+  // Registre complet, sans filtre (même requête que la liste quand aucun filtre n'est posé) : nombres des puces et seuil.
+  const complet = useQuery({
+    queryKey: ['grc', smsi, 'risk-register', ''],
+    queryFn: () => get<{ items: Ligne[]; tronque: boolean }>(`/api/grc/${smsi}/risks/register?`),
+  });
   const etudes = useQuery({
     queryKey: ['grc', smsi, 'objects', 'risk_study'],
     queryFn: () => get<{ items: GrcObject[] }>(`/api/grc/${smsi}/objects?kind=risk_study`),
   });
   const nomEtude = new Map((etudes.data?.items ?? []).map((e) => ['object:' + e.id, e.name] as const));
   const objet = (id: string) => get<GrcObject>(`/api/grc/${smsi}/objects/${id}`);
-  // Valeurs des filtres : les mêmes pour le panneau des filtres avancés et pour les titres de colonnes.
-  const optionsDemarche = Object.entries(DEMARCHES).map(([value, label]) => ({ value, label })),
-    optionsEtude = (etudes.data?.items ?? []).map((e) => ({ value: e.id, label: e.name })),
-    optionsOption = Object.entries(OPTIONS).map(([value, label]) => ({ value, label })),
-    optionsAcceptation = Object.entries(ETATS_ACCEPTATION).map(([value, label]) => ({ value, label }));
-  const libelleDe = (options: { value: string; label: string }[], v: string) =>
-    options.find((o) => o.value === v)?.label ?? 'sélectionnée';
+  const tous = complet.data?.items ?? [];
   const reinitialiser = () => {
     setDemarche(null);
     setEtude(null);
@@ -118,108 +118,82 @@ export function RegistreRisques({
     setRetard(false);
     setEcart(false);
   };
-  const criteres: CritereActif[] = [
-    ...(recherche ? [{ cle: 'q', libelle: 'Recherche', valeur: recherche, retirer: () => setRecherche('') }] : []),
-    ...(demarche
-      ? [
-          {
-            cle: 'demarche',
-            libelle: 'Démarche',
-            valeur: libelleDe(optionsDemarche, demarche),
-            retirer: () => setDemarche(null),
-          },
-        ]
-      : []),
-    ...(etude
-      ? [{ cle: 'etude', libelle: 'Étude', valeur: libelleDe(optionsEtude, etude), retirer: () => setEtude(null) }]
-      : []),
-    ...(strategie
-      ? [
-          {
-            cle: 'option',
-            libelle: 'Option de traitement',
-            valeur: libelleDe(optionsOption, strategie),
-            retirer: () => setStrategie(null),
-          },
-        ]
-      : []),
-    ...(acceptation
-      ? [
-          {
-            cle: 'acceptation',
-            libelle: 'Acceptation',
-            valeur: libelleDe(optionsAcceptation, acceptation),
-            retirer: () => setAcceptation(null),
-          },
-        ]
-      : []),
-    ...(retard ? [{ cle: 'retard', libelle: 'Revue dépassée', valeur: 'oui', retirer: () => setRetard(false) }] : []),
-    ...(ecart
-      ? [{ cle: 'ecart', libelle: 'Écart avec la matrice', valeur: 'oui', retirer: () => setEcart(false) }]
-      : []),
+  const puces: CriterePuces[] = [
+    {
+      cle: 'demarche',
+      libelle: 'Démarche',
+      valeur: demarche,
+      options: compterPuces(tous, (r) => r.demarche, {
+        ordre: Object.keys(DEMARCHES),
+        libelle: (v) => DEMARCHES[v] ?? v,
+      }),
+      onChange: setDemarche,
+    },
+    {
+      cle: 'option',
+      libelle: 'Option de traitement',
+      valeur: strategie,
+      options: compterPuces(tous, (r) => r.strategie, { ordre: Object.keys(OPTIONS), libelle: (v) => OPTIONS[v] ?? v }),
+      onChange: setStrategie,
+    },
+    {
+      cle: 'acceptation',
+      libelle: 'Acceptation',
+      valeur: acceptation,
+      options: compterPuces(tous, (r) => r.acceptation, {
+        ordre: Object.keys(ETATS_ACCEPTATION),
+        libelle: (v) => ETATS_ACCEPTATION[v as EtatAcceptation] ?? v,
+        ton: (v) => (v === 'a_decider' || v === 'echue' ? 'alerte' : undefined),
+      }),
+      onChange: setAcceptation,
+    },
+    {
+      cle: 'etude',
+      libelle: 'Étude',
+      valeur: etude,
+      options: compterPuces(tous, (r) => r.etude?.replace(/^object:/, ''), {
+        ordre: (etudes.data?.items ?? []).map((e) => e.id),
+        libelle: (v) => nomEtude.get('object:' + v) ?? 'Étude liée',
+      }),
+      onChange: setEtude,
+    },
+    {
+      cle: 'retard',
+      libelle: 'Revue',
+      valeur: retard ? 'oui' : null,
+      options: [
+        { value: 'oui', label: 'Revue dépassée', compte: tous.filter((r) => r.enRetard).length, ton: 'alerte' },
+      ],
+      onChange: (v) => setRetard(v === 'oui'),
+    },
+    {
+      cle: 'ecart',
+      libelle: 'Matrice',
+      valeur: ecart ? 'oui' : null,
+      options: [{ value: 'oui', label: 'Écart avec la matrice', compte: tous.filter((r) => r.ecartMatrice).length }],
+      onChange: (v) => setEcart(v === 'oui'),
+    },
   ];
   return (
     <>
-      {/* Boîte d'outils commune (7.3.0) : recherche et filtres avancés, libellés inchangés ; Démarche, Étude, Option et
-          Acceptation se filtrent aussi sur le titre de leur colonne (le panneau les garde : le tableau disparaît quand
-          aucun risque ne correspond, et ses colonnes secondaires se masquent sur petit écran). */}
       <BoiteOutils
         label="Outils du registre des risques"
-        recherche={{ label: 'Rechercher', value: recherche, onChange: setRecherche }}
-        filtres={{
-          actifs: [demarche, etude, strategie, acceptation, retard ? '1' : '', ecart ? '1' : ''].filter(Boolean).length,
-          onReinitialiser: reinitialiser,
-          contenu: (
-            <>
-              <Select
-                label="Démarche"
-                clearable
-                data={optionsDemarche}
-                value={demarche}
-                onChange={setDemarche}
-                comboboxProps={{ withinPortal: false }}
-              />
-              <Select
-                label="Étude"
-                clearable
-                data={optionsEtude}
-                value={etude}
-                onChange={setEtude}
-                comboboxProps={{ withinPortal: false }}
-              />
-              <Select
-                label="Option de traitement"
-                clearable
-                data={optionsOption}
-                value={strategie}
-                onChange={setStrategie}
-                comboboxProps={{ withinPortal: false }}
-              />
-              <Select
-                label="Acceptation"
-                clearable
-                data={optionsAcceptation}
-                value={acceptation}
-                onChange={setAcceptation}
-                comboboxProps={{ withinPortal: false }}
-              />
-              <Checkbox label="Revue dépassée" checked={retard} onChange={(e) => setRetard(e.currentTarget.checked)} />
-              <Checkbox
-                label="Écart avec la matrice"
-                checked={ecart}
-                onChange={(e) => setEcart(e.currentTarget.checked)}
-              />
-            </>
-          ),
+        titre={complet.data ? `${tous.length} risque${tous.length > 1 ? 's' : ''}` : undefined}
+        total={complet.isPending ? 0 : complet.data ? tous.length : undefined}
+        affiches={q.data?.items.length}
+        recherche={{
+          label: 'Rechercher dans les risques',
+          value: recherche,
+          onChange: setRecherche,
+          placeholder: 'Intitulé ou code…',
         }}
-        ajout={ajout}
-      />
-      <PastillesCriteres
-        criteres={criteres}
+        puces={puces}
+        libelleTout="Tous"
         onToutEffacer={() => {
           setRecherche('');
           reinitialiser();
         }}
+        ajout={ajout}
       />
       <ErrorAlert error={q.error} />
       {q.data?.tronque && <Text size="sm">Seuls les 500 premiers risques sont affichés : précisez les filtres.</Text>}
@@ -230,30 +204,12 @@ export function RegistreRisques({
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Risque</Table.Th>
-                <Table.Th className="col-p2">
-                  <FiltreColonne
-                    libelle="Démarche"
-                    valeur={demarche}
-                    options={optionsDemarche}
-                    onChange={setDemarche}
-                  />
-                </Table.Th>
-                <Table.Th className="col-p3">
-                  <FiltreColonne libelle="Étude" valeur={etude} options={optionsEtude} onChange={setEtude} />
-                </Table.Th>
+                <Table.Th className="col-p2">Démarche</Table.Th>
+                <Table.Th className="col-p3">Étude</Table.Th>
                 <Table.Th>Brut</Table.Th>
                 <Table.Th>Résiduel</Table.Th>
-                <Table.Th className="col-p2">
-                  <FiltreColonne libelle="Option" valeur={strategie} options={optionsOption} onChange={setStrategie} />
-                </Table.Th>
-                <Table.Th>
-                  <FiltreColonne
-                    libelle="Acceptation"
-                    valeur={acceptation}
-                    options={optionsAcceptation}
-                    onChange={setAcceptation}
-                  />
-                </Table.Th>
+                <Table.Th className="col-p2">Option</Table.Th>
+                <Table.Th>Acceptation</Table.Th>
                 <Table.Th className="col-p3">Prochaine revue</Table.Th>
                 <Table.Th>Actions</Table.Th>
               </Table.Tr>
@@ -262,8 +218,7 @@ export function RegistreRisques({
               {q.data.items.map((r) => (
                 <Table.Tr key={r.id} {...ficheCliquable(() => void objet(r.id).then(onOpen), `Afficher ${r.name}`)}>
                   <Table.Td>
-                    {r.code ? `${r.code} · ` : ''}
-                    {r.name}
+                    <Surligne texte={`${r.code ? `${r.code} · ` : ''}${r.name}`} recherche={recherche} />
                   </Table.Td>
                   <Table.Td className="col-p2">{r.demarche ? (DEMARCHES[r.demarche] ?? r.demarche) : '—'}</Table.Td>
                   <Table.Td className="col-p3">{r.etude ? (nomEtude.get(r.etude) ?? 'Étude liée') : '—'}</Table.Td>

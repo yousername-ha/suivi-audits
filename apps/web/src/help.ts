@@ -488,6 +488,17 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'recherche-listes',
+    title: 'Rechercher et filtrer une liste',
+    link: '/',
+    steps: [
+      'À partir de 8 éléments, une liste reçoit son champ de recherche, dans son en-tête, à droite du titre. En dessous de 8, tout est visible : ni recherche ni filtres, sauf si une recherche ou un filtre est déjà actif (par exemple par l’adresse de la page), pour pouvoir l’effacer.',
+      'La recherche porte sur l’intitulé et sur le texte des fiches, sans tenir compte des majuscules ni des accents ; ce qui correspond est surligné dans la liste. Le champ indique « N sur M » quand un critère est actif ; la croix « Effacer la recherche » le vide. La touche « / » place le curseur dans le champ. Ctrl K reste la recherche des pages du menu.',
+      'Les filtres sont des puces tirées des valeurs présentes dans la liste, chacune avec son nombre d’éléments ; une puce qui ne trierait rien n’est pas affichée. Une seule puce par critère à la fois ; plusieurs critères se combinent. Une puce active est en surbrillance avec une petite croix ; « Tout effacer » retire la recherche et tous les filtres.',
+      'Les critères qui ne se prêtent pas aux puces (dates, texte libre, longues listes de valeurs) sont dans « Plus de filtres ». Il n’y a plus de filtre sur le titre des colonnes ; un clic sur un titre de colonne triable trie toujours la liste.',
+    ],
+  },
+  {
     id: 'documents',
     title: 'Documents, liens et versions',
     permission: 'documents:lire',
@@ -496,8 +507,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Ouvrez Documents et liens pour rechercher une pièce ou consulter sa fiche et ses rattachements.',
       'Si vos droits le permettent, déposez un document, renseignez son titre et ses références, ou ajoutez un lien.',
       'Une nouvelle version conserve les versions précédentes. Vérifiez la version de la pièce utilisée comme preuve.',
-      'Les étiquettes servent à classer : ajoutez-les depuis la fiche d’un document ou d’un lien (celles déjà utilisées sont proposées ; « rgpd » est refusée si « RGPD » existe, la casse ne crée pas une autre étiquette). Dans la liste, filtrez par une ou plusieurs étiquettes depuis le titre de la colonne « Étiquettes » : cochez-les dans la liste qui s’ouvre (toutes les étiquettes cochées sont exigées ; « Tous » vide le filtre), ou cliquez sur une étiquette d’une ligne pour l’ajouter au filtre. L’entonnoir placé à côté du titre « Catégorie » filtre par catégorie ; selon vos droits, la corbeille se trouve dans l’entonnoir « Filtres avancés » de la boîte d’outils. Les critères actifs restent affichés sous la barre et se retirent un à un.',
-      'Cliquez sur l’en-tête d’une colonne (titre, classification, catégorie, taille, date) pour trier ; un second clic inverse l’ordre. Pour la catégorie, le tri se fait sur le mot, le filtre sur l’entonnoir.',
+      'Les étiquettes servent à classer : ajoutez-les depuis la fiche d’un document ou d’un lien (celles déjà utilisées sont proposées ; « rgpd » est refusée si « RGPD » existe, la casse ne crée pas une autre étiquette). Dans la liste, filtrez par une ou plusieurs étiquettes depuis « Plus de filtres » : cochez-les dans la liste qui s’ouvre (toutes les étiquettes cochées sont exigées ; « Tous » vide le filtre), ou cliquez sur une étiquette d’une ligne pour l’ajouter au filtre. Les catégories se filtrent par leurs puces, sous le champ de recherche ; selon vos droits, le choix « Documents » ou « Corbeille » reste à côté de la recherche. Les critères actifs sont des puces en surbrillance, qui se retirent une à une ; « Tout effacer » les retire toutes.',
+      'Cliquez sur l’en-tête d’une colonne (titre, classification, catégorie, taille, date) pour trier ; un second clic inverse l’ordre.',
       'Les téléchargements et les modifications restent soumis à vos droits ; un lien interne ne rend pas le document public.',
     ],
   },

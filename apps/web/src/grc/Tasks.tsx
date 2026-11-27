@@ -9,7 +9,7 @@ import { DataTable, retenirFocusFiche } from '@suivi/ui';
 import { useFiltreUrl } from '../components/filtre-url';
 import { get } from '../api';
 import { ErrorAlert } from '../components/common';
-import { BoiteOutils, FiltreColonne, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
+import { BoiteOutils, Surligne, type CritereActif, type CriterePuces } from '../components/BarreOutils';
 import { libelleDesignation, SelecteurResponsable, useProposables, useResponsables } from '../components/selecteurs';
 import { ficheCliquable } from '../fiche-cliquable';
 import { useOngletVisible } from '../parcours-iso/mouvement';
@@ -94,8 +94,9 @@ export function Tasks({
   // Animation des tâches « à faire » en continu, sans bouton de pause (ADR 0099) : arrêtée quand l'onglet est masqué ; le
   // mouvement réduit du système, l'impression et les couleurs forcées l'arrêtent par neon-taches.css.
   const ongletVisible = useOngletVisible();
-  // Barre d'outils discrète (lot 8) : loupe et raccourci « / » sur la recherche, pastilles des critères actifs. Les
-  // champs de filtre restent affichés (vue, mois, responsable, registre, état) : rien n'est caché derrière un bouton.
+  // Recherche et filtres des listes (refonte Verre, 27/11/2026) : recherche par intitulé (raccourci « / »), puces d'état
+  // comptées par le serveur, responsable et registre dans « Plus de filtres » (filtres appliqués par le serveur, sans
+  // nombre par valeur). Vues, mois et actions closes restent toujours visibles : ce sont des réglages d'affichage.
   const responsables = useResponsables(smsi);
   // Petite fenêtre de résultat, ouverte depuis un repère de la Timeline ; le repère retrouve le focus à sa fermeture.
   const [resultat, setResultat] = useState<GrcObject | null>(null),
@@ -116,7 +117,6 @@ export function Tasks({
   });
   const responsableChoisi = (responsables.data ?? []).find((r) => r.id === owner);
   const criteresTaches: CritereActif[] = [
-    ...(search ? [{ cle: 'tq', libelle: 'Recherche', valeur: search, retirer: () => setSearch('') }] : []),
     ...(owner
       ? [
           {
@@ -134,16 +134,6 @@ export function Tasks({
             libelle: 'Registre',
             valeur: (registres.data?.items ?? []).find((r) => r.id === registre)?.name ?? 'sélectionné',
             retirer: () => setRegistre(''),
-          },
-        ]
-      : []),
-    ...(status
-      ? [
-          {
-            cle: 'tetat',
-            libelle: 'État',
-            valeur: policy.statuses.find((x) => x.id === status)?.label ?? status,
-            retirer: () => setStatus(null),
           },
         ]
       : []),
@@ -195,9 +185,12 @@ export function Tasks({
       (!registre || o.registreId === registre) &&
       (!status || o.data.status === status),
   );
+  // Un état terminal choisi en puce montre ses actions, même quand les actions closes sont masquées.
+  const etatTerminal = !!status && !!policy.statuses.find((s) => s.id === status)?.terminal;
   const items = filtrees.filter(
     (o) =>
       showClosed ||
+      etatTerminal ||
       (!(o.data.legacy && o.data.status === 'done') && !policy.statuses.find((s) => s.id === o.data.status)?.terminal),
   );
   // Frise du plan d'actions : elle reçoit aussi les actions closes, qu'elle masque par ses bascules « Terminées » et
@@ -291,6 +284,23 @@ export function Tasks({
       </Stack>
     </Card>
   );
+  // Puces d'état : nombres de toutes les actions du périmètre (tableau de bord du serveur), stables quels que soient les
+  // autres critères.
+  const puces: CriterePuces[] = [
+    {
+      cle: 'tetat',
+      libelle: 'État',
+      valeur: status,
+      options: policy.statuses.map((s) => ({
+        value: s.id,
+        label: s.label,
+        compte: summary.data?.byStatus.find((b) => b.status === s.id)?.count ?? 0,
+      })),
+      onChange: setStatus,
+    },
+  ];
+  const totalActions = summary.isPending ? 0 : summary.data?.summary.total;
+  const parMois = view === 'calendar' || view === 'gantt' || view === 'dashboard';
   const days = Array.from({ length: last.getUTCDate() }, (_, i) => `${month}-${String(i + 1).padStart(2, '0')}`);
   return (
     <Stack className="taches-studio" data-mouvement={ongletVisible ? 'anime' : 'pause'}>
@@ -321,40 +331,36 @@ export function Tasks({
           ))}
         </div>
       </div>
-      {/* Boîte d'outils commune (7.3.0) : vues, recherche et filtres avancés ; État et Responsable se filtrent aussi sur le
-          titre de leur colonne dans la liste. Ajouts au bout de la ligne. */}
       <BoiteOutils
-        label="Outils des actions"
+        label={occurrences ? 'Outils des occurrences' : 'Outils des actions'}
         vues={views.map((v) => ({ value: v.value, label: v.label, icone: <IconeVue vue={v.value} /> }))}
         vue={view}
         onVue={(v) => setView(v as Vue)}
-        recherche={{ label: 'Rechercher une action', value: search, onChange: setSearch }}
+        total={totalActions}
+        affiches={items.length}
+        recherche={{
+          label: occurrences ? 'Rechercher dans les occurrences' : 'Rechercher dans les actions',
+          value: search,
+          onChange: setSearch,
+          placeholder: 'Intitulé de l’action…',
+        }}
+        puces={puces}
+        libelleTout="Tous"
+        criteres={criteresTaches}
+        onToutEffacer={() => {
+          setSearch('');
+          setOwner(null);
+          setRegistre('');
+          setStatus(null);
+        }}
         filtres={{
-          actifs: [owner, registre, status, showClosed ? '1' : ''].filter(Boolean).length,
+          actifs: [owner, registre].filter(Boolean).length,
           onReinitialiser: () => {
             setOwner(null);
             setRegistre('');
-            setStatus(null);
-            setShowClosed(false);
           },
           contenu: (
             <>
-              <Select
-                allowDeselect={false}
-                label="Vue synchronisée"
-                data={views.map((v) => ({ value: v.value, label: v.label }))}
-                value={view}
-                onChange={(v) => v && setView(v)}
-                comboboxProps={{ withinPortal: false }}
-              />
-              <TextInput
-                label="Mois"
-                type="month"
-                value={month}
-                onChange={(e) => {
-                  if (/^\d{4}-\d{2}$/.test(e.currentTarget.value)) setMonth(e.currentTarget.value);
-                }}
-              />
               <SelecteurResponsable smsi={smsi} value={owner} onChange={setOwner} sansRecherche />
               <Select
                 label="Registre"
@@ -367,33 +373,28 @@ export function Tasks({
                   .map((r) => ({ value: r.id, label: r.name }))}
                 comboboxProps={{ withinPortal: false }}
               />
-              <Select
-                label="État"
-                clearable
-                value={status}
-                onChange={setStatus}
-                data={policy.statuses.map((s) => ({ value: s.id, label: s.label }))}
-                comboboxProps={{ withinPortal: false }}
-              />
-              <Checkbox
-                label="Afficher les actions closes"
-                checked={showClosed}
-                onChange={(e) => setShowClosed(e.currentTarget.checked)}
-              />
             </>
           ),
         }}
         ajout={outils}
-      />
-      <PastillesCriteres
-        criteres={criteresTaches}
-        onToutEffacer={() => {
-          setSearch('');
-          setOwner(null);
-          setRegistre('');
-          setStatus(null);
-        }}
-      />
+      >
+        {parMois && (
+          <TextInput
+            className="taches-mois"
+            label="Mois"
+            type="month"
+            value={month}
+            onChange={(e) => {
+              if (/^\d{4}-\d{2}$/.test(e.currentTarget.value)) setMonth(e.currentTarget.value);
+            }}
+          />
+        )}
+        <Checkbox
+          label="Afficher les actions closes"
+          checked={showClosed}
+          onChange={(e) => setShowClosed(e.currentTarget.checked)}
+        />
+      </BoiteOutils>
       {/* Jours de fond : bascules au-dessus du calendrier ; dans la Timeline, elles sont dans la légende de la frise. */}
       {view === 'calendar' && <BasculesFond actives={fondActif} onChange={basculerFond} />}
       {(view === 'calendar' || view === 'timeline') && <ErrorAlert error={fond.erreur} />}
@@ -416,25 +417,8 @@ export function Tasks({
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Action</Table.Th>
-                <Table.Th>
-                  <FiltreColonne
-                    libelle="État"
-                    valeur={status}
-                    options={policy.statuses.map((s) => ({ value: s.id, label: s.label }))}
-                    onChange={setStatus}
-                  />
-                </Table.Th>
-                <Table.Th>
-                  <FiltreColonne
-                    libelle="Responsable"
-                    valeur={owner}
-                    options={(responsables.data ?? []).map((r) => ({
-                      value: r.id,
-                      label: r.displayName || r.username,
-                    }))}
-                    onChange={setOwner}
-                  />
-                </Table.Th>
+                <Table.Th>État</Table.Th>
+                <Table.Th>Responsable</Table.Th>
                 <Table.Th>Échéance</Table.Th>
               </Table.Tr>
             </Table.Thead>
@@ -452,7 +436,7 @@ export function Tasks({
                       className="taches-liste__titre"
                       onClick={() => onOpen(o)}
                     >
-                      {o.name}
+                      <Surligne texte={o.name} recherche={search} />
                     </Button>
                   </Table.Td>
                   <Table.Td>

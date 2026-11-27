@@ -77,11 +77,11 @@ for (const [nom, largeur, hauteur] of [
       await page.goto('/pilotage/actions');
       await page.getByRole('combobox', { name: 'Périmètre affiché', exact: true }).click();
       await page.getByRole('option', { name: `Périmètre frise ${nom} ${suffixe}`, exact: true }).click();
-      // Vue choisie dans les filtres avancés (boîte d'outils commune, 7.3.0).
-      await page.getByRole('button', { name: /^Filtres avancés/ }).click();
-      await page.getByRole('combobox', { name: 'Vue synchronisée' }).click();
-      await page.getByRole('option', { name: 'Timeline', exact: true }).click();
-      await page.getByRole('button', { name: /^Filtres avancés/ }).click();
+      // Vue choisie par son pictogramme (barre de recherche et de filtres des listes, refonte Verre, 27/11/2026).
+      await page
+        .getByRole('group', { name: 'Vues', exact: true })
+        .getByRole('button', { name: 'Timeline', exact: true })
+        .click();
       const frise = page.getByRole('region', { name: /Timeline des actions/ });
       await expect(frise).toBeVisible();
       // Le tableau n'affiche que les 50 premières ; on charge les suivantes pour atteindre cent actions.

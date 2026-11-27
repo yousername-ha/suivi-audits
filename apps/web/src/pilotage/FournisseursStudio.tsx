@@ -1,16 +1,18 @@
 /* Fournisseurs de l'organisation, registre compact « Studio » (refonte Neon, lot 5, ADR 0093) : présentation seule du
    registre réel ; requêtes, droits et écritures restent dans Fournisseurs.tsx. Vue compacte par défaut, détail à la
-   demande, lignes ouvrables (même fiche que le bouton « Fiche »), états colorés. Boîte d'outils commune (7.3.0) : vues,
-   recherche et filtres avancés (Situation) ; le Type se filtre sur le titre de sa colonne ; l'ajout au bout de la ligne.
+   demande, lignes ouvrables (même fiche que le bouton « Fiche »), états colorés. Recherche et filtres des listes (refonte
+   Verre, 27/11/2026) : vues, recherche (nom, identifiant, rattachement, contact, notes), puces Situation et Type avec
+   leur nombre ; l'ajout au bout de la ligne.
    Les couleurs sont portées par des classes (neon-fournisseurs.css), jamais par un style en ligne (CSP stricte). */
-import { ActionIcon, Button, Select, Table, Tooltip } from '@mantine/core';
+import { ActionIcon, Button, Table, Tooltip } from '@mantine/core';
 import { useState, type MouseEvent, type ReactNode } from 'react';
 import { APropos, DataTable, retenirFocusFiche } from '@suivi/ui';
-import { BoiteOutils, FiltreColonne, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
+import { BoiteOutils, Surligne, type CriterePuces } from '../components/BarreOutils';
 import { ficheCliquable } from '../fiche-cliquable';
 import {
   attentionFournisseur,
   detailCritere,
+  filtrerFournisseurs,
   jourFr,
   resumeCriteresLigne,
   tonCertificats,
@@ -185,36 +187,39 @@ const TYPES = [
 
 export function FournisseursStudio(p: FournisseursStudioProps) {
   const [densite, setDensite] = useState<'compact' | 'detail'>('compact');
-  const criteres: CritereActif[] = [
-    ...(p.recherche.trim()
-      ? [{ cle: 'fq', libelle: 'Recherche', valeur: p.recherche.trim(), retirer: () => p.onRecherche('') }]
-      : []),
-    ...(p.filtre !== 'all'
-      ? [
-          {
-            cle: 'fsit',
-            libelle: 'Situation',
-            valeur: p.situations.find((x) => x.value === p.filtre)?.label ?? p.filtre,
-            retirer: () => p.onFiltre('all'),
-          },
-        ]
-      : []),
-    ...(p.type !== 'all'
-      ? [
-          {
-            cle: 'ftype',
-            libelle: 'Type',
-            valeur: TYPES.find((x) => x.value === p.type)?.label ?? p.type,
-            retirer: () => p.onType('all'),
-          },
-        ]
-      : []),
-  ];
   const effacer = () => {
     p.onRecherche('');
     p.onFiltre('all');
     p.onType('all');
   };
+  // Puces (refonte Verre, 27/11/2026) : situations de l'outil de suivi et type, comptés sur tout le répertoire.
+  const puces: CriterePuces[] = [
+    {
+      cle: 'fsit',
+      libelle: 'Situation',
+      valeur: p.filtre === 'all' ? null : p.filtre,
+      options: p.situations
+        .filter((x) => x.value !== 'all')
+        .map((x) => ({
+          value: x.value,
+          label: x.label,
+          compte: filtrerFournisseurs(p.tous, x.value, 'all', '').length,
+          ton: 'alerte' as const,
+        })),
+      onChange: (v) => p.onFiltre(v ?? 'all'),
+    },
+    {
+      cle: 'ftype',
+      libelle: 'Type',
+      valeur: p.type === 'all' ? null : p.type,
+      options: TYPES.filter((t) => t.value !== 'all').map((t) => ({
+        value: t.value,
+        label: t.label,
+        compte: filtrerFournisseurs(p.tous, 'all', t.value, '').length,
+      })),
+      onChange: (v) => p.onType(v ?? 'all'),
+    },
+  ];
   const pourcentage = (s: { saas: number; pct: number }) => (p.disponible && s.saas ? `${s.pct} %` : '—');
   const indicateurs = [
     {
@@ -265,10 +270,11 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
         ))}
       </div>
       <div className="fs-workspace">
-        {/* Boîte d'outils commune (7.3.0) : densité, recherche par nom, filtres avancés (Situation, qui couvre plusieurs
-            colonnes) ; le Type se filtre sur le titre de sa colonne. Ajout au bout de la ligne. */}
         <BoiteOutils
           label="Outils des fournisseurs"
+          titre={p.disponible ? `${p.tous.length} fournisseur${p.tous.length > 1 ? 's' : ''}` : undefined}
+          total={p.disponible ? p.tous.length : 0}
+          affiches={p.affiches.length}
           vues={[
             { value: 'compact', label: 'Vue compacte', icone: <Icone nom="compact" /> },
             { value: 'detail', label: 'Vue détaillée', icone: <Icone nom="detail" /> },
@@ -276,25 +282,14 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
           vue={densite}
           onVue={(v) => setDensite(v === 'detail' ? 'detail' : 'compact')}
           recherche={{
-            label: 'Rechercher un fournisseur',
+            label: 'Rechercher dans les fournisseurs',
             value: p.recherche,
             onChange: p.onRecherche,
-            placeholder: 'Nom du fournisseur…',
+            placeholder: 'Nom, rattachement, notes…',
           }}
-          filtres={{
-            actifs: p.filtre !== 'all' ? 1 : 0,
-            onReinitialiser: () => p.onFiltre('all'),
-            contenu: (
-              <Select
-                label="Situation"
-                allowDeselect={false}
-                data={p.situations}
-                value={p.filtre}
-                onChange={(v) => p.onFiltre(v ?? 'all')}
-                comboboxProps={{ withinPortal: false }}
-              />
-            ),
-          }}
+          puces={puces}
+          libelleTout="Tous"
+          onToutEffacer={effacer}
           ajout={
             p.modifier && (
               <Button className="fs-ajouter" onClick={p.onCreer}>
@@ -303,7 +298,6 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
             )
           }
         />
-        <PastillesCriteres criteres={criteres} onToutEffacer={effacer} />
         <p className="fs-caption">
           {p.disponible
             ? `${p.affiches.length} fournisseur${p.affiches.length > 1 ? 's' : ''}`
@@ -319,15 +313,7 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
             <Table.Thead>
               <Table.Tr>
                 <Table.Th scope="col">
-                  Fournisseur ou application{' '}
-                  <span className="fs-th-sub">
-                    <FiltreColonne
-                      libelle="Type"
-                      valeur={p.type === 'all' ? null : p.type}
-                      options={TYPES.filter((t) => t.value !== 'all')}
-                      onChange={(v) => p.onType(v ?? 'all')}
-                    />
-                  </span>
+                  Fournisseur ou application <span className="fs-th-sub">Type · rattachement</span>
                 </Table.Th>
                 <Table.Th scope="col">
                   Accès <span className="fs-th-sub">SSO · MFA</span>
@@ -361,11 +347,15 @@ export function FournisseursStudio(p: FournisseursStudioProps) {
                         <Icone nom={f.saas ? 'cloud' : 'box'} />
                       </span>
                       <div>
-                        <strong>{f.name}</strong>
+                        <strong>
+                          <Surligne texte={f.name} recherche={p.recherche} />
+                        </strong>
                         <small>
                           {f.saas ? 'SaaS' : 'Hors SaaS'} · {f.rattachement || f.id}
                         </small>
-                        <small className="fs-context">{f.notes || 'Aucune note renseignée'}</small>
+                        <small className="fs-context">
+                          <Surligne texte={f.notes || 'Aucune note renseignée'} recherche={p.recherche} />
+                        </small>
                       </div>
                     </div>
                   </Table.Td>

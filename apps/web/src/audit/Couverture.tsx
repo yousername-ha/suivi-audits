@@ -1,12 +1,13 @@
 /* Couverture du cycle (reprise de « Couverture du cycle ») : ce qui a été audité chaque année, par l'AFNOR et en
-   interne ; une pastille passe de vide à prévue puis auditée. Écarts et pronostic de chaque exigence en regard. Boîte
-   d'outils commune (7.3.0) : recherche et filtres avancés (référentiel et bascules), libellés inchangés ; le référentiel
-   et l'écart ouvert se filtrent aussi sur le titre des colonnes « Mesure » et « Écarts ». */
-import { Button, Group, SegmentedControl, Stack, Switch, Table, Text } from '@mantine/core';
+   interne ; une pastille passe de vide à prévue puis auditée. Écarts et pronostic de chaque exigence en regard. Recherche
+   et filtres des listes (refonte Verre, 27/11/2026) : recherche par numéro ou intitulé, puces Référentiel, Non vues,
+   Angles morts et Avec écart ouvert, avec leur nombre. */
+import { Button, Group, Stack, Table, Text } from '@mantine/core';
 import { useState } from 'react';
 import { LV, itemCode, nextCoverage } from '@suivi/shared/audit';
 import { DataTable } from '@suivi/ui';
-import { BoiteOutils, FiltreColonne, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
+import { BoiteOutils, Surligne, type CriterePuces } from '../components/BarreOutils';
+import { compterPuces } from '../components/recherche-liste';
 import { ErrorAlert } from '../components/common';
 import { useCan } from '../session';
 import { CycleAudit } from './CycleAudit';
@@ -60,25 +61,33 @@ export function CouvertureCycle() {
     setAnglesMorts(false);
     setAvecEcart(false);
   };
-  const criteres: CritereActif[] = [
-    ...(recherche ? [{ cle: 'q', libelle: 'Recherche', valeur: recherche, retirer: () => setRecherche('') }] : []),
-    ...(ref !== 'all'
-      ? [
-          {
-            cle: 'ref',
-            libelle: 'Référentiel',
-            valeur: REFERENTIELS.find((r) => r.value === ref)?.label ?? ref,
-            retirer: () => setRef('all'),
-          },
-        ]
-      : []),
-    ...(nonVues ? [{ cle: 'nonvues', libelle: libNonVues, valeur: 'oui', retirer: () => setNonVues(false) }] : []),
-    ...(anglesMorts
-      ? [{ cle: 'angles', libelle: libAnglesMorts, valeur: 'oui', retirer: () => setAnglesMorts(false) }]
-      : []),
-    ...(avecEcart
-      ? [{ cle: 'ecart', libelle: 'Avec écart ouvert', valeur: 'oui', retirer: () => setAvecEcart(false) }]
-      : []),
+  const bascule = (cle: string, libelle: string, actif: boolean, compte: number, changer: (v: boolean) => void) => ({
+    cle,
+    libelle,
+    valeur: actif ? 'oui' : null,
+    options: [{ value: 'oui', label: libelle, compte, ton: 'alerte' as const }],
+    onChange: (v: string | null) => changer(v === 'oui'),
+  });
+  const puces: CriterePuces[] = [
+    {
+      cle: 'ref',
+      libelle: 'Référentiel',
+      valeur: ref === 'all' ? null : ref,
+      options: compterPuces(d.items, (i) => i.ref, {
+        ordre: REFERENTIELS.filter((r) => r.value !== 'all').map((r) => r.value),
+        libelle: (v) => REFERENTIELS.find((r) => r.value === v)?.label ?? v,
+      }),
+      onChange: (v) => setRef(v ?? 'all'),
+    },
+    bascule('nonvues', libNonVues, nonVues, d.items.filter((i) => analyses[i.id]?.notSeen).length, setNonVues),
+    bascule('angles', libAnglesMorts, anglesMorts, d.items.filter((i) => analyses[i.id]?.blind).length, setAnglesMorts),
+    bascule(
+      'ecart',
+      'Avec écart ouvert',
+      avecEcart,
+      d.items.filter((i) => analyses[i.id]?.open.length).length,
+      setAvecEcart,
+    ),
   ];
   const colonnes = (source: 'afnor' | 'interne', it: (typeof d.items)[number]) =>
     d.years.map((y) => {
@@ -113,40 +122,18 @@ export function CouvertureCycle() {
         </Button>
       </Group>
       <ErrorAlert error={erreur} />
-      {/* Boîte d'outils commune (7.3.0) : référentiel et bascules dans les filtres avancés, libellés inchangés ; le
-          référentiel et l'écart ouvert se filtrent aussi sur le titre des colonnes « Mesure » et « Écarts ». Le nombre de
-          mesures affichées reste sous la barre. */}
       <BoiteOutils
         label="Outils de la couverture du cycle"
+        titre={`${d.items.length} mesure${d.items.length > 1 ? 's' : ''}`}
+        total={d.items.length}
+        affiches={affichees}
         recherche={{
-          label: 'Rechercher',
+          label: 'Rechercher dans les mesures',
           placeholder: 'Une mesure ou un numéro',
           value: recherche,
           onChange: setRecherche,
         }}
-        filtres={{
-          actifs: [ref !== 'all', nonVues, anglesMorts, avecEcart].filter(Boolean).length,
-          onReinitialiser: reinitialiser,
-          contenu: (
-            <>
-              <SegmentedControl aria-label="Référentiel" value={ref} onChange={setRef} data={REFERENTIELS} />
-              <Switch label={libNonVues} checked={nonVues} onChange={(e) => setNonVues(e.currentTarget.checked)} />
-              <Switch
-                label={libAnglesMorts}
-                checked={anglesMorts}
-                onChange={(e) => setAnglesMorts(e.currentTarget.checked)}
-              />
-              <Switch
-                label="Avec écart ouvert"
-                checked={avecEcart}
-                onChange={(e) => setAvecEcart(e.currentTarget.checked)}
-              />
-            </>
-          ),
-        }}
-      />
-      <PastillesCriteres
-        criteres={criteres}
+        puces={puces}
         onToutEffacer={() => {
           setRecherche('');
           reinitialiser();
@@ -161,24 +148,10 @@ export function CouvertureCycle() {
           <Table>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th rowSpan={2}>
-                  <FiltreColonne
-                    libelle="Mesure"
-                    valeur={ref === 'all' ? null : ref}
-                    options={REFERENTIELS.filter((r) => r.value !== 'all')}
-                    onChange={(v) => setRef(v ?? 'all')}
-                  />
-                </Table.Th>
+                <Table.Th rowSpan={2}>Mesure</Table.Th>
                 <Table.Th colSpan={d.years.length}>AFNOR Certification</Table.Th>
                 <Table.Th colSpan={d.years.length}>Audit interne</Table.Th>
-                <Table.Th rowSpan={2}>
-                  <FiltreColonne
-                    libelle="Écarts"
-                    valeur={avecEcart ? 'ouvert' : null}
-                    options={[{ value: 'ouvert', label: 'Avec écart ouvert' }]}
-                    onChange={(v) => setAvecEcart(v === 'ouvert')}
-                  />
-                </Table.Th>
+                <Table.Th rowSpan={2}>Écarts</Table.Th>
                 <Table.Th rowSpan={2}>Pronostic {d.nextYear}</Table.Th>
               </Table.Tr>
               <Table.Tr>
@@ -207,7 +180,7 @@ export function CouvertureCycle() {
                   return (
                     <Table.Tr key={it.id}>
                       <Table.Td>
-                        <b>{itemCode(it)}</b> {it.title}
+                        <b>{itemCode(it)}</b> <Surligne texte={it.title} recherche={terme} />
                       </Table.Td>
                       {colonnes('afnor', it)}
                       {colonnes('interne', it)}

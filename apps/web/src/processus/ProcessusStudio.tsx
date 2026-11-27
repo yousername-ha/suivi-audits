@@ -2,9 +2,10 @@
    de rattachements ; liste compacte et critères par icônes. Présentation uniquement : la requête reste dans
    CartesProcessus et les écritures dans FicheCarteProcessus. Le corps d'une carte ouvre la consultation (clic, Entrée,
    Espace) ; le bouton centré déplie la finalité et les sous-processus. Les résultats défilent dans leur propre zone.
-   Boîte d'outils commune (7.3.0) : vues, recherche, filtres avancés (type, pilote, rattachement) et création au bout de
-   la ligne ; les en-têtes de la liste compacte restent décoratifs (aria-hidden), sans filtre de colonne. */
-import { Button, Select } from '@mantine/core';
+   Recherche et filtres des listes (refonte Verre, 27/11/2026) : vues, recherche (nom, code, pilote, finalité, type),
+   puces Type, Pilote et Rattachement présent avec leur nombre, création au bout de la ligne ; les en-têtes de la liste
+   compacte restent décoratifs (aria-hidden), sans filtre. */
+import { Button } from '@mantine/core';
 import { useReducedMotion } from '@mantine/hooks';
 import { retenirFocusFiche } from '@suivi/ui';
 import {
@@ -15,7 +16,8 @@ import {
   type ProcessusCartes,
 } from '@suivi/shared';
 import { useId, useState } from 'react';
-import { BoiteOutils, PastillesCriteres, type CritereActif } from '../components/BarreOutils';
+import { BoiteOutils, Surligne, type CriterePuces } from '../components/BarreOutils';
+import { compterPuces } from '../components/recherche-liste';
 import { ficheCliquable } from '../fiche-cliquable';
 import {
   filtrerProcessus,
@@ -90,29 +92,37 @@ export function ProcessusStudio({
     const t = donnees.types.find((x) => x.code === code);
     return { value: code, label: t ? t.label + (t.archived ? ' (archivé)' : '') : code };
   });
-  // Filtres avancés : tout sauf la recherche, qui reste dans son champ.
-  const filtresAvances = [filtres.type, filtres.pilote, filtres.rattachement].filter(Boolean).length;
-  const criteres: CritereActif[] = (
-    [
-      { cle: 'recherche', libelle: 'Recherche', valeur: filtres.recherche },
-      {
-        cle: 'type',
-        libelle: 'Type de processus',
-        valeur:
-          filtres.type === SANS_TYPE_PROCESSUS
-            ? 'Sans type'
-            : (optionsTypes.find((t) => t.value === filtres.type)?.label ?? filtres.type),
-      },
-      { cle: 'pilote', libelle: 'Pilote', valeur: filtres.pilote },
-      {
-        cle: 'rattachement',
-        libelle: 'Rattachement présent',
-        valeur: filtres.rattachement ? LIBELLES_RATTACHEMENT[filtres.rattachement] : '',
-      },
-    ] as { cle: keyof FiltresProcessus; libelle: string; valeur: string }[]
-  )
-    .filter((c) => !!filtres[c.cle])
-    .map((c) => ({ ...c, retirer: () => champ(c.cle, '') }));
+  const puces: CriterePuces[] = [
+    {
+      cle: 'type',
+      libelle: 'Type de processus',
+      valeur: filtres.type || null,
+      options: compterPuces(donnees.processus, (p) => p.family || SANS_TYPE_PROCESSUS, {
+        ordre: [...codesTypes, SANS_TYPE_PROCESSUS],
+        libelle: (v) =>
+          v === SANS_TYPE_PROCESSUS ? 'Sans type' : (optionsTypes.find((t) => t.value === v)?.label ?? v),
+      }),
+      onChange: (v) => champ('type', v ?? ''),
+    },
+    {
+      cle: 'pilote',
+      libelle: 'Pilote',
+      valeur: filtres.pilote || null,
+      options: compterPuces(donnees.processus, (p) => p.owner),
+      onChange: (v) => champ('pilote', v ?? ''),
+    },
+    {
+      cle: 'rattachement',
+      libelle: 'Rattachement présent',
+      valeur: filtres.rattachement || null,
+      options: compterPuces(
+        donnees.processus,
+        (p) => NATURES_RATTACHEMENT.filter((n) => !indisponibles.includes(n) && !!p.rattaches[n]?.length),
+        { ordre: NATURES_RATTACHEMENT, libelle: (v) => LIBELLES_RATTACHEMENT[v as NatureRattachement] ?? v },
+      ),
+      onChange: (v) => champ('rattachement', (v ?? '') as NatureRattachement | ''),
+    },
+  ];
   const sousProcessus = (p: CarteProcessus, vus = new Set<string>()) => {
     if (vus.has(p.id)) return null;
     const deja = new Set([...vus, p.id]),
@@ -157,7 +167,9 @@ export function ProcessusStudio({
               {enfants.length ? `${enfants.length} sous-processus` : p.parent ? 'Sous-processus' : 'Processus'}
             </span>
           </span>
-          <strong>{p.name}</strong>
+          <strong>
+            <Surligne texte={p.name} recherche={filtres.recherche} />
+          </strong>
           <span className="pr-pilot">
             <Icone name="user" />
             {p.owner || 'Pilote non renseigné'}
@@ -193,9 +205,10 @@ export function ProcessusStudio({
       aria-label="Processus du périmètre"
     >
       <div className="pr-workspace">
-        {/* Boîte d'outils commune (7.3.0) : vues, recherche et filtres avancés ; création au bout de la ligne. */}
         <BoiteOutils
           label="Outils des processus"
+          total={donnees.processus.length}
+          affiches={visibles.length}
           vues={[
             { value: 'cartes', label: 'Vue cartes', icone: <Icone name="grid" /> },
             { value: 'liste', label: 'Vue liste compacte', icone: <Icone name="list" /> },
@@ -203,58 +216,13 @@ export function ProcessusStudio({
           vue={vue}
           onVue={(v) => setVue(v === 'liste' ? 'liste' : 'cartes')}
           recherche={{
-            label: 'Rechercher un processus',
+            label: 'Rechercher dans les processus',
             value: filtres.recherche,
             onChange: (v) => champ('recherche', v),
             placeholder: 'Nom, code, pilote, finalité…',
           }}
-          filtres={{
-            actifs: filtresAvances,
-            onReinitialiser: () => setFiltres((old) => ({ ...FILTRES_VIDES, recherche: old.recherche })),
-            contenu: (
-              <>
-                <Select
-                  label="Type de processus"
-                  data={[
-                    { value: '', label: 'Tous les types' },
-                    ...optionsTypes,
-                    { value: SANS_TYPE_PROCESSUS, label: 'Sans type' },
-                  ]}
-                  value={filtres.type}
-                  onChange={(v) => champ('type', v ?? '')}
-                  allowDeselect={false}
-                  comboboxProps={{ withinPortal: false }}
-                />
-                <Select
-                  label="Pilote"
-                  data={[
-                    { value: '', label: 'Tous les pilotes' },
-                    ...[...new Set(donnees.processus.map((p) => p.owner).filter(Boolean))]
-                      .sort()
-                      .map((value) => ({ value, label: value })),
-                  ]}
-                  value={filtres.pilote}
-                  onChange={(v) => champ('pilote', v ?? '')}
-                  allowDeselect={false}
-                  comboboxProps={{ withinPortal: false }}
-                />
-                <Select
-                  label="Rattachement présent"
-                  data={[
-                    { value: '', label: 'Tous' },
-                    ...NATURES_RATTACHEMENT.filter((n) => !indisponibles.includes(n)).map((value) => ({
-                      value,
-                      label: LIBELLES_RATTACHEMENT[value],
-                    })),
-                  ]}
-                  value={filtres.rattachement}
-                  onChange={(v) => champ('rattachement', v ?? '')}
-                  allowDeselect={false}
-                  comboboxProps={{ withinPortal: false }}
-                />
-              </>
-            ),
-          }}
+          puces={puces}
+          onToutEffacer={reinitialiser}
           ajout={
             modifiable && (
               <Button
@@ -281,7 +249,6 @@ export function ProcessusStudio({
             <b>{donnees.processus.filter((p) => p.owner).length}</b> pilotes renseignés
           </span>
         </p>
-        <PastillesCriteres criteres={criteres} onToutEffacer={reinitialiser} />
         <div className="pr-content" role="region" tabIndex={0} aria-label="Processus affichés">
           {!visibles.length ? (
             <div className="pr-empty">
