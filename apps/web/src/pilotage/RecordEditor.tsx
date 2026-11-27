@@ -38,6 +38,10 @@ import { PartiePresentation } from './PartiePresentation';
 /** Lecture distincte (refonte Neon, ADR 0093, décision du RSSI du 13/11/2026) : une fiche existante de ces types s'ouvre
     d'abord en présentation ; « Modifier » ouvre le formulaire ci-dessous. Les autres types gardent leur ouverture. */
 const LECTURE_DISTINCTE: readonly GrcKind[] = ['context', 'stakeholder'];
+/** Ouverture ciblée d'une fiche (Périmètre et contexte en dossier, 27/11/2026) : `onglet` ouvre la présentation sur cet
+    onglet ; `champ` ouvre directement le formulaire, curseur dans ce champ (droit de modification requis, sinon la
+    présentation s'ouvre comme d'habitude). Sans précision : ouverture habituelle. */
+export type VueFiche = { onglet?: 'presentation' | 'links' | 'history'; champ?: string };
 export function RecordEditor({
   smsi,
   kind,
@@ -46,6 +50,7 @@ export function RecordEditor({
   onClose,
   policy,
   initial,
+  vue,
 }: {
   smsi: string;
   kind: GrcKind;
@@ -55,6 +60,8 @@ export function RecordEditor({
   policy: BusinessPolicy;
   /** Valeurs initiales d'une création (par exemple l'étude EBIOS RM de rattachement). */
   initial?: Record<string, unknown>;
+  /** Onglet ou champ visé à l'ouverture (fiches à lecture distincte). */
+  vue?: VueFiche;
 }) {
   const can = useCan(),
     qc = useQueryClient();
@@ -65,14 +72,16 @@ export function RecordEditor({
     [error, setError] = useState<unknown>(null),
     [saving, setSaving] = useState(false),
     [archivage, setArchivage] = useState(false),
-    [modification, setModification] = useState(false);
-  // Chaque ouverture (ou changement de fiche) repart de la présentation : réglé pendant le rendu, sans afficher le
-  // formulaire une image. À la fermeture, la fenêtre affichée reste la même jusqu'à la fin de sa transition.
+    // Fenêtre montée déjà ouverte (nouvelle fiche) sur un champ visé : formulaire d'emblée.
+    [modification, setModification] = useState(() => opened && !!vue?.champ);
+  // Chaque ouverture (ou changement de fiche) repart de la présentation, ou du formulaire quand un champ est visé : réglé
+  // pendant le rendu, sans afficher l'autre fenêtre une image. À la fermeture, la fenêtre affichée reste la même jusqu'à
+  // la fin de sa transition.
   const ouverture = opened ? (object?.id ?? '') : null;
   const [ouvertureVue, setOuvertureVue] = useState(ouverture);
   if (ouverture !== ouvertureVue) {
     setOuvertureVue(ouverture);
-    if (ouverture !== null) setModification(false);
+    if (ouverture !== null) setModification(!!vue?.champ);
   }
   const sources = useQuery({
     queryKey: ['grc', smsi, 'sources', search],
@@ -201,37 +210,36 @@ export function RecordEditor({
   );
   const lectureDistincte = LECTURE_DISTINCTE.includes(kind) && !!object;
   if (lectureDistincte && object && (!modification || readonly)) {
-    const Presentation = kind === 'context' ? ContextPresentation : PartiePresentation;
     const responsable = owners.data?.find((o) => o.id === object.data.ownerId);
-    return (
-      <Presentation
-        smsi={smsi}
-        object={object}
-        opened={opened}
-        onClose={onClose}
-        onModify={
-          readonly
-            ? undefined
-            : () => {
-                // Le formulaire repart des valeurs enregistrées : un brouillon annulé n'est pas conservé.
-                setName(object.name);
-                setData({ ...object.data });
-                setError(null);
-                setArchivage(false);
-                setModification(true);
-              }
-        }
-        ownerLabel={
-          responsable?.displayName ||
-          responsable?.username ||
-          String(object.data.ownerLabel || (object.data.ownerId ? 'Responsable non disponible' : 'Non attribué'))
-        }
-        sources={options}
-        history={history.data}
-        historyLoading={history.isPending}
-        error={error ?? sources.error ?? owners.error ?? history.error}
-        archivage={commandeArchivage}
-      />
+    const presentation = {
+      smsi,
+      object,
+      opened,
+      onClose,
+      onModify: readonly
+        ? undefined
+        : () => {
+            // Le formulaire repart des valeurs enregistrées : un brouillon annulé n'est pas conservé.
+            setName(object.name);
+            setData({ ...object.data });
+            setError(null);
+            setArchivage(false);
+            setModification(true);
+          },
+      ownerLabel:
+        responsable?.displayName ||
+        responsable?.username ||
+        String(object.data.ownerLabel || (object.data.ownerId ? 'Responsable non disponible' : 'Non attribué')),
+      sources: options,
+      history: history.data,
+      historyLoading: history.isPending,
+      error: error ?? sources.error ?? owners.error ?? history.error,
+      archivage: commandeArchivage,
+    };
+    return kind === 'context' ? (
+      <ContextPresentation {...presentation} ongletInitial={vue?.onglet} />
+    ) : (
+      <PartiePresentation {...presentation} />
     );
   }
   return (
@@ -286,7 +294,15 @@ export function RecordEditor({
                 onChange={(v) => set('ownerId', v)}
                 disabled={readonly}
               />
-              <Fields kind={kind} data={data} onChange={set} sources={options} readonly={readonly} smsi={smsi} />
+              <Fields
+                kind={kind}
+                data={data}
+                onChange={set}
+                sources={options}
+                readonly={readonly}
+                smsi={smsi}
+                champActif={vue?.champ}
+              />
               {kind === 'risk_study' && object && !object.id.startsWith('legacy:') && (
                 <MigrationEtude smsi={smsi} study={object} readonly={readonly} onDone={onClose} />
               )}

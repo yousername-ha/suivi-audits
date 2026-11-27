@@ -2289,6 +2289,117 @@ html[data-style='verre'] .contexte-bref__rappel-titre {
   font-weight: 700;
 }
 
+/* Périmètre et contexte en dossier (dessin « Périmètre et contexte, en dossier », décision du RSSI du 27/11/2026) :
+   panneau de verre ; anneau vert d'Organisation ; cases en verre léger à pastille lumineuse de couleur, liseré ambré pour
+   une rubrique à compléter ; pastilles « Renseigné » vertes et « À compléter » ambrées ; bouton principal en dégradé
+   violet (règle commune des boutons). La disposition vient de styles.css. */
+html[data-style='verre'] .contexte-dossier {
+  gap: 0.875rem;
+  padding: 1.125rem 1.25rem;
+}
+html[data-style='verre'] .contexte-dossier .contexte-dossier__nom {
+  color: var(--verre-texte-fort);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .contexte-dossier__meta {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .contexte-dossier__intro {
+  color: var(--verre-secondaire);
+  font-size: 0.875rem;
+}
+html[data-style='verre'] .contexte-dossier__a-decrire {
+  color: var(--verre-texte-menu);
+  font-size: 0.875rem;
+}
+html[data-style='verre'] .contexte-dossier__commandes .mantine-ActionIcon-root {
+  width: 2.5rem;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  border-color: var(--verre-bord-fort);
+  box-shadow:
+    var(--verre-gelule-reflet),
+    0 6px 16px rgba(0, 0, 0, 0.35);
+}
+html[data-style='verre'] .contexte-dossier__fiche[aria-pressed='true'] {
+  border-color: var(--verre-primaire-bord);
+  background: color-mix(in srgb, var(--verre-violet) 22%, transparent);
+  color: var(--verre-texte-fort);
+  box-shadow: var(--verre-relief-ombre);
+}
+html[data-style='verre'][data-mantine-color-scheme='dark'] .contexte-anneau__fond {
+  stroke: rgba(255, 255, 255, 0.1);
+}
+html[data-style='verre'] .contexte-anneau__arc {
+  stroke: var(--verre-vert);
+}
+html[data-style='verre'] .contexte-anneau__texte {
+  fill: var(--verre-texte-fort);
+}
+html[data-style='verre'] .contexte-rubrique {
+  --contexte-teinte: var(--verre-vert);
+  gap: 0.625rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--verre-ligne-trait);
+  border-radius: 1.375rem;
+  background: var(--verre-ligne-fond);
+  box-shadow: var(--verre-reflet);
+}
+html[data-style='verre'][data-mantine-color-scheme='dark'] .contexte-rubrique {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+html[data-style='verre'] .contexte-rubrique[data-etat='a-completer'] {
+  border-color: color-mix(in srgb, var(--verre-ambre) 40%, transparent);
+}
+html[data-style='verre'] :is(.contexte-rubrique, .contexte-dossier__a-decrire li)[data-rubrique='organisation'] {
+  --contexte-teinte: var(--verre-vert);
+}
+html[data-style='verre'] :is(.contexte-rubrique, .contexte-dossier__a-decrire li)[data-rubrique='scope'] {
+  --contexte-teinte: var(--verre-bleu);
+}
+html[data-style='verre'] :is(.contexte-rubrique, .contexte-dossier__a-decrire li)[data-rubrique='interfaces'] {
+  --contexte-teinte: var(--verre-sarcelle);
+}
+html[data-style='verre'] :is(.contexte-rubrique, .contexte-dossier__a-decrire li)[data-rubrique='issues'] {
+  --contexte-teinte: var(--verre-ambre);
+}
+html[data-style='verre'] :is(.contexte-rubrique, .contexte-dossier__a-decrire li)[data-rubrique='exclusions'] {
+  --contexte-teinte: var(--verre-rose);
+}
+html[data-style='verre'] .contexte-rubrique__repere {
+  box-shadow: 0 0 10px var(--contexte-teinte);
+}
+html[data-style='verre'] .contexte-rubrique .contexte-rubrique__titre {
+  color: var(--verre-texte-fort);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .contexte-rubrique__texte {
+  color: var(--verre-texte-menu);
+  font-size: 0.875rem;
+}
+html[data-style='verre'] .contexte-rubrique__aide {
+  color: var(--verre-secondaire);
+  font-size: 0.875rem;
+}
+/* Pastilles du dessin (mode sombre) ; en mode clair, les pastilles communes du verre. */
+html[data-style='verre'][data-mantine-color-scheme='dark']
+  :is(.contexte-etat[data-etat='renseigne'], .contexte-dossier__pastille[data-pastille='existant']) {
+  border-color: rgba(110, 231, 183, 0.5);
+  background: rgba(52, 211, 153, 0.16);
+  color: #a7f3d0;
+}
+html[data-style='verre'][data-mantine-color-scheme='dark'] .contexte-etat[data-etat='a-completer'] {
+  border-color: rgba(252, 211, 77, 0.5);
+  background: rgba(251, 191, 36, 0.16);
+  color: #fde68a;
+}
+
 /* ---------------------------------------------------------------- Recherche et filtres des listes (27/11/2026)
    Dessin validé par le RSSI (« Recherche et filtres, style Verre », onglet Parties intéressées) : champ de recherche en
    gélule creuse dans l'en-tête de la liste (loupe violette, « N sur M », bouton rond « Effacer la recherche »), lueur

@@ -48,6 +48,22 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Modifié
 
+- **Périmètre et contexte en dossier** (dessin « Périmètre et contexte, en dossier », décision du RSSI du 27/11/2026) : un
+  périmètre n'ayant en pratique qu'une fiche de contexte, le tableau d'une ligne laisse place à un dossier, dans tous les
+  styles (panneau de verre dans le style « Verre »), toujours accompagné de l'encadré « Le contexte en bref ». En tête :
+  anneau de complétude (rubriques renseignées sur 5, lu « 4 rubriques renseignées sur 5 »), nom de la fiche, pastilles du
+  registre (« Existant »…), responsable ou « Non attribué », date de mise à jour ; bouton rond « Historique de la fiche »
+  (fenêtre de la fiche ouverte sur son onglet Historique), bouton rond « Autres actions » (menu de la ligne du registre,
+  inchangé) et « Modifier la fiche » (fenêtre de la fiche habituelle). Dessous, une case par rubrique de la fiche
+  (organisation, activités et services, interfaces et dépendances, enjeux, exclusions), avec son texte (lignes
+  conservées ; au-delà de six lignes ou de 420 caractères, aperçu et « Lire la suite ») et son état « Renseigné » ou « À
+  compléter » ; un texte fait seulement de blancs compte comme vide. Une rubrique vide a un liseré ambré, une phrase d'aide
+  et un bouton « Compléter » qui ouvre le formulaire, curseur dans ce champ. Sans fiche : les cinq rubriques à décrire et
+  « Décrire le contexte » ; plusieurs fiches : une gélule par fiche pour choisir celle affichée et « Ajouter une fiche de
+  contexte » (avec une seule fiche, l'ajout est dans « Autres actions »). Ni recherche ni puces (moins de huit fiches).
+  Droits inchangés : en consultation seule, ni « Modifier », ni « Compléter », ni ajout (« Afficher la fiche » reste).
+  Mêmes données et mêmes fenêtres que le registre ; aucune migration, aucun changement d'API. (session « Projet
+  audit_suivi Coeur »)
 - **Recherche et filtres des listes, au dessin validé « Recherche et filtres, style Verre »** (décision du RSSI du
   27/11/2026, pour toute la plateforme) : la boîte d'outils de la refonte Neon (loupe ronde, entonnoir des filtres avancés)
   et les entonnoirs posés sur le titre des colonnes sont retirés. À partir de 8 éléments (nombre total, avant filtrage),

@@ -15,7 +15,7 @@ import {
   jourParis,
 } from '@suivi/shared';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactElement, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 import { download, get } from '../api';
 import { ErrorAlert } from '../components/common';
@@ -29,6 +29,8 @@ import { usePerimetres, useResponsables } from '../components/selecteurs';
 import { PartiesInteresseesStudio } from './PartiesInteresseesStudio';
 import { idObjetDeRef, lienContexte } from '../retour';
 import { SwotMatrice } from './SwotMatrice';
+import { ContexteDossier } from './ContexteDossier';
+import type { VueFiche } from './RecordEditor';
 const STATES: Record<string, string> = {
   draft: 'À préparer',
   review: 'À valider',
@@ -94,7 +96,8 @@ export function BusinessRegistry({
   smsi: string;
   kind: GrcKind;
   legacyKey?: string;
-  onOpen: (o: GrcObject) => void;
+  /** `vue` : onglet ou champ visé (dossier de Périmètre et contexte). */
+  onOpen: (o: GrcObject, vue?: VueFiche) => void;
   /** `init` : valeurs préremplies de la fiche créée (par exemple l'audit d'origine ou le constat dont c'est la récidive). */
   onCreate: (k: GrcKind, init?: Record<string, unknown>) => void;
   onDecision: (o: GrcObject, operation: PilotageRecord['operation']) => void;
@@ -340,94 +343,197 @@ export function BusinessRegistry({
             Valider
           </Button>
         )}
-        <Menu>
-          <Menu.Target>
-            <Button variant="subtle" size="xs" aria-label={'Autres actions pour ' + o.name}>
-              Autres actions
-            </Button>
-          </Menu.Target>
-          <Menu.Dropdown>
-            {editable && kind === 'control' && can('ecarts', 'modifier') && !o.data.seriesRef && (
-              <Menu.Item onClick={() => onSchedule?.(o)}>Planifier les répétitions</Menu.Item>
-            )}
-            {editable && kind === 'nonconformity' && (
-              <Menu.Item onClick={() => onDecision(o, 'close')}>Clôturer le constat</Menu.Item>
-            )}
-            {writable && kind === 'nonconformity' && o.data.status === 'closed' && (
-              <Menu.Item onClick={() => onDecision(o, 'reopen')}>Rouvrir le constat</Menu.Item>
-            )}
-            {kind === 'nonconformity' && idObjetDeRef(o.data.auditRef) && (
-              <Menu.Item
-                component={Link}
-                to={lienContexte('audits', idObjetDeRef(o.data.auditRef)!, emplacement.pathname + emplacement.search)}
-              >
-                Voir l’audit d’origine
-              </Menu.Item>
-            )}
-            {kind === 'nonconformity' && idObjetDeRef(o.data.recidiveRef) && (
-              <Menu.Item
-                component={Link}
-                to={lienContexte(
-                  'amelioration',
-                  idObjetDeRef(o.data.recidiveRef)!,
-                  emplacement.pathname + emplacement.search,
-                )}
-              >
-                Voir le constat précédent
-              </Menu.Item>
-            )}
-            {writable && kind === 'nonconformity' && o.data.status === 'closed' && !o.id.startsWith('legacy:') && (
-              <Menu.Item
-                onClick={() =>
-                  onCreate('nonconformity', {
-                    name: `Récidive : ${o.name}`.slice(0, 200),
-                    recidiveRef: 'object:' + o.id,
-                    auditRef: o.data.auditRef ?? null,
-                    classification: o.data.classification ?? '',
-                    findingType: o.data.findingType,
-                    origin: o.data.origin,
-                  })
-                }
-              >
-                Déclarer une récidive
-              </Menu.Item>
-            )}
-            {kind === 'audit' && can('ecarts', 'modifier') && !o.id.startsWith('legacy:') && (
-              <Menu.Item onClick={() => onCreate('nonconformity', { auditRef: 'object:' + o.id, origin: 'audit' })}>
-                Constater un écart pour cet audit
-              </Menu.Item>
-            )}
-            {editable &&
-              [
-                'nonconformity',
-                'control',
-                'management_review',
-                'continuity_exercise',
-                'continuity_plan',
-                'objective',
-              ].includes(kind) &&
-              can('ecarts', 'modifier') && (
-                <Menu.Item onClick={() => onDecision(o, 'action_create')}>Créer une action suivie</Menu.Item>
-              )}
-            {kind === 'management_review' && can('pilotage', 'exporter') && (
-              <>
-                <Menu.Item onClick={() => download(`/api/grc/${smsi}/pilotage/revue/${o.id}/export?format=docx`)}>
-                  Compte rendu (Word)
-                </Menu.Item>
-                <Menu.Item onClick={() => download(`/api/grc/${smsi}/pilotage/revue/${o.id}/export?format=pptx`)}>
-                  Support de présentation (PowerPoint)
-                </Menu.Item>
-                <Menu.Item onClick={() => download(`/api/grc/${smsi}/pilotage/revue/${o.id}/export?format=xlsx`)}>
-                  Classeur (Excel)
-                </Menu.Item>
-              </>
-            )}
-            <Menu.Item onClick={() => setHistory(o)}>Décisions et réalisations</Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
+        {autresActions(
+          o,
+          <Button variant="subtle" size="xs" aria-label={'Autres actions pour ' + o.name}>
+            Autres actions
+          </Button>,
+        )}
       </Group>
     );
   };
+  /** Menu « Autres actions » d'une fiche, ouvert par `cible` (bouton de la ligne, ou bouton rond du dossier de contexte) ;
+      `avant` : entrées ajoutées en tête. */
+  const autresActions = (o: GrcObject, cible: ReactElement, avant?: ReactNode) => {
+    const editable = writable && o.data.status !== 'closed';
+    return (
+      <Menu>
+        <Menu.Target>{cible}</Menu.Target>
+        <Menu.Dropdown>
+          {avant}
+          {editable && kind === 'control' && can('ecarts', 'modifier') && !o.data.seriesRef && (
+            <Menu.Item onClick={() => onSchedule?.(o)}>Planifier les répétitions</Menu.Item>
+          )}
+          {editable && kind === 'nonconformity' && (
+            <Menu.Item onClick={() => onDecision(o, 'close')}>Clôturer le constat</Menu.Item>
+          )}
+          {writable && kind === 'nonconformity' && o.data.status === 'closed' && (
+            <Menu.Item onClick={() => onDecision(o, 'reopen')}>Rouvrir le constat</Menu.Item>
+          )}
+          {kind === 'nonconformity' && idObjetDeRef(o.data.auditRef) && (
+            <Menu.Item
+              component={Link}
+              to={lienContexte('audits', idObjetDeRef(o.data.auditRef)!, emplacement.pathname + emplacement.search)}
+            >
+              Voir l’audit d’origine
+            </Menu.Item>
+          )}
+          {kind === 'nonconformity' && idObjetDeRef(o.data.recidiveRef) && (
+            <Menu.Item
+              component={Link}
+              to={lienContexte(
+                'amelioration',
+                idObjetDeRef(o.data.recidiveRef)!,
+                emplacement.pathname + emplacement.search,
+              )}
+            >
+              Voir le constat précédent
+            </Menu.Item>
+          )}
+          {writable && kind === 'nonconformity' && o.data.status === 'closed' && !o.id.startsWith('legacy:') && (
+            <Menu.Item
+              onClick={() =>
+                onCreate('nonconformity', {
+                  name: `Récidive : ${o.name}`.slice(0, 200),
+                  recidiveRef: 'object:' + o.id,
+                  auditRef: o.data.auditRef ?? null,
+                  classification: o.data.classification ?? '',
+                  findingType: o.data.findingType,
+                  origin: o.data.origin,
+                })
+              }
+            >
+              Déclarer une récidive
+            </Menu.Item>
+          )}
+          {kind === 'audit' && can('ecarts', 'modifier') && !o.id.startsWith('legacy:') && (
+            <Menu.Item onClick={() => onCreate('nonconformity', { auditRef: 'object:' + o.id, origin: 'audit' })}>
+              Constater un écart pour cet audit
+            </Menu.Item>
+          )}
+          {editable &&
+            [
+              'nonconformity',
+              'control',
+              'management_review',
+              'continuity_exercise',
+              'continuity_plan',
+              'objective',
+            ].includes(kind) &&
+            can('ecarts', 'modifier') && (
+              <Menu.Item onClick={() => onDecision(o, 'action_create')}>Créer une action suivie</Menu.Item>
+            )}
+          {kind === 'management_review' && can('pilotage', 'exporter') && (
+            <>
+              <Menu.Item onClick={() => download(`/api/grc/${smsi}/pilotage/revue/${o.id}/export?format=docx`)}>
+                Compte rendu (Word)
+              </Menu.Item>
+              <Menu.Item onClick={() => download(`/api/grc/${smsi}/pilotage/revue/${o.id}/export?format=pptx`)}>
+                Support de présentation (PowerPoint)
+              </Menu.Item>
+              <Menu.Item onClick={() => download(`/api/grc/${smsi}/pilotage/revue/${o.id}/export?format=xlsx`)}>
+                Classeur (Excel)
+              </Menu.Item>
+            </>
+          )}
+          <Menu.Item onClick={() => setHistory(o)}>Décisions et réalisations</Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
+    );
+  };
+  const fenetreDecisions = (
+    <Modal
+      opened={!!history}
+      onClose={() => setHistory(null)}
+      title="Décisions et réalisations"
+      size="lg"
+      closeButtonProps={{ 'aria-label': 'Fermer l’historique' }}
+    >
+      <Stack>
+        <Text fw={600}>{history?.name}</Text>
+        <ErrorAlert error={decisions.error} />
+        {decisions.data?.pages
+          .flatMap((p) => p.items)
+          .map((h) => (
+            <Card key={h.id} withBorder>
+              <Stack gap="xs">
+                <Text fw={600}>
+                  {OPERATION_LABELS[h.operation]} · {stateLabel(h.result)}
+                </Text>
+                <Text size="sm">
+                  {date(h.date)} · {h.createdBy} · Fiche version {h.sourceVersion}
+                </Text>
+                <Text>{h.note}</Text>
+                {h.refs.map((ref) => (
+                  <Text size="sm" key={ref}>
+                    {decisions.data?.pages.find((p) => p.references[ref])?.references[ref]?.name ??
+                      'Justificatif conservé'}
+                    {ref.startsWith('document:') ? ' · Document examiné, version ' + ref.split(':')[2] : ''}
+                  </Text>
+                ))}
+                {h.generatedRefs.length > 0 && (
+                  <Text size="sm">
+                    {h.generatedRefs.length} action(s) ou constat(s) créé(s) dans les registres communs.
+                  </Text>
+                )}
+              </Stack>
+            </Card>
+          ))}
+        {decisions.data && !decisions.data.pages[0]?.items.length && (
+          <Text>Aucune décision enregistrée pour cette fiche.</Text>
+        )}
+        {decisions.data?.pages.some((p) => p.referencesTruncated) && (
+          <Text size="sm">
+            Certaines références restent identifiées dans l’export ; la résolution des libellés est limitée à 200 par
+            page.
+          </Text>
+        )}
+        {decisions.hasNextPage && (
+          <Button onClick={() => void decisions.fetchNextPage()}>Voir les décisions précédentes</Button>
+        )}
+      </Stack>
+    </Modal>
+  );
+  const pagination = (
+    <Group>
+      {native.hasNextPage && (
+        <Button variant="light" loading={native.isFetchingNextPage} onClick={() => void native.fetchNextPage()}>
+          Afficher les fiches suivantes
+        </Button>
+      )}
+      {historical.hasNextPage && (
+        <Button variant="light" onClick={() => void historical.fetchNextPage()}>
+          Afficher les données existantes suivantes
+        </Button>
+      )}
+    </Group>
+  );
+  /* Périmètre et contexte (dessin validé par le RSSI le 27/11/2026) : la fiche se lit en dossier, sans recherche ni puces
+     (moins de huit fiches). Mêmes fiches, même menu « Autres actions », même création et mêmes fenêtres que le registre. */
+  if (kind === 'context')
+    return (
+      <Stack>
+        <ErrorAlert error={native.error ?? historical.error ?? owners.error} />
+        <ContexteDossier
+          fiches={toutes}
+          chargement={native.isPending || historical.isLoading}
+          writable={writable}
+          smsi={smsi}
+          responsable={(o) =>
+            owners.data?.find((u) => u.id === o.data.ownerId)?.displayName ||
+            (o.data.ownerLabel ? String(o.data.ownerLabel) : null) ||
+            (o.data.ownerId && owners.data ? 'Responsable non disponible' : null)
+          }
+          etat={(o) => ((o.data.status ?? o.data.result) !== undefined ? state(o) : null)}
+          onOpen={onOpen}
+          onCreate={() => onCreate(kind)}
+          autresActions={autresActions}
+          entreeAjout={<Menu.Item onClick={() => onCreate(kind)}>Ajouter une fiche de contexte</Menu.Item>}
+        />
+        {pagination}
+        {fenetreDecisions}
+      </Stack>
+    );
   const registre = (
     <Stack
       className={kind === 'stakeholder' ? 'pi-registry-shell' : undefined}
@@ -649,57 +755,7 @@ export function BusinessRegistry({
           </Button>
         )}
       </Group>
-      <Modal
-        opened={!!history}
-        onClose={() => setHistory(null)}
-        title="Décisions et réalisations"
-        size="lg"
-        closeButtonProps={{ 'aria-label': 'Fermer l’historique' }}
-      >
-        <Stack>
-          <Text fw={600}>{history?.name}</Text>
-          <ErrorAlert error={decisions.error} />
-          {decisions.data?.pages
-            .flatMap((p) => p.items)
-            .map((h) => (
-              <Card key={h.id} withBorder>
-                <Stack gap="xs">
-                  <Text fw={600}>
-                    {OPERATION_LABELS[h.operation]} · {stateLabel(h.result)}
-                  </Text>
-                  <Text size="sm">
-                    {date(h.date)} · {h.createdBy} · Fiche version {h.sourceVersion}
-                  </Text>
-                  <Text>{h.note}</Text>
-                  {h.refs.map((ref) => (
-                    <Text size="sm" key={ref}>
-                      {decisions.data?.pages.find((p) => p.references[ref])?.references[ref]?.name ??
-                        'Justificatif conservé'}
-                      {ref.startsWith('document:') ? ' · Document examiné, version ' + ref.split(':')[2] : ''}
-                    </Text>
-                  ))}
-                  {h.generatedRefs.length > 0 && (
-                    <Text size="sm">
-                      {h.generatedRefs.length} action(s) ou constat(s) créé(s) dans les registres communs.
-                    </Text>
-                  )}
-                </Stack>
-              </Card>
-            ))}
-          {decisions.data && !decisions.data.pages[0]?.items.length && (
-            <Text>Aucune décision enregistrée pour cette fiche.</Text>
-          )}
-          {decisions.data?.pages.some((p) => p.referencesTruncated) && (
-            <Text size="sm">
-              Certaines références restent identifiées dans l’export ; la résolution des libellés est limitée à 200 par
-              page.
-            </Text>
-          )}
-          {decisions.hasNextPage && (
-            <Button onClick={() => void decisions.fetchNextPage()}>Voir les décisions précédentes</Button>
-          )}
-        </Stack>
-      </Modal>
+      {fenetreDecisions}
     </Stack>
   );
   // SWOT : la matrice Studio (refonte Neon, lot 5) précède le registre complet, conservé tel quel et toujours affiché.

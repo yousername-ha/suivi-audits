@@ -3209,6 +3209,195 @@ html[data-style='clair'][data-mantine-color-scheme='light'] {
   }
 }
 
+/* Périmètre et contexte en dossier (dessin validé par le RSSI le 27/11/2026) : la fiche de contexte du périmètre, en tête
+   l'anneau de complétude, le nom, les pastilles et les commandes ; dessous une case par rubrique, sur deux colonnes (une
+   seule quand la place manque). Une rubrique vide a un liseré ambré ; seule sur sa dernière ligne, elle prend les deux
+   colonnes. Présentation sobre ici ; l'aspect « Verre » est dans verre.css. */
+.contexte-dossier {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-md);
+  min-width: 0;
+}
+.contexte-dossier__choix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+}
+.contexte-dossier__fiches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mantine-spacing-xs);
+  min-width: 0;
+}
+.contexte-dossier__fiche {
+  max-width: 100%;
+}
+.contexte-dossier__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+}
+.contexte-dossier__identite {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+.contexte-dossier__nom {
+  margin: 0;
+  font-size: var(--mantine-font-size-xl);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.contexte-dossier__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  margin-top: var(--mantine-spacing-xs);
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.contexte-dossier__commandes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+.contexte-dossier__icone {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.contexte-dossier__icone--pleine {
+  fill: currentColor;
+  stroke: none;
+}
+.contexte-dossier__intro {
+  margin: 0;
+  font-weight: 500;
+}
+.contexte-dossier__a-decrire {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 600;
+}
+.contexte-dossier__a-decrire li {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+}
+.contexte-dossier__decrire {
+  align-self: flex-start;
+}
+/* Anneau de complétude : piste discrète, arc à la couleur d'Organisation, chiffre au centre. */
+.contexte-anneau {
+  flex: none;
+  width: 4.25rem;
+  height: 4.25rem;
+}
+.contexte-anneau__fond {
+  stroke: var(--mantine-color-default-border);
+}
+.contexte-anneau__arc {
+  stroke: var(--mantine-color-green-6);
+}
+.contexte-anneau__texte {
+  fill: var(--mantine-color-text);
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.contexte-dossier__rubriques {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mantine-spacing-sm);
+}
+.contexte-rubrique {
+  --contexte-teinte: var(--mantine-color-green-6);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--mantine-spacing-xs);
+  min-width: 0;
+  padding: var(--mantine-spacing-md);
+  border: var(--suivi-trait-l) solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--suivi-surface-douce);
+}
+.contexte-rubrique[data-etat='a-completer'] {
+  border-color: var(--mantine-color-orange-6);
+}
+.contexte-rubrique[data-etendue] {
+  grid-column: 1 / -1;
+}
+:is(.contexte-rubrique, .contexte-dossier__a-decrire li)[data-rubrique='scope'] {
+  --contexte-teinte: var(--mantine-color-blue-6);
+}
+:is(.contexte-rubrique, .contexte-dossier__a-decrire li)[data-rubrique='interfaces'] {
+  --contexte-teinte: var(--mantine-color-cyan-7);
+}
+:is(.contexte-rubrique, .contexte-dossier__a-decrire li)[data-rubrique='issues'] {
+  --contexte-teinte: var(--mantine-color-yellow-6);
+}
+:is(.contexte-rubrique, .contexte-dossier__a-decrire li)[data-rubrique='exclusions'] {
+  --contexte-teinte: var(--mantine-color-pink-6);
+}
+.contexte-dossier__a-decrire li {
+  --contexte-teinte: var(--mantine-color-green-6);
+}
+.contexte-rubrique__tete {
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-sm);
+}
+.contexte-rubrique__repere {
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--contexte-teinte, var(--mantine-color-green-6));
+}
+.contexte-rubrique__titre {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--mantine-font-size-md);
+  font-weight: 700;
+}
+.contexte-rubrique__texte,
+.contexte-rubrique__aide {
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.contexte-rubrique__texte {
+  white-space: pre-line;
+}
+.contexte-rubrique__aide {
+  color: var(--mantine-color-dimmed);
+}
+.contexte-rubrique :is(.contexte-rubrique__suite, .contexte-rubrique__completer) {
+  align-self: flex-start;
+}
+@media (max-width: 48em) {
+  .contexte-dossier__rubriques {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* ---------------------------------------------------------------- Recherche et filtres des listes (27/11/2026)
    Règle validée par le RSSI pour toute la plateforme (apps/web/src/components/BarreOutils.tsx) : en-tête de la liste
    (titre et compteur à gauche, champ de recherche en gélule à droite), puis les puces de filtre avec leur nombre,

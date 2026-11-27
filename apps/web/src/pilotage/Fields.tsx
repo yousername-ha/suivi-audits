@@ -134,6 +134,7 @@ export function Fields({
   sources,
   readonly = false,
   smsi,
+  champActif,
 }: {
   kind: GrcKind;
   data: Record<string, unknown>;
@@ -141,6 +142,8 @@ export function Fields({
   sources: Source[];
   readonly?: boolean;
   smsi?: string;
+  /** Champ texte qui reçoit le curseur à l'ouverture de la fenêtre (attribut data-autofocus lu par Mantine). */
+  champActif?: string;
 }) {
   const pertinence = usePertinence(kind === 'sr_ov' ? smsi : undefined, data.studyRef);
   // Avec une matrice épinglée par l'étude, motivation et ressources se choisissent sur ses échelles : les anciens champs
@@ -260,6 +263,7 @@ export function Fields({
         value={String(value ?? '')}
         onChange={(e) => onChange(f.key, e.currentTarget.value)}
         disabled={readonly}
+        data-autofocus={(!readonly && champActif === f.key) || undefined}
       />
     );
   };

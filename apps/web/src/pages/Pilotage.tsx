@@ -42,7 +42,7 @@ import { BusinessPolicyPanel } from '../grc/BusinessPolicy';
 import { Registry } from './Grc';
 import { BusinessRegistry } from '../pilotage/Registry';
 import { cheminRetourSur } from '../retour';
-import { RecordEditor } from '../pilotage/RecordEditor';
+import { RecordEditor, type VueFiche } from '../pilotage/RecordEditor';
 import { Decision } from '../pilotage/Decision';
 import { Members } from '../pilotage/Members';
 import { Bibliotheque } from '../pilotage/Bibliotheque';
@@ -178,6 +178,7 @@ export function PilotagePage() {
     }),
     [editing, setEditing] = useState<GrcObject | null>(null),
     [kind, setKind] = useState<GrcKind>('context'),
+    [vue, setVue] = useState<VueFiche | undefined>(undefined),
     [opened, setOpened] = useState(false),
     [evaluation, setEvaluation] = useState<GrcObject | null>(null),
     [relation, setRelation] = useState<string | null>(null),
@@ -220,9 +221,10 @@ export function PilotagePage() {
     setSchedule(null);
   };
   const config = REGISTERS[section];
-  const open = (o: GrcObject) => {
+  const open = (o: GrcObject, cible?: VueFiche) => {
     setEditing(o);
     setKind(o.kind);
+    setVue(cible);
     setOpened(true);
   };
   // Ouverture contextuelle (`?ouvrir=<fiche>`) depuis une autre page ; `?retour=` garde le chemin d'origine.
@@ -251,6 +253,7 @@ export function PilotagePage() {
   const create = (k: GrcKind, init?: Record<string, unknown>) => {
     setEditing(null);
     setKind(k);
+    setVue(undefined);
     setInitial(init);
     setPreset(undefined);
     setOpened(true);
@@ -259,6 +262,7 @@ export function PilotagePage() {
   const createPreset = (k: GrcKind, name: string, data: Record<string, unknown>) => {
     setEditing(null);
     setKind(k);
+    setVue(undefined);
     setInitial(undefined);
     setPreset({ name, data });
     setOpened(true);
@@ -267,6 +271,7 @@ export function PilotagePage() {
   const createRisk = (name: string, data: Record<string, unknown>) => {
     setEditing(null);
     setKind('risk');
+    setVue(undefined);
     setInitial(undefined);
     setPreset({ name, data });
     setOpened(true);
@@ -535,6 +540,7 @@ export function PilotagePage() {
                 opened={opened}
                 onClose={() => setOpened(false)}
                 initial={initial}
+                vue={vue}
               />
             )}
             <RiskEvaluation smsi={smsi} risk={evaluation} onClose={() => setEvaluation(null)} />

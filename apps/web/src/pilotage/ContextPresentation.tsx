@@ -239,6 +239,7 @@ export function ContextPresentation({
   historyLoading,
   error,
   archivage,
+  ongletInitial = 'presentation',
 }: {
   smsi: string;
   object: GrcObject;
@@ -252,6 +253,8 @@ export function ContextPresentation({
   error: unknown;
   /** Commande d'archivage existante (droit de suppression), conservée sous la présentation. */
   archivage?: ReactNode;
+  /** Onglet affiché à l'ouverture (« Historique de la fiche » du dossier de contexte : `history`). */
+  ongletInitial?: 'presentation' | 'links' | 'history';
 }) {
   const [fullScreen, setFullScreen] = useState(false);
   const id = useId();
@@ -269,7 +272,7 @@ export function ContextPresentation({
     >
       <Stack>
         <ErrorAlert error={error} />
-        <Tabs defaultValue="presentation" keepMounted={false}>
+        <Tabs key={ongletInitial} defaultValue={ongletInitial} keepMounted={false}>
           <Tabs.List>
             <Tabs.Tab value="presentation">Présentation</Tabs.Tab>
             <Tabs.Tab value="links">Liens et justificatifs</Tabs.Tab>
