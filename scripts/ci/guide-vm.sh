@@ -70,7 +70,13 @@ if [ ! -w /dev/kvm ]; then
   echo "::endgroup::"
   arret "KVM indisponible sur ce runner : impossible de démarrer la machine virtuelle ($SYSTEME)."
 fi
-command -v qemu-system-x86_64 > /dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq qemu-system-x86 qemu-utils > /dev/null; }
+# Un dépôt tiers du runner en panne (dépôt Microsoft refusé en 403, 27/11/2026) fait échouer « apt-get update » : avec « && »,
+# l'installation était alors sautée sans erreur, puis qemu-img manquait. La mise à jour peut échouer, l'installation non.
+if ! command -v qemu-system-x86_64 > /dev/null; then
+  sudo apt-get update -qq || echo "::warning::apt-get update incomplet (dépôt tiers du runner indisponible) : installation tentée quand même."
+  sudo apt-get install -y -qq qemu-system-x86 qemu-utils > /dev/null
+fi
+command -v qemu-img > /dev/null || arret "qemu-img introuvable après installation : impossible de préparer la machine virtuelle ($SYSTEME)."
 
 # --- Image officielle, empreinte vérifiée
 # HTTP/1.1 et nouvel essai sur toute erreur : le miroir des images coupe parfois le flux HTTP/2 (curl 92, 17/11/2026),
