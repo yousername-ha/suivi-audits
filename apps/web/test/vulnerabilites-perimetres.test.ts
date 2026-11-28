@@ -35,7 +35,7 @@ import {
   nomAccessibleCarte,
   urlDetailPerimetre,
   URL_PERIMETRES,
-} from '../src/vulnerabilites/perimetres';
+} from '../src/vulnerabilites/perimetres-presentation';
 
 // Fournisseur réglé comme l'application sous la CSP (ADR 0006) : aucune balise <style> injectée.
 const rendu = (e: ReactElement) =>

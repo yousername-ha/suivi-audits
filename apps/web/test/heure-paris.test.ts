@@ -11,9 +11,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { isoVersLocal, maintenantLocal } from '../src/incidents/FormulaireEvenementRetex';
-import { aujourdhui } from '../src/vulnerabilites/tendances';
+import { aujourdhui } from '../src/vulnerabilites/tendances-presentation';
 import { KevTable } from '../src/vulnerabilites/Veille';
-import { echeanceDepassee } from '../src/vulnerabilites/veille';
+import { echeanceDepassee } from '../src/vulnerabilites/veille-presentation';
 
 const rendu = (e: ReactElement) =>
   renderToStaticMarkup(createElement(MantineProvider, null, createElement(MemoryRouter, null, e)));

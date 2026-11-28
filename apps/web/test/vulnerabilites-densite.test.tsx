@@ -9,7 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { EnteteVulnerabilites } from '../src/vulnerabilites/EnteteVulnerabilites';
 import { ListePerimetres } from '../src/vulnerabilites/Perimetres';
-import { CLE_PERIMETRES, CLE_PERIMETRES_AFFECTABLES } from '../src/vulnerabilites/perimetres';
+import { CLE_PERIMETRES, CLE_PERIMETRES_AFFECTABLES } from '../src/vulnerabilites/perimetres-presentation';
 
 const rendu = (element: ReactElement) =>
   renderToStaticMarkup(createElement(MantineProvider, { withCssVariables: false, withGlobalClasses: false }, element));

@@ -38,7 +38,7 @@ import {
   marqueAlerte,
   urlFenetre,
   urlPriseEnCompte,
-} from './alertes';
+} from './alertes-presentation';
 import { PictosSources } from './PictoSource';
 import { pictosExploitation } from './pictos-sources';
 

@@ -40,14 +40,14 @@ import { fmtDate } from '../components/common';
 import { LienConfigurerIntegration } from '../integrations/EtatIntegration';
 import { erreurSynchronisation, peutConfigurerIntegration } from '../integrations/etat-integration';
 import { useCan } from '../session';
-import { CLE_ALERTES, lienFicheAlerte, urlAlertes } from './alertes';
+import { CLE_ALERTES, lienFicheAlerte, urlAlertes } from './alertes-presentation';
 import { FicheConstat, FicheDeclaree } from './FaillesDetectees';
 import { FicheFaille } from './FicheFaille';
 import { Ondes, Reacteur, TeteCase } from './Instruments';
 import { ANNEAUX, disposerRadar, libelleEpss, libelleTouches, RAYON, type SceneRadar, VUE } from './radar';
 import { SuiviFaille } from './SuiviFaille';
-import { ADRESSE_TENDANCES } from './tendances';
-import { etatSource } from './veille';
+import { ADRESSE_TENDANCES } from './tendances-presentation';
+import { etatSource } from './veille-presentation';
 import { etatConnecteur as etatConnecteurCommun, etatImport } from '../integrations/etat-integration';
 import {
   type CaseChoisie,

@@ -43,7 +43,7 @@ import { URL_COPIE_CPE, URL_DICTIONNAIRE_CPE } from './dictionnaire-cpe';
 import { PictoSource } from './PictoSource';
 import { pictoVeille } from './pictos-sources';
 import { urlSourceAnnonce } from './cve-inconnue';
-import { etatSource, libelleLangue, messageCollectesDemandees } from './veille';
+import { etatSource, libelleLangue, messageCollectesDemandees } from './veille-presentation';
 
 const CLE = ['vulnerabilites', 'veille'] as const;
 const FLUX = 'veille-vulnerabilites' as const;

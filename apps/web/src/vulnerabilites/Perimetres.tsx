@@ -49,7 +49,7 @@ import {
   parametresPerimetre,
   URL_PERIMETRES,
   urlDetailPerimetre,
-} from './perimetres';
+} from './perimetres-presentation';
 import { deuxChiffres } from './vue-ensemble';
 
 /* ------------------------------------------------------------------ Carte d'un périmètre */

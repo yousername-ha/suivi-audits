@@ -3,11 +3,11 @@
    22/11/2026 : la page « Machines » des Vulnérabilités, ouverte depuis la carte « Sans périmètre » de l'onglet
    « Périmètres », recevait les cartes de l'onglet au lieu de la liste des périmètres et affichait « (perimetres.data ?? [])
    .map is not a function »). Lecture statique des sources : clés écrites en littéraux ou en constantes littérales du même
-   fichier ou de `vulnerabilites/perimetres.ts`, adresse lue au premier argument de `get(...)` dans `queryFn`. */
+   fichier ou de `vulnerabilites/perimetres-presentation.ts`, adresse lue au premier argument de `get(...)` dans `queryFn`. */
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { CLE_PERIMETRES, CLE_PERIMETRES_AFFECTABLES } from '../src/vulnerabilites/perimetres';
+import { CLE_PERIMETRES, CLE_PERIMETRES_AFFECTABLES } from '../src/vulnerabilites/perimetres-presentation';
 
 const SRC = path.resolve(__dirname, '../src');
 const fichiers = (d: string): string[] =>
@@ -23,7 +23,7 @@ const constantes = (texte: string) =>
 /** Adresses écrites en constantes littérales : `const URL_X = '/api/…';`. */
 const adresses = (texte: string) =>
   new Map([...texte.matchAll(/const (URL_[A-Z_]+)\s*=\s*'([^']+)'/g)].map((m) => [m[1]!, m[2]!] as const));
-const PARTAGE = fs.readFileSync(path.join(SRC, 'vulnerabilites/perimetres.ts'), 'utf8');
+const PARTAGE = fs.readFileSync(path.join(SRC, 'vulnerabilites/perimetres-presentation.ts'), 'utf8');
 const PARTAGEES = constantes(PARTAGE);
 const ADRESSES_PARTAGEES = adresses(PARTAGE);
 

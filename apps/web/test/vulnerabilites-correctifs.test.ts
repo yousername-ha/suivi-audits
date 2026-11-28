@@ -38,7 +38,7 @@ import {
   sourcesCorrectif,
   urlCorrectif,
   urlCorrectifs,
-} from '../src/vulnerabilites/correctifs';
+} from '../src/vulnerabilites/correctifs-presentation';
 import { FicheFailleIllustree } from '../src/vulnerabilites/FicheFaille';
 import { filtresDepuisAdresse, marquesConstat, urlMachines } from '../src/vulnerabilites/failles';
 import { nomAccessibleMachine, urlParc } from '../src/vulnerabilites/parc';
@@ -373,7 +373,7 @@ describe('aide et sources du lot', () => {
     expect(estZeroDay('sans_correctif')).toBe(true);
   });
   it('aucune prop style dans les sources du lot', () => {
-    for (const f of ['Correctifs.tsx', 'correctifs.ts']) {
+    for (const f of ['Correctifs.tsx', 'correctifs-presentation.ts']) {
       const src = readFileSync(path.join(ICI, '../src/vulnerabilites', f), 'utf8');
       expect(src).not.toMatch(/\sstyle=\{/);
       expect(src).not.toMatch(/lockScroll=\{true\}/);

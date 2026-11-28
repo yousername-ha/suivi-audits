@@ -64,7 +64,7 @@ import {
   urlFicheConstatSilene,
   urlLierSilene,
 } from './surface-silene';
-import { nombrePages } from './veille';
+import { nombrePages } from './veille-presentation';
 import { NOMS_PAGINATION } from './pagination';
 
 const CLE = ['vulnerabilites', 'surface', 'silene'] as const;

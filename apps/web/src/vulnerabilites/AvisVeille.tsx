@@ -20,7 +20,7 @@ import {
   libelleNatureAvis,
   libelleSourceAvis,
   marquesAvis,
-} from './veille';
+} from './veille-presentation';
 
 /** CVE citées par défaut dans une ligne de la liste ; la fiche les montre toutes. */
 export const CVES_EN_LISTE = 6;

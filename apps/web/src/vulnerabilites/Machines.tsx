@@ -93,11 +93,11 @@ import {
   urlMachines,
 } from './failles';
 import { libellePrioriteMachine, urlParc } from './parc';
-import { adressePerimetre, CLE_PERIMETRES_AFFECTABLES, filtresDepuisAdresse } from './perimetres';
+import { adressePerimetre, CLE_PERIMETRES_AFFECTABLES, filtresDepuisAdresse } from './perimetres-presentation';
 import { LegendeMarques, MarquesMachine, MentionFinSupport, MentionSansCorrectif, ParcMachines } from './ParcMachines';
 import { libelleExposition, urlExpositionMachine } from './surface';
 import { ouvertureMachines } from './recherche';
-import { nombrePages } from './veille';
+import { nombrePages } from './veille-presentation';
 import { SourceConnecteur } from './SourceConnecteur';
 import { NOMS_PAGINATION } from './pagination';
 import { FenetreGroupes, MentionFournisseurGroupe } from './GroupesMachines';

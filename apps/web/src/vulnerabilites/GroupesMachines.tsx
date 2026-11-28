@@ -58,7 +58,7 @@ import {
   urlMachinesGroupe,
 } from './groupes';
 import { NOMS_PAGINATION } from './pagination';
-import { nombrePages } from './veille';
+import { nombrePages } from './veille-presentation';
 
 const CLE_MACHINES = ['vulnerabilites', 'machines'] as const;
 

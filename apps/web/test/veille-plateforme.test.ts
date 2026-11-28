@@ -34,7 +34,7 @@ import {
   LIEN_CONFIGURATION_VEILLE,
   lignesEtatVeille,
   peutConfigurerVeille,
-} from '../src/vulnerabilites/veille';
+} from '../src/vulnerabilites/veille-presentation';
 
 const SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src');
 const lireSource = (f: string) => readFileSync(path.join(SRC, f), 'utf8');

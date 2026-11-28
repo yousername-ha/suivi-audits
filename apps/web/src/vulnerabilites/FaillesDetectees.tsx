@@ -88,7 +88,7 @@ import {
   urlMachines,
 } from './failles';
 import { ETAT_DELAI_PUCE, libelleEtatDelai, lignesDelai, OPTIONS_FILTRE_DELAI, OPTIONS_TRI } from './delais';
-import { nombrePages } from './veille';
+import { nombrePages } from './veille-presentation';
 import { CorrectifsVue } from './Correctifs';
 import { FicheFaille } from './FicheFaille';
 import { MachinesTable } from './Machines';

@@ -30,7 +30,7 @@ import {
   PORTEE_TOUT,
   urlRapport,
   urlTendances,
-} from './tendances';
+} from './tendances-presentation';
 
 /** Un tableau du rapport, en tableau HTML simple (lisible à l'écran et à l'impression). */
 function TableauDuRapport({ t }: { t: TableauRapport }) {

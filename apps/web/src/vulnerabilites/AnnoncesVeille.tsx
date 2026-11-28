@@ -28,7 +28,7 @@ import {
   verdictCite,
 } from './cve-inconnue';
 import { NOMS_PAGINATION } from './pagination';
-import { GRAVITE_LIBELLES, nombrePages } from './veille';
+import { GRAVITE_LIBELLES, nombrePages } from './veille-presentation';
 
 export const CLE_ANNONCES_SOURCES = ['vulnerabilites', 'veille', 'annonces-sources'] as const;
 

@@ -51,7 +51,7 @@ import {
   TENDANCE_FLECHE,
   TENDANCE_PUCE,
   urlTendances,
-} from './tendances';
+} from './tendances-presentation';
 
 /** Légende d'une courbe : pour chaque série, son trait, sa marque et son libellé. */
 export function LegendeCourbe({ series }: { series: readonly SerieTendance[] }) {

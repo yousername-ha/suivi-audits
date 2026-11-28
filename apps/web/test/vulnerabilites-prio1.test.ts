@@ -18,7 +18,7 @@ import { FicheAvis, ListeAvis } from '../src/vulnerabilites/AvisVeille';
 import { FenetreAlerteCritiqueVue } from '../src/vulnerabilites/FenetreAlerteCritique';
 import { faitsPriorite, marquesConstat } from '../src/vulnerabilites/failles';
 import { MarquesSources, SourcesFaille } from '../src/vulnerabilites/SourcesFaille';
-import { marquesAvis } from '../src/vulnerabilites/veille';
+import { marquesAvis } from '../src/vulnerabilites/veille-presentation';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const rendre = (n: ReactNode) =>
