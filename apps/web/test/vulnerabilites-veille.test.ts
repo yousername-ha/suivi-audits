@@ -23,7 +23,7 @@ import {
   nombrePages,
   urlAvis,
   urlFailles,
-} from '../src/vulnerabilites/veille';
+} from '../src/vulnerabilites/veille-presentation';
 
 const rendu = (e: ReactElement) => renderToStaticMarkup(createElement(MantineProvider, null, e));
 

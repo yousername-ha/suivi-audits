@@ -24,7 +24,7 @@ import {
   urlAlertes,
   urlFenetre,
   urlPriseEnCompte,
-} from '../src/vulnerabilites/alertes';
+} from '../src/vulnerabilites/alertes-presentation';
 import { ecarter, ecartees, marqueAlerte, oublierEcartees } from '../src/vulnerabilites/alertes-session';
 
 // Fournisseur réglé comme l'application sous la CSP (ADR 0006) : aucune balise <style> injectée.

@@ -20,7 +20,7 @@ import { IntegrationsPanel } from '../src/integrations/IntegrationsPage';
 import { cartesDuCote, fenetreAuDessus } from '../src/pages/Administration';
 import { EtatSynchronisations } from '../src/vulnerabilites/FaillesDetectees';
 import { EtatSurface } from '../src/vulnerabilites/SurfaceExterne';
-import { messageCollectesDemandees } from '../src/vulnerabilites/veille';
+import { messageCollectesDemandees } from '../src/vulnerabilites/veille-presentation';
 import { Capteurs } from '../src/vulnerabilites/VueEnsemble';
 
 const rendre = (n: ReactNode) =>

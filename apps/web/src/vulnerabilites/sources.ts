@@ -18,7 +18,7 @@ import {
   type SourceVeille,
   valeursRetenues,
 } from '@suivi/shared';
-import { dateCourte } from './veille';
+import { dateCourte } from './veille-presentation';
 
 /** Libellé d'un signalement : source, et date (JJ/MM/AAAA) quand elle est connue. */
 const avecDate = (libelle: string, le: string | null) => (le ? `${libelle} (le ${dateCourte(le)})` : libelle);

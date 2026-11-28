@@ -44,11 +44,11 @@ import {
   urlAlertes,
   urlFenetre,
   urlPriseEnCompte,
-} from './alertes';
+} from './alertes-presentation';
 import { PrioriteFaits } from './FaillesDetectees';
 import { PictosSources } from './PictoSource';
 import { pictosExploitation } from './pictos-sources';
-import { nombrePages } from './veille';
+import { nombrePages } from './veille-presentation';
 import { NOMS_PAGINATION } from './pagination';
 
 /** Liste des alertes (sans état) : rendu testable hors navigateur. */

@@ -28,7 +28,7 @@ import {
 } from '../src/vulnerabilites/pictos-sources';
 import { optionsRecherche } from '../src/vulnerabilites/recherche';
 import { ListeFailles } from '../src/vulnerabilites/Veille';
-import { alerteUrgente, blocsTexte, marquesAvis } from '../src/vulnerabilites/veille';
+import { alerteUrgente, blocsTexte, marquesAvis } from '../src/vulnerabilites/veille-presentation';
 import { ficheFaille } from './fiche-faille-fixture';
 
 const SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src');

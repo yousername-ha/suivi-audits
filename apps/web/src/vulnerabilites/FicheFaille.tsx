@@ -57,7 +57,7 @@ import {
   lignesDelai,
   STATUT_EXCEPTION_PUCE,
 } from './delais';
-import { ETAT_CORRECTIF_PUCE } from './correctifs';
+import { ETAT_CORRECTIF_PUCE } from './correctifs-presentation';
 import { ETAT_PRIORITE, faitsPrioriteComplets } from './failles';
 import {
   DETAIL,

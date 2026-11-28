@@ -39,7 +39,7 @@ import {
   sourcesCorrectif,
   urlCorrectif,
   urlCorrectifs,
-} from './correctifs';
+} from './correctifs-presentation';
 import { ETAT_DELAI_PUCE, libelleEtatDelai } from './delais';
 import { ETAT_PRIORITE, libelleMachine, libelleRole } from './failles';
 import { DelaiFaille } from './FaillesDetectees';

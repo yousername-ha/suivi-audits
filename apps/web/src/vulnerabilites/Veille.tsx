@@ -57,7 +57,7 @@ import {
   peutConfigurerVeille,
   urlAvis,
   urlFailles,
-} from './veille';
+} from './veille-presentation';
 import { NOMS_PAGINATION } from './pagination';
 
 const CLE = ['vulnerabilites', 'veille'] as const;

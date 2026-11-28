@@ -41,7 +41,7 @@ import {
   seriesSuivi,
   urlRapport,
   urlTendances,
-} from '../src/vulnerabilites/tendances';
+} from '../src/vulnerabilites/tendances-presentation';
 import { VariationSeptJours } from '../src/vulnerabilites/VueEnsemble';
 
 // Fournisseur réglé comme l'application sous la CSP (ADR 0006) : aucune balise <style> injectée.
@@ -278,7 +278,7 @@ describe('document du rapport', () => {
 
 describe('CSP stricte (ADR 0006)', () => {
   it('aucune prop style ni balise <style> ou <script> dans les sources du lot', () => {
-    for (const f of ['Tendances.tsx', 'Rapport.tsx', 'tendances.ts', 'VueEnsemble.tsx']) {
+    for (const f of ['Tendances.tsx', 'Rapport.tsx', 'tendances-presentation.ts', 'VueEnsemble.tsx']) {
       const source = readFileSync(new URL(`../src/vulnerabilites/${f}`, import.meta.url), 'utf8');
       expect(source).not.toMatch(/\sstyle=\{/i);
       expect(source).not.toMatch(/<style/i);

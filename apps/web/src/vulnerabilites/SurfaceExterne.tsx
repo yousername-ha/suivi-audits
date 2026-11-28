@@ -85,7 +85,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { type OngletSurface, ouvertureSurface } from './recherche';
 import { EnteteVulnerabilites } from './EnteteVulnerabilites';
-import { CLE_PERIMETRES_AFFECTABLES } from './perimetres';
+import { CLE_PERIMETRES_AFFECTABLES } from './perimetres-presentation';
 import { api, errorMessage, get } from '../api';
 import { fmtDate } from '../components/common';
 import { EtatIntegration } from '../integrations/EtatIntegration';
@@ -151,7 +151,7 @@ import {
   urlFicheAlerteAlh,
   urlTechnologiesAlh,
 } from './surface';
-import { nombrePages } from './veille';
+import { nombrePages } from './veille-presentation';
 import { NOMS_PAGINATION } from './pagination';
 
 const CLE = ['vulnerabilites', 'surface'] as const;

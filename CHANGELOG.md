@@ -25,6 +25,18 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   journal `grc.responsabilites.raci.*` réduit au périmètre et aux comptes, contrôle des relations, remise à vide. Textes de
   14 px au moins, graisse 500 à 700. (session « Projet audit_suivi Coeur »)
 
+### Corrigé
+
+- **Interface sur un système de fichiers insensible à la casse** (Windows, macOS, Docker Desktop avec un dossier partagé) :
+  les modules de présentation `alertes.ts`, `correctifs.ts`, `perimetres.ts`, `tendances.ts` et `veille.ts` de
+  `apps/web/src/vulnerabilites/` ne différaient de `Alertes.tsx`, `Correctifs.tsx`, `Perimetres.tsx`, `Tendances.tsx` et
+  `Veille.tsx` que par la casse ; l'import `./Alertes` y était résolu vers `alertes.ts` et l'interface ne démarrait plus
+  (« does not provide an export named 'RappelAlertesCritiques' », écran noir ; constaté par le RSSI le 27/11/2026). Ils sont
+  renommés `*-presentation.ts`, comme `pilotage/objectifs-presentation.ts`, imports mis à jour, sans changement de
+  comportement. Nouveau test d'architecture `apps/web/test/casse-fichiers.test.ts` : échec si deux fichiers de
+  `apps/web/src`, `apps/api/src` ou `packages/*/src` ne diffèrent que par la casse une fois l'extension retirée.
+  (session « Renommer les modules qui ne diffèrent que par la casse »)
+
 ## [7.8.0] — 2026-11-26
 
 ### Notes de mise à jour

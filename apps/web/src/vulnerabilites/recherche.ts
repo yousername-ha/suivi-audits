@@ -11,7 +11,7 @@ import {
   ROLE_MACHINE_LIBELLES,
   type ResultatCveDto,
 } from '@suivi/shared';
-import { GRAVITE_LIBELLES } from './veille';
+import { GRAVITE_LIBELLES } from './veille-presentation';
 import { sansDoublon, type SourcePicto } from './pictos-sources';
 
 /** Délai de frappe avant l'appel (anti-rebond), en millisecondes. */

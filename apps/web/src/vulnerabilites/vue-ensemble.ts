@@ -14,7 +14,7 @@ import {
   type SecteurRadar,
 } from '@suivi/shared';
 import { etatConnecteur as etatConnecteurCommun } from '../integrations/etat-integration';
-import { libelleSource } from './veille';
+import { libelleSource } from './veille-presentation';
 
 export const CLE_VUE = ['vulnerabilites', 'vue-ensemble'] as const;
 export const URL_VUE = '/api/vulnerabilites/vue-ensemble';
