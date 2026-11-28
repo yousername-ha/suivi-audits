@@ -121,6 +121,15 @@ export async function controleRelations(svc: Services): Promise<ControleRelation
       refs.verifie();
       if (typeof r === 'string' && !resolue(r)) refs.anomalie(`${o.kind} ${o.id} : référence introuvable ${r}`);
     }
+  // Matrices « Qui décide quoi » (ADR 0115) : une case désigne un rôle du registre ; un rôle archivé reste résolu (colonne
+  // « Rôle retiré », lettres conservées), une référence qui ne désigne plus rien est signalée, jamais corrigée.
+  for (const m of await k.selectFrom('responsabilites_raci').select(['smsi_id', 'cases']).execute()) {
+    const roles = new Set((Array.isArray(m.cases) ? m.cases : []).map((x) => String((x as { role?: unknown }).role)));
+    for (const r of roles) {
+      refs.verifie();
+      if (!resolue(r)) refs.anomalie(`matrice « Qui décide quoi » du périmètre ${m.smsi_id} : rôle introuvable ${r}`);
+    }
+  }
 
   // 3) Risques, méthodes, référentiels et fournisseurs.
   const risques = nouveau('Risques, référentiels et fournisseurs');

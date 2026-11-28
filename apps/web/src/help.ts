@@ -39,6 +39,19 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
   },
   {
+    id: 'qui-decide-quoi',
+    title: 'Rôles et responsabilités : qui décide quoi',
+    permission: 'pilotage:lire',
+    link: '/pilotage/responsabilites',
+    steps: [
+      'Ouvrez Pilotage > Rôles et responsabilités et choisissez le périmètre affiché : chaque périmètre a son tableau « Qui décide quoi », sous la liste des fiches du registre.',
+      'Les colonnes sont les rôles du registre du périmètre (au périmètre commun, aussi ceux de l’outil de suivi) : ajoutez, renommez ou retirez un rôle dans le registre, le tableau suit. Les lignes sont vos décisions : « Ajouter une décision », puis nommez-la ; aucune n’est proposée au départ.',
+      'Chaque case prend R (réalise), A (approuve), C (consulté), I (informé) ou « — » (non concerné). La colonne « Contrôle » applique la règle « exactement un A et au moins un R » (Conforme, Aucun A, Plusieurs A, Aucun R) et un résumé liste les décisions à revoir : c’est un avertissement, l’enregistrement reste possible.',
+      'Un rôle retiré du registre garde ses lettres dans une colonne « Rôle retiré » ; elles ne comptent plus dans le contrôle. Reportez-les sur un rôle actuel, puis effacez-les avec le bouton × de la colonne.',
+      'Il faut le droit de modifier le pilotage et un accès en écriture au périmètre pour saisir ; si quelqu’un a enregistré entre-temps, rechargez le tableau avant de reprendre.',
+    ],
+  },
+  {
     id: 'preuves-controles',
     title: 'Preuves et plan de contrôle',
     permission: 'pilotage:lire',

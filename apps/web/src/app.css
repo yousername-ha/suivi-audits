@@ -4715,3 +4715,28 @@ tr[data-importe='oui'] {
   padding-block: var(--mantine-spacing-xs);
   border-top: var(--suivi-trait-l) solid var(--suivi-trait);
 }
+
+/* « Qui décide quoi » des rôles et responsabilités (ADR 0115, décision du RSSI du 27/11/2026) : textes lisibles, de la
+   taille « sm » du thème au moins (14 px), en graisse 500 à 700, dans tous les styles d'instance (jetons seulement). Les
+   sélecteurs commencent par .app-main pour l'emporter sur la densité des tableaux (neon-densite.css, chargée après). */
+.app-main .qui-decide-quoi :is(.qui-decide-quoi__legende, .mantine-Alert-message) {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+}
+.app-main .qui-decide-quoi .qui-decide-quoi__grille {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+}
+.app-main .qui-decide-quoi .qui-decide-quoi__grille th {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+.app-main .qui-decide-quoi .qui-decide-quoi__grille :is(input, select) {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+}
+.app-main .qui-decide-quoi .qui-decide-quoi__grille .mantine-Badge-root {
+  height: auto;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}

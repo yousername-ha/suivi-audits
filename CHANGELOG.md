@@ -6,8 +6,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Notes de mise à jour
 
-- Aucune migration, aucune commande sur le serveur, aucun flux nouveau vers l'extérieur. Le style par défaut ne change pas :
-  le style « Verre » ne s'applique que si un administrateur le choisit dans Paramètres > Apparence. Aucune action.
+- Migration automatique additive `108` (table `responsabilites_raci`, vide au départ), appliquée au démarrage, quelques
+  secondes ; sans reprise de données ni commande sur le serveur. Aucun flux nouveau vers l'extérieur. Le style par défaut
+  ne change pas : le style « Verre » ne s'applique que si un administrateur le choisit dans Paramètres > Apparence. Aucune
+  action.
   (session « Projet audit_suivi Coeur »)
 
 ### Ajouté
@@ -176,6 +178,18 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   choisi montre ses actions. Aspect « Verre » dans `verre.css` (gélule creuse à lueur violette, puces translucides, puce
   active en relief, surlignage violet) ; présentation sobre dans les autres styles. Aucune migration, aucun changement
   d'API. (session « Projet audit_suivi Coeur »)
+- **« Qui décide quoi »** dans Pilotage > Rôles et responsabilités (décision du RSSI du 27/11/2026,
+  [ADR 0115](docs/adr/0115-matrice-qui-decide-quoi.md)) : sous la liste des fiches du registre, une matrice RACI des
+  décisions de l'organisation par périmètre (sélecteur « Périmètre affiché »). Lignes : décisions saisies librement, aucune
+  au départ ; colonnes : les rôles du registre du périmètre (au périmètre commun, aussi ceux de l'outil de suivi), libellés
+  de leur nom à chaque lecture. Une lettre R, A, C ou I par case (légende « R réalise · A approuve · C consulté · I
+  informé »), règle « exactement un A et au moins un R » signalée sans bloquer (colonne « Contrôle », résumé `role=status`),
+  comme la matrice RACI des fournisseurs dont la grille, la règle et les opérations de saisie sont reprises et généralisées
+  (comportement de la matrice des fournisseurs inchangé). Un rôle retiré du registre garde ses lettres dans une colonne
+  « Rôle retiré », hors du contrôle, effaçables. API `GET` et `PUT /api/grc/{smsi}/pilotage/responsabilites/raci` (lecture
+  du pilotage et accès au périmètre ; écriture avec le droit de modifier le pilotage et un accès en écriture, `If-Match`),
+  journal `grc.responsabilites.raci.*` réduit au périmètre et aux comptes, contrôle des relations, remise à vide. Textes de
+  14 px au moins, graisse 500 à 700. (session « Projet audit_suivi Coeur »)
 
 ## [7.8.0] — 2026-11-26
 

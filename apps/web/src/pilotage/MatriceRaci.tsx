@@ -2,10 +2,12 @@
    responsabilités » de la fiche. Activités en lignes, acteurs en colonnes (le fournisseur, puis les fonctions de
    l'établissement), une liste R / A / C / I / — par case, colonne « Contrôle » (Conforme, Aucun A, Plusieurs A, Aucun R)
    et résumé des activités à revoir (role=status). La règle avertit sans bloquer l'enregistrement. Lecture seule sans le
-   droit de modifier les fournisseurs ; suppression de la matrice avec le droit « supprimer » (ADR 0068). */
+   droit de modifier les fournisseurs ; suppression de la matrice avec le droit « supprimer » (ADR 0068).
+   La légende, la grille (GrilleRaci) et le résumé servent aussi à la matrice « Qui décide quoi » des rôles et
+   responsabilités (ADR 0115, QuiDecideQuoi.tsx), avec leurs mots et leurs colonnes. */
 import { ActionIcon, Alert, Button, Group, NativeSelect, Stack, Table, Text, TextInput } from '@mantine/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   RACI_LETTRES,
   RACI_LETTRES_LIBELLES,
@@ -14,6 +16,7 @@ import {
   libelleControleRaci,
   matriceRaciModele,
   nettoyerLibelleRaci,
+  type ControleActiviteRaci,
   type LettreRaci,
   type MatriceRaciReponse,
 } from '@suivi/shared';
@@ -24,7 +27,7 @@ import {
   ajouterActeur,
   ajouterActivite,
   avecLettre,
-  colonnesRaci,
+  colonnesGrilleFournisseur,
   deplacerActivite,
   lettreRaci,
   libellesVides,
@@ -34,6 +37,7 @@ import {
   renommer,
   retirerActeur,
   retirerActivite,
+  type ColonneGrilleRaci,
   type ContenuRaci,
 } from './raci';
 
@@ -44,15 +48,21 @@ const cle = (id: string) => ['grc', 'fournisseurs-raci', id];
 export const cleMatriceRaci = cle;
 export const urlMatriceRaci = (id: string) => `/api/suppliers/${encodeURIComponent(id)}/raci`;
 
-/** Légende de la maquette. */
-export function LegendeRaci() {
+/** Légende de la maquette ; `libelles` : légende propre à une autre matrice (« Qui décide quoi »). */
+export function LegendeRaci({
+  libelles = RACI_LETTRES_LIBELLES,
+  className,
+}: {
+  libelles?: Record<LettreRaci, string>;
+  className?: string;
+}) {
   return (
-    <Text size="sm" c="dimmed">
+    <Text size="sm" c="dimmed" className={className}>
       Légende :{' '}
       {RACI_LETTRES.map((l, i) => (
         <span key={l}>
           {i > 0 && ' · '}
-          <strong>{l}</strong> {RACI_LETTRES_LIBELLES[l]}
+          <strong>{l}</strong> {libelles[l]}
         </span>
       ))}
       {' · '}
@@ -61,18 +71,49 @@ export function LegendeRaci() {
   );
 }
 
-/** Résumé de la règle « exactement un A, au moins un R », annoncé sans interrompre (role=status). */
-export function ResumeControleRaci({ contenu }: { contenu: ContenuRaci }) {
-  const aRevoir = activitesARevoirRaci(controleRaci(contenu));
+/** Mots d'une matrice : nom des lignes (« activité », « décision », féminins) et des colonnes (« l’acteur », « le rôle »). */
+export interface MotsRaci {
+  /** En-tête de la colonne des lignes. */
+  entete: string;
+  /** Nom d'une ligne, au singulier et au pluriel. */
+  ligne: string;
+  lignes: string;
+  /** Nom d'une ligne et d'une colonne avec leur article (« l’activité », « le rôle »). */
+  laLigne: string;
+  laColonne: string;
+}
+export const MOTS_ACTIVITES: MotsRaci = {
+  entete: 'Activité',
+  ligne: 'activité',
+  lignes: 'activités',
+  laLigne: 'l’activité',
+  laColonne: 'l’acteur',
+};
+
+/** Résumé de la règle « exactement un A, au moins un R », annoncé sans interrompre (role=status). `controles` : contrôle
+    déjà calculé (par défaut, celui de la matrice d'un fournisseur) ; `children` : précision ajoutée après le résumé. */
+export function ResumeControleRaci({
+  contenu,
+  controles,
+  mots = MOTS_ACTIVITES,
+  children,
+}: {
+  contenu: ContenuRaci;
+  controles?: readonly ControleActiviteRaci[];
+  mots?: MotsRaci;
+  children?: ReactNode;
+}) {
+  const aRevoir = activitesARevoirRaci(controles ?? controleRaci(contenu));
   return (
     <Alert role="status" color={aRevoir.length ? 'orange' : 'suivi'} title="Contrôle de la matrice">
       {!contenu.activites.length
-        ? 'Aucune activité : ajoutez-en une.'
+        ? `Aucune ${mots.ligne} : ajoutez-en une.`
         : aRevoir.length
-          ? `${aRevoir.length === 1 ? '1 activité à revoir' : `${aRevoir.length} activités à revoir`} (règle : exactement un A et au moins un R) : ${aRevoir
+          ? `${aRevoir.length === 1 ? `1 ${mots.ligne} à revoir` : `${aRevoir.length} ${mots.lignes} à revoir`} (règle : exactement un A et au moins un R) : ${aRevoir
               .map((c) => `« ${c.libelle} » (${libelleControleRaci(c)})`)
               .join(' ; ')}. L’enregistrement reste possible.`
-          : 'Toutes les activités ont exactement un A et au moins un R.'}
+          : `Toutes les ${mots.lignes} ont exactement un A et au moins un R.`}
+      {children}
     </Alert>
   );
 }
@@ -84,30 +125,83 @@ export interface TableauRaciProps {
   onChange: (c: ContenuRaci) => void;
 }
 
-/** Tableau accessible : en-têtes de colonnes (acteurs) et de lignes (activités), une liste nommée par case. */
+/** Tableau de la matrice d'un fournisseur : la grille commune, avec la colonne du fournisseur puis les fonctions. */
 export function TableauRaci({ contenu, nomFournisseur, modifiable, onChange }: TableauRaciProps) {
-  const colonnes = colonnesRaci(contenu, nomFournisseur);
-  const controles = new Map(controleRaci(contenu).map((c) => [c.activite, c]));
   return (
-    <DataTable label={`Matrice RACI de ${nomFournisseur}`}>
-      <Table>
+    <GrilleRaci
+      label={`Matrice RACI de ${nomFournisseur}`}
+      contenu={contenu}
+      colonnes={colonnesGrilleFournisseur(contenu, nomFournisseur)}
+      controles={controleRaci(contenu)}
+      modifiable={modifiable}
+      onChange={onChange}
+    />
+  );
+}
+
+export interface GrilleRaciProps {
+  /** Nom accessible du tableau. */
+  label: string;
+  contenu: ContenuRaci;
+  colonnes: readonly ColonneGrilleRaci[];
+  /** Contrôle de chaque ligne (colonne « Contrôle »), dans n'importe quel ordre. */
+  controles: readonly ControleActiviteRaci[];
+  modifiable: boolean;
+  onChange: (c: ContenuRaci) => void;
+  mots?: MotsRaci;
+  /** Taille des champs : « xs » pour la fiche du fournisseur, « sm » (14 px) pour une matrice de pleine page. */
+  taille?: 'xs' | 'sm';
+  className?: string;
+}
+
+/** Grille accessible commune : en-têtes de colonnes et de lignes, une liste nommée « <ligne> – <colonne> » par case,
+    colonne « Contrôle ». Une colonne retirée ne propose que sa lettre actuelle et « — ». */
+export function GrilleRaci({
+  label,
+  contenu,
+  colonnes,
+  controles: liste,
+  modifiable,
+  onChange,
+  mots = MOTS_ACTIVITES,
+  taille = 'xs',
+  className,
+}: GrilleRaciProps) {
+  const controles = new Map(liste.map((c) => [c.activite, c]));
+  return (
+    <DataTable label={label}>
+      <Table className={className}>
         <Table.Thead>
           <Table.Tr>
-            <Table.Th scope="col">Activité</Table.Th>
+            <Table.Th scope="col">{mots.entete}</Table.Th>
             {colonnes.map((col) => (
               <Table.Th scope="col" key={col.id}>
-                {modifiable && !col.fournisseur ? (
+                {modifiable && col.renommable ? (
                   <Group gap="xs" wrap="nowrap">
                     <TextInput
-                      size="xs"
-                      aria-label={`Nom de l’acteur « ${col.libelle} »`}
+                      size={taille}
+                      aria-label={`Nom de ${mots.laColonne} « ${col.libelle} »`}
                       value={col.libelle}
                       onChange={(e) => onChange(renommer(contenu, 'acteurs', col.id, e.currentTarget.value))}
                     />
+                    {col.retirable && (
+                      <ActionIcon
+                        variant="subtle"
+                        color="red"
+                        aria-label={`Retirer ${mots.laColonne} « ${col.libelle} »`}
+                        onClick={() => onChange(retirerActeur(contenu, col.id))}
+                      >
+                        ×
+                      </ActionIcon>
+                    )}
+                  </Group>
+                ) : modifiable && col.retirable ? (
+                  <Group gap="xs" wrap="nowrap">
+                    {col.libelle}
                     <ActionIcon
                       variant="subtle"
                       color="red"
-                      aria-label={`Retirer l’acteur « ${col.libelle} »`}
+                      aria-label={`Retirer ${mots.laColonne} « ${col.libelle} » et ses lettres`}
                       onClick={() => onChange(retirerActeur(contenu, col.id))}
                     >
                       ×
@@ -123,22 +217,22 @@ export function TableauRaci({ contenu, nomFournisseur, modifiable, onChange }: T
         </Table.Thead>
         <Table.Tbody>
           {contenu.activites.map((act, i) => {
-            const controle = controles.get(act.id)!;
+            const controle = controles.get(act.id);
             return (
               <Table.Tr key={act.id}>
                 <Table.Th scope="row">
                   {modifiable ? (
                     <Group gap="xs" wrap="nowrap">
                       <TextInput
-                        size="xs"
-                        aria-label={`Nom de l’activité « ${act.libelle} »`}
+                        size={taille}
+                        aria-label={`Nom de ${mots.laLigne} « ${act.libelle} »`}
                         value={act.libelle}
                         onChange={(e) => onChange(renommer(contenu, 'activites', act.id, e.currentTarget.value))}
                       />
                       <ActionIcon
                         variant="subtle"
                         disabled={i === 0}
-                        aria-label={`Monter l’activité « ${act.libelle} »`}
+                        aria-label={`Monter ${mots.laLigne} « ${act.libelle} »`}
                         onClick={() => onChange(deplacerActivite(contenu, act.id, -1))}
                       >
                         ↑
@@ -146,7 +240,7 @@ export function TableauRaci({ contenu, nomFournisseur, modifiable, onChange }: T
                       <ActionIcon
                         variant="subtle"
                         disabled={i === contenu.activites.length - 1}
-                        aria-label={`Descendre l’activité « ${act.libelle} »`}
+                        aria-label={`Descendre ${mots.laLigne} « ${act.libelle} »`}
                         onClick={() => onChange(deplacerActivite(contenu, act.id, 1))}
                       >
                         ↓
@@ -154,7 +248,7 @@ export function TableauRaci({ contenu, nomFournisseur, modifiable, onChange }: T
                       <ActionIcon
                         variant="subtle"
                         color="red"
-                        aria-label={`Retirer l’activité « ${act.libelle} »`}
+                        aria-label={`Retirer ${mots.laLigne} « ${act.libelle} »`}
                         onClick={() => onChange(retirerActivite(contenu, act.id))}
                       >
                         ×
@@ -170,9 +264,9 @@ export function TableauRaci({ contenu, nomFournisseur, modifiable, onChange }: T
                     <Table.Td key={col.id}>
                       {modifiable ? (
                         <NativeSelect
-                          size="xs"
+                          size={taille}
                           aria-label={nomCaseRaci(act.libelle, col.libelle)}
-                          data={OPTIONS}
+                          data={col.retiree ? OPTIONS.filter((o) => o.value === AUCUNE || o.value === lettre) : OPTIONS}
                           value={lettre ?? AUCUNE}
                           onChange={(e) =>
                             onChange(
@@ -192,9 +286,11 @@ export function TableauRaci({ contenu, nomFournisseur, modifiable, onChange }: T
                   );
                 })}
                 <Table.Td>
-                  <StatusChip etat={controle.ecarts.length ? 'attention' : 'succes'}>
-                    {libelleControleRaci(controle)}
-                  </StatusChip>
+                  {controle && (
+                    <StatusChip etat={controle.ecarts.length ? 'attention' : 'succes'}>
+                      {libelleControleRaci(controle)}
+                    </StatusChip>
+                  )}
                 </Table.Td>
               </Table.Tr>
             );
