@@ -14,6 +14,7 @@ import {
   AIDES_RUBRIQUES,
   apercuTexte,
   arcCompletude,
+  commandesDossier,
   completudeContexte,
   dateMiseAJour,
   ficheAffichee,
@@ -257,6 +258,39 @@ describe('rendu du dossier', () => {
     const vide = dossier({ fiches: [], writable: false });
     expect(vide).not.toContain('Décrire le contexte');
     expect(vide).toContain('Consultation seule');
+  });
+});
+
+describe('commandes de l’en-tête (décisions du RSSI du 28/11/2026)', () => {
+  it('« Historique de la fiche » ouvre la fiche sur son onglet Historique, avec ou sans droit de modifier', () => {
+    expect(commandesDossier(true, 1).historique).toEqual({ onglet: 'history' });
+    expect(commandesDossier(false, 1).historique).toEqual({ onglet: 'history' });
+    // L'onglet visé ouvre la présentation (sans formulaire) : aucun champ n'est visé.
+    expect(commandesDossier(true, 1).historique.champ).toBeUndefined();
+  });
+  it('ajout : bouton visible sans fiche, rangé dans « ⋯ » avec une fiche, bouton avec plusieurs ; rien sans droit', () => {
+    expect(commandesDossier(true, 0)).toMatchObject({ decrire: true, ajoutDansMenu: false, ajoutBouton: false });
+    expect(commandesDossier(true, 1)).toMatchObject({ decrire: false, ajoutDansMenu: true, ajoutBouton: false });
+    expect(commandesDossier(true, 3)).toMatchObject({ decrire: false, ajoutDansMenu: false, ajoutBouton: true });
+    for (const n of [0, 1, 3])
+      expect(commandesDossier(false, n), String(n)).toMatchObject({
+        decrire: false,
+        ajoutDansMenu: false,
+        ajoutBouton: false,
+      });
+  });
+  it('lecture seule : le bouton principal devient « Afficher la fiche »', () => {
+    expect(commandesDossier(true, 1).principal).toBe('Modifier la fiche');
+    expect(commandesDossier(false, 1).principal).toBe('Afficher la fiche');
+  });
+  it('le menu « ⋯ » est un bouton rond au nom explicite, et le dossier suit ces commandes', () => {
+    const h = dossier({ fiches: [fiche('f1', 'Fiche fictive', COMPLET)] });
+    expect(h).toMatch(/<button[^>]*aria-label="Autres actions pour Fiche fictive"/);
+    const source = lire('../src/pilotage/ContexteDossier.tsx');
+    expect(source).toContain('onOpen(fiche, commandes.historique)');
+    expect(source).toContain('commandes.ajoutDansMenu ? entreeAjout : null');
+    expect(source).toContain('{commandes.principal}');
+    expect(source).toMatch(/radius="xl"\s+aria-label=\{`Autres actions pour \$\{fiche\.name\}`\}/);
   });
 });
 

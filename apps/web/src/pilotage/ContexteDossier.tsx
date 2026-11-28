@@ -4,7 +4,7 @@
    mise à jour, puis « Historique de la fiche », « Autres actions » (menu du registre) et « Modifier la fiche ». Dessous,
    une case par rubrique de la fiche. Aucune donnée propre : les fiches, le menu, la création et les fenêtres sont ceux du
    registre (Registry.tsx), avec ses droits ; calculs dans contexte-dossier.ts. Pas de recherche ni de puces : moins de
-   huit fiches (règle validée le 27/11/2026). */
+   huit fiches (règle validée le 27/11/2026). Commandes de l'en-tête (décisions du 28/11/2026) : commandesDossier. */
 import { ActionIcon, Badge, Button, Card, Text, Tooltip } from '@mantine/core';
 import type { GrcObject } from '@suivi/shared';
 import { useId, useState, type ReactElement, type ReactNode } from 'react';
@@ -12,6 +12,7 @@ import type { VueFiche } from './RecordEditor';
 import {
   apercuTexte,
   arcCompletude,
+  commandesDossier,
   completudeContexte,
   dateMiseAJour,
   ficheAffichee,
@@ -189,6 +190,7 @@ export function ContexteDossier({
   const titre = useId();
   const [choisie, setChoisie] = useState<string | null>(null);
   const fiche = ficheAffichee(fiches, choisie);
+  const commandes = commandesDossier(writable, fiches.length);
 
   if (!fiche)
     return chargement ? (
@@ -211,7 +213,7 @@ export function ContexteDossier({
             </li>
           ))}
         </ol>
-        {writable ? (
+        {commandes.decrire ? (
           <Button
             variant="filled"
             className="contexte-dossier__decrire"
@@ -247,7 +249,7 @@ export function ContexteDossier({
               </Button>
             ))}
           </div>
-          {writable && (
+          {commandes.ajoutBouton && (
             <Button variant="default" className="contexte-dossier__ajouter" onClick={onCreate}>
               Ajouter une fiche de contexte
             </Button>
@@ -290,7 +292,7 @@ export function ContexteDossier({
               size="xl"
               radius="xl"
               aria-label="Historique de la fiche"
-              onClick={() => onOpen(fiche, { onglet: 'history' })}
+              onClick={() => onOpen(fiche, commandes.historique)}
             >
               <IconeHistorique />
             </ActionIcon>
@@ -300,7 +302,7 @@ export function ContexteDossier({
             <ActionIcon variant="default" size="xl" radius="xl" aria-label={`Autres actions pour ${fiche.name}`}>
               <IconePoints />
             </ActionIcon>,
-            fiches.length === 1 && writable ? entreeAjout : null,
+            commandes.ajoutDansMenu ? entreeAjout : null,
           )}
           <Button
             className="contexte-dossier__modifier"
@@ -308,7 +310,7 @@ export function ContexteDossier({
             leftSection={writable ? <IconeCrayon /> : undefined}
             onClick={() => onOpen(fiche)}
           >
-            {writable ? 'Modifier la fiche' : 'Afficher la fiche'}
+            {commandes.principal}
           </Button>
         </div>
       </div>

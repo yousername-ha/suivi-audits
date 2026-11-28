@@ -152,6 +152,10 @@ export interface GrilleRaciProps {
   /** Taille des champs : « xs » pour la fiche du fournisseur, « sm » (14 px) pour une matrice de pleine page. */
   taille?: 'xs' | 'sm';
   className?: string;
+  /** Lettres en puces colorées (matrice « Qui décide quoi » en style « Verre ») : chaque case porte sa lettre
+      (data-lettre), la case « Contrôle » son état (data-controle : conforme ou a-revoir) et, en lecture, la lettre
+      s'écrit dans une puce. Le texte lu reste la lettre, ou « — ». */
+  lettresEnPuces?: boolean;
 }
 
 /** Grille accessible commune : en-têtes de colonnes et de lignes, une liste nommée « <ligne> – <colonne> » par case,
@@ -166,6 +170,7 @@ export function GrilleRaci({
   mots = MOTS_ACTIVITES,
   taille = 'xs',
   className,
+  lettresEnPuces = false,
 }: GrilleRaciProps) {
   const controles = new Map(liste.map((c) => [c.activite, c]));
   return (
@@ -261,7 +266,7 @@ export function GrilleRaci({
                 {colonnes.map((col) => {
                   const lettre = lettreRaci(contenu, act.id, col.id);
                   return (
-                    <Table.Td key={col.id}>
+                    <Table.Td key={col.id} data-lettre={(lettresEnPuces && lettre) || undefined}>
                       {modifiable ? (
                         <NativeSelect
                           size={taille}
@@ -279,13 +284,21 @@ export function GrilleRaci({
                             )
                           }
                         />
+                      ) : lettresEnPuces ? (
+                        <span className="raci-puce" data-lettre={lettre ?? undefined}>
+                          {lettre ?? '—'}
+                        </span>
                       ) : (
                         (lettre ?? '—')
                       )}
                     </Table.Td>
                   );
                 })}
-                <Table.Td>
+                <Table.Td
+                  data-controle={
+                    lettresEnPuces && controle ? (controle.ecarts.length ? 'a-revoir' : 'conforme') : undefined
+                  }
+                >
                   {controle && (
                     <StatusChip etat={controle.ecarts.length ? 'attention' : 'succes'}>
                       {libelleControleRaci(controle)}

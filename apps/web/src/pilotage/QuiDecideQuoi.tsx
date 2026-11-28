@@ -11,7 +11,7 @@ import { useId, useState } from 'react';
 import { RACI_DECISIONS_LETTRES_LIBELLES, type MatriceDecisionsReponse } from '@suivi/shared';
 import { ErrorAlert } from '@suivi/ui';
 import { api, ApiError, get } from '../api';
-import { useCan } from '../session';
+import { useCan, useMe } from '../session';
 import { GrilleRaci, LegendeRaci, ResumeControleRaci, type MotsRaci } from './MatriceRaci';
 import {
   ajouterDecision,
@@ -23,6 +23,7 @@ import {
   peutAjouterDecision,
   rolesRetiresAvecLettres,
 } from './qui-decide-quoi';
+import { ANCRE_QUI_DECIDE_QUOI } from './role-verre';
 import type { ContenuRaci } from './raci';
 
 export const MOTS_DECISIONS: MotsRaci = {
@@ -32,7 +33,10 @@ export const MOTS_DECISIONS: MotsRaci = {
   laLigne: 'la décision',
   laColonne: 'le rôle',
 };
-const cle = (smsi: string) => ['grc', smsi, 'responsabilites-raci'];
+/** Clé de cache et adresse de la matrice d'un périmètre, partagées avec la fenêtre d'un rôle en style « Verre ». */
+export const cleQuiDecideQuoi = (smsi: string) => ['grc', smsi, 'responsabilites-raci'];
+export const urlQuiDecideQuoi = (smsi: string) => `/api/grc/${smsi}/pilotage/responsabilites/raci`;
+const cle = cleQuiDecideQuoi;
 
 /** Note du résumé : rôles retirés dont les lettres sont gardées hors du contrôle. */
 export function NoteRolesRetires({ nombre }: { nombre: number }) {
@@ -51,10 +55,12 @@ export function QuiDecideQuoi({ smsi }: { smsi: string }) {
     qc = useQueryClient(),
     titre = useId(),
     modifiable = can('pilotage', 'modifier'),
+    // Style « Verre » : panneau de verre et lettres en puces colorées (verre-roles.css) ; mêmes opérations et règles.
+    verre = useMe().appearance.style === 'verre',
     [brouillon, setBrouillon] = useState<{ version: number; contenu: ContenuRaci } | null>(null),
     [erreur, setErreur] = useState<unknown>(null),
     [envoi, setEnvoi] = useState(false);
-  const url = `/api/grc/${smsi}/pilotage/responsabilites/raci`;
+  const url = urlQuiDecideQuoi(smsi);
   const lue = useQuery({ queryKey: cle(smsi), queryFn: () => get<MatriceDecisionsReponse>(url) });
   const roles = lue.data?.roles ?? [];
   const matrice = lue.data?.matrice ?? null;
@@ -89,7 +95,8 @@ export function QuiDecideQuoi({ smsi }: { smsi: string }) {
   };
   const conflit = erreur instanceof ApiError && erreur.status === 412;
   return (
-    <section className="qui-decide-quoi" aria-labelledby={titre}>
+    // Ancre de « Voir la matrice complète » (fenêtre d'un rôle, style « Verre ») : la section reçoit le focus à l'arrivée.
+    <section className="qui-decide-quoi" id={ANCRE_QUI_DECIDE_QUOI} tabIndex={-1} aria-labelledby={titre}>
       <Stack gap="sm">
         <Title order={2} size="h3" id={titre}>
           Qui décide quoi
@@ -131,6 +138,7 @@ export function QuiDecideQuoi({ smsi }: { smsi: string }) {
                   onChange={modifier}
                   mots={MOTS_DECISIONS}
                   taille="sm"
+                  lettresEnPuces={verre}
                 />
                 <ResumeControleRaci
                   contenu={contenu}

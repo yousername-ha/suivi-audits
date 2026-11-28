@@ -38,6 +38,8 @@ import '@suivi/ui/neon-vulnerabilites.css';
 import '@suivi/ui/verre.css';
 // Complément « Verre » de la famille Documents (dessins validés par le RSSI le 28/11/2026), mêmes règles que verre.css.
 import '@suivi/ui/verre-documents.css';
+// Complément « Verre » des rôles et responsabilités (fenêtre d'un rôle, matrice « Qui décide quoi »), 28/11/2026.
+import '@suivi/ui/verre-roles.css';
 import { FichesSansDefilement } from './components/FichesSansDefilement';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';

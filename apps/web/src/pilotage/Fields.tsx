@@ -127,6 +127,19 @@ function ReferentielsAudites({
   );
 }
 
+/** Champs dans l'ordre demandé (`ordre`), puis les autres dans leur ordre d'origine ; sans ordre, la liste telle quelle. */
+export function ordonnerChamps<T extends { key: string }>(champs: readonly T[], ordre?: readonly string[]): T[] {
+  if (!ordre?.length) return [...champs];
+  const rang = (k: string) => {
+    const i = ordre.indexOf(k);
+    return i < 0 ? ordre.length : i;
+  };
+  return champs
+    .map((c, i) => ({ c, i }))
+    .sort((a, b) => rang(a.c.key) - rang(b.c.key) || a.i - b.i)
+    .map((x) => x.c);
+}
+
 export function Fields({
   kind,
   data,
@@ -135,6 +148,7 @@ export function Fields({
   readonly = false,
   smsi,
   champActif,
+  ordre,
 }: {
   kind: GrcKind;
   data: Record<string, unknown>;
@@ -144,17 +158,22 @@ export function Fields({
   smsi?: string;
   /** Champ texte qui reçoit le curseur à l'ouverture de la fenêtre (attribut data-autofocus lu par Mantine). */
   champActif?: string;
+  /** Ordre d'affichage des champs (fenêtre d'un rôle en style « Verre ») ; par défaut, celui de PILOTAGE_FIELDS. */
+  ordre?: readonly string[];
 }) {
   const pertinence = usePertinence(kind === 'sr_ov' ? smsi : undefined, data.studyRef);
   // Avec une matrice épinglée par l'étude, motivation et ressources se choisissent sur ses échelles : les anciens champs
   // à quatre niveaux ne sont plus proposés (leurs valeurs déjà saisies restent conservées).
   const gravite = useGravite(kind === 'feared_event' ? smsi : undefined, data.studyRef);
   const echelle = useEchelleScenario(smsi, kind, data.studyRef);
-  const fields = (PILOTAGE_FIELDS[kind] ?? []).filter(
-    (f) =>
-      !(pertinence && kind === 'sr_ov' && ['motivation', 'resources'].includes(f.key)) &&
-      !(gravite && kind === 'feared_event' && f.key === 'gravity') &&
-      !(echelle && estScenario(kind) && f.key === ancienChamp(kind)),
+  const fields = ordonnerChamps(
+    (PILOTAGE_FIELDS[kind] ?? []).filter(
+      (f) =>
+        !(pertinence && kind === 'sr_ov' && ['motivation', 'resources'].includes(f.key)) &&
+        !(gravite && kind === 'feared_event' && f.key === 'gravity') &&
+        !(echelle && estScenario(kind) && f.key === ancienChamp(kind)),
+    ),
+    ordre,
   );
   const input = (f: PilotageField) => {
     const value = data[f.key];
@@ -263,6 +282,7 @@ export function Fields({
         value={String(value ?? '')}
         onChange={(e) => onChange(f.key, e.currentTarget.value)}
         disabled={readonly}
+        wrapperProps={{ 'data-champ': f.key }}
         data-autofocus={(!readonly && champActif === f.key) || undefined}
       />
     );

@@ -3657,9 +3657,27 @@ html[data-style='verre'] .fsv-raci {
   background: var(--verre-surface);
   box-shadow: var(--verre-reflet);
 }
-html[data-style='verre'] .fsv-raci .mantine-Alert-root[data-variant='light'] {
-  border: 1px solid color-mix(in srgb, var(--verre-ambre) 35%, transparent);
-  border-radius: 0.75rem;
+/* Résumé « Contrôle de la matrice » (matrice RACI d'un fournisseur et « Qui décide quoi », même composant) : alerte de
+   verre translucide au lieu de l'aplat orange du thème, comme l'alerte de saisie d'un indicateur (.indv-alerte). Mantine
+   ne pose aucun attribut de variante sur l'alerte : la teinte se lit dans ses variables (orange : à revoir, suivi :
+   conforme). */
+html[data-style='verre'] :is(.fsv-raci, .qui-decide-quoi) .mantine-Alert-root {
+  --raci-alerte: var(--verre-ambre);
+  border: 1px solid color-mix(in srgb, var(--raci-alerte) 40%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--raci-alerte) 12%, transparent);
+  color: var(--verre-texte);
+}
+html[data-style='verre'] :is(.fsv-raci, .qui-decide-quoi) .mantine-Alert-root[style*='--mantine-color-suivi-'] {
+  --raci-alerte: var(--verre-vert);
+}
+html[data-style='verre'] :is(.fsv-raci, .qui-decide-quoi) .mantine-Alert-root .mantine-Alert-title {
+  color: var(--raci-alerte);
+  font-weight: 700;
+}
+html[data-style='verre'] :is(.fsv-raci, .qui-decide-quoi) .mantine-Alert-root .mantine-Alert-message {
+  color: var(--verre-texte);
+  font-weight: 500;
 }
 
 /* Fenêtre d'un indicateur : verre teinté sarcelle → violet, en-tête sans filet, onglets à droite des puces. */

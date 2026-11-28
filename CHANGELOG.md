@@ -53,6 +53,26 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Modifié
 
+- **Rôles et responsabilités dans le style « Verre »** (décisions du RSSI du 28/11/2026, dessin « FicheRole » ; les styles
+  « Sauge » et « Clair bleuté » restent inchangés). La fenêtre d'un rôle prend le dessin validé : en-tête à pastille
+  violette, nom du rôle, puces « Titulaire désigné » et « Suppléant désigné » (seulement si renseignés) et onglets
+  habituels ; à gauche, bloc « Le rôle » : les champs du registre en creux sur deux colonnes (rôle et responsabilités sur
+  toute la largeur ; intitulé, description et responsable gardés) ; à droite, bloc « Matrice RACI » : les lettres de ce rôle
+  dans la matrice « Qui décide quoi » du périmètre, en lecture (décision et lettre en puce : R violet, A ambre, C et I
+  gris), lien « Voir la matrice complète » qui ferme la fenêtre et descend à la matrice de la page, texte court quand
+  aucune décision n'est saisie. Pied : « Rôles et responsabilités — périmètre · modifié par … le … », chaque partie
+  seulement si la fiche la porte, puis « Archiver la fiche », « Fermer » et « Enregistrer » (bouton principal violet). Mêmes champs, même
+  enregistrement (`If-Match`), même archivage et mêmes droits. La matrice « Qui décide quoi » de la page passe en panneau de
+  verre, lettres en puces colorées, colonne « Contrôle » en vert (conforme) ou ambre (à revoir) ; mêmes opérations, même
+  règle. Le résumé « Contrôle de la matrice » de cette matrice et de la matrice RACI des fournisseurs devient une alerte
+  de verre translucide, ambre à revoir et verte conforme, au lieu de l'aplat orange. Feuille `packages/ui/src/verre-roles.css`, limitée à `html[data-style='verre']`. Aucune route d'API ni migration.
+  (session « Projet audit_suivi Coeur »)
+- **Périmètre et contexte en dossier : commandes de l'en-tête** (décisions du RSSI du 28/11/2026, dans tous les styles) :
+  « Historique de la fiche » ouvre la fiche sur son onglet Historique ; avec une seule fiche, « Ajouter une fiche de
+  contexte » est rangé dans le menu rond « ⋯ » (« Autres actions pour … ») ; sans fiche, « Décrire le contexte » reste
+  visible ; avec plusieurs, le bouton reste à côté du choix de la fiche ; en consultation seule, le bouton principal devient
+  « Afficher la fiche », qui ouvre la fiche sans édition. Règles réunies dans une fonction testée ; comportement inchangé
+  depuis le dossier du 27/11/2026. (session « Projet audit_suivi Coeur »)
 - **Documents et liens, Import et rapports, Exports Excel aux dessins validés, dans le style « Verre »** (décisions du
   RSSI du 28/11/2026 ; les styles « Sauge » et « Clair bleuté » restent inchangés). Documents : quatre tuiles (documents,
   rattachés, à revoir = non modifiés depuis plus d'un an, confidentiels), liste en lignes de verre (type de fichier,

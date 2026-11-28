@@ -26,7 +26,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { api, get } from '../api';
 import { ErrorAlert } from '../components/common';
-import { useCan } from '../session';
+import { useCan, useMe } from '../session';
 import { Fields, type Source } from './Fields';
 import { Relations } from '../grc/Relations';
 import { MigrationEtude } from '../config-grc/MigrationEtude';
@@ -34,6 +34,8 @@ import { SelecteurResponsable, useResponsables } from '../components/selecteurs'
 import { SelecteurRegistre } from '../registres/SelecteurRegistre';
 import { ContextPresentation } from './ContextPresentation';
 import { PartiePresentation } from './PartiePresentation';
+import { FicheRoleVerre } from './FicheRoleVerre';
+import { ORDRE_CHAMPS_ROLE } from './role-verre';
 
 /** Lecture distincte (refonte Neon, ADR 0093, décision du RSSI du 13/11/2026) : une fiche existante de ces types s'ouvre
     d'abord en présentation ; « Modifier » ouvre le formulaire ci-dessous. Les autres types gardent leur ouverture. */
@@ -64,7 +66,9 @@ export function RecordEditor({
   vue?: VueFiche;
 }) {
   const can = useCan(),
-    qc = useQueryClient();
+    qc = useQueryClient(),
+    // Style « Verre » : la fiche d'un rôle prend la fenêtre du dessin FicheRole (28/11/2026), mêmes champs et écritures.
+    roleVerre = useMe().appearance.style === 'verre' && kind === 'governance';
   const [name, setName] = useState(''),
     [data, setData] = useState<Record<string, unknown>>({}),
     [search, setSearch] = useState(''),
@@ -189,25 +193,23 @@ export function RecordEditor({
   for (const ref of refs)
     if (!options.some((s) => s.ref === ref)) options.push({ ref, name: 'Référence déjà liée', kind: '' });
   const archivable = !!object && !object.id.startsWith('legacy:') && can(GRC_MODULES[kind], 'supprimer');
-  const commandeArchivage = archivable && (
-    <div>
-      {!archivage ? (
-        <Button variant="subtle" onClick={() => setArchivage(true)}>
-          Archiver la fiche
-        </Button>
-      ) : (
-        <Alert>
-          <Text>Confirmer l’archivage ? Les décisions, preuves et historiques sont conservés.</Text>
-          <Group gap="xs">
-            <Button onClick={() => void archiver()}>Confirmer l’archivage</Button>
-            <Button variant="subtle" onClick={() => setArchivage(false)}>
-              Annuler
-            </Button>
-          </Group>
-        </Alert>
-      )}
-    </div>
+  const boutonArchiver = (
+    <Button variant={roleVerre ? 'default' : 'subtle'} onClick={() => setArchivage(true)}>
+      Archiver la fiche
+    </Button>
   );
+  const confirmationArchivage = (
+    <Alert>
+      <Text>Confirmer l’archivage ? Les décisions, preuves et historiques sont conservés.</Text>
+      <Group gap="xs">
+        <Button onClick={() => void archiver()}>Confirmer l’archivage</Button>
+        <Button variant="subtle" onClick={() => setArchivage(false)}>
+          Annuler
+        </Button>
+      </Group>
+    </Alert>
+  );
+  const commandeArchivage = archivable && <div>{!archivage ? boutonArchiver : confirmationArchivage}</div>;
   const lectureDistincte = LECTURE_DISTINCTE.includes(kind) && !!object;
   if (lectureDistincte && object && (!modification || readonly)) {
     const responsable = owners.data?.find((o) => o.id === object.data.ownerId);
@@ -242,6 +244,140 @@ export function RecordEditor({
       <PartiePresentation {...presentation} />
     );
   }
+  // Champs et onglets de la fiche, communs à la fenêtre habituelle et à celle d'un rôle en style « Verre » (mêmes
+  // valeurs, mêmes écritures, mêmes droits) ; seule leur disposition change.
+  const erreurFiche = <ErrorAlert error={error ?? sources.error ?? owners.error} />;
+  const alerteVerification = object &&
+    ['validated', 'effectiveness'].includes(String(object.data.status)) &&
+    !readonly && (
+      <Alert>Une modification demande une nouvelle vérification. Les décisions précédentes restent conservées.</Alert>
+    );
+  const noteLectureSeule = readonly && <Text>Cette fiche est consultable en lecture seule.</Text>;
+  const champIntitule = (
+    <TextInput label="Intitulé" value={name} onChange={(e) => setName(e.currentTarget.value)} disabled={readonly} />
+  );
+  const champDescription = (
+    <Textarea
+      label="Description"
+      value={String(data.description ?? '')}
+      onChange={(e) => set('description', e.currentTarget.value)}
+      disabled={readonly}
+    />
+  );
+  const champRegistre = (
+    <SelecteurRegistre
+      smsi={smsi}
+      kind={kind}
+      data={data}
+      object={object}
+      value={registreId}
+      onChange={setRegistreId}
+      disabled={readonly}
+    />
+  );
+  const champResponsable = (
+    <SelecteurResponsable
+      smsi={smsi}
+      value={typeof data.ownerId === 'string' ? data.ownerId : null}
+      onChange={(v) => set('ownerId', v)}
+      disabled={readonly}
+    />
+  );
+  const champsMetier = (
+    <Fields
+      kind={kind}
+      data={data}
+      onChange={set}
+      sources={options}
+      readonly={readonly}
+      smsi={smsi}
+      champActif={vue?.champ}
+      ordre={roleVerre ? ORDRE_CHAMPS_ROLE : undefined}
+    />
+  );
+  const ongletLiens = (
+    <Stack>
+      <APropos label="Aide et précisions">
+        <Text>Reliez les référentiels, exigences, processus, actifs, risques ou documents déjà présents.</Text>
+      </APropos>
+      <BarreFiltres label="Rechercher une référence">
+        <TextInput label="Rechercher une référence" value={search} onChange={(e) => setSearch(e.currentTarget.value)} />
+      </BarreFiltres>
+      <MultiSelect
+        label="Éléments liés"
+        searchable
+        data={options.map((s) => ({ value: s.ref, label: s.name }))}
+        value={refs}
+        onChange={(v) => set('refs', v)}
+        disabled={readonly}
+      />
+      {object && (
+        <Relations
+          smsi={smsi}
+          source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id}
+          sourceKind={object.id.startsWith('legacy:') ? undefined : kind}
+        />
+      )}
+    </Stack>
+  );
+  const ongletHistorique = (
+    <Stack>
+      <ErrorAlert error={history.error} />
+      {object?.id.startsWith('legacy:') && (
+        <Text>
+          La fiche reste dans la source historique. Les réalisations et validations sont consultables depuis le
+          registre.
+        </Text>
+      )}
+      {history.data?.map((h) => (
+        <Text key={h.version}>
+          Version {h.version} · {new Date(h.createdAt).toLocaleString('fr-FR')} · {h.createdBy} · {h.reason}
+        </Text>
+      ))}
+    </Stack>
+  );
+  // Style « Verre », fenêtre d'un rôle : bouton principal plein (violet de verre.css) ; ailleurs, la variante du thème.
+  const boutonEnregistrer = !readonly && (
+    <Button
+      variant={roleVerre ? 'filled' : undefined}
+      loading={saving}
+      disabled={!name.trim()}
+      onClick={() => void save()}
+    >
+      Enregistrer
+    </Button>
+  );
+  if (roleVerre)
+    return (
+      <FicheRoleVerre
+        smsi={smsi}
+        object={object}
+        opened={opened}
+        onClose={onClose}
+        titre={object ? object.name : `Ajouter — ${GRC_LABELS[kind]}`}
+        avertissements={
+          <>
+            {erreurFiche}
+            {alerteVerification}
+            {noteLectureSeule}
+          </>
+        }
+        intitule={champIntitule}
+        champs={champsMetier}
+        complements={
+          <>
+            {champDescription}
+            {champRegistre}
+            {champResponsable}
+          </>
+        }
+        liens={ongletLiens}
+        historique={ongletHistorique}
+        archiver={archivable && !archivage && boutonArchiver}
+        confirmationArchivage={archivable && archivage && confirmationArchivage}
+        enregistrer={boutonEnregistrer}
+      />
+    );
   return (
     <Modal
       opened={opened}
@@ -252,13 +388,9 @@ export function RecordEditor({
       classNames={{ content: 'fenetre-fiche', body: 'fenetre-fiche-corps' }}
     >
       <Stack>
-        <ErrorAlert error={error ?? sources.error ?? owners.error} />
-        {object && ['validated', 'effectiveness'].includes(String(object.data.status)) && !readonly && (
-          <Alert>
-            Une modification demande une nouvelle vérification. Les décisions précédentes restent conservées.
-          </Alert>
-        )}
-        {readonly && <Text>Cette fiche est consultable en lecture seule.</Text>}
+        {erreurFiche}
+        {alerteVerification}
+        {noteLectureSeule}
         <Tabs defaultValue="details" keepMounted>
           <Tabs.List>
             <Tabs.Tab value="details">Informations</Tabs.Tab>
@@ -267,42 +399,11 @@ export function RecordEditor({
           </Tabs.List>
           <Tabs.Panel value="details" pt="md">
             <Stack className="fenetre-formulaire">
-              <TextInput
-                label="Intitulé"
-                value={name}
-                onChange={(e) => setName(e.currentTarget.value)}
-                disabled={readonly}
-              />
-              <Textarea
-                label="Description"
-                value={String(data.description ?? '')}
-                onChange={(e) => set('description', e.currentTarget.value)}
-                disabled={readonly}
-              />
-              <SelecteurRegistre
-                smsi={smsi}
-                kind={kind}
-                data={data}
-                object={object}
-                value={registreId}
-                onChange={setRegistreId}
-                disabled={readonly}
-              />
-              <SelecteurResponsable
-                smsi={smsi}
-                value={typeof data.ownerId === 'string' ? data.ownerId : null}
-                onChange={(v) => set('ownerId', v)}
-                disabled={readonly}
-              />
-              <Fields
-                kind={kind}
-                data={data}
-                onChange={set}
-                sources={options}
-                readonly={readonly}
-                smsi={smsi}
-                champActif={vue?.champ}
-              />
+              {champIntitule}
+              {champDescription}
+              {champRegistre}
+              {champResponsable}
+              {champsMetier}
               {kind === 'risk_study' && object && !object.id.startsWith('legacy:') && (
                 <MigrationEtude smsi={smsi} study={object} readonly={readonly} onDone={onClose} />
               )}
@@ -340,49 +441,10 @@ export function RecordEditor({
             </Stack>
           </Tabs.Panel>
           <Tabs.Panel value="links" pt="md">
-            <Stack>
-              <APropos label="Aide et précisions">
-                <Text>Reliez les référentiels, exigences, processus, actifs, risques ou documents déjà présents.</Text>
-              </APropos>
-              <BarreFiltres label="Rechercher une référence">
-                <TextInput
-                  label="Rechercher une référence"
-                  value={search}
-                  onChange={(e) => setSearch(e.currentTarget.value)}
-                />
-              </BarreFiltres>
-              <MultiSelect
-                label="Éléments liés"
-                searchable
-                data={options.map((s) => ({ value: s.ref, label: s.name }))}
-                value={refs}
-                onChange={(v) => set('refs', v)}
-                disabled={readonly}
-              />
-              {object && (
-                <Relations
-                  smsi={smsi}
-                  source={object.id.startsWith('legacy:') ? object.id : 'object:' + object.id}
-                  sourceKind={object.id.startsWith('legacy:') ? undefined : kind}
-                />
-              )}
-            </Stack>
+            {ongletLiens}
           </Tabs.Panel>
           <Tabs.Panel value="history" pt="md">
-            <Stack>
-              <ErrorAlert error={history.error} />
-              {object?.id.startsWith('legacy:') && (
-                <Text>
-                  La fiche reste dans la source historique. Les réalisations et validations sont consultables depuis le
-                  registre.
-                </Text>
-              )}
-              {history.data?.map((h) => (
-                <Text key={h.version}>
-                  Version {h.version} · {new Date(h.createdAt).toLocaleString('fr-FR')} · {h.createdBy} · {h.reason}
-                </Text>
-              ))}
-            </Stack>
+            {ongletHistorique}
           </Tabs.Panel>
         </Tabs>
         {commandeArchivage}
@@ -397,11 +459,7 @@ export function RecordEditor({
               Fermer
             </Button>
           )}
-          {!readonly && (
-            <Button loading={saving} disabled={!name.trim()} onClick={() => void save()}>
-              Enregistrer
-            </Button>
-          )}
+          {boutonEnregistrer}
         </Group>
       </Stack>
     </Modal>

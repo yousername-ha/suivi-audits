@@ -4,6 +4,7 @@
    registre, modifiée par sa fenêtre habituelle. */
 import { PILOTAGE_FIELDS, jourParis, type GrcObject } from '@suivi/shared';
 import { dateConnue } from './categories-contexte';
+import type { VueFiche } from './RecordEditor';
 
 /** Ce que l'on attend d'une rubrique encore vide (clauses 4.1 et 4.3 de l'ISO/IEC 27001). */
 export const AIDES_RUBRIQUES: Record<string, string> = {
@@ -94,4 +95,20 @@ export function ficheAffichee(fiches: GrcObject[], choisie: string | null): GrcO
 export function dateMiseAJour(updatedAt: string | null | undefined): string | null {
   const connue = dateConnue(updatedAt);
   return connue ? jourParis(new Date(connue)).split('-').reverse().join('/') : null;
+}
+
+/** Commandes de l'en-tête du dossier (décisions du RSSI du 28/11/2026) : « Historique de la fiche » ouvre la fiche sur
+    son onglet Historique (versions) ; avec une seule fiche, « Ajouter une fiche de contexte » est rangé dans le menu « ⋯ »
+    (Autres actions) ; avec plusieurs, il reste un bouton à côté du choix de la fiche ; sans fiche, « Décrire le
+    contexte » reste visible. Sans le droit de modifier : aucun ajout, et le bouton principal devient « Afficher la
+    fiche », qui ouvre la fiche sans édition (ouverture habituelle, présentation en lecture seule). */
+export function commandesDossier(writable: boolean, nombreFiches: number) {
+  const historique: VueFiche = { onglet: 'history' };
+  return {
+    historique,
+    principal: writable ? 'Modifier la fiche' : 'Afficher la fiche',
+    decrire: writable && nombreFiches === 0,
+    ajoutDansMenu: writable && nombreFiches === 1,
+    ajoutBouton: writable && nombreFiches > 1,
+  };
 }
