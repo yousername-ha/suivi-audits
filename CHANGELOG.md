@@ -55,11 +55,20 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   RSSI du 28/11/2026 ; les styles « Sauge » et « Clair bleuté » restent inchangés). Documents : quatre tuiles (documents,
   rattachés, à revoir = non modifiés depuis plus d'un an, confidentiels), liste en lignes de verre (type de fichier,
   catégorie, version, taille, rattachements, classification, date), filtres par classification, panneau du document
-  choisi (rattachements, étiquettes, frise des versions, télécharger, nouvelle version, fiche) et zone de dépôt ; l'onglet
-  Liens garde son rendu. Import et rapports : import en trois étapes (choisir, simuler, appliquer), « Appliquer » actif
+  choisi (rattachements, étiquettes, frise des versions, télécharger, nouvelle version, fiche) et zone de dépôt. Import et rapports : import en trois étapes (choisir, simuler, appliquer), « Appliquer » actif
   seulement quand la simulation l'autorise, motifs d'un refus ligne à ligne ; export d'un référentiel, rapport de pilotage
   et modèles fictifs en cartes. Exports Excel : une carte par rubrique (nombre de feuilles, Classique, Pro), export
   complet mis en avant. Mêmes appels d'API qu'avant ; aucune route ni migration. (session « Projet audit_suivi Coeur »)
+- **Onglet Liens de Documents et liens au dessin validé, dans le style « Verre »** (dessin DocLiens validé par le RSSI le
+  28/11/2026 ; les styles « Sauge » et « Clair bleuté » restent inchangés). Quatre tuiles (liens et genres présents,
+  rattachés sur le total, partages réseau, sites web), genre déduit de l'adresse (site web `http(s)://`, partage
+  `\\serveur\…` ou `smb://`, fichier `file://`, autre adresse neutre), liste en lignes de verre (icône du genre, titre,
+  adresse en police fixe, deux rattachements puis « +N », catégorie, date), puces de filtre par genre avec leur nombre,
+  recherche à partir de 8 liens, tri inchangé ; panneau du lien choisi (adresse complète à copier, description,
+  rattachements, étiquettes, « Ouvrir le lien » comme avant : l'adresse enregistrée dans un nouvel onglet, modification
+  par la même fenêtre, suppression avec le même droit) ; « Ajouter un lien » dans l'en-tête de l'onglet ; le lien choisi
+  suit l'adresse de la page (`/documents?lien=…`). Mêmes appels d'API ; aucune route ni migration. (session « Projet
+  audit_suivi Coeur »)
 - **Tableau de bord du style « Verre » : plusieurs méthodes de risque, points sensibles, état des actions** (décisions du
   RSSI du 28/11/2026 ; les styles « Sauge » et « Clair bleuté » restent inchangés). Niveau de risque : une grille par
   méthode d'appréciation à matrice utilisée par les risques lisibles, de la plus utilisée à la moins utilisée ; à partir

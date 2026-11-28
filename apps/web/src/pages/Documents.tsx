@@ -3,8 +3,10 @@
    rattachements) à partir de 2560 px.
    Style « Verre » (dessin DocDocuments validé par le RSSI le 28/11/2026, DocumentsVerre.tsx) : onglets en rail avec leur
    nombre, quatre tuiles, liste en lignes de verre avec puces de classification et corbeille, document choisi à droite
-   (le premier par défaut), zone de dépôt par glisser-déposer ; la fiche existante s'ouvre dans un tiroir. Les autres
-   styles gardent le rendu ci-dessous. */
+   (le premier par défaut), zone de dépôt par glisser-déposer ; la fiche existante s'ouvre dans un tiroir. Onglet Liens
+   (dessin DocLiens validé par le RSSI le 28/11/2026, LiensVerre.tsx) : quatre tuiles, liste en lignes de verre avec puces
+   de genre (site web, partage, fichier), lien choisi à droite (le premier par défaut, sinon celui de l'adresse
+   /documents?lien=…), même fenêtre d'ajout et de modification. Les autres styles gardent le rendu ci-dessous. */
 import {
   Alert,
   Anchor,
@@ -43,7 +45,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Page, PageHeader } from '@suivi/ui';
 import { useMediaQuery } from '@mantine/hooks';
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, ApiError, download, errorMessage, get } from '../api';
 import {
   BoiteOutils,
@@ -61,6 +63,8 @@ import { ficheCliquable } from '../fiche-cliquable';
 import { DataTable } from '@suivi/ui';
 import { filtrerClassification, pucesClassification, tuilesDocuments } from './documents-verre';
 import { ListeDocumentsVerre, PanneauDocumentVerre, TuilesDocumentsVerre, ZoneDepotVerre } from './DocumentsVerre';
+import { filtrerGenre, pucesGenre, tuilesLiens } from './liens-verre';
+import { ListeLiensVerre, PanneauLienVerre, TuilesLiensVerre } from './LiensVerre';
 
 interface Ref {
   ref: string;
@@ -321,7 +325,8 @@ function DocumentsPageClassique() {
 
 /* ---------------------------------------------------------------- Style « Verre » */
 /** Page en style « Verre » : mêmes requêtes, mêmes droits et même fiche que le rendu classique. Le document montré à
-    droite est celui de l'adresse (/documents/:id), à défaut le premier de la liste affichée. */
+    droite est celui de l'adresse (/documents/:id), à défaut le premier de la liste affichée ; de même pour le lien
+    (/documents?lien=…), qui ouvre l'onglet Liens. */
 function DocumentsPageVerre() {
   const can = useCan();
   const canWrite = can('documents', 'modifier');
@@ -330,8 +335,11 @@ function DocumentsPageVerre() {
   const { id } = useParams();
   const nav = useNavigate();
   const qc = useQueryClient();
+  const [adresse] = useSearchParams();
+  const lienId = adresse.get('lien') ?? undefined;
   usePresence(id ? `documents/${id}` : 'documents');
-  const [tab, setTab] = useState<string | null>('docs');
+  const [tab, setTab] = useState<string | null>(lienId ? 'links' : 'docs');
+  const [lienEdite, setLienEdite] = useState<LienEdite | null>(null);
   const [fiche, setFiche] = useState(false);
   const [q, setQ] = useState('');
   const [category, setCategory] = useState<string | null>(null);
@@ -421,11 +429,24 @@ function DocumentsPageVerre() {
                 )}
               </FileButton>
             )}
+            {canWrite && tab === 'links' && (
+              <Button variant="filled" onClick={() => setLienEdite({ refs: [], tags: [] })}>
+                Ajouter un lien
+              </Button>
+            )}
             <PresenceBar resource="documents" />
           </>
         }
       />
-      <Tabs value={tab} onChange={setTab} className="docv-onglets">
+      <Tabs
+        value={tab}
+        onChange={(v) => {
+          setTab(v);
+          // Le lien choisi n'est gardé dans l'adresse que sur l'onglet Liens (un rechargement rouvre le bon onglet).
+          if (v === 'docs' && lienId) nav(id ? `/documents/${id}` : '/documents', { replace: true });
+        }}
+        className="docv-onglets"
+      >
         <Tabs.List aria-label="Documents et liens">
           <Tabs.Tab value="docs">Documents{nombre(registre.data?.length)}</Tabs.Tab>
           <Tabs.Tab value="links">Liens{nombre(liens.data?.length)}</Tabs.Tab>
@@ -544,9 +565,16 @@ function DocumentsPageVerre() {
           </Stack>
         </Tabs.Panel>
         <Tabs.Panel value="links" pt="md">
-          <LinkList canWrite={canWrite} />
+          <LiensPageVerre
+            canWrite={canWrite}
+            canDelete={canDelete}
+            choisi={lienId}
+            onChoisir={(lien) => nav(`/documents?lien=${encodeURIComponent(lien)}`)}
+            onModifier={(l) => setLienEdite({ ...l })}
+          />
         </Tabs.Panel>
       </Tabs>
+      <FenetreLien edit={lienEdite} setEdit={setLienEdite} />
       <Drawer
         opened={fiche && !!choisi}
         onClose={() => setFiche(false)}
@@ -1106,31 +1134,14 @@ function DocumentAnnexe({ id }: { id: string }) {
 }
 
 /* ---------------------------------------------------------------- Liens */
-function LinkList({ canWrite }: { canWrite: boolean }) {
-  const canDelete = useCan()('documents', 'supprimer');
+type LienEdite = Partial<LinkOut> & { refs: string[]; tags: string[] };
+
+/** Fenêtre d'ajout ou de modification d'un lien (rendu classique et style « Verre ») : mêmes champs, même appel, même
+    contrôle de concurrence (If-Match). `edit` vide : fenêtre fermée. */
+function FenetreLien({ edit, setEdit }: { edit: LienEdite | null; setEdit: (e: LienEdite | null) => void }) {
   const qc = useQueryClient();
   const refs = useRefs();
-  const [q, setQ] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [tri, setTri] = useState<'modifie' | 'titre' | 'categorie'>('modifie');
-  const etiquettes = useEtiquettes('liens');
   const suggestions = useEtiquettes('tous');
-  const params = new URLSearchParams({
-    ...(q ? { q } : {}),
-    ...(tags.length ? { tags: tags.join(',') } : {}),
-    tri,
-  });
-  const list = useQuery({
-    queryKey: ['links', params.toString()],
-    queryFn: () => get<LinkOut[]>(`/api/links?${params}`),
-  });
-  // Liste sans recherche ni étiquette (même requête que la liste quand rien n'est filtré) : seuil de la recherche.
-  const paramsBase = new URLSearchParams({ tri });
-  const base = useQuery({
-    queryKey: ['links', paramsBase.toString()],
-    queryFn: () => get<LinkOut[]>(`/api/links?${paramsBase}`),
-  });
-  const [edit, setEdit] = useState<(Partial<LinkOut> & { refs: string[]; tags: string[] }) | null>(null);
   const [err, setErr] = useState<string | null>(null);
   usePresence(edit ? `documents/links${edit.id ? '/' + edit.id : ''}` : null, 'edit');
 
@@ -1159,6 +1170,105 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
       }
     }
   };
+
+  return (
+    <Modal
+      opened={!!edit}
+      onClose={() => setEdit(null)}
+      title={edit?.id ? 'Modifier le lien' : 'Ajouter un lien'}
+      centered
+    >
+      {edit && (
+        <Stack>
+          {err && <Alert color="red">{err}</Alert>}
+          <TextInput
+            label="Adresse"
+            description="http(s)://…, file://… ou \\serveur\partage\…"
+            required
+            value={edit.url ?? ''}
+            onChange={(e) => setEdit({ ...edit, url: e.currentTarget.value })}
+          />
+          <TextInput
+            label="Titre"
+            value={edit.title ?? ''}
+            onChange={(e) => setEdit({ ...edit, title: e.currentTarget.value })}
+          />
+          <Textarea
+            label="Description"
+            value={edit.description ?? ''}
+            onChange={(e) => setEdit({ ...edit, description: e.currentTarget.value })}
+          />
+          <TagsInput
+            label="Rattachements"
+            data={refs}
+            value={edit.refs}
+            onChange={(v) => setEdit({ ...edit, refs: v })}
+          />
+          <TagsInput
+            label="Étiquettes"
+            description="Pour classer et filtrer. Choisissez une étiquette existante ou tapez-en une nouvelle (la casse ne crée pas une autre étiquette)."
+            data={(suggestions.data ?? []).map((e) => e.tag)}
+            limit={30}
+            value={edit.tags}
+            onChange={(v) =>
+              setEdit({
+                ...edit,
+                tags: saisirEtiquettes(
+                  (suggestions.data ?? []).map((e) => e.tag),
+                  edit.tags,
+                  v,
+                ),
+              })
+            }
+          />
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setEdit(null)}>
+              Annuler
+            </Button>
+            <Button onClick={save}>Enregistrer</Button>
+          </Group>
+        </Stack>
+      )}
+    </Modal>
+  );
+}
+
+type TriLiens = 'modifie' | 'titre' | 'categorie';
+const LIBELLES_TRI_LIENS: { value: TriLiens; label: string }[] = [
+  { value: 'modifie', label: 'Dernière modification' },
+  { value: 'titre', label: 'Titre' },
+  { value: 'categorie', label: 'Catégorie' },
+];
+
+/** Liste des liens (recherche, étiquettes, tri) et liste de base sans recherche ni étiquette (même requête que la liste
+    quand rien n'est filtré) : seuil de la recherche, nombres des puces et tuiles. */
+function useListeLiens(f: { q: string; tags: string[]; tri: TriLiens }) {
+  const params = new URLSearchParams({
+    ...(f.q ? { q: f.q } : {}),
+    ...(f.tags.length ? { tags: f.tags.join(',') } : {}),
+    tri: f.tri,
+  });
+  const list = useQuery({
+    queryKey: ['links', params.toString()],
+    queryFn: () => get<LinkOut[]>(`/api/links?${params}`),
+  });
+  const paramsBase = new URLSearchParams({ tri: f.tri });
+  const base = useQuery({
+    queryKey: ['links', paramsBase.toString()],
+    queryFn: () => get<LinkOut[]>(`/api/links?${paramsBase}`),
+  });
+  return { list, base };
+}
+
+function LinkList({ canWrite }: { canWrite: boolean }) {
+  const canDelete = useCan()('documents', 'supprimer');
+  const qc = useQueryClient();
+  const [q, setQ] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tri, setTri] = useState<TriLiens>('modifie');
+  const etiquettes = useEtiquettes('liens');
+  const { list, base } = useListeLiens({ q, tags, tri });
+  const [edit, setEdit] = useState<LienEdite | null>(null);
 
   return (
     <Stack>
@@ -1197,11 +1307,7 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
         <Select
           label="Trier par"
           className="liste-outils__tri"
-          data={[
-            { value: 'modifie', label: 'Dernière modification' },
-            { value: 'titre', label: 'Titre' },
-            { value: 'categorie', label: 'Catégorie' },
-          ]}
+          data={LIBELLES_TRI_LIENS}
           value={tri}
           onChange={(v) => setTri((v as typeof tri) ?? 'modifie')}
           allowDeselect={false}
@@ -1275,64 +1381,134 @@ function LinkList({ canWrite }: { canWrite: boolean }) {
           </Table>
         </div>
       </Card>
-      <Modal
-        opened={!!edit}
-        onClose={() => setEdit(null)}
-        title={edit?.id ? 'Modifier le lien' : 'Ajouter un lien'}
-        centered
-      >
-        {edit && (
-          <Stack>
-            {err && <Alert color="red">{err}</Alert>}
-            <TextInput
-              label="Adresse"
-              description="http(s)://…, file://… ou \\serveur\partage\…"
-              required
-              value={edit.url ?? ''}
-              onChange={(e) => setEdit({ ...edit, url: e.currentTarget.value })}
-            />
-            <TextInput
-              label="Titre"
-              value={edit.title ?? ''}
-              onChange={(e) => setEdit({ ...edit, title: e.currentTarget.value })}
-            />
-            <Textarea
-              label="Description"
-              value={edit.description ?? ''}
-              onChange={(e) => setEdit({ ...edit, description: e.currentTarget.value })}
-            />
-            <TagsInput
-              label="Rattachements"
-              data={refs}
-              value={edit.refs}
-              onChange={(v) => setEdit({ ...edit, refs: v })}
-            />
-            <TagsInput
-              label="Étiquettes"
-              description="Pour classer et filtrer. Choisissez une étiquette existante ou tapez-en une nouvelle (la casse ne crée pas une autre étiquette)."
-              data={(suggestions.data ?? []).map((e) => e.tag)}
-              limit={30}
-              value={edit.tags}
-              onChange={(v) =>
-                setEdit({
-                  ...edit,
-                  tags: saisirEtiquettes(
-                    (suggestions.data ?? []).map((e) => e.tag),
-                    edit.tags,
-                    v,
-                  ),
-                })
+      <FenetreLien edit={edit} setEdit={setEdit} />
+    </Stack>
+  );
+}
+
+/* ---------------------------------------------------------------- Liens en style « Verre » */
+/** Onglet Liens en style « Verre » : mêmes requêtes et mêmes droits que le rendu classique (ajout et modification par
+    la même fenêtre, suppression avec le droit de supprimer). Le genre (site web, partage, fichier) est filtré dans le
+    navigateur ; la recherche et les étiquettes le sont par l'API, comme dans le rendu classique. */
+function LiensPageVerre({
+  canWrite,
+  canDelete,
+  choisi: demande,
+  onChoisir,
+  onModifier,
+}: {
+  canWrite: boolean;
+  canDelete: boolean;
+  /** Lien de l'adresse (/documents?lien=…), s'il y en a un. */
+  choisi: string | undefined;
+  onChoisir: (id: string) => void;
+  onModifier: (l: LinkOut) => void;
+}) {
+  const qc = useQueryClient();
+  const [q, setQ] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [genre, setGenre] = useState<string | null>(null);
+  const [tri, setTri] = useState<TriLiens>('modifie');
+  const etiquettes = useEtiquettes('liens');
+  const { list, base } = useListeLiens({ q, tags, tri });
+  const tous = base.data ?? [];
+  const affiches = filtrerGenre(list.data ?? [], genre);
+  // Lien de l'adresse s'il existe encore (même hors des filtres), à défaut le premier de la liste affichée.
+  const lien = (demande && [...tous, ...affiches].find((l) => l.id === demande)) || affiches[0];
+  const total = base.isPending ? undefined : base.data?.length;
+  const ajouterEtiquette = (t: string) => setTags((cur) => (cur.includes(t) ? cur : [...cur, t]));
+  const puces: CriterePuces[] = [
+    { cle: 'genre', libelle: 'Genre', valeur: genre, options: pucesGenre(tous), onChange: setGenre },
+  ];
+  return (
+    <Stack>
+      {base.data && <TuilesLiensVerre t={tuilesLiens(base.data)} />}
+      <div className="docv">
+        <section className="docv-liste" aria-label="Liens">
+          <BoiteOutils
+            label="Outils des liens"
+            titre={
+              total !== undefined && (
+                <h2 className="docv-liste__titre">
+                  {total} lien{total > 1 ? 's' : ''}
+                </h2>
+              )
+            }
+            total={total ?? 0}
+            affiches={affiches.length}
+            recherche={{
+              label: 'Rechercher dans les liens',
+              placeholder: 'Rechercher un lien',
+              value: q,
+              onChange: setQ,
+            }}
+            puces={puces}
+            libelleTout="Tous"
+            criteres={criteresEtiquettes(tags, setTags)}
+            onToutEffacer={() => {
+              setQ('');
+              setTags([]);
+              setGenre(null);
+            }}
+            filtres={{
+              actifs: tags.length ? 1 : 0,
+              onReinitialiser: () => setTags([]),
+              contenu: (
+                <ListeFiltreMultiple
+                  libelle="Étiquettes"
+                  description="Toutes les étiquettes cochées sont exigées."
+                  valeurs={tags}
+                  options={optionsEtiquettes(etiquettes.data)}
+                  onChange={setTags}
+                />
+              ),
+            }}
+          >
+            <Group gap="2xs" wrap="nowrap" className="docv-tri">
+              <Select
+                aria-label="Trier par"
+                className="liste-outils__tri"
+                data={LIBELLES_TRI_LIENS}
+                value={tri}
+                onChange={(v) => setTri((v as TriLiens) ?? 'modifie')}
+                allowDeselect={false}
+              />
+            </Group>
+          </BoiteOutils>
+          <ErrorAlert error={list.error} />
+          {list.data && <ListeLiensVerre liens={affiches} choisi={lien?.id} recherche={q} onChoisir={onChoisir} />}
+        </section>
+        <section className="docv-panneau" aria-label="Lien choisi">
+          {lien ? (
+            <PanneauLienVerre
+              key={lien.id}
+              l={lien}
+              onModifier={canWrite ? () => onModifier(lien) : undefined}
+              onEtiquette={ajouterEtiquette}
+              suppression={
+                canWrite &&
+                canDelete && (
+                  <ConfirmButton
+                    variant="light"
+                    message={`Supprimer le lien « ${lien.title} » ?`}
+                    onConfirm={() =>
+                      api('DELETE', `/api/links/${lien.id}`).then(() => qc.invalidateQueries({ queryKey: ['links'] }))
+                    }
+                  >
+                    Supprimer
+                  </ConfirmButton>
+                )
               }
             />
-            <Group justify="flex-end">
-              <Button variant="default" onClick={() => setEdit(null)}>
-                Annuler
-              </Button>
-              <Button onClick={save}>Enregistrer</Button>
-            </Group>
-          </Stack>
-        )}
-      </Modal>
+          ) : (
+            list.data && (
+              <Text size="sm" c="dimmed">
+                Aucun lien choisi.
+              </Text>
+            )
+          )}
+        </section>
+      </div>
     </Stack>
   );
 }
