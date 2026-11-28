@@ -411,10 +411,11 @@ function DocumentsPageVerre() {
         description="Le registre documentaire du SMSI : versions, classification et rattachements."
         actions={
           <>
+            {/* Bouton principal : variante pleine, dégradé violet des boutons principaux du style « Verre » (verre.css). */}
             {canWrite && tab === 'docs' && trash === '0' && (
               <FileButton onChange={(f) => f.length && deposer(f)} multiple>
                 {(props) => (
-                  <Button {...props} loading={uploading}>
+                  <Button {...props} variant="filled" loading={uploading}>
                     Déposer des documents
                   </Button>
                 )}

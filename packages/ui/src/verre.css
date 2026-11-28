@@ -1812,11 +1812,21 @@ html[data-style='verre'] .tdb .tdbv-courbe {
   flex-direction: column;
   gap: 0.375rem;
 }
+/* Repères de mois bornés au tracé (remarque du RSSI du 28/11/2026 : « sept. » et « nov. » débordaient de la dalle en
+   1440 × 900) : l'axe ne compte pas dans la largeur de la courbe (contain: inline-size), qui vaut donc celle du tracé ;
+   le premier repère s'aligne sur le bord gauche du tracé, le dernier sur son bord droit, sans réduire le texte. */
 html[data-style='verre'] .tdb .tdbv-axes--mois {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   justify-items: center;
   white-space: nowrap;
+  contain: inline-size;
+}
+html[data-style='verre'] .tdb .tdbv-axes--mois > :first-child {
+  justify-self: start;
+}
+html[data-style='verre'] .tdb .tdbv-axes--mois > :last-child {
+  justify-self: end;
 }
 html[data-style='verre'] .tdb .tdbv-repere,
 html[data-style='verre'] .tdb .tdbv-socle {

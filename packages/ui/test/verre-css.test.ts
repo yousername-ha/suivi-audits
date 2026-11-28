@@ -131,6 +131,19 @@ describe('verre.css : repli opaque et accessibilité', () => {
   });
 });
 
+describe('dalle « Incidents de sécurité » : repères de mois bornés au tracé', () => {
+  const corps = (prelude: string) => toutes(css).find((r) => r.prelude === prelude)?.corps ?? '';
+  it('l’axe ne compte pas dans la largeur de la courbe ; premier repère à gauche, dernier à droite ; texte non réduit', () => {
+    const axe = corps(`${PORTEE} .tdb .tdbv-axes--mois`);
+    expect(axe).toMatch(/contain:\s*inline-size;/);
+    expect(axe).toMatch(/white-space:\s*nowrap;/);
+    expect(axe).not.toMatch(/font-size/);
+    expect(corps(`${PORTEE} .tdb .tdbv-axes--mois > :first-child`)).toMatch(/justify-self:\s*start;/);
+    expect(corps(`${PORTEE} .tdb .tdbv-axes--mois > :last-child`)).toMatch(/justify-self:\s*end;/);
+    expect(corps(`${PORTEE} .tdb .tdbv-axes`)).toMatch(/font-size:\s*var\(--verre-texte-min\);/);
+  });
+});
+
 describe('dalle du tableau de bord : attribut data-dalle inerte hors du style « Verre »', () => {
   const section = (p: Parameters<typeof Dalle>[0]) => Dalle(p) as ReactElement<Record<string, unknown>>;
   it('absent quand la dalle ne le demande pas (React n’écrit pas un attribut indéfini), présent sinon', () => {

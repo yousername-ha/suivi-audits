@@ -315,4 +315,11 @@ describe('branchement sur le style d’instance', () => {
     expect(source).toContain('<Tabs.Tab value="links">Liens{nombre(liens.data?.length)}</Tabs.Tab>');
     expect(source).toContain('Corbeille{nombre(corbeille.data?.length)}');
   });
+  it('« Déposer des documents » : bouton principal plein (dégradé violet du Verre) dans l’en-tête Verre seulement', () => {
+    const verre = source.slice(source.indexOf('function DocumentsPageVerre'), source.indexOf('function DocumentList'));
+    const classique = source.slice(source.indexOf('function DocumentList'), source.indexOf('function DocumentDetail'));
+    expect(verre).toContain('<Button {...props} variant="filled" loading={uploading}>');
+    expect(classique).toContain('<Button {...props} loading={uploading}>');
+    expect(classique).not.toContain('variant="filled"');
+  });
 });
