@@ -1,21 +1,21 @@
-/* Tableau de bord du style « Verre » (dessin validé, décision du RSSI du 27/11/2026) : détail des dalles que la synthèse
-   ne portait pas (grille des risques selon la méthode d'appréciation paramétrée, actions une par une), et calculs purs
-   partagés par le serveur et l'interface. Les valeurs viennent des fiches lisibles par la personne (porte de lecture,
-   ADR 0083) ; rien n'est déduit ni inventé. */
+/* Tableau de bord du style « Verre » (dessin validé, décisions du RSSI du 27 et du 28/11/2026) : détail des dalles que la
+   synthèse ne portait pas (grilles des risques selon les méthodes d'appréciation paramétrées, actions une par une avec
+   leur état, leur retard et leur priorité), et calculs purs partagés par le serveur et l'interface. Les valeurs viennent
+   des fiches lisibles par la personne (porte de lecture, ADR 0083) ; rien n'est déduit ni inventé. */
 import { z } from 'zod';
 
 const n = z.number().int().min(0);
 
 /** Nombre de noms de risques gardés par case de la grille (le nombre total de la case reste exact). */
 export const NOMS_PAR_CASE = 6;
-/** Nombre d'actions détaillées renvoyées, les plus urgentes d'abord (le décompte par état reste exact). */
+/** Nombre d'actions détaillées renvoyées, les plus urgentes d'abord (les décomptes restent exacts). */
 export const ACTIONS_DETAILLEES = 60;
 
 /** Risque placé dans une case : de quoi le nommer et ouvrir sa fiche dans son périmètre. */
 export const RisqueGrille = z.object({ id: z.string(), perimetre: z.string(), nom: z.string(), code: z.string() });
 export type RisqueGrille = z.infer<typeof RisqueGrille>;
 
-/** Grille vraisemblance × gravité de la méthode à calcul matriciel la plus utilisée par les risques lisibles : colonnes =
+/** Grille vraisemblance × gravité d'une méthode à calcul matriciel utilisée par les risques lisibles : colonnes =
     niveaux de la dimension de la matrice (gravité, croissants), lignes = niveaux de vraisemblance (croissants), niveau de
     risque de chaque case tel que publié dans la méthode (indice dans `niveaux`, du plus faible au plus fort). */
 export const GrilleRisques = z.object({
@@ -38,7 +38,7 @@ export const GrilleRisques = z.object({
   ),
   /** Risques placés dans la grille. */
   places: n,
-  /** Risques appréciés mais hors de la grille (autre méthode, cotation absente de la matrice). */
+  /** Risques appréciés selon la méthode mais hors de sa grille (cotation absente de la matrice, autre base). */
   horsGrille: n,
 });
 export type GrilleRisques = z.infer<typeof GrilleRisques>;
@@ -47,30 +47,42 @@ export type GrilleRisques = z.infer<typeof GrilleRisques>;
 export const DetailRisques = z.object({
   /** Risques sans aucune appréciation. */
   aApprecier: n,
-  /** Risques des cases au niveau le plus fort de la méthode ; null sans grille. */
+  /** Risques des cases au niveau le plus fort de la méthode de `grille` ; null sans grille. */
   critiques: n.nullable(),
+  /** Grille de la méthode la plus utilisée : première de `grilles` (compatibilité). */
   grille: GrilleRisques.nullable(),
+  /** Une grille par méthode à calcul matriciel utilisée par les risques lisibles (28/11/2026), du plus grand nombre de
+      risques appréciés au plus petit, puis par nom de méthode ; `horsGrille` n'y compte que les risques de la méthode
+      hors de sa matrice. Absent d'une synthèse antérieure. */
+  grilles: z.array(GrilleRisques).optional(),
 });
 export type DetailRisques = z.infer<typeof DetailRisques>;
 
-export const ETATS_ACTION_TDB = ['retard', 'mois', 'ouverte', 'close'] as const;
+/** État d'une action au tableau de bord (décision du RSSI du 28/11/2026) : à faire (statut initial de la politique),
+    en cours (autre statut non terminal), planifiée (statut initial et début postérieur au jour), terminée (statut
+    terminal). Le retard et la priorité haute sont deux marquages à part. */
+export const ETATS_ACTION_TDB = ['a_faire', 'en_cours', 'planifiee', 'terminee'] as const;
 export type EtatActionTdb = (typeof ETATS_ACTION_TDB)[number];
 export const LIBELLES_ETAT_ACTION_TDB: Record<EtatActionTdb, string> = {
-  retard: 'En retard',
-  mois: 'À échéance ce mois-ci',
-  ouverte: 'Ouverte',
-  close: 'Close',
+  a_faire: 'À faire',
+  en_cours: 'En cours',
+  planifiee: 'Planifiée',
+  terminee: 'Terminée',
 };
+/** Priorités d'une action marquées « prioritaire » au tableau de bord. */
+export const PRIORITES_HAUTES = ['high', 'urgent'] as const;
 
-/** Détail de la dalle « Plan d'action » : actions autonomes (hors occurrences de tâches récurrentes), décomptées par état,
-    et les `ACTIONS_DETAILLEES` plus urgentes (en retard, à échéance ce mois-ci, autres ouvertes, closes). */
+/** Détail de la dalle « Plan d'action » : actions autonomes (hors occurrences de tâches récurrentes), décomptées par état
+    et par marquage (en retard et prioritaires parmi les non terminées), et les `ACTIONS_DETAILLEES` premières dans l'ordre
+    de `rangActionTdb` (en retard, prioritaires, à faire ou en cours par échéance, planifiées, terminées). */
 export const PlanActions = z.object({
   total: n,
+  aFaire: n,
+  enCours: n,
+  planifiees: n,
+  terminees: n,
   enRetard: n,
-  ceMois: n,
-  /** Ouvertes, ni en retard ni à échéance ce mois-ci. */
-  autresOuvertes: n,
-  closes: n,
+  prioritaires: n,
   items: z.array(
     z.object({
       id: z.string(),
@@ -78,19 +90,80 @@ export const PlanActions = z.object({
       nom: z.string(),
       echeance: z.string().nullable(),
       etat: z.enum(ETATS_ACTION_TDB),
+      retard: z.boolean(),
+      prioritaire: z.boolean(),
     }),
   ),
 });
 export type PlanActions = z.infer<typeof PlanActions>;
 
-/** État d'une action pour le tableau de bord, au jour civil `jour` (AAAA-MM-JJ, Paris) : close (statut terminal), en
-    retard (échéance passée), à échéance ce mois-ci (échéance d'ici la fin du mois en cours), sinon ouverte. */
-export function etatActionTdb(echeance: string | null, terminee: boolean, jour: string): EtatActionTdb {
-  if (terminee) return 'close';
-  const e = echeance && /^\d{4}-\d{2}-\d{2}$/.test(echeance) ? echeance : null;
-  if (!e) return 'ouverte';
-  if (e < jour) return 'retard';
-  return e.slice(0, 7) === jour.slice(0, 7) ? 'mois' : 'ouverte';
+/** Jour civil (AAAA-MM-JJ) d'une date de fiche (jour seul ou instant ISO), sinon null. */
+export function jourCivil(v: unknown): string | null {
+  if (typeof v !== 'string') return null;
+  const j = v.slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(j) ? j : null;
+}
+
+/** Ce que l'état d'une action au tableau de bord lit de sa fiche et de la politique métier de son périmètre. */
+export interface ActionPourTdb {
+  /** Statut terminal de la politique. */
+  terminee: boolean;
+  /** Statut initial : le premier de la politique (non démarré, `todo` par défaut). */
+  initiale: boolean;
+  /** Début (`startAt`) et échéance (`dueAt`) : jour seul ou instant ISO, lus au jour civil. */
+  debut: unknown;
+  echeance: unknown;
+  priorite: unknown;
+}
+export interface EtatAction {
+  etat: EtatActionTdb;
+  retard: boolean;
+  prioritaire: boolean;
+}
+
+/** État et marquages d'une action au jour civil `jour` (AAAA-MM-JJ, Paris). Terminée : statut terminal ; planifiée :
+    statut initial et début strictement postérieur au jour ; à faire : statut initial sans début futur ; en cours : tout
+    autre statut non terminal. En retard : non terminée et échéance antérieure au jour. Prioritaire : non terminée et
+    priorité haute ou urgente (décision du RSSI du 28/11/2026 : pas de contour or sur une action terminée). Même règle que la requête du serveur. Fonction pure. */
+export function etatActionTdb(a: ActionPourTdb, jour: string): EtatAction {
+  const debut = jourCivil(a.debut),
+    echeance = jourCivil(a.echeance);
+  const etat: EtatActionTdb = a.terminee
+    ? 'terminee'
+    : a.initiale
+      ? debut && debut > jour
+        ? 'planifiee'
+        : 'a_faire'
+      : 'en_cours';
+  return {
+    etat,
+    retard: !a.terminee && !!echeance && echeance < jour,
+    prioritaire: !a.terminee && (PRIORITES_HAUTES as readonly unknown[]).includes(a.priorite),
+  };
+}
+
+/** Rang d'une action dans la dalle, du plus urgent au moins urgent : 0 en retard, 1 prioritaire, 2 à faire ou en cours,
+    3 planifiée, 4 terminée. À rang égal : échéance la plus proche d'abord (sans échéance à la fin), puis intitulé. */
+export function rangActionTdb(a: EtatAction): number {
+  if (a.etat === 'terminee') return 4;
+  if (a.retard) return 0;
+  if (a.prioritaire) return 1;
+  return a.etat === 'planifiee' ? 3 : 2;
+}
+
+/** Comparaison de deux actions selon `rangActionTdb`, puis l'échéance, l'intitulé et l'identifiant. */
+export function comparerActionsTdb(
+  a: EtatAction & { echeance: string | null; nom: string; id: string },
+  b: EtatAction & { echeance: string | null; nom: string; id: string },
+): number {
+  const ea = jourCivil(a.echeance),
+    eb = jourCivil(b.echeance);
+  return (
+    rangActionTdb(a) - rangActionTdb(b) ||
+    (ea === eb ? 0 : ea === null ? 1 : eb === null ? -1 : ea < eb ? -1 : 1) ||
+    (a.nom < b.nom ? -1 : a.nom > b.nom ? 1 : 0) ||
+    (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  );
 }
 
 /** Méthode d'appréciation, réduite à ce que la grille lit. */

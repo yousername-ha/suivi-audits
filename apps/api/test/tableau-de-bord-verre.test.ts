@@ -1,6 +1,6 @@
-/* Tableau de bord du style « Verre » (décision du RSSI du 27/11/2026) : la synthèse porte la grille des risques selon la
-   méthode d'appréciation paramétrée et les actions une par une, dans le périmètre de lecture de la personne (porte de
-   lecture, ADR 0083), jamais pour un écran mural. Données fictives. */
+/* Tableau de bord du style « Verre » (décisions du RSSI du 27 et du 28/11/2026) : la synthèse porte une grille des risques
+   par méthode d'appréciation à matrice et les actions une par une (état, retard, priorité), dans le périmètre de lecture
+   de la personne (porte de lecture, ADR 0083), jamais pour un écran mural. Données fictives. */
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { SessionUser } from '../src/auth.js';
@@ -63,11 +63,15 @@ describe('synthèse du tableau de bord : détail des dalles du style « Verre »
     ids[nom] = r!.id;
     return r!.id;
   };
-  const versionMethode = async (smsi: string, nom: string) =>
+  const versionMethode = async (smsi: string, nom: string, matrice = true) =>
     (await t.svc.db.one<{ id: string }>(
       `INSERT INTO grc_method_versions(method_id, smsi_id, version, definition, reason, created_by)
        VALUES ($1, $2, 1, $3, 'test', 'test') RETURNING id`,
-      [randomUUID(), smsi, JSON.stringify(methode(nom))],
+      [
+        randomUUID(),
+        smsi,
+        JSON.stringify(matrice ? methode(nom) : { ...methode(nom), calculation: { kind: 'judgement' } }),
+      ],
     ))!.id;
   let revision = 0;
   const apprecier = (smsi: string, risque: string, version: string, g: string, v: string, decision = 'draft') =>
@@ -100,9 +104,11 @@ describe('synthèse du tableau de bord : détail des dalles du style « Verre »
     B = await smsi('Périmètre Verre B');
     await t.svc.db.q('INSERT INTO grc_members(smsi_id, user_id, can_write) VALUES ($1,$2,false)', [A, m.id]);
 
-    // Risques du périmètre A : trois selon la méthode de la grille, un selon une autre méthode, un sans appréciation.
+    // Risques du périmètre A : trois selon la méthode de la grille (plus un hors de sa matrice), un selon une autre
+    // méthode à matrice, un selon une méthode sans matrice, un sans appréciation.
     const principale = await versionMethode(A, 'Méthode fictive principale');
     const autre = await versionMethode(A, 'Méthode fictive secondaire');
+    const sansMatrice = await versionMethode(A, 'Méthode fictive sans matrice', false);
     const r1 = await objet(A, 'risk', 'Risque fictif 1', { code: 'RF-1' });
     const r2 = await objet(A, 'risk', 'Risque fictif 2', { code: 'RF-2' });
     const r3 = await objet(A, 'risk', 'Risque fictif 3', { code: 'RF-3' });
@@ -114,6 +120,10 @@ describe('synthèse du tableau de bord : détail des dalles du style « Verre »
     await apprecier(A, r2, principale, 'g1', 'v1');
     await apprecier(A, r3, principale, 'g2', 'v1');
     await apprecier(A, r4, autre, 'g1', 'v1');
+    const r5 = await objet(A, 'risk', 'Risque fictif hors matrice', { code: 'RF-5' });
+    await apprecier(A, r5, principale, 'g9', 'v1');
+    const r6 = await objet(A, 'risk', 'Risque fictif sans matrice', {});
+    await apprecier(A, r6, sansMatrice, 'g1', 'v1');
     // Périmètre B, que le membre ne lit pas.
     const rb = await objet(B, 'risk', 'Risque fictif B', {});
     await apprecier(B, rb, principale, 'g1', 'v2');
@@ -125,6 +135,24 @@ describe('synthèse du tableau de bord : détail des dalles du style « Verre »
     await objet(A, 'action', 'Action fictive ouverte', { status: 'todo', dueAt: '2027-01-15' });
     await objet(A, 'action', 'Action fictive sans échéance', { status: 'todo' });
     await objet(A, 'action', 'Action fictive close', { status: 'done', dueAt: '2026-10-01' });
+    // État du 28/11/2026 : planifiée (statut initial, début futur), débutée (début passé), prioritaire (bloquée,
+    // urgente), close prioritaire (ni marquée ni comptée parmi les prioritaires : décision du 28/11/2026).
+    await objet(A, 'action', 'Action fictive planifiée', {
+      status: 'todo',
+      startAt: '2026-12-01T08:00:00.000Z',
+      dueAt: '2027-02-01T08:00:00.000Z',
+    });
+    await objet(A, 'action', 'Action fictive débutée', {
+      status: 'todo',
+      startAt: '2026-11-01T08:00:00.000Z',
+      dueAt: '2026-12-10',
+    });
+    await objet(A, 'action', 'Action fictive prioritaire', {
+      status: 'blocked',
+      priority: 'urgent',
+      dueAt: '2026-12-20',
+    });
+    await objet(A, 'action', 'Action fictive close prioritaire', { status: 'done', priority: 'high' });
     await objet(A, 'action', 'Occurrence fictive', { status: 'todo', dueAt: '2026-11-01', seriesId: randomUUID() });
     await objet(B, 'action', 'Action fictive B', { status: 'todo', dueAt: '2026-11-01' });
 
@@ -149,29 +177,49 @@ describe('synthèse du tableau de bord : détail des dalles du style « Verre »
     expect(caseDe(1, 0).n).toBe(1);
     expect(caseDe(0, 0).n).toBe(0);
     expect(g.places).toBe(3);
-    // Autre méthode : hors grille ; périmètre B : jamais compté pour le membre.
+    // Hors grille : seulement les risques de la méthode hors de sa matrice ; périmètre B : jamais compté pour le membre.
     expect(g.horsGrille).toBe(1);
     expect(d.critiques).toBe(2);
     expect(JSON.stringify(d)).not.toContain('Risque fictif B');
   });
 
-  it('actions une par une : décompte par état au jour de Paris, les plus urgentes d’abord, hors occurrences', async () => {
+  it('une grille par méthode à matrice, de la plus utilisée à la moins utilisée, chacune avec ses seuls risques', async () => {
+    const d = (await synthese(membre)).detailRisques!;
+    // La méthode sans matrice ne donne pas de grille.
+    expect(d.grilles!.map((x) => x.methode)).toEqual(['Méthode fictive principale', 'Méthode fictive secondaire']);
+    expect(d.grille).toEqual(d.grilles![0]);
+    const secondaire = d.grilles![1]!;
+    expect([secondaire.places, secondaire.horsGrille]).toEqual([1, 0]);
+    expect(secondaire.cases.find((c) => c.colonne === 0 && c.ligne === 0)!.risques.map((r) => r.id)).toEqual([
+      ids['Risque fictif autre méthode'],
+    ]);
+    expect(secondaire.cases.reduce((n, c) => n + c.n, 0)).toBe(1);
+  });
+
+  it('actions une par une : décompte par état et marquage au jour de Paris, les plus urgentes d’abord, hors occurrences', async () => {
     const p = (await synthese(membre)).planActions!;
-    expect([p.total, p.enRetard, p.ceMois, p.autresOuvertes, p.closes]).toEqual([6, 1, 2, 2, 1]);
-    expect(p.items.map((x) => [x.nom, x.etat])).toEqual([
-      ['Action fictive en retard', 'retard'],
-      ['Action fictive du jour', 'mois'],
-      ['Action fictive du mois', 'mois'],
-      ['Action fictive ouverte', 'ouverte'],
-      ['Action fictive sans échéance', 'ouverte'],
-      ['Action fictive close', 'close'],
+    expect([p.total, p.aFaire, p.enCours, p.planifiees, p.terminees, p.enRetard, p.prioritaires]).toEqual([
+      10, 5, 2, 1, 2, 1, 1,
+    ]);
+    // En retard, prioritaires, à faire ou en cours par échéance, planifiées, terminées.
+    expect(p.items.map((x) => [x.nom, x.etat, x.retard, x.prioritaire])).toEqual([
+      ['Action fictive en retard', 'a_faire', true, false],
+      ['Action fictive prioritaire', 'en_cours', false, true],
+      ['Action fictive du jour', 'a_faire', false, false],
+      ['Action fictive du mois', 'en_cours', false, false],
+      ['Action fictive débutée', 'a_faire', false, false],
+      ['Action fictive ouverte', 'a_faire', false, false],
+      ['Action fictive sans échéance', 'a_faire', false, false],
+      ['Action fictive planifiée', 'planifiee', false, false],
+      ['Action fictive close', 'terminee', false, false],
+      ['Action fictive close prioritaire', 'terminee', false, false],
     ]);
     expect(p.items[0]).toMatchObject({ id: ids['Action fictive en retard'], perimetre: A, echeance: '2026-11-20' });
   });
 
   it('administrateur : tous les périmètres lisibles', async () => {
     const s = await synthese(admin);
-    expect(s.planActions!.total).toBe(7);
+    expect(s.planActions!.total).toBe(11);
     expect(s.detailRisques!.grille!.places).toBe(4);
   });
 

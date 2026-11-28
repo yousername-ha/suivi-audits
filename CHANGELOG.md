@@ -40,7 +40,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
   et mesures en anneau (conforme, partiel, insuffisant) ; Niveau de risque en grille vraisemblance × gravité de la méthode
   d'appréciation paramétrée (taille de sa matrice, ses niveaux), avec le nombre de risques de chaque case, et critiques, à
   apprécier, revues échues ; Incidents en courbe sur douze mois ; Audits et constats en histogramme par nature ; Plan
-  d'action en une case par action (en retard, ce mois-ci, ouvertes, closes ; au-delà de 45, les plus urgentes et « + N ») ;
+  d'action en une case par action (état, retard et priorité ; au-delà de 45, les plus urgentes et « + N ») ;
   Indicateurs et maturité en triangle des référentiels. Chaque élément montre son intitulé dans une bulle au survol et au
   focus clavier (Échap la ferme) et mène à sa fiche : case d'action vers l'action, case de risques vers le risque ou, à
   plusieurs, vers le choix de l'un d'eux, point de la courbe vers l'incident du mois ou le choix parmi eux, barre vers les
@@ -51,6 +51,32 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Numérotation
 
 ### Modifié
 
+- **Documents et liens, Import et rapports, Exports Excel aux dessins validés, dans le style « Verre »** (décisions du
+  RSSI du 28/11/2026 ; les styles « Sauge » et « Clair bleuté » restent inchangés). Documents : quatre tuiles (documents,
+  rattachés, à revoir = non modifiés depuis plus d'un an, confidentiels), liste en lignes de verre (type de fichier,
+  catégorie, version, taille, rattachements, classification, date), filtres par classification, panneau du document
+  choisi (rattachements, étiquettes, frise des versions, télécharger, nouvelle version, fiche) et zone de dépôt ; l'onglet
+  Liens garde son rendu. Import et rapports : import en trois étapes (choisir, simuler, appliquer), « Appliquer » actif
+  seulement quand la simulation l'autorise, motifs d'un refus ligne à ligne ; export d'un référentiel, rapport de pilotage
+  et modèles fictifs en cartes. Exports Excel : une carte par rubrique (nombre de feuilles, Classique, Pro), export
+  complet mis en avant. Mêmes appels d'API qu'avant ; aucune route ni migration. (session « Projet audit_suivi Coeur »)
+- **Tableau de bord du style « Verre » : plusieurs méthodes de risque, points sensibles, état des actions** (décisions du
+  RSSI du 28/11/2026 ; les styles « Sauge » et « Clair bleuté » restent inchangés). Niveau de risque : une grille par
+  méthode d'appréciation à matrice utilisée par les risques lisibles, de la plus utilisée à la moins utilisée ; à partir
+  de deux méthodes, un rail sous le titre (« EBIOS RM 20 », « Matrice 4 ») choisit la grille, le chiffre clé (risques
+  placés et méthode) et les critiques ; « hors grille » ne compte plus que les risques de la méthode hors de sa matrice.
+  Audits et constats : les points sensibles ont leur barre (violette), entre les mineures et les observations (les
+  observations ne regroupent plus que les remarques) ; le filtre d'adresse `?nature=point_sensible` du registre des
+  constats les montre ; légende sur trois lignes de deux colonnes. Plan d'action : quatre états (à faire en bleu, en cours
+  en violet, planifiée en gris à bord pointillé pour un statut initial dont le début est postérieur au jour, terminée en
+  vert) et deux marquages (en retard : case entièrement rouge ; action non terminée de priorité haute ou urgente :
+  contour or qui scintille, fixe quand les animations sont réduites) ; ordre : en retard, prioritaires, à faire ou en cours par échéance, planifiées,
+  terminées ; chiffre clé « N actions » ; légende À faire, En cours, Planifiées, Terminées, En retard, Prioritaires. Les
+  quatre dalles de la deuxième rangée gardent une rangée du bas de même hauteur. La synthèse `GET /api/mur/synthese`
+  ajoute `detailRisques.grilles` (`grille` et `critiques` restent ceux de la première) ; `planActions` passe aux
+  décomptes `aFaire`, `enCours`, `planifiees`, `terminees`, `enRetard`, `prioritaires` et ses actions portent `etat`
+  (`a_faire`, `en_cours`, `planifiee`, `terminee`), `retard` et `prioritaire` (champs ajoutés le 27/11/2026, non publiés).
+  Aucune migration. (session « Projet audit_suivi Coeur »)
 - **Veille réglementaire, tâches récurrentes et plan d'actions aux dessins validés, dans le style « Verre »** (décisions
   du RSSI du 27/11/2026 ; les styles « Sauge » et « Clair bleuté » restent inchangés). Veille réglementaire : surtitre
   « Conformité · dernière collecte », sources en rail dans l'en-tête, quatre tuiles par statut (à qualifier, à suivre, sans

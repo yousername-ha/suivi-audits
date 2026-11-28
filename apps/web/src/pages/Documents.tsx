@@ -1,6 +1,10 @@
 /* Documents (chiffrés, versionnés) et liens, avec rattachements, présence et contrôle de concurrence.
    Liste et fiche : tiroir sur petit écran ; côte à côte à partir de 1440 px ; troisième panneau (versions,
-   rattachements) à partir de 2560 px. */
+   rattachements) à partir de 2560 px.
+   Style « Verre » (dessin DocDocuments validé par le RSSI le 28/11/2026, DocumentsVerre.tsx) : onglets en rail avec leur
+   nombre, quatre tuiles, liste en lignes de verre avec puces de classification et corbeille, document choisi à droite
+   (le premier par défaut), zone de dépôt par glisser-déposer ; la fiche existante s'ouvre dans un tiroir. Les autres
+   styles gardent le rendu ci-dessous. */
 import {
   Alert,
   Anchor,
@@ -12,6 +16,7 @@ import {
   FileButton,
   Group,
   Modal,
+  ActionIcon,
   MultiSelect,
   SegmentedControl,
   Select,
@@ -35,6 +40,7 @@ import {
   type TagCount,
 } from '@suivi/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Page, PageHeader } from '@suivi/ui';
 import { useMediaQuery } from '@mantine/hooks';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
@@ -50,9 +56,11 @@ import { compterPuces } from '../components/recherche-liste';
 import { ConfirmButton, ErrorAlert, fmtDate, fmtSize, PresenceBar } from '../components/common';
 import { useColonnes, type Colonne } from '../components/Colonnes';
 import { usePresence } from '../realtime';
-import { useCan } from '../session';
+import { useCan, useMe } from '../session';
 import { ficheCliquable } from '../fiche-cliquable';
 import { DataTable } from '@suivi/ui';
+import { filtrerClassification, pucesClassification, tuilesDocuments } from './documents-verre';
+import { ListeDocumentsVerre, PanneauDocumentVerre, TuilesDocumentsVerre, ZoneDepotVerre } from './DocumentsVerre';
 
 interface Ref {
   ref: string;
@@ -111,6 +119,71 @@ interface OrdreTri {
   ordre: 'asc' | 'desc';
 }
 const TRI_DEFAUT: OrdreTri = { tri: 'modifie', ordre: 'desc' };
+/** Clés de tri (style « Verre », liste sans titres de colonnes : choix dans une liste, sens par un bouton). */
+const LIBELLES_TRI: { value: CleTri; label: string }[] = [
+  { value: 'modifie', label: 'Dernière modification' },
+  { value: 'titre', label: 'Titre' },
+  { value: 'categorie', label: 'Catégorie' },
+  { value: 'classification', label: 'Classification' },
+  { value: 'taille', label: 'Taille' },
+];
+
+/** Liste des documents (recherche, catégorie, étiquettes, tri, corbeille) et liste de base sans recherche ni filtre
+    (même requête que la liste quand rien n'est filtré) : nombres des puces et seuil de la recherche. */
+function useListeDocuments(f: { q: string; category: string | null; tags: string[]; ordre: OrdreTri; trash: string }) {
+  const params = new URLSearchParams({
+    ...(f.q ? { q: f.q } : {}),
+    ...(f.category ? { category: f.category } : {}),
+    ...(f.tags.length ? { tags: f.tags.join(',') } : {}),
+    tri: f.ordre.tri,
+    ordre: f.ordre.ordre,
+    trash: f.trash,
+  });
+  const list = useQuery({
+    queryKey: ['documents', params.toString()],
+    queryFn: () => get<DocumentOut[]>(`/api/documents?${params}`),
+  });
+  const paramsBase = new URLSearchParams({ tri: f.ordre.tri, ordre: f.ordre.ordre, trash: f.trash });
+  const base = useQuery({
+    queryKey: ['documents', paramsBase.toString()],
+    queryFn: () => get<DocumentOut[]>(`/api/documents?${paramsBase}`),
+  });
+  return { list, base };
+}
+
+/** Dépôt de documents (bouton de l'en-tête et zone de glisser-déposer du style « Verre ») : un envoi par fichier. */
+function useDepotDocuments() {
+  const qc = useQueryClient();
+  const [uploading, setUploading] = useState(false);
+  const upload = async (files: File[], meta: { category: string | null; tags: string[] }) => {
+    setUploading(true);
+    try {
+      for (const f of files) {
+        await api('POST', '/api/documents', {
+          raw: await f.arrayBuffer(),
+          headers: {
+            'X-File-Name': encodeURIComponent(f.name),
+            // Un dépôt fait pendant un filtrage reprend la catégorie et les étiquettes filtrées.
+            'X-Meta': encodeURIComponent(
+              JSON.stringify({
+                ...(meta.category ? { category: meta.category } : {}),
+                ...(meta.tags.length ? { tags: meta.tags } : {}),
+              }),
+            ),
+          },
+        });
+      }
+      notifications.show({ color: 'teal', message: `${files.length} document(s) déposé(s).` });
+      await qc.invalidateQueries({ queryKey: ['documents'] });
+      await qc.invalidateQueries({ queryKey: ['etiquettes'] });
+    } catch (e) {
+      notifications.show({ color: 'red', title: 'Dépôt refusé', message: errorMessage(e) });
+    } finally {
+      setUploading(false);
+    }
+  };
+  return { uploading, upload };
+}
 
 /** En-tête de colonne triable : un second clic inverse le sens ; l'état est annoncé par aria-sort. Plus d'entonnoir
     (refonte Verre, 27/11/2026) : les filtres sont dans la barre de la liste. */
@@ -176,6 +249,11 @@ function Etiquettes({ tags, onChoisir }: { tags: string[]; onChoisir?: (t: strin
 }
 
 export function DocumentsPage() {
+  const verre = useMe().appearance.style === 'verre';
+  return verre ? <DocumentsPageVerre /> : <DocumentsPageClassique />;
+}
+
+function DocumentsPageClassique() {
   const can = useCan();
   const canWrite = can('documents', 'modifier');
   const { id } = useParams();
@@ -241,6 +319,257 @@ export function DocumentsPage() {
   );
 }
 
+/* ---------------------------------------------------------------- Style « Verre » */
+/** Page en style « Verre » : mêmes requêtes, mêmes droits et même fiche que le rendu classique. Le document montré à
+    droite est celui de l'adresse (/documents/:id), à défaut le premier de la liste affichée. */
+function DocumentsPageVerre() {
+  const can = useCan();
+  const canWrite = can('documents', 'modifier');
+  const canDelete = can('documents', 'supprimer');
+  const isAdmin = can('documents', 'administrer');
+  const { id } = useParams();
+  const nav = useNavigate();
+  const qc = useQueryClient();
+  usePresence(id ? `documents/${id}` : 'documents');
+  const [tab, setTab] = useState<string | null>('docs');
+  const [fiche, setFiche] = useState(false);
+  const [q, setQ] = useState('');
+  const [category, setCategory] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [classification, setClassification] = useState<string | null>(null);
+  const [ordre, setOrdre] = useState<OrdreTri>(TRI_DEFAUT);
+  const [trash, setTrash] = useState('0');
+  const etiquettes = useEtiquettes('documents');
+  const { list, base } = useListeDocuments({ q, category, tags, ordre, trash });
+  const { uploading, upload } = useDepotDocuments();
+  // Registre (hors corbeille, sans filtre) pour les tuiles et le rail ; nombre de documents de la corbeille ; nombre de
+  // liens. Mêmes clés que les listes : réponses partagées.
+  const registre = useQuery({
+    queryKey: ['documents', 'tri=modifie&ordre=desc&trash=0'],
+    queryFn: () => get<DocumentOut[]>('/api/documents?tri=modifie&ordre=desc&trash=0'),
+  });
+  const corbeille = useQuery({
+    queryKey: ['documents', 'tri=modifie&ordre=desc&trash=1'],
+    queryFn: () => get<DocumentOut[]>('/api/documents?tri=modifie&ordre=desc&trash=1'),
+    enabled: canDelete,
+  });
+  const liens = useQuery({
+    queryKey: ['links', 'tri=modifie'],
+    queryFn: () => get<LinkOut[]>('/api/links?tri=modifie'),
+  });
+  const affiches = filtrerClassification(list.data ?? [], classification);
+  const choisi = id ?? affiches[0]?.id;
+  const detail = useQuery({
+    queryKey: ['document', choisi],
+    queryFn: () => get<DocumentDetailOut>(`/api/documents/${choisi}`),
+    enabled: !!choisi,
+  });
+  const deposer = (f: File[]) => void upload(f, { category, tags });
+  const nouvelleVersion = async (docId: string, f: File) => {
+    try {
+      await api('POST', `/api/documents/${docId}/versions`, {
+        raw: await f.arrayBuffer(),
+        headers: { 'X-File-Name': encodeURIComponent(f.name) },
+      });
+      notifications.show({ color: 'teal', message: 'Nouvelle version déposée.' });
+      await qc.invalidateQueries({ queryKey: ['documents'] });
+      await qc.invalidateQueries({ queryKey: ['document', docId] });
+    } catch (e) {
+      notifications.show({ color: 'red', message: errorMessage(e) });
+    }
+  };
+  const ajouterEtiquette = (t: string) => setTags((cur) => (cur.includes(t) ? cur : [...cur, t]));
+  const toutEffacer = () => {
+    setQ('');
+    setCategory(null);
+    setTags([]);
+    setClassification(null);
+  };
+  const puces: CriterePuces[] = [
+    {
+      cle: 'classification',
+      libelle: 'Classification',
+      valeur: classification,
+      options: pucesClassification(base.data ?? []),
+      onChange: setClassification,
+    },
+    {
+      cle: 'categorie',
+      libelle: 'Catégorie',
+      valeur: category,
+      options: compterPuces(base.data ?? [], (d) => d.category),
+      onChange: setCategory,
+    },
+  ];
+  const total = base.isPending ? undefined : base.data?.length;
+  const nombre = (n: number | undefined) => (n === undefined ? '' : ` · ${n}`);
+  const d = detail.data;
+  return (
+    <Page>
+      <PageHeader
+        title="Documents et liens"
+        description="Le registre documentaire du SMSI : versions, classification et rattachements."
+        actions={
+          <>
+            {canWrite && tab === 'docs' && trash === '0' && (
+              <FileButton onChange={(f) => f.length && deposer(f)} multiple>
+                {(props) => (
+                  <Button {...props} loading={uploading}>
+                    Déposer des documents
+                  </Button>
+                )}
+              </FileButton>
+            )}
+            <PresenceBar resource="documents" />
+          </>
+        }
+      />
+      <Tabs value={tab} onChange={setTab} className="docv-onglets">
+        <Tabs.List aria-label="Documents et liens">
+          <Tabs.Tab value="docs">Documents{nombre(registre.data?.length)}</Tabs.Tab>
+          <Tabs.Tab value="links">Liens{nombre(liens.data?.length)}</Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="docs" pt="md">
+          <Stack>
+            {registre.data && <TuilesDocumentsVerre t={tuilesDocuments(registre.data, Date.now())} />}
+            <div className="docv">
+              <section className="docv-liste" aria-label={trash === '1' ? 'Corbeille' : 'Documents'}>
+                <BoiteOutils
+                  label="Outils des documents"
+                  titre={
+                    total !== undefined && (
+                      <h2 className="docv-liste__titre">
+                        {total} document{total > 1 ? 's' : ''}
+                        {trash === '1' && ' dans la corbeille'}
+                      </h2>
+                    )
+                  }
+                  total={total ?? 0}
+                  affiches={affiches.length}
+                  recherche={{
+                    label: 'Rechercher dans les documents',
+                    placeholder: 'Rechercher un document',
+                    value: q,
+                    onChange: setQ,
+                  }}
+                  puces={puces}
+                  criteres={criteresEtiquettes(tags, setTags)}
+                  onToutEffacer={toutEffacer}
+                  filtres={{
+                    actifs: tags.length ? 1 : 0,
+                    onReinitialiser: () => setTags([]),
+                    contenu: (
+                      <ListeFiltreMultiple
+                        libelle="Étiquettes"
+                        description="Toutes les étiquettes cochées sont exigées."
+                        valeurs={tags}
+                        options={optionsEtiquettes(etiquettes.data)}
+                        onChange={setTags}
+                      />
+                    ),
+                  }}
+                >
+                  {canDelete && (
+                    <Button
+                      variant="default"
+                      aria-pressed={trash === '1'}
+                      onClick={() => {
+                        setTrash(trash === '1' ? '0' : '1');
+                        if (id) nav('/documents');
+                      }}
+                    >
+                      Corbeille{nombre(corbeille.data?.length)}
+                    </Button>
+                  )}
+                  <Group gap="2xs" wrap="nowrap" className="docv-tri">
+                    <Select
+                      aria-label="Trier par"
+                      className="liste-outils__tri"
+                      data={LIBELLES_TRI}
+                      value={ordre.tri}
+                      onChange={(v) =>
+                        v &&
+                        setOrdre({
+                          tri: v as CleTri,
+                          ordre: v === 'modifie' || v === 'taille' ? 'desc' : 'asc',
+                        })
+                      }
+                      allowDeselect={false}
+                    />
+                    <ActionIcon
+                      variant="default"
+                      size="lg"
+                      aria-label={ordre.ordre === 'asc' ? 'Ordre croissant, inverser' : 'Ordre décroissant, inverser'}
+                      title={ordre.ordre === 'asc' ? 'Ordre croissant' : 'Ordre décroissant'}
+                      onClick={() => setOrdre({ ...ordre, ordre: ordre.ordre === 'asc' ? 'desc' : 'asc' })}
+                    >
+                      {ordre.ordre === 'asc' ? '▲' : '▼'}
+                    </ActionIcon>
+                  </Group>
+                </BoiteOutils>
+                <ErrorAlert error={list.error} />
+                {list.data && (
+                  <ListeDocumentsVerre
+                    documents={affiches}
+                    choisi={choisi}
+                    recherche={q}
+                    onChoisir={(docId) => nav(`/documents/${docId}`)}
+                  />
+                )}
+                {canWrite && trash === '0' && <ZoneDepotVerre enCours={uploading} onDeposer={deposer} />}
+              </section>
+              <section className="docv-panneau" aria-label="Document choisi">
+                <ErrorAlert error={detail.error} />
+                {d ? (
+                  <PanneauDocumentVerre
+                    d={d}
+                    peutDeposerVersion={canWrite && !d.deleted_at}
+                    onTelecharger={() => download(`/api/documents/${d.id}/download`)}
+                    onTelechargerVersion={(v) => download(`/api/documents/${d.id}/download?v=${v}`)}
+                    onNouvelleVersion={(f) => void nouvelleVersion(d.id, f)}
+                    onFiche={() => setFiche(true)}
+                    onEtiquette={ajouterEtiquette}
+                    libelleFiche={canWrite || canDelete ? 'Modifier la fiche' : 'Ouvrir la fiche'}
+                  />
+                ) : (
+                  !detail.error && (
+                    <Text size="sm" c="dimmed">
+                      Choisissez un document dans la liste pour l’afficher ici.
+                    </Text>
+                  )
+                )}
+              </section>
+            </div>
+          </Stack>
+        </Tabs.Panel>
+        <Tabs.Panel value="links" pt="md">
+          <LinkList canWrite={canWrite} />
+        </Tabs.Panel>
+      </Tabs>
+      <Drawer
+        opened={fiche && !!choisi}
+        onClose={() => setFiche(false)}
+        position="right"
+        size="lg"
+        title="Fiche du document"
+      >
+        {fiche && choisi && (
+          <DocumentDetail
+            key={choisi}
+            id={choisi}
+            canWrite={canWrite}
+            isAdmin={isAdmin}
+            onClose={() => {
+              setFiche(false);
+              nav('/documents');
+            }}
+          />
+        )}
+      </Drawer>
+    </Page>
+  );
+}
+
 /* ---------------------------------------------------------------- Liste et dépôt */
 const COLONNES_DOCS: Colonne[] = [
   { cle: 'titre', libelle: 'Titre', priorite: 1, fixe: true },
@@ -263,57 +592,14 @@ function DocumentList({
 }) {
   const { cls, selecteur } = useColonnes('documents', COLONNES_DOCS);
   const canDelete = useCan()('documents', 'supprimer');
-  const qc = useQueryClient();
   const [q, setQ] = useState('');
   const [category, setCategory] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [ordre, setOrdre] = useState<OrdreTri>(TRI_DEFAUT);
   const [trash, setTrash] = useState('0');
-  const params = new URLSearchParams({
-    ...(q ? { q } : {}),
-    ...(category ? { category } : {}),
-    ...(tags.length ? { tags: tags.join(',') } : {}),
-    tri: ordre.tri,
-    ordre: ordre.ordre,
-    trash,
-  });
   const etiquettes = useEtiquettes('documents');
-  const list = useQuery({
-    queryKey: ['documents', params.toString()],
-    queryFn: () => get<DocumentOut[]>(`/api/documents?${params}`),
-  });
-  // Liste sans recherche ni filtre (même requête que la liste quand rien n'est filtré) : nombres des puces et seuil.
-  const paramsBase = new URLSearchParams({ tri: ordre.tri, ordre: ordre.ordre, trash });
-  const base = useQuery({
-    queryKey: ['documents', paramsBase.toString()],
-    queryFn: () => get<DocumentOut[]>(`/api/documents?${paramsBase}`),
-  });
-  const [uploading, setUploading] = useState(false);
-
-  const upload = async (files: File[]) => {
-    setUploading(true);
-    try {
-      for (const f of files) {
-        await api('POST', '/api/documents', {
-          raw: await f.arrayBuffer(),
-          headers: {
-            'X-File-Name': encodeURIComponent(f.name),
-            // Un dépôt fait pendant un filtrage reprend la catégorie et les étiquettes filtrées.
-            'X-Meta': encodeURIComponent(
-              JSON.stringify({ ...(category ? { category } : {}), ...(tags.length ? { tags } : {}) }),
-            ),
-          },
-        });
-      }
-      notifications.show({ color: 'teal', message: `${files.length} document(s) déposé(s).` });
-      await qc.invalidateQueries({ queryKey: ['documents'] });
-      await qc.invalidateQueries({ queryKey: ['etiquettes'] });
-    } catch (e) {
-      notifications.show({ color: 'red', title: 'Dépôt refusé', message: errorMessage(e) });
-    } finally {
-      setUploading(false);
-    }
-  };
+  const { list, base } = useListeDocuments({ q, category, tags, ordre, trash });
+  const { uploading, upload } = useDepotDocuments();
 
   const toutEffacer = () => {
     setQ('');
@@ -365,7 +651,7 @@ function DocumentList({
           <Group gap="xs">
             {selecteur}
             {canWrite && trash === '0' && (
-              <FileButton onChange={(f) => f.length && void upload(f)} multiple>
+              <FileButton onChange={(f) => f.length && void upload(f, { category, tags })} multiple>
                 {(props) => (
                   <Button {...props} loading={uploading}>
                     Déposer des documents

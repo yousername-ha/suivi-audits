@@ -509,6 +509,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Une nouvelle version conserve les versions précédentes. Vérifiez la version de la pièce utilisée comme preuve.',
       'Les étiquettes servent à classer : ajoutez-les depuis la fiche d’un document ou d’un lien (celles déjà utilisées sont proposées ; « rgpd » est refusée si « RGPD » existe, la casse ne crée pas une autre étiquette). Dans la liste, filtrez par une ou plusieurs étiquettes depuis « Plus de filtres » : cochez-les dans la liste qui s’ouvre (toutes les étiquettes cochées sont exigées ; « Tous » vide le filtre), ou cliquez sur une étiquette d’une ligne pour l’ajouter au filtre. Les catégories se filtrent par leurs puces, sous le champ de recherche ; selon vos droits, le choix « Documents » ou « Corbeille » reste à côté de la recherche. Les critères actifs sont des puces en surbrillance, qui se retirent une à une ; « Tout effacer » les retire toutes.',
       'Cliquez sur l’en-tête d’une colonne (titre, classification, catégorie, taille, date) pour trier ; un second clic inverse l’ordre.',
+      'Dans le style « Verre », quatre tuiles résument le registre (documents, rattachés, à revoir car non modifiés depuis plus d’un an, confidentiels) ; la liste se filtre aussi par classification, se trie par la liste « Trier » et son bouton de sens, et le bouton « Corbeille » bascule vers la corbeille. Le document choisi s’affiche à droite (versions, téléchargement, nouvelle version) ; le bouton rond ouvre sa fiche. Glissez des fichiers sur la zone en bas de la liste pour les déposer.',
       'Les téléchargements et les modifications restent soumis à vos droits ; un lien interne ne rend pas le document public.',
     ],
   },
@@ -534,6 +535,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Ouvrez Exports Excel dans le menu : les rubriques sont regroupées (audit avec le pronostic, objectifs et indicateurs, conformité, écarts, fournisseurs avec les évaluations par le clausier, contexte, incidents et crise, preuves, plans et IA).',
       'Excel classique donne les données brutes avec filtres ; Excel pro ajoute un sommaire, des en-têtes colorés et une mise en page prête à imprimer.',
       'Les rubriques que vous n’avez pas le droit de lire sont exportées vides. Chaque export est tracé dans le journal d’audit.',
+      'Dans le style « Verre », chaque rubrique est une carte (nombre de feuilles, boutons Classique et Pro) ; l’export complet, en dernier, réunit les feuilles de toutes les rubriques.',
     ],
   },
   {

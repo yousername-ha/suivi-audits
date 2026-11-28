@@ -29,7 +29,9 @@ describe('style « Verre »', () => {
     expect(lire('../../../packages/ui/package.json')).toContain('"./verre.css": "./src/verre.css"');
     const main = lire('../src/main.tsx');
     const feuilles = [...main.matchAll(/^import '(@suivi\/ui\/[^']+\.css)';/gm)].map((m) => m[1]);
-    expect(feuilles.at(-1)).toBe('@suivi/ui/verre.css');
+    // Seuls ses compléments par famille (verre-*.css, mêmes règles) la suivent (famille Documents, 28/11/2026).
+    const rang = feuilles.indexOf('@suivi/ui/verre.css');
+    expect(feuilles.slice(rang + 1)).toEqual(['@suivi/ui/verre-documents.css']);
     expect(feuilles.filter((f) => f === '@suivi/ui/verre.css')).toHaveLength(1);
   });
 

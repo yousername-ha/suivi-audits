@@ -1,9 +1,11 @@
-/* Calculs purs des dalles du tableau de bord en style « Verre » (dessin validé, décision du RSSI du 27/11/2026) : liens
-   vers les fiches et pages filtrées, cases d'actions bornées, rangées de la grille des risques, mois des incidents,
-   constats par nature. Aucune valeur inventée : un élément sans donnée n'est pas dessiné. */
+/* Calculs purs des dalles du tableau de bord en style « Verre » (dessin validé, décisions du RSSI du 27 et du
+   28/11/2026) : liens vers les fiches et pages filtrées, cases d'actions bornées, rangées de la grille des risques, mois
+   des incidents, constats par nature. Aucune valeur inventée : un élément sans donnée n'est pas dessiné. */
 import {
   LIBELLES_ETAT_ACTION_TDB,
   NATURES_CONSTAT,
+  risquesCritiques,
+  type DetailRisques,
   type EtatActionTdb,
   type GrilleRisques,
   type NatureConstat,
@@ -54,6 +56,8 @@ export const CAPACITE_ACTIONS = 45;
 export interface CaseAction {
   cle: string;
   etat: EtatActionTdb;
+  retard: boolean;
+  prioritaire: boolean;
   /** Intitulé et lien de la fiche ; absents quand seul le décompte est connu (chiffres ouverts d'un auteur). */
   nom: string | null;
   echeance: string | null;
@@ -63,16 +67,22 @@ export interface CasesActions {
   cases: CaseAction[];
   /** Actions non dessinées (case « + N autres ») ; 0 quand tout tient. */
   reste: number;
+  aFaire: number;
+  /** Null quand seul le décompte des ouvertes est connu (chiffres ouverts) : non inventé. */
+  enCours: number | null;
+  planifiees: number | null;
+  terminees: number;
+  /** Parmi les actions non terminées. */
   enRetard: number;
-  ceMois: number;
-  ouvertes: number;
-  closes: number;
+  prioritaires: number | null;
   total: number;
 }
 
-/** Cases du plan d'action : une par action, les plus urgentes d'abord (en retard, à échéance ce mois-ci, autres
-    ouvertes, closes). Au-delà de la capacité, les deux derniers emplacements deviennent « + N autres ». Sans détail (chiffres ouverts),
-    les cases viennent des seuls décomptes de la synthèse, sans intitulé ni lien. */
+/** Cases du plan d'action : une par action, dans l'ordre du serveur (en retard, prioritaires, à faire ou en cours par
+    échéance, planifiées, terminées). Au-delà de la capacité, les deux derniers emplacements deviennent « + N autres ».
+    Sans détail (chiffres ouverts), les cases viennent des seuls décomptes de la synthèse, sans intitulé ni lien : ouvertes
+    à faire, dont les premières en retard selon le compteur, puis terminées ; en cours, planifiées et prioritaires restent
+    inconnues (null). */
 export function casesActions(
   plan: PlanActions | null | undefined,
   actions: Synthese['actions'],
@@ -84,30 +94,42 @@ export function casesActions(
     liste = plan.items.map((a) => ({
       cle: a.id,
       etat: a.etat,
+      retard: a.retard,
+      prioritaire: a.prioritaire,
       nom: a.nom,
       echeance: a.echeance,
       lien: lienAction(a.perimetre, a.id),
     }));
     compte = {
+      aFaire: plan.aFaire,
+      enCours: plan.enCours,
+      planifiees: plan.planifiees,
+      terminees: plan.terminees,
       enRetard: plan.enRetard,
-      ceMois: plan.ceMois,
-      ouvertes: plan.enRetard + plan.ceMois + plan.autresOuvertes,
-      closes: plan.closes,
+      prioritaires: plan.prioritaires,
       total: plan.total,
     };
   } else if (actions) {
-    const autres = Math.max(0, actions.ouvertes - actions.enRetard);
-    const etats: EtatActionTdb[] = [
-      ...Array<EtatActionTdb>(actions.enRetard).fill('retard'),
-      ...Array<EtatActionTdb>(autres).fill('ouverte'),
-      ...Array<EtatActionTdb>(actions.terminees).fill('close'),
+    const retard = Math.min(actions.enRetard, actions.ouvertes);
+    const cases = [
+      ...Array.from({ length: actions.ouvertes }, (_, i) => ({ etat: 'a_faire' as const, retard: i < retard })),
+      ...Array.from({ length: actions.terminees }, () => ({ etat: 'terminee' as const, retard: false })),
     ].slice(0, capacite);
-    liste = etats.map((etat, i) => ({ cle: `${etat}-${i}`, etat, nom: null, echeance: null, lien: null }));
+    liste = cases.map((c, i) => ({
+      cle: `${c.etat}${c.retard ? '-retard' : ''}-${i}`,
+      ...c,
+      prioritaire: false,
+      nom: null,
+      echeance: null,
+      lien: null,
+    }));
     compte = {
+      aFaire: actions.ouvertes,
+      enCours: null,
+      planifiees: null,
+      terminees: actions.terminees,
       enRetard: actions.enRetard,
-      ceMois: 0,
-      ouvertes: actions.ouvertes,
-      closes: actions.terminees,
+      prioritaires: null,
       total: actions.total,
     };
   } else return null;
@@ -117,12 +139,16 @@ export function casesActions(
   return { ...compte, cases: gardees, reste: compte.total - gardees.length };
 }
 
-/** Bulle d'une case d'action : état et échéance. */
-export function detailAction(c: Pick<CaseAction, 'etat' | 'echeance'>): string {
-  const etat = LIBELLES_ETAT_ACTION_TDB[c.etat];
-  if (!c.echeance) return c.etat === 'close' ? etat : `${etat} · sans échéance`;
-  const date = c.echeance.split('-').reverse().join('/');
-  return `${etat} · échéance ${c.etat === 'retard' ? 'dépassée, ' : ''}le ${date}`;
+/** Bulle et nom accessible d'une case d'action : état, « en retard » et « priorité haute » s'il y a lieu, échéance. */
+export function detailAction(c: Pick<CaseAction, 'etat' | 'echeance' | 'retard' | 'prioritaire'>): string {
+  const morceaux = [
+    LIBELLES_ETAT_ACTION_TDB[c.etat],
+    ...(c.retard ? ['en retard'] : []),
+    ...(c.prioritaire ? ['priorité haute'] : []),
+  ];
+  if (c.echeance) morceaux.push(`échéance le ${c.echeance.slice(0, 10).split('-').reverse().join('/')}`);
+  else if (c.etat !== 'terminee') morceaux.push('sans échéance');
+  return morceaux.join(' · ');
 }
 
 /* ---------------------------------------------------------------- Grille des risques */
@@ -133,6 +159,50 @@ export function teinteNiveau(niveau: number | null, niveaux: number): 'neutre' |
   if (niveaux === 1 || niveau >= niveaux - 1) return 3;
   if (niveau <= 0) return 0;
   return niveaux === 3 ? 1 : (Math.min(2, 1 + Math.floor(((niveau - 1) * 2) / (niveaux - 2))) as 1 | 2);
+}
+
+/** Grilles de la dalle « Niveau de risque », de la méthode la plus utilisée à la moins utilisée ; une synthèse sans
+    `grilles` donne sa seule `grille`. */
+export function grillesRisques(d: DetailRisques | null | undefined): GrilleRisques[] {
+  if (!d) return [];
+  return d.grilles ?? (d.grille ? [d.grille] : []);
+}
+
+/** Ce que montre la dalle « Niveau de risque » pour la grille choisie dans le rail (la première par défaut, bornée aux
+    grilles présentes) : chiffre clé (risques placés et méthode ; à défaut de grille, tous les risques) et critiques de la
+    grille (à défaut, ceux de la synthèse). */
+export function vueRisques(
+  d: DetailRisques | null | undefined,
+  totalRisques: number,
+  choix: number,
+): {
+  grilles: GrilleRisques[];
+  choisie: number;
+  grille: GrilleRisques | null;
+  valeur: number;
+  etiquette: string;
+  critiques: number | null;
+} {
+  const grilles = grillesRisques(d);
+  const choisie = Math.min(Math.max(0, choix), Math.max(0, grilles.length - 1));
+  const grille = grilles[choisie] ?? null;
+  if (!grille)
+    return {
+      grilles,
+      choisie,
+      grille,
+      valeur: totalRisques,
+      etiquette: totalRisques > 1 ? 'risques' : 'risque',
+      critiques: d?.critiques ?? null,
+    };
+  return {
+    grilles,
+    choisie,
+    grille,
+    valeur: grille.places,
+    etiquette: `${grille.places > 1 ? 'risques' : 'risque'} · ${grille.methode}`,
+    critiques: risquesCritiques(grille),
+  };
 }
 
 /** Rangées de la grille dans l'ordre d'affichage : vraisemblance décroissante de haut en bas, gravité croissante de
@@ -205,14 +275,15 @@ export function moisIncidents(
 /* ---------------------------------------------------------------- Constats par nature */
 
 /** Constats ouverts par nature, à partir des types d'écarts ouverts de la synthèse (mêmes regroupements que le filtre
-    « nature » du registre). */
+    « nature » du registre) : points sensibles à part (28/11/2026), observations = remarques. */
 export function constatsParNature(eo: Synthese['ecartsOuverts']): Record<NatureConstat, number> | null {
   if (!eo) return null;
   const n = (type: string) => eo.parType.find((t) => t.type === type)?.n ?? 0;
   const r: Record<NatureConstat, number> = {
     majeure: n('NC maj'),
     mineure: n('NC min'),
-    observation: n('PS') + n('Remarque'),
+    point_sensible: n('PS'),
+    observation: n('Remarque'),
     piste: n('PP'),
   };
   return Object.fromEntries(NATURES_CONSTAT.map((k) => [k, r[k]])) as Record<NatureConstat, number>;

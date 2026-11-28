@@ -1,0 +1,1019 @@
+/* ========================================================================
+   STYLE « VERRE » : FAMILLE DOCUMENTS (dessins DocDocuments, DocImports et DocExports validés par le RSSI le 28/11/2026)
+   Complément de verre.css, chargé juste après elle (apps/web/src/main.tsx). Mêmes règles : chaque sélecteur commence par
+   html[data-style='verre'] (test packages/ui/test/verre-documents-css.test.ts), flou uniquement par les variables du
+   verre (coupées par le repli opaque), teintes tirées des jetons --verre-* (redéfinis par le mode clair et le fond bleu
+   nuit). Lisibilité : 13 px au moins (--verre-texte-min), graisse 500 à 700, texte secondaire --verre-secondaire(-2).
+   - En-tête comme les autres familles : surtitre jaune de la famille, grand titre, description, puis les onglets.
+   - Documents et liens : onglets en rail, quatre tuiles, liste en lignes de verre (badge du type de fichier, puces de
+     classification), document choisi à droite, zone de dépôt en pointillé.
+   - Import et rapports : importation en trois étapes à gauche, trois cartes à droite.
+   - Exports Excel : bandeau Classique / Pro, grille de cartes à icône colorée, export complet violet.
+   ======================================================================== */
+
+/* ---------------------------------------------------------------- En-tête de la famille Documents */
+html[data-style='verre'] .app-main[data-famille='documents']:has(> .page > .page-header) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mantine-spacing-lg);
+}
+html[data-style='verre'] .app-main[data-famille='documents'] > .page:has(> .page-header) {
+  display: contents;
+}
+html[data-style='verre'] .app-main[data-famille='documents']:has(> .page > .page-header)::before {
+  order: -30;
+  margin-bottom: calc(var(--mantine-spacing-lg) * -1 + 0.2rem);
+  content: attr(data-famille-libelle);
+  color: var(--verre-jaune);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+html[data-style='verre'] .app-main[data-famille='documents'] > .page > .page-header {
+  order: -20;
+}
+html[data-style='verre'] .app-main[data-famille='documents']:has(> .page > .page-header) > .entete-module {
+  order: -10;
+}
+html[data-style='verre'] .app-main[data-famille='documents']:has(> .page > .page-header) > :not(.entete-module, .page) {
+  order: -40;
+}
+html[data-style='verre'] .app-main[data-famille='documents'] .page-header h1 {
+  color: var(--verre-texte-fort);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ---------------------------------------------------------------- Commandes communes : gélules et bouton rond */
+html[data-style='verre'] :is(.docv-gelule, .impv-gelule, .expv-bouton, .docv-rond) {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-block-size: 2.375rem;
+  padding: 0 1.125rem;
+  border: 1px solid var(--verre-gelule-bord);
+  border-radius: 999px;
+  background: var(--verre-gelule-fond);
+  box-shadow: var(--verre-gelule-reflet);
+  color: var(--verre-texte-fort);
+  font: inherit;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--suivi-motion);
+}
+html[data-style='verre'] :is(.docv-gelule, .impv-gelule, .expv-bouton, .docv-rond):hover:not(:disabled) {
+  background: var(--mantine-color-default-hover);
+}
+html[data-style='verre']
+  :is(.docv-gelule--primaire, .impv-gelule--primaire, .expv-bouton[data-pro]):is(:not(:disabled)) {
+  border-color: var(--verre-primaire-bord);
+  background: var(--verre-primaire);
+  box-shadow: var(--verre-primaire-ombre);
+  color: #ffffff;
+}
+html[data-style='verre'] :is(.docv-gelule, .impv-gelule, .expv-bouton):disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+html[data-style='verre'] .docv-rond {
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  padding: 0;
+  border-radius: 50%;
+  box-shadow: var(--verre-gelule-reflet), var(--verre-ombre-douce);
+}
+html[data-style='verre']
+  :is(
+    .docv-gelule,
+    .impv-gelule,
+    .expv-bouton,
+    .docv-rond,
+    .docv-ligne,
+    .impv-modele,
+    .docv-frise__version
+  ):focus-visible {
+  outline: 2px solid var(--verre-focus);
+  outline-offset: 2px;
+}
+
+/* Puces : neutre par défaut, violette pour un rattachement ; classification teintée. */
+html[data-style='verre'] :is(.docv-puce, .docv-classif, .expv-puce) {
+  --docv-teinte: var(--verre-texte-menu);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-block-size: 1.5rem;
+  padding: 0 0.625rem;
+  border: 1px solid var(--verre-gelule-bord);
+  border-radius: 999px;
+  background: var(--verre-survol);
+  color: var(--docv-teinte);
+  font: inherit;
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  white-space: nowrap;
+}
+html[data-style='verre'] :is(.docv-puce[data-ton='rattachement'], .expv-puce[data-mode='pro']) {
+  --docv-teinte: var(--verre-violet);
+}
+html[data-style='verre'] .docv-classif[data-classification='public'] {
+  --docv-teinte: var(--verre-vert);
+}
+html[data-style='verre'] .docv-classif[data-classification='restreint'] {
+  --docv-teinte: var(--verre-ambre);
+}
+html[data-style='verre'] .docv-classif[data-classification='confidentiel'] {
+  --docv-teinte: var(--verre-rouge);
+}
+html[data-style='verre']
+  :is(
+    .docv-puce[data-ton='rattachement'],
+    .expv-puce[data-mode='pro'],
+    .docv-classif:is(
+      [data-classification='public'],
+      [data-classification='restreint'],
+      [data-classification='confidentiel']
+    )
+  ) {
+  border-color: color-mix(in srgb, var(--docv-teinte) 50%, transparent);
+  background: color-mix(in srgb, var(--docv-teinte) 16%, transparent);
+}
+html[data-style='verre'] .docv-puce--bouton {
+  cursor: pointer;
+}
+html[data-style='verre'] .docv-puce--bouton:hover {
+  background: var(--verre-ligne-survol);
+}
+
+/* ---------------------------------------------------------------- Documents : onglets et tuiles */
+html[data-style='verre'] .docv-onglets > .mantine-Tabs-list {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+html[data-style='verre'] .docv-onglets > .mantine-Tabs-list::before {
+  display: none;
+}
+html[data-style='verre'] .docv-tuiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.875rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .docv-tuile {
+  --docv-teinte: var(--verre-texte);
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+  padding: 0.625rem 1.125rem 0.75rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: 1.375rem;
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre-douce);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] .docv-tuile[data-tuile='rattaches'] {
+  --docv-teinte: var(--verre-vert);
+}
+html[data-style='verre'] .docv-tuile[data-tuile='a-revoir'] {
+  --docv-teinte: var(--verre-ambre);
+}
+html[data-style='verre'] .docv-tuile[data-tuile='confidentiels'] {
+  --docv-teinte: var(--verre-rouge);
+}
+html[data-style='verre'] .docv-tuile__titre {
+  color: var(--verre-texte-fort);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .docv-tuile__valeur {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+}
+html[data-style='verre'] .docv-tuile__nombre {
+  color: var(--docv-teinte);
+  font-size: 1.875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+html[data-style='verre'] .docv-tuile__sur {
+  color: var(--verre-secondaire-2);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+html[data-style='verre'] .docv-tuile__detail {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+
+/* ---------------------------------------------------------------- Documents : liste et document choisi */
+html[data-style='verre'] .docv {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 23.25rem);
+  align-items: start;
+  gap: 0.875rem;
+}
+html[data-style='verre'] :is(.docv-liste, .docv-panneau) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-width: 0;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: 1.625rem;
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] .docv-panneau {
+  position: sticky;
+  inset-block-start: var(--mantine-spacing-md);
+  padding: 1.125rem 1.25rem;
+}
+html[data-style='verre'] .docv-liste__titre {
+  margin: 0;
+  color: var(--verre-texte-fort);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+html[data-style='verre'] .docv-tri {
+  flex: none;
+}
+html[data-style='verre'] .docv-tri .mantine-Select-root {
+  inline-size: 13.5rem;
+}
+html[data-style='verre'] .docv-lignes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .docv-ligne {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  inline-size: 100%;
+  min-width: 0;
+  padding: 0.5625rem 0.875rem;
+  border: 1px solid var(--verre-ligne-trait);
+  border-radius: var(--verre-rayon-ligne);
+  background: var(--verre-ligne-fond);
+  color: var(--verre-texte);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background-color var(--suivi-motion),
+    border-color var(--suivi-motion);
+}
+html[data-style='verre'] .docv-ligne:hover {
+  background: var(--verre-ligne-survol);
+}
+html[data-style='verre'] .docv-ligne[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--verre-violet) 55%, transparent);
+  background: color-mix(in srgb, var(--verre-violet) 16%, transparent);
+  box-shadow:
+    var(--verre-reflet),
+    0 0 0 3px color-mix(in srgb, var(--verre-violet) 18%, transparent);
+}
+html[data-style='verre'] .docv-ligne__corps {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+html[data-style='verre'] .docv-ligne__titre {
+  overflow: hidden;
+  color: var(--verre-texte-fort);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-style='verre'] .docv-ligne__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.5rem;
+  min-width: 0;
+  margin-block-start: 0.3125rem;
+}
+html[data-style='verre'] :is(.docv-ligne__infos, .docv-ligne__reste, .docv-ligne__date) {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .docv-ligne__meta .docv-puce {
+  overflow: hidden;
+  max-inline-size: 12rem;
+  text-overflow: ellipsis;
+}
+html[data-style='verre'] .docv-ligne__reste {
+  font-weight: 700;
+}
+html[data-style='verre'] .docv-ligne__date {
+  flex: none;
+  min-inline-size: 5.25rem;
+  text-align: end;
+}
+
+/* Badge du type de fichier : feuille à coin replié, teinte de la famille du fichier. */
+html[data-style='verre'] .docv-badge {
+  --docv-teinte: var(--verre-secondaire-2);
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: flex-end;
+  justify-content: center;
+  inline-size: 3rem;
+  block-size: 3rem;
+  padding-block-end: 0.375rem;
+  border: 1px solid color-mix(in srgb, var(--docv-teinte) 40%, transparent);
+  border-radius: 0.625rem;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--docv-teinte) 22%, transparent),
+    color-mix(in srgb, var(--docv-teinte) 8%, transparent)
+  );
+  color: var(--docv-teinte);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+}
+html[data-style='verre'] .docv-badge::after {
+  position: absolute;
+  inset-block-start: -1px;
+  inset-inline-end: -1px;
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  border-radius: 0 0.625rem 0 0.375rem;
+  background: color-mix(in srgb, var(--docv-teinte) 33%, transparent);
+  content: '';
+}
+html[data-style='verre'] .docv-badge[data-type='pdf'] {
+  --docv-teinte: var(--verre-rouge);
+}
+html[data-style='verre'] .docv-badge[data-type='texte'] {
+  --docv-teinte: var(--verre-bleu);
+}
+html[data-style='verre'] .docv-badge[data-type='tableur'] {
+  --docv-teinte: var(--verre-vert);
+}
+html[data-style='verre'] .docv-badge[data-type='presentation'] {
+  --docv-teinte: var(--verre-orange);
+}
+html[data-style='verre'] .docv-badge[data-type='image'] {
+  --docv-teinte: var(--verre-violet);
+}
+
+/* Zone de dépôt : pointillé jaune de la famille, plus franc pendant le survol d'un fichier. */
+html[data-style='verre'] .docv-depot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  min-block-size: 2.75rem;
+  padding: 0.375rem 1rem;
+  border: 1.5px dashed color-mix(in srgb, var(--verre-jaune) 45%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--verre-jaune) 5%, transparent);
+  color: var(--verre-jaune);
+  font-size: 0.84375rem;
+  font-weight: 600;
+  transition:
+    background-color var(--suivi-motion),
+    border-color var(--suivi-motion);
+}
+html[data-style='verre'] .docv-depot[data-survol] {
+  border-style: solid;
+  border-color: var(--verre-jaune);
+  background: color-mix(in srgb, var(--verre-jaune) 14%, transparent);
+}
+html[data-style='verre'] .docv-depot__choisir {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+html[data-style='verre'] .docv-depot__choisir:focus-visible {
+  outline: 2px solid var(--verre-focus);
+  outline-offset: 2px;
+}
+
+/* Document choisi. */
+html[data-style='verre'] .docv-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  min-width: 0;
+}
+html[data-style='verre'] .docv-detail__tete {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+}
+html[data-style='verre'] .docv-detail__titres {
+  flex: 1;
+  min-width: 0;
+}
+html[data-style='verre'] .docv-detail__titre {
+  margin: 0;
+  color: var(--verre-texte-fort);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+html[data-style='verre'] .docv-detail__puces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+html[data-style='verre'] .docv-detail__titres > .docv-detail__puces {
+  margin-block-start: 0.5rem;
+}
+html[data-style='verre'] .docv-detail__description {
+  margin: 0;
+  white-space: pre-line;
+  color: var(--verre-texte-menu);
+  font-size: 0.84375rem;
+  font-weight: 500;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+html[data-style='verre'] .docv-detail__corbeille {
+  margin: 0;
+  color: var(--verre-ambre);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] :is(.docv-detail__bloc h3, .impv-cle) {
+  margin: 0 0 0.5rem;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+html[data-style='verre'] .docv-frise {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-block-size: 16rem;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+html[data-style='verre'] .docv-frise__etape {
+  position: relative;
+  display: flex;
+  gap: 0.75rem;
+  padding-block-end: 0.75rem;
+}
+/* Filet vertical entre deux points de la frise. */
+html[data-style='verre'] .docv-frise__etape:not(:last-child)::before {
+  position: absolute;
+  inset-block: 1.125rem 0;
+  inset-inline-start: 0.375rem;
+  inline-size: 2px;
+  background: var(--verre-creux-bord);
+  content: '';
+}
+html[data-style='verre'] .docv-frise__point {
+  flex: none;
+  box-sizing: border-box;
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  margin-block-start: 0.1875rem;
+  border: 2px solid var(--verre-gelule-bord);
+  border-radius: 50%;
+}
+html[data-style='verre'] .docv-frise__etape[data-courante] .docv-frise__point {
+  border-color: var(--verre-violet);
+  background: var(--verre-violet);
+  box-shadow: 0 0 10px var(--verre-violet);
+}
+html[data-style='verre'] .docv-frise__corps {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+html[data-style='verre'] .docv-frise__version {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--verre-texte-fort);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: start;
+  cursor: pointer;
+}
+html[data-style='verre'] .docv-frise__version:hover {
+  text-decoration: underline;
+}
+html[data-style='verre'] :is(.docv-frise__date, .docv-frise__texte) {
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .docv-frise__texte {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-style='verre'] .docv-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+html[data-style='verre'] .docv-detail__actions > .docv-rond {
+  margin-inline-start: auto;
+}
+
+/* ---------------------------------------------------------------- Import et rapports */
+html[data-style='verre'] .impv {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 0.875rem;
+}
+html[data-style='verre'] .impv[data-import] {
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 25rem);
+}
+html[data-style='verre'] .impv > :not(.impv-import, .impv-cartes) {
+  grid-column: 1 / -1;
+}
+html[data-style='verre'] .impv:not([data-import]) > .impv-cartes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+}
+html[data-style='verre'] :is(.impv-import, .impv-carte) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1.125rem 1.25rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: 1.625rem;
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] .impv-carte {
+  gap: 0.625rem;
+  padding: 1rem 1.125rem;
+  border-radius: 1.5rem;
+}
+html[data-style='verre'] .impv-cartes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  min-width: 0;
+}
+html[data-style='verre'] .impv-tete {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+html[data-style='verre'] .impv-tete h2 {
+  flex: 1;
+  margin: 0;
+  color: var(--verre-texte-fort);
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .impv-carte h3 {
+  margin: 0;
+  color: var(--verre-texte-fort);
+  font-size: 1rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .impv-sec {
+  margin: 0;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 500;
+}
+html[data-style='verre'] .impv-cle {
+  margin: 0;
+}
+
+/* Étapes : pastille ronde (✓ faite, numéro en cours ou à venir, ✕ bloquée) reliées par un filet. */
+html[data-style='verre'] .impv-etapes {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .impv-etape {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+html[data-style='verre'] .impv-etape:not(:first-child) {
+  flex: 1;
+}
+html[data-style='verre'] .impv-etape:not(:first-child)::before {
+  flex: 1;
+  min-inline-size: 1rem;
+  block-size: 2px;
+  margin-inline: 0.375rem;
+  background: var(--verre-creux-bord);
+  content: '';
+}
+html[data-style='verre'] .impv-etape__pastille {
+  --impv-teinte: var(--verre-violet);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  inline-size: 1.875rem;
+  block-size: 1.875rem;
+  border-radius: 50%;
+  background: var(--impv-teinte);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--impv-teinte) 60%, transparent);
+  color: var(--verre-fond-page);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+html[data-style='verre'] .impv-etape[data-etat='fait'] .impv-etape__pastille {
+  --impv-teinte: var(--verre-vert);
+}
+html[data-style='verre'] .impv-etape[data-etat='bloque'] .impv-etape__pastille {
+  --impv-teinte: var(--verre-rouge);
+}
+html[data-style='verre'] .impv-etape[data-etat='a-venir'] .impv-etape__pastille {
+  border: 2px solid var(--verre-gelule-bord);
+  background: transparent;
+  box-shadow: none;
+  color: var(--verre-secondaire-2);
+}
+html[data-style='verre'] .impv-etape__libelle {
+  color: var(--verre-texte-fort);
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+html[data-style='verre'] .impv-etape[data-etat='a-venir'] .impv-etape__libelle {
+  color: var(--verre-secondaire-2);
+}
+
+/* Fichier choisi. */
+html[data-style='verre'] .impv-fichier {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--verre-violet) 40%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--verre-violet) 12%, transparent);
+}
+html[data-style='verre'] :is(.impv-fichier, .impv-modele) > svg {
+  flex: none;
+  color: var(--verre-violet);
+}
+html[data-style='verre'] .impv-fichier__corps {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+html[data-style='verre'] .impv-fichier__nom {
+  overflow: hidden;
+  color: var(--verre-texte-fort);
+  font-size: 0.90625rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-style='verre'] .impv-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Résultat de la simulation et motifs d'un refus. */
+html[data-style='verre'] .impv-resultat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+html[data-style='verre'] .impv-referentiel {
+  margin: 0;
+  color: var(--verre-texte-fort);
+  font-size: 0.875rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+html[data-style='verre'] .impv-chiffres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .impv-chiffres > li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--verre-ligne-trait);
+  border-radius: 1rem;
+  background: var(--verre-ligne-fond);
+}
+html[data-style='verre'] .impv-chiffres strong {
+  color: var(--verre-texte);
+  font-size: 1.625rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+html[data-style='verre'] .impv-chiffres > li[data-ton='ok'] strong {
+  color: var(--verre-vert);
+}
+html[data-style='verre'] .impv-avertissement {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--verre-ambre) 40%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--verre-ambre) 10%, transparent);
+  color: var(--verre-ambre);
+  font-size: var(--verre-texte-min);
+  font-weight: 600;
+}
+html[data-style='verre'] .impv-refus {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .impv-refus > li {
+  padding: 0.5625rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--verre-rouge) 30%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--verre-rouge) 10%, transparent);
+  color: var(--verre-texte-menu);
+  font-size: 0.84375rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+html[data-style='verre'] .impv-confirmation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--verre-violet) 45%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--verre-violet) 10%, transparent);
+}
+html[data-style='verre'] .impv-confirmation > p {
+  flex: 1;
+  margin: 0;
+  color: var(--verre-texte-fort);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Modèles à télécharger. */
+html[data-style='verre'] .impv-modeles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .impv-modele {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  inline-size: 100%;
+  padding: 0.5625rem 0.75rem;
+  border: 1px solid var(--verre-ligne-trait);
+  border-radius: 0.75rem;
+  background: var(--verre-ligne-fond);
+  color: var(--verre-texte-menu);
+  font: inherit;
+  font-size: 0.84375rem;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+html[data-style='verre'] .impv-modele:hover {
+  background: var(--verre-ligne-survol);
+}
+html[data-style='verre'] .impv-modele__libelle {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------------- Exports Excel */
+html[data-style='verre'] .expv-bandeau {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem;
+}
+html[data-style='verre'] .expv-mode {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: 1.125rem;
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet);
+  color: var(--verre-texte-menu);
+  font-size: 0.84375rem;
+  font-weight: 500;
+}
+html[data-style='verre'] .expv-grille {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html[data-style='verre'] .expv-carte {
+  --expv-teinte: var(--verre-secondaire-2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--verre-bord);
+  border-radius: 1.375rem;
+  background: var(--verre-surface);
+  box-shadow: var(--verre-reflet), var(--verre-ombre-douce);
+  -webkit-backdrop-filter: var(--verre-flou-leger);
+  backdrop-filter: var(--verre-flou-leger);
+}
+html[data-style='verre'] .expv-carte[data-groupe='audit'] {
+  --expv-teinte: var(--verre-violet);
+}
+html[data-style='verre'] .expv-carte:is([data-groupe='obj'], [data-groupe='plans']) {
+  --expv-teinte: var(--verre-bleu);
+}
+html[data-style='verre'] .expv-carte:is([data-groupe='conf'], [data-groupe='ctx']) {
+  --expv-teinte: var(--verre-vert);
+}
+html[data-style='verre'] .expv-carte[data-groupe='ec'] {
+  --expv-teinte: var(--verre-rouge);
+}
+html[data-style='verre'] .expv-carte[data-groupe='sup'] {
+  --expv-teinte: var(--verre-sarcelle);
+}
+html[data-style='verre'] .expv-carte:is([data-groupe='incs'], [data-groupe='cont']) {
+  --expv-teinte: var(--verre-rose);
+}
+html[data-style='verre'] .expv-carte:is([data-groupe='risq'], [data-groupe='prvx']) {
+  --expv-teinte: var(--verre-jaune);
+}
+html[data-style='verre'] .expv-carte[data-complet] {
+  --expv-teinte: var(--verre-texte-fort);
+  border-color: color-mix(in srgb, var(--verre-violet) 50%, transparent);
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--verre-violet) 30%, transparent),
+      color-mix(in srgb, var(--verre-violet) 10%, transparent)
+    ),
+    var(--verre-surface);
+}
+html[data-style='verre'] .expv-carte__tete {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+html[data-style='verre'] .expv-icone {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border: 1px solid color-mix(in srgb, var(--expv-teinte) 33%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--expv-teinte) 13%, transparent);
+  color: var(--expv-teinte);
+}
+html[data-style='verre'] .expv-carte__titre {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--verre-texte-fort);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+html[data-style='verre'] .expv-carte__description {
+  flex: 1;
+  margin: 0;
+  color: var(--verre-secondaire-2);
+  font-size: 0.84375rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+html[data-style='verre'] .expv-carte[data-complet] .expv-carte__description {
+  color: var(--verre-texte-menu);
+}
+html[data-style='verre'] .expv-carte__pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+html[data-style='verre'] .expv-carte__feuilles {
+  flex: 1;
+  color: var(--verre-secondaire-2);
+  font-size: var(--verre-texte-min);
+  font-weight: 700;
+  white-space: nowrap;
+}
+html[data-style='verre'] .expv-bouton {
+  min-block-size: 2rem;
+  padding: 0 0.75rem;
+  font-size: var(--verre-texte-min);
+}
+
+/* ---------------------------------------------------------------- Écrans plus étroits */
+@media (max-width: 75em) {
+  html[data-style='verre'] :is(.docv, .impv[data-import]) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html[data-style='verre'] .docv-panneau {
+    position: static;
+  }
+  html[data-style='verre'] .expv-grille {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 62em) {
+  html[data-style='verre'] .docv-tuiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  html[data-style='verre'] .expv-grille {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  html[data-style='verre'] .expv-bandeau {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html[data-style='verre'] .impv-etape__libelle {
+    white-space: normal;
+  }
+}
+@media (max-width: 36em) {
+  html[data-style='verre'] :is(.docv-tuiles, .expv-grille) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html[data-style='verre'] .docv-ligne {
+    flex-wrap: wrap;
+  }
+}
+@media (forced-colors: active) {
+  html[data-style='verre']
+    :is(.docv-tuile, .docv-liste, .docv-panneau, .docv-ligne, .docv-badge, .impv-import, .impv-carte, .expv-carte) {
+    border: 1px solid CanvasText;
+  }
+  html[data-style='verre'] .docv-ligne[aria-pressed='true'] {
+    border: 2px solid Highlight;
+  }
+  html[data-style='verre'] .docv-depot {
+    border-color: CanvasText;
+  }
+}

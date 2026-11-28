@@ -47,7 +47,8 @@
     "./neon-fiches-pages.css": "./src/neon-fiches-pages.css",
     "./neon-fiches-sobres.css": "./src/neon-fiches-sobres.css",
     "./neon-vulnerabilites.css": "./src/neon-vulnerabilites.css",
-    "./verre.css": "./src/verre.css"
+    "./verre.css": "./src/verre.css",
+    "./verre-documents.css": "./src/verre-documents.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",

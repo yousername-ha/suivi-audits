@@ -5,6 +5,7 @@
    périmètres par un registre partagé. Chaque bloc exige la lecture de son module et vaut `null` sans ce droit. */
 import {
   ACTIONS_DETAILLEES,
+  comparerActionsTdb,
   etatActionTdb,
   jourParis,
   repartirGrilleRisques,
@@ -272,60 +273,98 @@ async function tableauDeBordNatifBase(
   return sortie;
 }
 
-/** Actions autonomes du tableau de bord (hors occurrences de tâches récurrentes) : décompte par état au jour civil `jour`
-    (Paris) et les `ACTIONS_DETAILLEES` plus urgentes. Un statut terminal vient de la politique métier du périmètre de
-    l'action ; `data` n'est décodé qu'une fois par ligne (PERF-15). Même portée que les autres compteurs. */
+/** Actions autonomes du tableau de bord (hors occurrences de tâches récurrentes) : décompte par état et par marquage au
+    jour civil `jour` (Paris), et les `ACTIONS_DETAILLEES` plus urgentes. Statuts initial (premier) et terminaux lus dans la
+    politique métier du périmètre de l'action ; état, retard, priorité et rang calculés comme `etatActionTdb` et
+    `rangActionTdb` (même règle, vérifiée par les tests) ; `data` n'est décodé qu'une fois par ligne (PERF-15). Même portée
+    que les autres compteurs. */
 async function planActions(g: Grc, ids: string[], masques: string[], jour: string): Promise<PlanActions> {
-  const finMois = `${jour.slice(0, 7)}-31`;
-  // Rang : 0 en retard, 1 à échéance ce mois-ci, 2 autre ouverte, 3 close (même règle que `etatActionTdb`).
+  const jourDe = (champ: string) =>
+    `CASE WHEN left(d."${champ}",10) ~ '^\\d{4}-\\d{2}-\\d{2}$' THEN left(d."${champ}",10) END`;
   const actions = `WITH a AS (
-      SELECT o.id, o.smsi_id, o.name,
-             CASE WHEN left(d."dueAt",10) ~ '^\\d{4}-\\d{2}-\\d{2}$' THEN left(d."dueAt",10) END due,
-             COALESCE(d.status,'')=ANY(t.ids) fin
+      SELECT o.id, o.smsi_id, o.name, ${jourDe('dueAt')} due, ${jourDe('startAt')} debut, d.priority priorite,
+             COALESCE(d.status,'')=ANY(t.ids) fin, COALESCE(d.status,'')=COALESCE(t.initial,'') initiale
         FROM grc_objects o
         CROSS JOIN LATERAL jsonb_to_record(CASE WHEN jsonb_typeof(o.data)='object' THEN o.data END)
-             AS d("dueAt" text, status text, "seriesId" text)
+             AS d("dueAt" text, "startAt" text, status text, priority text, "seriesId" text)
         JOIN grc_smsis s ON s.id=o.smsi_id
         JOIN business_policy_versions v ON v.version=s.business_version
         CROSS JOIN LATERAL (
-          SELECT COALESCE(array_agg(st->>'id') FILTER (WHERE st->>'terminal'='true'),'{}'::text[]) AS ids
+          SELECT COALESCE(array_agg(st->>'id') FILTER (WHERE st->>'terminal'='true'),'{}'::text[]) AS ids,
+                 v.definition->'statuses'->0->>'id' AS initial
             FROM jsonb_array_elements(v.definition->'statuses') st) t
        WHERE ${DANS_LA_PORTEE} AND o.kind='action' AND d."seriesId" IS NULL),
-    r AS (SELECT a.*, CASE WHEN fin THEN 3 WHEN due IS NULL THEN 2 WHEN due < $3 THEN 0 WHEN due <= $4 THEN 1 ELSE 2 END rang
-            FROM a)`;
+    e AS (SELECT a.*,
+            CASE WHEN fin THEN 'terminee' WHEN initiale AND debut > $3 THEN 'planifiee' WHEN initiale THEN 'a_faire'
+                 ELSE 'en_cours' END etat,
+            NOT fin AND due IS NOT NULL AND due < $3 retard,
+            NOT fin AND COALESCE(priorite IN ('high','urgent'), false) prioritaire
+            FROM a),
+    r AS (SELECT e.*, CASE WHEN fin THEN 4 WHEN retard THEN 0 WHEN prioritaire THEN 1 WHEN etat='planifiee' THEN 3 ELSE 2 END rang
+            FROM e)`;
   const [compte, lignes] = await Promise.all([
-    g.db.q<{ rang: number; n: number }>(`${actions} SELECT rang, count(*)::int n FROM r GROUP BY rang`, [
-      ids,
-      masques,
-      jour,
-      finMois,
-    ]),
-    g.db.q<{ id: string; smsi_id: string; name: string; due: string | null; fin: boolean }>(
-      `${actions} SELECT id, smsi_id, name, due, fin FROM r ORDER BY rang, due NULLS LAST, name, id LIMIT $5`,
-      [ids, masques, jour, finMois, ACTIONS_DETAILLEES],
+    g.db.one<{
+      total: number;
+      aFaire: number;
+      enCours: number;
+      planifiees: number;
+      terminees: number;
+      enRetard: number;
+      prioritaires: number;
+    }>(
+      `${actions} SELECT count(*)::int total,
+              count(*) FILTER (WHERE etat='a_faire')::int "aFaire",
+              count(*) FILTER (WHERE etat='en_cours')::int "enCours",
+              count(*) FILTER (WHERE etat='planifiee')::int planifiees,
+              count(*) FILTER (WHERE etat='terminee')::int terminees,
+              count(*) FILTER (WHERE retard)::int "enRetard",
+              count(*) FILTER (WHERE prioritaire)::int prioritaires
+         FROM r`,
+      [ids, masques, jour],
+    ),
+    g.db.q<{
+      id: string;
+      smsi_id: string;
+      name: string;
+      due: string | null;
+      debut: string | null;
+      priorite: string | null;
+      fin: boolean;
+      initiale: boolean;
+    }>(
+      `${actions} SELECT id, smsi_id, name, due, debut, priorite, fin, initiale FROM r
+        ORDER BY rang, due NULLS LAST, name COLLATE "C", id LIMIT $4`,
+      [ids, masques, jour, ACTIONS_DETAILLEES],
     ),
   ]);
-  const parRang = new Map(compte.rows.map((x) => [x.rang, x.n]));
-  const nb = (rang: number) => parRang.get(rang) ?? 0;
-  return {
-    total: nb(0) + nb(1) + nb(2) + nb(3),
-    enRetard: nb(0),
-    ceMois: nb(1),
-    autresOuvertes: nb(2),
-    closes: nb(3),
-    items: lignes.rows.map((x) => ({
+  const items = lignes.rows
+    .map((x) => ({
       id: x.id,
       perimetre: x.smsi_id,
       nom: x.name,
       echeance: x.due,
-      etat: etatActionTdb(x.due, x.fin, jour),
-    })),
+      ...etatActionTdb(
+        { terminee: x.fin, initiale: x.initiale, debut: x.debut, echeance: x.due, priorite: x.priorite },
+        jour,
+      ),
+    }))
+    .sort(comparerActionsTdb);
+  return {
+    total: compte?.total ?? 0,
+    aFaire: compte?.aFaire ?? 0,
+    enCours: compte?.enCours ?? 0,
+    planifiees: compte?.planifiees ?? 0,
+    terminees: compte?.terminees ?? 0,
+    enRetard: compte?.enRetard ?? 0,
+    prioritaires: compte?.prioritaires ?? 0,
+    items,
   };
 }
 
-/** Grille des risques du tableau de bord : méthode à calcul matriciel la plus utilisée par les dernières appréciations
-    des risques lisibles (validée d'abord, puis la plus récente, comme le registre), dans sa version publiée la plus
-    récente ; risques sans appréciation ; risques au niveau le plus fort de la méthode. */
+/** Grilles des risques du tableau de bord : une par méthode à calcul matriciel des dernières appréciations des risques
+    lisibles (validée d'abord, puis la plus récente, comme le registre), chacune dans la version publiée la plus récente
+    de sa méthode, de la méthode la plus utilisée à la moins utilisée (puis par nom) ; risques sans appréciation ;
+    risques au niveau le plus fort de la méthode la plus utilisée. */
 async function detailRisques(g: Grc, ids: string[], masques: string[]): Promise<DetailRisques> {
   const lignes = (
     await g.db.q<{
@@ -347,30 +386,28 @@ async function detailRisques(g: Grc, ids: string[], masques: string[]): Promise<
     )
   ).rows;
   const aApprecier = lignes.filter((x) => !x.methode).length;
-  const parMethode = new Map<string, number>();
-  for (const x of lignes) if (x.methode) parMethode.set(x.methode, (parMethode.get(x.methode) ?? 0) + 1);
-  const choisie = [...parMethode].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0];
-  if (!choisie) return { aApprecier, critiques: null, grille: null };
-  const version = await g.db.k
+  const parMethode = new Map<string, typeof lignes>();
+  for (const x of lignes) if (x.methode) parMethode.set(x.methode, [...(parMethode.get(x.methode) ?? []), x]);
+  if (!parMethode.size) return { aApprecier, critiques: null, grille: null, grilles: [] };
+  const versions = await g.db.k
     .selectFrom('grc_method_versions')
-    .select('definition')
-    .where('method_id', '=', choisie)
+    .select(['method_id', 'definition'])
+    .distinctOn('method_id')
+    .where('method_id', 'in', [...parMethode.keys()])
+    .orderBy('method_id')
     .orderBy('version', 'desc')
-    .limit(1)
-    .executeTakeFirst();
-  const grille = version
-    ? repartirGrilleRisques(
-        version.definition as unknown as MethodeGrille,
-        lignes
-          .filter((x) => x.methode === choisie)
-          .map((x) => ({ id: x.id, perimetre: x.smsi_id, nom: x.name, code: x.code, ratings: x.ratings })),
-      )
-    : null;
-  if (!grille) return { aApprecier, critiques: null, grille: null };
-  const autres = lignes.length - aApprecier - (parMethode.get(choisie) ?? 0);
-  return {
-    aApprecier,
-    critiques: risquesCritiques(grille),
-    grille: { ...grille, horsGrille: grille.horsGrille + autres },
-  };
+    .execute();
+  const grilles = versions
+    .flatMap((v) => {
+      const risques = parMethode.get(v.method_id) ?? [];
+      const grille = repartirGrilleRisques(
+        v.definition as unknown as MethodeGrille,
+        risques.map((x) => ({ id: x.id, perimetre: x.smsi_id, nom: x.name, code: x.code, ratings: x.ratings })),
+      );
+      return grille ? [{ grille, n: risques.length }] : [];
+    })
+    .sort((a, b) => b.n - a.n || a.grille.methode.localeCompare(b.grille.methode, 'fr'))
+    .map((x) => x.grille);
+  const premiere = grilles[0] ?? null;
+  return { aApprecier, critiques: premiere ? risquesCritiques(premiere) : null, grille: premiere, grilles };
 }

@@ -11,6 +11,8 @@ import {
   incidentOuvert,
   LIBELLES_NATURE_CONSTAT,
   NATURES_CONSTAT,
+  type EtatActionTdb,
+  type GrilleRisques,
   type Incident,
   type NatureConstat,
   type Synthese,
@@ -35,6 +37,7 @@ import {
   pluriel,
   rangeesGrille,
   teinteNiveau,
+  vueRisques,
 } from './tdb-verre-calculs';
 import type { RenduDalle } from './tdb-types';
 
@@ -255,26 +258,42 @@ function Pied({ chiffres }: { chiffres: readonly ChiffrePied[] }) {
   );
 }
 
-function Cle({ valeur, etiquette, teinte }: { valeur: ReactNode; etiquette: string; teinte?: Teinte }) {
+function Cle({
+  valeur,
+  etiquette,
+  teinte,
+  titre,
+}: {
+  valeur: ReactNode;
+  etiquette: string;
+  teinte?: Teinte;
+  /** Étiquette complète en bulle native, quand elle peut être tronquée (nom de méthode long). */
+  titre?: string;
+}) {
   return (
     <p className="tdbv-cle">
       <span className={`tdbv-gros chiffres${teinte ? ` tdbv-t-${teinte}` : ''}`}>{valeur}</span>
-      <span className="tdbv-etiq">{etiquette}</span>
+      <span className="tdbv-etiq" title={titre}>
+        {etiquette}
+      </span>
     </p>
   );
 }
 
-/** Dalle au cadre du dessin : titre et flèche, centre (chiffre clé et graphique), rangée du bas. */
+/** Dalle au cadre du dessin : titre et flèche, bandeau facultatif sous le titre (rail de choix), centre (chiffre clé et
+    graphique), rangée du bas. */
 function Cadre({
   p,
   titre,
   variante,
+  bandeau,
   centre,
   pied,
 }: {
   p: RenduDalle;
   titre: string;
   variante: string;
+  bandeau?: ReactNode;
   centre: ReactNode;
   pied: ReactNode;
 }) {
@@ -287,6 +306,7 @@ function Cadre({
       dalle={p.id}
       className={`tdb-neon tdbv tdbv--${variante}`}
     >
+      {bandeau}
       <div className="tdbv-centre">{centre}</div>
       {pied}
     </Dalle>
@@ -510,20 +530,72 @@ export function ApplicabiliteVerre({ p, refs }: { p: RenduDalle; refs: readonly 
 
 /* ---------------------------------------------------------------- Niveau de risque : grille de la méthode */
 
+/** Rail des méthodes d'appréciation (deux grilles au moins) : un bouton par méthode, avec son nombre de risques placés ;
+    simple rangée sans commande en mode modification de la disposition. */
+function RailMethodes({
+  grilles,
+  choisie,
+  choisir,
+  interactif,
+}: {
+  grilles: readonly GrilleRisques[];
+  choisie: number;
+  choisir: (i: number) => void;
+  interactif: boolean;
+}) {
+  if (grilles.length < 2) return null;
+  return (
+    <div className="tdbv-rail" role="group" aria-label="Méthode d’appréciation">
+      {grilles.map((g, i) => {
+        const contenu = (
+          <>
+            <span className="tdbv-rail-nom">{g.methode}</span>
+            <span className="tdbv-rail-n chiffres">{g.places}</span>
+          </>
+        );
+        const titre = `${g.methode} : ${pluriel(g.places, 'risque placé', 'risques placés')}`;
+        const classe = `tdbv-rail-bouton${i === choisie ? ' actif' : ''}`;
+        return interactif ? (
+          <button
+            key={`${g.methode}-${i}`}
+            type="button"
+            className={classe}
+            aria-pressed={i === choisie}
+            aria-label={titre}
+            title={titre}
+            onClick={() => choisir(i)}
+          >
+            {contenu}
+          </button>
+        ) : (
+          <span key={`${g.methode}-${i}`} className={classe} title={titre}>
+            {contenu}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 export function RisquesVerre({ p, s }: { p: RenduDalle; s: Synthese }) {
   const b = useBulles(!!p.interactif);
+  const [choix, setChoix] = useState(0);
   const r = s.risques!;
   const detail = s.detailRisques;
-  const g = detail?.grille ?? null;
+  const vue = vueRisques(detail, r.total, choix);
+  const g = vue.grille;
   const niveau = (i: number | null) => (g && i !== null ? (g.niveaux[i] ?? '').toLocaleLowerCase('fr') : null);
   return (
     <Cadre
       p={p}
       titre="Niveau de risque"
       variante="risques"
+      bandeau={
+        <RailMethodes grilles={vue.grilles} choisie={vue.choisie} choisir={setChoix} interactif={!!p.interactif} />
+      }
       centre={
         <>
-          <Cle valeur={r.total} etiquette={r.total > 1 ? 'risques' : 'risque'} />
+          <Cle valeur={vue.valeur} etiquette={vue.etiquette} titre={g ? vue.etiquette : undefined} />
           {g ? (
             <div className="tdbv-graphe">
               <div
@@ -607,7 +679,7 @@ export function RisquesVerre({ p, s }: { p: RenduDalle; s: Synthese }) {
       pied={
         <Pied
           chiffres={[
-            { libelle: 'Critiques', valeur: detail?.critiques ?? '—', teinte: 'rouge' },
+            { libelle: 'Critiques', valeur: vue.critiques ?? '—', teinte: 'rouge' },
             { libelle: 'À apprécier', valeur: detail?.aApprecier ?? '—', teinte: 'violet' },
             { libelle: 'Revues échues', valeur: r.revueEchue, teinte: 'ambre' },
           ]}
@@ -785,20 +857,25 @@ const NATURE: Record<NatureConstat, { court: string; un: string; plusieurs: stri
     plusieurs: 'non-conformités mineures',
     teinte: 'ambre',
   },
+  point_sensible: { court: 'Points sensibles', un: 'point sensible', plusieurs: 'points sensibles', teinte: 'violet' },
   observation: { court: 'Observations', un: 'observation', plusieurs: 'observations', teinte: 'bleu' },
   piste: { court: 'Pistes', un: 'piste de progrès', plusieurs: 'pistes de progrès', teinte: 'sarcelle' },
 };
+
+/** Légende du bas sur trois lignes de deux colonnes : Majeures | Points sensibles ; Mineures | Observations ; Pistes. */
+const LEGENDE_CONSTATS: readonly NatureConstat[] = ['majeure', 'point_sensible', 'mineure', 'observation', 'piste'];
 
 export function ConstatsVerre({ p, s }: { p: RenduDalle; s: Synthese }) {
   const can = useCan();
   const b = useBulles(!!p.interactif);
   const natures = constatsParNature(s.ecartsOuverts);
   const ouverts = s.ecartsOuverts?.ouverts ?? s.ecarts?.ouverts ?? 0;
+  const nb = NATURES_CONSTAT.length;
   const W = 220,
     H = 112,
     marge = 6,
-    ecart = 16,
-    largeur = (W - 2 * marge - 3 * ecart) / 4;
+    ecart = 12,
+    largeur = (W - 2 * marge - (nb - 1) * ecart) / nb;
   const max = Math.max(1, ...NATURES_CONSTAT.map((k) => natures?.[k] ?? 0));
   const lire = can('ecarts', 'lire');
   return (
@@ -830,7 +907,7 @@ export function ConstatsVerre({ p, s }: { p: RenduDalle; s: Synthese }) {
                   })}
                   <line x1="0" x2={W} y1={H - 0.5} y2={H - 0.5} className="tdbv-socle" />
                 </svg>
-                <div className="tdbv-colonnes tdbv-colonnes--4">
+                <div className="tdbv-colonnes tdbv-colonnes--5">
                   {NATURES_CONSTAT.map((k) => {
                     const v = natures[k];
                     const n = NATURE[k];
@@ -869,7 +946,7 @@ export function ConstatsVerre({ p, s }: { p: RenduDalle; s: Synthese }) {
       }
       pied={
         <dl className="tdbv-pied tdbv-pied--legende">
-          {NATURES_CONSTAT.map((k) => (
+          {LEGENDE_CONSTATS.map((k) => (
             <div key={k}>
               <dt>{NATURE[k].court}</dt>
               <dd className={`chiffres tdbv-t-${NATURE[k].teinte}`}>{natures?.[k] ?? '—'}</dd>
@@ -883,11 +960,18 @@ export function ConstatsVerre({ p, s }: { p: RenduDalle; s: Synthese }) {
 
 /* ---------------------------------------------------------------- Plan d'action : une case par action */
 
+/** Classe de l'état d'une case d'action (couleur) ; le retard (case rouge) et la priorité (contour or) s'y ajoutent. */
+const CLASSE_ETAT_ACTION: Record<EtatActionTdb, string> = {
+  a_faire: 'afaire',
+  en_cours: 'encours',
+  planifiee: 'planifiee',
+  terminee: 'terminee',
+};
+
 export function PlanActionVerre({ p, s }: { p: RenduDalle; s: Synthese }) {
   const b = useBulles(!!p.interactif);
   const c = casesActions(s.planActions, s.actions);
   if (!c) return null;
-  const teinte = { retard: 'rouge', mois: 'ambre', ouverte: 'violet', close: 'vert' } as const;
   return (
     <Cadre
       p={p}
@@ -895,18 +979,24 @@ export function PlanActionVerre({ p, s }: { p: RenduDalle; s: Synthese }) {
       variante="actions"
       centre={
         <>
-          <Cle valeur={c.ouvertes} etiquette={`${c.ouvertes > 1 ? 'ouvertes' : 'ouverte'} sur ${c.total}`} />
+          <Cle valeur={c.total} etiquette={c.total > 1 ? 'actions' : 'action'} />
           {c.total > 0 ? (
             <div className="tdbv-graphe">
               <div className="tdbv-cases" role="group" aria-label="Actions, une case par action">
                 {c.cases.map((a) => {
                   const cle = `action-${a.cle}`;
+                  const classe = [
+                    'tdbv-carre',
+                    `tdbv-action--${CLASSE_ETAT_ACTION[a.etat]}`,
+                    ...(a.retard ? ['tdbv-action--retard'] : []),
+                    ...(a.prioritaire ? ['tdbv-action--prioritaire'] : []),
+                  ].join(' ');
                   return (
                     <span key={cle} className="tdbv-case-boite">
                       <Point
                         b={b}
                         cle={cle}
-                        className={`tdbv-carre tdbv-fond-${teinte[a.etat]}`}
+                        className={classe}
                         nom={`Action ${a.nom ?? ''} (${detailAction(a)}) : ouvrir sa fiche`}
                         vers={a.lien}
                       />
@@ -944,13 +1034,23 @@ export function PlanActionVerre({ p, s }: { p: RenduDalle; s: Synthese }) {
         </>
       }
       pied={
-        <Pied
-          chiffres={[
-            { libelle: 'En retard', valeur: c.enRetard, teinte: 'rouge' },
-            { libelle: 'Ce mois-ci', valeur: c.ceMois, teinte: 'ambre' },
-            { libelle: 'Closes', valeur: c.closes, teinte: 'vert' },
-          ]}
-        />
+        <dl className="tdbv-pied tdbv-pied--legende">
+          {(
+            [
+              ['À faire', c.aFaire, 'tdbv-t-bleu'],
+              ['En cours', c.enCours, 'tdbv-t-violet'],
+              ['Planifiées', c.planifiees, 'tdbv-t-gris'],
+              ['Terminées', c.terminees, 'tdbv-t-vert'],
+              ['En retard', c.enRetard, 'tdbv-t-retard'],
+              ['Prioritaires', c.prioritaires, 'tdbv-t-or'],
+            ] as const
+          ).map(([libelle, valeur, classe]) => (
+            <div key={libelle}>
+              <dt>{libelle}</dt>
+              <dd className={`chiffres ${classe}`}>{valeur ?? '—'}</dd>
+            </div>
+          ))}
+        </dl>
       }
     />
   );

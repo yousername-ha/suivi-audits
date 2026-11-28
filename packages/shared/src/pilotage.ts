@@ -23,20 +23,20 @@ export function classificationEcart(data: Record<string, unknown>): (typeof CLAS
   return typeof data.type === 'string' ? (CLASSIFICATION_HISTORIQUE[data.type] ?? null) : null;
 }
 /** Nature d'un constat au tableau de bord (style « Verre », 27/11/2026), mêmes regroupements que les types d'écarts ouverts
-    de la synthèse : non-conformité majeure, mineure, piste de progrès (opportunité d'amélioration), sinon observation
-    (point sensible, constat, écart non classé). */
-export const NATURES_CONSTAT = ['majeure', 'mineure', 'observation', 'piste'] as const;
+    de la synthèse : non-conformité majeure, mineure, point sensible (barre à part depuis le 28/11/2026), piste de progrès
+    (opportunité d'amélioration), sinon observation (constat, remarque, écart non classé). */
+export const NATURES_CONSTAT = ['majeure', 'mineure', 'point_sensible', 'observation', 'piste'] as const;
 export type NatureConstat = (typeof NATURES_CONSTAT)[number];
 export const LIBELLES_NATURE_CONSTAT: Record<NatureConstat, string> = {
   majeure: 'Non-conformités majeures',
   mineure: 'Non-conformités mineures',
+  point_sensible: 'Points sensibles',
   observation: 'Observations',
   piste: 'Pistes de progrès',
 };
 export function natureConstat(data: Record<string, unknown>): NatureConstat {
   const c = classificationEcart(data);
-  if (c === 'majeure' || c === 'mineure') return c;
-  if (c === 'point_sensible') return 'observation';
+  if (c) return c;
   return data.findingType === 'opportunity' || data.type === 'PP' ? 'piste' : 'observation';
 }
 const text = z.string().max(10000);

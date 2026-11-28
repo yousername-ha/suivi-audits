@@ -36,6 +36,8 @@ import '@suivi/ui/neon-vulnerabilites.css';
 // Style d'instance « Verre » (décision du RSSI du 26/11/2026) : chaque règle est limitée à html[data-style='verre'].
 // Chargé en dernier, sans effet sur les autres styles.
 import '@suivi/ui/verre.css';
+// Complément « Verre » de la famille Documents (dessins validés par le RSSI le 28/11/2026), mêmes règles que verre.css.
+import '@suivi/ui/verre-documents.css';
 import { FichesSansDefilement } from './components/FichesSansDefilement';
 import { Center, Loader, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';

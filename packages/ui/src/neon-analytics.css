@@ -493,6 +493,24 @@
     transform: rotate(360deg);
   }
 }
+/* Contour or qui scintille d'une action prioritaire, tableau de bord du style « Verre » (décision du RSSI du 28/11/2026) :
+   seule la feuille verre.css l'utilise, mais elle n'admet pas de @keyframes (test verre-css) ; couleurs lues dans ses
+   variables, coupée sous prefers-reduced-motion. */
+@keyframes tdbv-scintille {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px var(--verre-fond-page),
+      0 0 0 3.5px var(--tdbv-or-a),
+      0 0 4px 3.5px var(--tdbv-or-halo-a);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px var(--verre-fond-page),
+      0 0 0 3.5px var(--tdbv-or-b),
+      0 0 9px 3.5px var(--tdbv-or-halo-b);
+  }
+}
 @media (min-width: 120em) {
   .neon-analytics {
     --na-hauteur: 20rem;
